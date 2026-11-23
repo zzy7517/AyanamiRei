@@ -1,0 +1,65 @@
+apps/web/config/google-analytics.ts
+  s_fc0852876b2926::t_587ff380219d2c 41-43,53-55
+  s_fc0852876b2926::t_fad9ac0f24e8af 142
+apps/web/package.json
+  s_fc0852876b2926::t_77f61ba307c3e0 13
+  s_fc0852876b2926::t_200325613770da 26
+apps/web/next.config.test.ts
+  s_fc0852876b2926::t_de0f4fb0a5c371 10-12
+apps/web/app/robots.ts
+  s_fc0852876b2926::t_c04ffa2859e01f 10,25
+apps/web/app/globals.css
+  s_fc0852876b2926::t_28cc251f133fab 9-11
+knip.jsonc
+  s_fc0852876b2926::t_4de676ebae26fb 40
+  s_fc0852876b2926::t_42560e7b5e4edf 72-73
+apps/web/proxy.test.ts
+  s_fc0852876b2926::t_eeff6ce1989feb 237-241
+  s_fc0852876b2926::t_2b8d22e3581eb6 256,258-259,262-268,271-272,275-276,278,280-282,285-286,288-292
+  s_a0f2d70485e0dd::t_f1ebca5657d14a 92-93
+apps/web/platform/workspace-document-title.tsx
+  s_fc0852876b2926::t_6aa3224054024a 63-65
+apps/web/app/manifest.test.ts
+  s_fc0852876b2926::t_ba1edca8f5c0d9 21-23
+  s_fc0852876b2926::t_7335fd47b19839 37,40-41
+apps/web/app/brand-variant-cascade.test.ts
+  s_fc0852876b2926::t_60d375b1a100d7 89
+  s_fc0852876b2926::t_acf8b5872bfeaf 119
+  s_fc0852876b2926::t_bb7379ebf5fd00 15
+apps/web/proxy.ts
+  s_fc0852876b2926::t_5f304f3132d833 88-95,97,102
+  s_fc0852876b2926::t_c486f0dbf51b23 77-80
+apps/web/app/manifest.ts
+  s_fc0852876b2926::t_953918077c45ee 4-6
+apps/web/next.config.ts
+  s_fc0852876b2926::t_ccce94f955d66b 59-62
+  s_fc0852876b2926::t_61a94df9e7ac49 113
+apps/web/platform/document-title.ts
+  s_fc0852876b2926::t_622f8de64ff932 5
+pnpm-lock.yaml
+  s_fc0852876b2926::t_09e6c20842a38d 6143,15653,15655
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "59e23eaf8f32fdf77ffd1d59f45e839af3a35567",
+  "prompts": {},
+  "sessions": {
+    "s_a0f2d70485e0dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a57ae628335167b03",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhongzhuan/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
