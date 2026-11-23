@@ -42,8 +42,8 @@ type CommentResponse struct {
 	ResolvedByID   *string `json:"resolved_by_id"`
 	SourceTaskID   *string `json:"source_task_id,omitempty"`
 	// DeletedAt marks a tombstone: a comment deleted while it still had
-	// replies (#8296). Its content is empty and it carries no attachments or
-	// reactions; it stays only so the replies keep their direct parent.
+	// replies (#8296). Its content is empty and it carries no attachments; it
+	// stays only so the replies keep their direct parent.
 	// Omitted for every live comment.
 	DeletedAt *string `json:"deleted_at,omitempty"`
 	// QuickActionID marks a comment produced by a quick action run (MUL-5465).
@@ -52,7 +52,6 @@ type CommentResponse struct {
 	// request field for it — which is exactly why the card keys off this id
 	// rather than a `type` value the client controls.
 	QuickActionID *string              `json:"quick_action_id,omitempty"`
-	Reactions     []ReactionResponse   `json:"reactions"`
 	Attachments   []AttachmentResponse `json:"attachments"`
 	// Orientation stats — populated only on the roots_only path and omitted in
 	// every other mode, so the default response shape stays byte-identical for
@@ -109,10 +108,7 @@ type CommentTriggerOutcome struct {
 	ReasonCode DispatchReasonCode `json:"reason_code"`
 }
 
-func commentToResponse(c db.Comment, reactions []ReactionResponse, attachments []AttachmentResponse) CommentResponse {
-	if reactions == nil {
-		reactions = []ReactionResponse{}
-	}
+func commentToResponse(c db.Comment, attachments []AttachmentResponse) CommentResponse {
 	if attachments == nil {
 		attachments = []AttachmentResponse{}
 	}
@@ -133,7 +129,6 @@ func commentToResponse(c db.Comment, reactions []ReactionResponse, attachments [
 		SourceTaskID:   uuidToPtr(c.SourceTaskID),
 		DeletedAt:      timestampToPtr(c.DeletedAt),
 		QuickActionID:  uuidToPtr(c.QuickActionID),
-		Reactions:      reactions,
 		Attachments:    attachments,
 	}
 }
@@ -553,9 +548,9 @@ func (h *Handler) ListComments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Apply the resolve-aware fold before anything keys off the comment set
-	// (reaction/attachment grouping, the response array): folding drops comments,
-	// and the dropped ones should not pay a reactions/attachments round-trip or
-	// appear in the response.
+	// (attachment grouping, the response array): folding drops comments, and the
+	// dropped ones should not pay an attachments round-trip or appear in the
+	// response.
 	//
 	// fetchCommentsForList marks FoldUnsafe only when a returned thread is known
 	// to be partial. The default capped path is safe: completeCommentThreads
@@ -572,13 +567,12 @@ func (h *Handler) ListComments(w http.ResponseWriter, r *http.Request) {
 	for i, c := range result.Comments {
 		commentIDs[i] = c.ID
 	}
-	grouped := h.groupReactions(r, commentIDs)
 	groupedAtt := h.groupAttachments(r, commentIDs)
 
 	resp := make([]CommentResponse, len(result.Comments))
 	for i, c := range result.Comments {
 		cid := uuidToString(c.ID)
-		resp[i] = commentToResponse(c, grouped[cid], groupedAtt[cid])
+		resp[i] = commentToResponse(c, groupedAtt[cid])
 		// Attach roots_only orientation stats when present (nil map elsewhere).
 		if st, ok := result.RootStats[cid]; ok {
 			rc := st.ReplyCount
@@ -1898,7 +1892,7 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch linked attachments so the response includes them.
 	groupedAtt := h.groupAttachments(r, []pgtype.UUID{comment.ID})
-	resp := commentToResponse(comment, nil, groupedAtt[uuidToString(comment.ID)])
+	resp := commentToResponse(comment, groupedAtt[uuidToString(comment.ID)])
 	resp.IssueRevision = created.IssueRevision
 	slog.Info("comment created", append(logger.RequestAttrs(r), "comment_id", uuidToString(comment.ID), "issue_id", issueID)...)
 	h.publish(protocol.EventCommentCreated, uuidToString(issue.WorkspaceID), authorType, authorID, map[string]any{
@@ -3328,11 +3322,10 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return h.triggerTasksForComment(r.Context(), issue, comment, parentComment, actorType, actorID, h.invokeOriginatorFromRequest(r, actorType, actorID), suppressAgentIDs, commentSteerRequest{})
 	}
 
-	// Fetch reactions and attachments for the updated comment.
-	grouped := h.groupReactions(r, []pgtype.UUID{comment.ID})
+	// Fetch attachments for the updated comment.
 	groupedAtt := h.groupAttachments(r, []pgtype.UUID{comment.ID})
 	cid := uuidToString(comment.ID)
-	resp := commentToResponse(comment, grouped[cid], groupedAtt[cid])
+	resp := commentToResponse(comment, groupedAtt[cid])
 	resp.IssueRevision = issueRevision
 	slog.Info("comment updated", append(logger.RequestAttrs(r), "comment_id", commentId)...)
 	eventPayload := map[string]any{"comment": resp}
@@ -3449,7 +3442,7 @@ func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	// A tombstone is still part of the thread, so clients replace it in place
 	// through the ordinary update event; removed rows get one delete event each.
 	if deleted.Tombstone != nil {
-		resp := commentToResponse(*deleted.Tombstone, nil, nil)
+		resp := commentToResponse(*deleted.Tombstone, nil)
 		resp.IssueRevision = deleted.IssueRevision
 		eventPayload := map[string]any{"comment": resp}
 		if deleted.IssueRevision > 0 {
@@ -3539,8 +3532,8 @@ func lockCommentAttachments(ctx context.Context, qtx *db.Queries, workspaceID, i
 // withLiveCommentLock runs write in a transaction that first locks the
 // comment's issue and then the comment — the order every comment mutation
 // takes — and only while the comment is live. Writes to a comment's children
-// (reactions, attachments) go through it so none can land on a tombstone, even
-// when the delete commits while this waits. Returns pgx.ErrNoRows when the
+// (attachments) go through it so none can land on a tombstone, even when the
+// delete commits while this waits. Returns pgx.ErrNoRows when the
 // comment is gone or deleted.
 func (h *Handler) withLiveCommentLock(ctx context.Context, commentID, workspaceID pgtype.UUID, write func(*db.Queries) error) error {
 	tx, err := h.beginWakeupWrite(ctx)
@@ -3565,8 +3558,8 @@ const commentTombstonePruneDepth = 256
 var errTaskSupplementInFlight = errors.New("additional message is still being delivered")
 
 // deleteComment deletes exactly one comment (#8296). A comment that still has
-// replies becomes a tombstone — content, attachments, reactions and resolution
-// cleared, row kept — so each reply stays attached to its direct parent. A
+// replies becomes a tombstone — content, attachments and resolution cleared,
+// row kept — so each reply stays attached to its direct parent. A
 // comment without replies is removed, along with every tombstone ancestor
 // that is left without replies. Nothing here relies on the parent_id cascade.
 // Returns pgx.ErrNoRows when the comment is already gone or already deleted.
@@ -3621,12 +3614,6 @@ func (h *Handler) deleteComment(ctx context.Context, commentID, workspaceID pgty
 		WorkspaceID: target.WorkspaceID,
 	})
 	if err != nil {
-		return out, err
-	}
-	if err := qtx.DeleteCommentReactions(ctx, db.DeleteCommentReactionsParams{
-		CommentID:   target.ID,
-		WorkspaceID: target.WorkspaceID,
-	}); err != nil {
 		return out, err
 	}
 
@@ -3892,17 +3879,15 @@ func (h *Handler) ResolveComment(w http.ResponseWriter, r *http.Request) {
 	// describes an uncommitted state.
 	for _, c := range cleared {
 		clearedID := uuidToString(c.ID)
-		clearedReactions := h.groupReactions(r, []pgtype.UUID{c.ID})
 		clearedAtt := h.groupAttachments(r, []pgtype.UUID{c.ID})
-		clearedResp := commentToResponse(c, clearedReactions[clearedID], clearedAtt[clearedID])
+		clearedResp := commentToResponse(c, clearedAtt[clearedID])
 		slog.Info("comment unresolved (replaced)", append(logger.RequestAttrs(r), "comment_id", clearedID)...)
 		h.publish(protocol.EventCommentUnresolved, workspaceID, actorType, actorID, map[string]any{"comment": clearedResp})
 	}
 
-	grouped := h.groupReactions(r, []pgtype.UUID{updated.ID})
 	groupedAtt := h.groupAttachments(r, []pgtype.UUID{updated.ID})
 	cid := uuidToString(updated.ID)
-	resp := commentToResponse(updated, grouped[cid], groupedAtt[cid])
+	resp := commentToResponse(updated, groupedAtt[cid])
 
 	// Suppress the target event on a re-resolve no-op so consumers do not
 	// re-process an unchanged thread (notifications, log spam). Cleared siblings
@@ -3931,10 +3916,9 @@ func (h *Handler) UnresolveComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grouped := h.groupReactions(r, []pgtype.UUID{updated.ID})
 	groupedAtt := h.groupAttachments(r, []pgtype.UUID{updated.ID})
 	cid := uuidToString(updated.ID)
-	resp := commentToResponse(updated, grouped[cid], groupedAtt[cid])
+	resp := commentToResponse(updated, groupedAtt[cid])
 
 	if wasResolved {
 		slog.Info("comment unresolved", append(logger.RequestAttrs(r), "comment_id", cid)...)

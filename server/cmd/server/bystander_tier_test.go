@@ -25,7 +25,6 @@ func TestDeliverToBystander(t *testing.T) {
 		{"task_failed", true, true, false},
 		{"assignee_changed", true, true, false},
 		{"priority_changed", true, true, false},
-		{"reaction_added", true, true, false},
 	}
 	for _, c := range cases {
 		if got := deliverToBystander(c.notifType, c.handoff, c.threadParticipant); got != c.want {

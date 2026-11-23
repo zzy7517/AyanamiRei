@@ -138,7 +138,7 @@ func (s *IssueWakeupService) Validate(in *WakeupInput, now time.Time) (pgtype.Ti
 		}
 		for _, event := range in.EventTypes {
 			if strings.HasPrefix(event, "task.") {
-				return bad("actor filters apply to issue, comment, reaction and attachment changes; use agent/run filters for task events")
+				return bad("actor filters apply to issue, comment and attachment changes; use agent/run filters for task events")
 			}
 		}
 	}

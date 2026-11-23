@@ -16,7 +16,7 @@ WITH base AS MATERIALIZED (
     SELECT i.id, i.issue_id, COALESCE(i.issue_id, i.id) AS group_id, i.created_at, i.read,
            CASE
                WHEN i.type = 'mentioned' THEN 'mention'
-               WHEN i.type IN ('new_comment', 'reaction_added') THEN 'comment'
+               WHEN i.type = 'new_comment' THEN 'comment'
                WHEN i.type IN ('issue_assigned', 'unassigned', 'assignee_changed', 'issue_subscribed') THEN 'assign'
                WHEN i.type = 'review_requested' THEN 'review'
                WHEN i.type IN ('issue_created', 'status_changed', 'priority_changed', 'start_date_changed', 'due_date_changed', 'children_done') THEN 'change'
@@ -211,7 +211,7 @@ WITH base AS MATERIALIZED (
     SELECT i.id, i.issue_id, COALESCE(i.issue_id, i.id) AS group_id, i.created_at, i.read, i.type,
            CASE
                WHEN i.type = 'mentioned' THEN 'mention'
-               WHEN i.type IN ('new_comment', 'reaction_added') THEN 'comment'
+               WHEN i.type = 'new_comment' THEN 'comment'
                WHEN i.type IN ('issue_assigned', 'unassigned', 'assignee_changed', 'issue_subscribed') THEN 'assign'
                WHEN i.type = 'review_requested' THEN 'review'
                WHEN i.type IN ('issue_created', 'status_changed', 'priority_changed', 'start_date_changed', 'due_date_changed', 'children_done') THEN 'change'

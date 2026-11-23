@@ -341,7 +341,6 @@ func TestWakesSnooze(t *testing.T) {
 		{"mentioned", `{"mention_via":"all"}`, false},
 		{"new_comment", `{}`, false},
 		{"status_changed", `{}`, false},
-		{"reaction_added", `{}`, false},
 	}
 	for _, c := range cases {
 		if got := inbox.WakesSnooze(c.notifType, []byte(c.details)); got != c.want {

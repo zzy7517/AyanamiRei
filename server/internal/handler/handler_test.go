@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -263,6 +264,37 @@ func createHandlerTestAgent(t *testing.T, name string, mcpConfig []byte) string 
 	})
 
 	return agentID
+}
+
+var testSeq atomic.Int64
+
+// createTestUserAndMember inserts a fresh user and (optionally) a member row
+// in the test workspace with the given role. Returns the new user id.
+func createTestUserAndMember(t *testing.T, role string) string {
+	t.Helper()
+	ctx := context.Background()
+	seq := testSeq.Add(1)
+	var userID string
+	if err := testPool.QueryRow(ctx,
+		`INSERT INTO "user" (name, email) VALUES ($1, $2) RETURNING id`,
+		fmt.Sprintf("handler-test-%d", seq),
+		fmt.Sprintf("handler-test-%d@multica.ai", seq),
+	).Scan(&userID); err != nil {
+		t.Fatalf("create handler test user: %v", err)
+	}
+	if role != "" {
+		if _, err := testPool.Exec(ctx,
+			`INSERT INTO member (workspace_id, user_id, role) VALUES ($1, $2, $3)`,
+			parseUUID(testWorkspaceID), parseUUID(userID), role,
+		); err != nil {
+			t.Fatalf("create handler test member: %v", err)
+		}
+	}
+	t.Cleanup(func() {
+		testPool.Exec(context.Background(), `DELETE FROM member WHERE user_id = $1`, parseUUID(userID))
+		testPool.Exec(context.Background(), `DELETE FROM "user" WHERE id = $1`, parseUUID(userID))
+	})
+	return userID
 }
 
 // createHandlerTestTaskForAgent seeds a running agent_task_queue row for the
@@ -1815,14 +1847,6 @@ func TestGetMyInvitationRejectsMalformedID(t *testing.T) {
 	req := newRequest("GET", "/api/invitations/not-a-uuid", nil)
 	req = withURLParam(req, "id", "not-a-uuid")
 	testutil.Call(t, testHandler.GetMyInvitation, req).Want(http.StatusBadRequest)
-}
-
-func TestAddReactionRejectsMalformedCommentID(t *testing.T) {
-	req := newRequest("POST", "/api/comments/not-a-uuid/reactions", map[string]any{
-		"emoji": "thumbs_up",
-	})
-	req = withURLParam(req, "commentId", "not-a-uuid")
-	testutil.Call(t, testHandler.AddReaction, req).Want(http.StatusBadRequest)
 }
 
 func TestUpdateCommentRejectsMalformedCommentID(t *testing.T) {

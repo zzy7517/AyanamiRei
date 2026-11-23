@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +24,6 @@ func memberLimitWorkspace(t *testing.T, members int) string {
 	suffix := uuid.NewString()[:8]
 	workspaceID := dbfx.Workspace(t, "Member limit "+suffix, "member-limit-"+suffix)
 	dbfx.Cleanup(t, `DELETE FROM workspace_invitation WHERE workspace_id = $1`, workspaceID)
-	dbfx.Cleanup(t, `DELETE FROM workspace_share_link WHERE workspace_id = $1`, workspaceID)
 	dbfx.Cleanup(t, `DELETE FROM member WHERE workspace_id = $1`, workspaceID)
 	dbfx.Cleanup(t, `DELETE FROM entitlement_limit_overage WHERE workspace_id = $1`, workspaceID)
 	dbfx.Member(t, workspaceID, testUserID, "owner")
@@ -199,45 +199,6 @@ func TestAcceptInvitationTakesTheSlotItHolds(t *testing.T) {
 	}
 }
 
-func joinWorkspaceByLink(t *testing.T, code, userID string) *testutil.Response {
-	t.Helper()
-	req := newRequest(http.MethodPost, "/api/share-links/join", JoinByShareLinkRequest{Code: code})
-	req.Header.Set("X-User-ID", userID)
-	return testutil.Call(t, testHandler.JoinByShareLink, req)
-}
-
-func TestJoinShareLinkRefusedWhenWorkspaceIsFull(t *testing.T) {
-	workspaceID := memberLimitWorkspace(t, 4)
-	link := createTestShareLink(t, workspaceID, "member", 5, 0)
-	userID := dbfx.User(t, "Member limit joiner", "joiner-"+uuid.NewString()+"@multica.ai")
-	useMemberLimit(t, workspaceID, entitlement.ActionEnforce, 5)
-
-	wantMemberLimitReached(t, joinWorkspaceByLink(t, link.Code, userID))
-	if uses := dbfx.Count(t, `SELECT use_count FROM workspace_share_link WHERE id = $1`, link.ID); uses != 0 {
-		t.Fatalf("refused join used the link %d times", uses)
-	}
-	if got := memberLimitOverageOf(t, workspaceID); got.enforced != 1 || got.peak != 6 {
-		t.Fatalf("overage = %+v, want one enforced attempt at 6", got)
-	}
-}
-
-// A joiner who was also invited by email takes the slot that invitation
-// holds instead of a new one.
-func TestJoinShareLinkTakesTheJoinersInvitationSlot(t *testing.T) {
-	workspaceID := memberLimitWorkspace(t, 3)
-	link := createTestShareLink(t, workspaceID, "member", 5, 0)
-	email := "invited-joiner-" + uuid.NewString() + "@multica.ai"
-	userID := dbfx.User(t, "Member limit invited joiner", email)
-	invitationID := pendingInvitation(t, workspaceID, email, userID)
-	pendingInvitation(t, workspaceID, "other-"+uuid.NewString()+"@multica.ai", "")
-	useMemberLimit(t, workspaceID, entitlement.ActionEnforce, 5)
-
-	joinWorkspaceByLink(t, link.Code, userID).Want(http.StatusOK)
-	if status, _ := invitationStatusOf(t, invitationID); status != "accepted" {
-		t.Fatalf("invitation status = %q, want accepted", status)
-	}
-}
-
 // A workspace that has just upgraded must not be refused on the policy cached
 // before the upgrade: the handler re-reads it before refusing.
 func TestMemberLimitRefreshesPolicyBeforeRefusing(t *testing.T) {
@@ -356,4 +317,15 @@ func TestMemberLimitPeriodIsTheUTCMonth(t *testing.T) {
 	if !start.Equal(time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)) || !end.Equal(time.Date(2027, 2, 1, 0, 0, 0, 0, time.UTC)) {
 		t.Fatalf("period = %s..%s", start, end)
 	}
+}
+
+func invitationStatusOf(t *testing.T, invitationID string) (string, string) {
+	t.Helper()
+	var status, role string
+	if err := testPool.QueryRow(context.Background(),
+		`SELECT status, role FROM workspace_invitation WHERE id = $1`, parseUUID(invitationID),
+	).Scan(&status, &role); err != nil {
+		t.Fatalf("reload invitation: %v", err)
+	}
+	return status, role
 }

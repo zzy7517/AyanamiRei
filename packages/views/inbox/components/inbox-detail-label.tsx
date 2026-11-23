@@ -33,7 +33,6 @@ export function useTypeLabels(): Record<InboxItemType, string> {
     task_failed: t(($) => $.types.task_failed),
     agent_blocked: t(($) => $.types.agent_blocked),
     agent_completed: t(($) => $.types.agent_completed),
-    reaction_added: t(($) => $.types.reaction_added),
     quick_create_done: t(($) => $.types.quick_create_done),
     quick_create_failed: t(($) => $.types.quick_create_failed),
     quick_create_unconfirmed: t(($) => $.types.quick_create_unconfirmed),
@@ -123,11 +122,6 @@ export function InboxDetailLabel({ item }: { item: InboxItem }) {
     }
     case "new_comment": {
       if (item.body) return <span>{item.body}</span>;
-      return <span>{typeLabels[item.type]}</span>;
-    }
-    case "reaction_added": {
-      const emoji = details.emoji;
-      if (emoji) return <span>{t(($) => $.labels.reacted_to_comment, { emoji })}</span>;
       return <span>{typeLabels[item.type]}</span>;
     }
     case "quick_create_done": {

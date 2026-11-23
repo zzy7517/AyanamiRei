@@ -102,9 +102,8 @@ type IssueResponse struct {
 	Metadata map[string]any `json:"metadata"`
 	// Properties is the custom-property value bag keyed by property definition
 	// UUID (see property.go). Always emitted, mirroring Metadata.
-	Properties  map[string]any          `json:"properties"`
-	Reactions   []IssueReactionResponse `json:"reactions,omitempty"`
-	Attachments []AttachmentResponse    `json:"attachments,omitempty"`
+	Properties  map[string]any       `json:"properties"`
+	Attachments []AttachmentResponse `json:"attachments,omitempty"`
 	// Labels are bulk-attached by list/detail endpoints so the client can render
 	// chips without an N+1 round-trip per row. Pointer + omitempty so paths that
 	// don't load labels (e.g. UpdateIssue, batch UpdateIssues, the issue:updated
@@ -2534,18 +2533,6 @@ func (h *Handler) GetIssue(w http.ResponseWriter, r *http.Request) {
 		detailLabels = []LabelResponse{}
 	}
 	resp.Labels = &detailLabels
-
-	// Fetch issue reactions.
-	reactions, err := h.Queries.ListIssueReactions(r.Context(), issue.ID)
-	if writeQueryCancellation(w, r, err) {
-		return
-	}
-	if err == nil && len(reactions) > 0 {
-		resp.Reactions = make([]IssueReactionResponse, len(reactions))
-		for i, rx := range reactions {
-			resp.Reactions[i] = issueReactionToResponse(rx)
-		}
-	}
 
 	// Fetch issue-level attachments.
 	attachments, err := h.Queries.ListAttachmentsByIssue(r.Context(), db.ListAttachmentsByIssueParams{

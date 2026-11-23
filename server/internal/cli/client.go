@@ -362,32 +362,6 @@ func (c *APIClient) deleteJSON(ctx context.Context, path string, out any, onConf
 	return nil
 }
 
-// DeleteJSONWithBody performs a DELETE request with a JSON body.
-func (c *APIClient) DeleteJSONWithBody(ctx context.Context, path string, body any) error {
-	data, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.BaseURL+path, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	c.setHeaders(req)
-
-	resp, err := c.HTTPClient.Do(req)
-	err = wrapTransport(req, err)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return newHTTPError(http.MethodDelete, path, resp)
-	}
-	return nil
-}
-
 // PostJSON performs a POST request with a JSON body.
 func (c *APIClient) PostJSON(ctx context.Context, path string, body any, out any) error {
 	data, err := json.Marshal(body)

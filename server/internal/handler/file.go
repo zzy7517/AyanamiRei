@@ -670,11 +670,9 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 					ID:          att.CommentID,
 					WorkspaceID: att.WorkspaceID,
 				}); loadErr == nil {
-					commentID := uuidToString(comment.ID)
-					reactions := h.groupReactions(r, []pgtype.UUID{comment.ID})
 					attachments := h.groupAttachments(r, []pgtype.UUID{comment.ID})
 					h.publish(protocol.EventCommentUpdated, workspaceID, uploaderType, uploaderID, map[string]any{
-						"comment": commentToResponse(comment, reactions[commentID], attachments[commentID]),
+						"comment": commentToResponse(comment, attachments[uuidToString(comment.ID)]),
 					})
 				}
 			}
@@ -1586,11 +1584,9 @@ func (h *Handler) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
 			ID:          att.CommentID,
 			WorkspaceID: att.WorkspaceID,
 		}); loadErr == nil {
-			commentID := uuidToString(comment.ID)
-			reactions := h.groupReactions(r, []pgtype.UUID{comment.ID})
 			attachments := h.groupAttachments(r, []pgtype.UUID{comment.ID})
 			h.publish(protocol.EventCommentUpdated, workspaceID, "member", userID, map[string]any{
-				"comment": commentToResponse(comment, reactions[commentID], attachments[commentID]),
+				"comment": commentToResponse(comment, attachments[uuidToString(comment.ID)]),
 			})
 		}
 	}

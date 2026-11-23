@@ -1,11 +1,11 @@
 -- name: UpsertSeatCapacityIntent :one
 INSERT INTO seat_capacity_outbox (
     workspace_id, operation_token, action, subject_id, member_id,
-    invitation_id, share_link_id, user_id, expires_at, next_attempt_at
+    invitation_id, user_id, expires_at, next_attempt_at
 ) VALUES (
     sqlc.arg('workspace_id'), sqlc.arg('operation_token'), sqlc.arg('action'),
     sqlc.narg('subject_id'), sqlc.narg('member_id'), sqlc.narg('invitation_id'),
-    sqlc.narg('share_link_id'), sqlc.narg('user_id'), sqlc.narg('expires_at'),
+    sqlc.narg('user_id'), sqlc.narg('expires_at'),
     sqlc.arg('next_attempt_at')
 )
 ON CONFLICT (operation_token) DO UPDATE SET
@@ -13,7 +13,6 @@ ON CONFLICT (operation_token) DO UPDATE SET
     subject_id = EXCLUDED.subject_id,
     member_id = EXCLUDED.member_id,
     invitation_id = EXCLUDED.invitation_id,
-    share_link_id = EXCLUDED.share_link_id,
     user_id = EXCLUDED.user_id,
     expires_at = EXCLUDED.expires_at,
     attempt_count = CASE
@@ -46,7 +45,6 @@ ON CONFLICT (operation_token) DO UPDATE SET
     subject_id = EXCLUDED.subject_id,
     member_id = NULL,
     invitation_id = NULL,
-    share_link_id = NULL,
     user_id = NULL,
     expires_at = NULL,
     delivered_at = NULL,
@@ -57,7 +55,7 @@ ON CONFLICT (operation_token) DO UPDATE SET
     dead_lettered_at = NULL,
     updated_at = now()
 WHERE seat_capacity_outbox.action IN (
-    'reserve_invitation', 'consume_invitation', 'claim_share_join', 'release'
+    'reserve_invitation', 'consume_invitation', 'release'
 )
 RETURNING *;
 
@@ -69,33 +67,6 @@ SELECT * FROM seat_capacity_outbox
 WHERE operation_token = sqlc.arg('operation_token')
   AND action = sqlc.arg('action')
   AND lease_token = sqlc.arg('lease_token');
-
--- name: CreateOrReactivateShareJoinCapacityIntent :one
-INSERT INTO seat_capacity_outbox (
-    workspace_id, operation_token, action, subject_id, share_link_id, user_id,
-    next_attempt_at
-) VALUES (
-    sqlc.arg('workspace_id'), sqlc.arg('operation_token'), 'claim_share_join',
-    sqlc.arg('operation_token'), sqlc.arg('share_link_id'), sqlc.arg('user_id'),
-    sqlc.arg('next_attempt_at')
-)
-ON CONFLICT (workspace_id, share_link_id, user_id)
-WHERE share_link_id IS NOT NULL AND user_id IS NOT NULL
-DO UPDATE SET
-    action = 'claim_share_join',
-    subject_id = seat_capacity_outbox.operation_token,
-    member_id = NULL,
-    invitation_id = NULL,
-    expires_at = NULL,
-    delivered_at = NULL,
-    attempt_count = 0,
-    next_attempt_at = EXCLUDED.next_attempt_at,
-    lease_token = NULL,
-    last_error = NULL,
-    dead_lettered_at = NULL,
-    updated_at = now()
-WHERE seat_capacity_outbox.action IN ('claim_share_join', 'release')
-RETURNING *;
 
 -- name: GetMemberReleaseCapacityIntent :one
 SELECT * FROM seat_capacity_outbox
@@ -150,7 +121,7 @@ ON CONFLICT (operation_token) DO UPDATE SET
     dead_lettered_at = NULL,
     updated_at = now()
 WHERE seat_capacity_outbox.action IN (
-    'reserve_invitation', 'consume_invitation', 'claim_share_join', 'release'
+    'reserve_invitation', 'consume_invitation', 'release'
 );
 
 -- name: PrepareSeatCapacityMemberReleasesForWorkspaceDeletion :exec

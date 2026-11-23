@@ -1,0 +1,3 @@
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_seat_capacity_outbox_share_join
+    ON seat_capacity_outbox(workspace_id, share_link_id, user_id)
+    WHERE share_link_id IS NOT NULL AND user_id IS NOT NULL;

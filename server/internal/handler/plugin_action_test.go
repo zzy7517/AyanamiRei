@@ -226,7 +226,7 @@ func TestPluginIssueUsesStableDTOAndRevisionETag(t *testing.T) {
 	if err := json.Unmarshal(get.Body.Bytes(), &raw); err != nil {
 		t.Fatalf("decode issue map: %v", err)
 	}
-	for _, appOnly := range []string{"labels", "attachments", "reactions"} {
+	for _, appOnly := range []string{"labels", "attachments"} {
 		if _, leaked := raw[appOnly]; leaked {
 			t.Fatalf("App-only field %q leaked into Public API: %s", appOnly, get.Body.String())
 		}

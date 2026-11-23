@@ -15,7 +15,6 @@ import (
 const (
 	ActionReserveInvitation = "reserve_invitation"
 	ActionConsumeInvitation = "consume_invitation"
-	ActionClaimShareJoin    = "claim_share_join"
 	ActionConfirm           = "confirm"
 	ActionRelease           = "release"
 	ActionReleaseMember     = "release_member"
@@ -218,7 +217,7 @@ func (w *Worker) settle(ctx context.Context, intent db.SeatCapacityOutbox) error
 	switch intent.Action {
 	case ActionReserveInvitation:
 		return w.recoverReserve(ctx, intent, workspaceID, token)
-	case ActionConsumeInvitation, ActionClaimShareJoin:
+	case ActionConsumeInvitation:
 		return w.recoverConsuming(ctx, intent, workspaceID, token)
 	case ActionConfirm:
 		decision, err := w.executor.Confirm(ctx, workspaceID, token, uuidFromPG(intent.MemberID))
@@ -306,10 +305,8 @@ func (w *Worker) recoverConsuming(ctx context.Context, intent db.SeatCapacityOut
 		// stale consuming worker must not try to release that used seat.
 		return w.deleteCurrent(ctx, intent)
 	case "released":
-		if intent.Action == ActionConsumeInvitation && intent.InvitationID.Valid {
-			if err := w.queries.ExpireInvitationForCapacityRecovery(ctx, intent.InvitationID); err != nil {
-				return err
-			}
+		if err := w.queries.ExpireInvitationForCapacityRecovery(ctx, intent.InvitationID); err != nil {
+			return err
 		}
 		return w.deleteCurrent(ctx, intent)
 	case "consuming":
@@ -320,12 +317,7 @@ func (w *Worker) recoverConsuming(ctx context.Context, intent db.SeatCapacityOut
 		if err != nil || !changed {
 			return err
 		}
-		if intent.Action == ActionConsumeInvitation && intent.InvitationID.Valid {
-			if err := w.queries.ExpireInvitationForCapacityRecovery(ctx, intent.InvitationID); err != nil {
-				return err
-			}
-		}
-		return nil
+		return w.queries.ExpireInvitationForCapacityRecovery(ctx, intent.InvitationID)
 	default:
 		return errors.New("unexpected recovered consuming capacity state " + decision.Operation.State)
 	}

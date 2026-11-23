@@ -40,9 +40,6 @@ func (s *stubSeatCapacity) ReserveInvitation(context.Context, uuid.UUID, uuid.UU
 	s.reserveCalls++
 	return s.reserveDecision, s.reserveErr
 }
-func (s *stubSeatCapacity) ClaimShareJoin(context.Context, uuid.UUID, uuid.UUID) (seatcapacity.Decision, error) {
-	return seatcapacity.Decision{Managed: true, Allowed: true}, nil
-}
 func (s *stubSeatCapacity) Consume(context.Context, uuid.UUID, uuid.UUID) (seatcapacity.Decision, error) {
 	s.consumeCalls++
 	decision := seatcapacity.Decision{Managed: true, Allowed: true}

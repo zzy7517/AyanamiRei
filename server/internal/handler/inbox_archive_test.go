@@ -115,9 +115,10 @@ func TestArchivedInboxExactTypeMatchesBeforeGrouping(t *testing.T) {
 	mentioned := dbfx.Issue(t, "Mentioned, then changed", testutil.Cols{"workspace_id": ws})
 	mention := insert(mentioned, "mentioned", old)
 	insert(mentioned, "status_changed", old.Add(time.Minute))
-	commented := dbfx.Issue(t, "Commented, then reacted", testutil.Cols{"workspace_id": ws})
-	comment := insert(commented, "new_comment", old)
-	insert(commented, "reaction_added", old.Add(time.Minute))
+	// priority_changed and due_date_changed share the change group.
+	reprioritized := dbfx.Issue(t, "Reprioritized, then rescheduled", testutil.Cols{"workspace_id": ws})
+	priority := insert(reprioritized, "priority_changed", old)
+	insert(reprioritized, "due_date_changed", old.Add(time.Minute))
 	get := func(query string) []string {
 		var page archivedInboxPageResponse
 		testutil.Call(t, inboxWorkspaceHandler(testHandler.ListArchivedInboxPage), inboxRequest(http.MethodGet, "/api/inbox/archived/page?"+query, ws)).Want(http.StatusOK).JSON(&page)
@@ -128,12 +129,12 @@ func TestArchivedInboxExactTypeMatchesBeforeGrouping(t *testing.T) {
 		return ids
 	}
 	for query, want := range map[string][]string{
-		"notification_types=mentioned":                         {mention},
-		"notification_types=mentioned&group_id=" + mentioned:   {mention},
-		"notification_types=new_comment":                       {comment},
-		"notification_types=new_comment&group_id=" + commented: {comment},
-		"notification_types=new_comment,mentioned":             {comment, mention},
-		"notification_types=issue_assigned":                    {},
+		"notification_types=mentioned":                                  {mention},
+		"notification_types=mentioned&group_id=" + mentioned:            {mention},
+		"notification_types=priority_changed":                           {priority},
+		"notification_types=priority_changed&group_id=" + reprioritized: {priority},
+		"notification_types=priority_changed,mentioned":                 {priority, mention},
+		"notification_types=issue_assigned":                             {},
 	} {
 		got := get(query)
 		slices.Sort(got)

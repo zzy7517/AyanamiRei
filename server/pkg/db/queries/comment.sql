@@ -694,8 +694,8 @@ WHERE comment.id = @id AND comment.workspace_id = @workspace_id
 FOR UPDATE OF comment;
 
 -- name: LockLiveComment :one
--- Locks a live comment ahead of a write to one of its children — reactions and
--- attachments — in the order every comment mutation shares: issue, then
+-- Locks a live comment ahead of a write to one of its children — an
+-- attachment — in the order every comment mutation shares: issue, then
 -- comment, then child. A comment deleted before or while this waits reads as
 -- absent (the row lock re-checks deleted_at), so no child can land on its
 -- tombstone. FOR NO KEY UPDATE conflicts with the delete transaction's FOR
@@ -728,8 +728,8 @@ SELECT EXISTS (
 -- Deletes a comment that still has replies by clearing it in place. The row,
 -- its id and its parent_id stay so every reply keeps its direct parent; the
 -- body goes, and so does any resolution, since a deleted comment cannot be a
--- thread's conclusion. The caller removes attachments and reactions in the
--- same transaction.
+-- thread's conclusion. The caller removes attachments in the same
+-- transaction.
 UPDATE comment SET
     content = '',
     deleted_at = now(),

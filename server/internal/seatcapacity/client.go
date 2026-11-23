@@ -65,7 +65,6 @@ type Executor interface {
 	// wrapper and accidentally start the recovery worker.
 	RecoveryAvailable() bool
 	ReserveInvitation(context.Context, uuid.UUID, uuid.UUID, time.Time) (Decision, error)
-	ClaimShareJoin(context.Context, uuid.UUID, uuid.UUID) (Decision, error)
 	Consume(context.Context, uuid.UUID, uuid.UUID) (Decision, error)
 	Confirm(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (Decision, error)
 	Release(context.Context, uuid.UUID, uuid.UUID) (Decision, error)
@@ -90,9 +89,6 @@ func (u *unavailableExecutor) fail() (Decision, error) {
 	return Decision{}, fmt.Errorf("seat capacity executor unavailable: %w", u.err)
 }
 func (u *unavailableExecutor) ReserveInvitation(context.Context, uuid.UUID, uuid.UUID, time.Time) (Decision, error) {
-	return u.fail()
-}
-func (u *unavailableExecutor) ClaimShareJoin(context.Context, uuid.UUID, uuid.UUID) (Decision, error) {
 	return u.fail()
 }
 func (u *unavailableExecutor) Consume(context.Context, uuid.UUID, uuid.UUID) (Decision, error) {
@@ -146,12 +142,6 @@ func New(cfg Config) (Executor, error) {
 func (c *Client) ReserveInvitation(ctx context.Context, workspaceID, invitationID uuid.UUID, expiresAt time.Time) (Decision, error) {
 	return c.post(ctx, workspaceID, "reserve", map[string]any{
 		"token": invitationID, "kind": "invitation", "subject_id": invitationID, "expires_at": expiresAt,
-	})
-}
-
-func (c *Client) ClaimShareJoin(ctx context.Context, workspaceID, intentID uuid.UUID) (Decision, error) {
-	return c.post(ctx, workspaceID, "claim", map[string]any{
-		"token": intentID, "kind": "share_join", "subject_id": intentID,
 	})
 }
 

@@ -360,12 +360,6 @@ deleted_chat_wakeups AS (
 deleted_agent_builder_drafts AS (
     DELETE FROM agent_builder_draft WHERE workspace_id = $1
 ),
-deleted_comment_reactions AS (
-    DELETE FROM comment_reaction WHERE workspace_id = $1
-),
-deleted_issue_reactions AS (
-    DELETE FROM issue_reaction WHERE workspace_id = $1
-),
 deleted_activity AS (
     DELETE FROM activity_log WHERE workspace_id = $1
 ),
@@ -794,10 +788,6 @@ detached_client_usage AS (
     UPDATE client_usage_daily
     SET workspace_id = NULL
     WHERE client_usage_daily.workspace_id = $1
-),
-deleted_share_links AS (
-    DELETE FROM workspace_share_link
-    WHERE workspace_share_link.workspace_id = $1
 )
 DELETE FROM workspace_invitation
 WHERE workspace_invitation.workspace_id = $1;

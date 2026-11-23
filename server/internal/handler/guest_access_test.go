@@ -13,7 +13,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/multica-ai/multica/server/internal/entitlement"
 	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/testutil"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
@@ -347,25 +346,6 @@ func TestUnknownMemberRoleGrantsNothing(t *testing.T) {
 		Want(http.StatusOK).JSON(&summary)
 	if len(summary) != 1 || summary[0].WorkspaceID != other {
 		t.Errorf("unread summary = %+v, want only the workspace where the role is known", summary)
-	}
-}
-
-// A pending guest invitation reserves no member slot, so a joiner holding one
-// who comes in through a member share link takes a new slot, and cannot take
-// one another invitation reserved.
-func TestJoinShareLinkWithGuestInvitationTakesANewSlot(t *testing.T) {
-	workspaceID := memberLimitWorkspace(t, 3) // owner + 3 members
-	link := createTestShareLink(t, workspaceID, "member", 5, 0)
-	email := "guest-invited-joiner-" + uuid.NewString() + "@multica.ai"
-	userID := dbfx.User(t, "Guest-invited joiner", email)
-	guestInvitation := pendingInvitation(t, workspaceID, email, userID)
-	dbfx.Exec(t, `UPDATE workspace_invitation SET role = 'guest' WHERE id = $1`, guestInvitation)
-	pendingInvitation(t, workspaceID, "other-"+uuid.NewString()+"@multica.ai", "") // the fifth slot
-	useMemberLimit(t, workspaceID, entitlement.ActionEnforce, 5)
-
-	wantMemberLimitReached(t, joinWorkspaceByLink(t, link.Code, userID))
-	if n := dbfx.Count(t, `SELECT count(*) FROM member WHERE workspace_id = $1 AND user_id = $2`, workspaceID, userID); n != 0 {
-		t.Fatalf("refused join created %d members", n)
 	}
 }
 

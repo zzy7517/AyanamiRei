@@ -173,7 +173,6 @@ The handler checks it wherever a member is added
 | Operation | Counted against the limit |
 | --- | --- |
 | Create an invitation (`POST /api/workspaces/{id}/members`) | members + live pending invitations + 1 |
-| Join by share link | the same, or members + 1 when the joiner holds a pending invitation |
 | Accept an invitation | members + 1: the invitation already holds its slot |
 
 Guests take no slot and are never checked. A refused invitation acceptance

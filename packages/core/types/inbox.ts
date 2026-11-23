@@ -20,7 +20,6 @@ export type InboxItemType =
   | "task_failed"
   // No longer written, but older servers wrote them and those rows remain;
   // keep their labels and filter groups so history still reads and filters.
-  | "reaction_added"
   | "review_requested"
   | "task_completed"
   | "agent_blocked"

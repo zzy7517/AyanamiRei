@@ -49,12 +49,6 @@ func TestIssueWakeupCollaborationCapture(t *testing.T) {
 	f.Exec(t, "UPDATE comment SET content='private-edited-comment' WHERE id=$1", comment)
 	f.Exec(t, "UPDATE comment SET resolved_at=now(),resolved_by_type='member',resolved_by_id=$2 WHERE id=$1", comment, f.UserID)
 	f.Exec(t, "UPDATE comment SET resolved_at=NULL,resolved_by_type=NULL,resolved_by_id=NULL WHERE id=$1", comment)
-	for _, target := range []struct{ table, key, id string }{{"comment_reaction", "comment_id", comment}, {"issue_reaction", "issue_id", util.UUIDToString(issue)}} {
-		reaction := f.Insert(t, target.table, testutil.Cols{target.key: target.id, "workspace_id": f.WorkspaceID, "actor_type": "member", "actor_id": f.UserID, "emoji": "👍"})
-		f.Exec(t, "DELETE FROM "+target.table+" WHERE id=$1", reaction)
-	}
-	assert("reaction.added", 2)
-	assert("reaction.removed", 2)
 	attachment := f.Insert(t, "attachment", testutil.Cols{"workspace_id": f.WorkspaceID, "uploader_type": "member", "uploader_id": f.UserID, "filename": "secret.txt", "url": "https://private.invalid/secret", "content_type": "text/plain", "size_bytes": 1})
 	assert("attachment.attached", 0) // upload without an owner is not attachment
 	f.Exec(t, "UPDATE attachment SET issue_id=$2 WHERE id=$1", attachment, issue)

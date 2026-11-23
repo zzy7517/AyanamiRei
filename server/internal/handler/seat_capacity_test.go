@@ -125,13 +125,13 @@ func TestSeatCapacityWorkspaceLockWaitersDoNotPinPoolConnections(t *testing.T) {
 func TestSeatCapacityIntentCannotRegressOrBeDeletedByStaleWorker(t *testing.T) {
 	ctx := context.Background()
 	workspaceID := parseUUID(testWorkspaceID)
-	token, linkID, userID, memberID := uuid.New(), uuid.New(), uuid.New(), uuid.New()
+	token, userID, memberID := uuid.New(), uuid.New(), uuid.New()
 	queries := db.New(testPool)
 
 	_, err := queries.UpsertSeatCapacityIntent(ctx, db.UpsertSeatCapacityIntentParams{
 		WorkspaceID: uuidToPG(uuid.UUID(workspaceID.Bytes)), OperationToken: uuidToPG(token),
-		Action: seatcapacity.ActionClaimShareJoin, SubjectID: uuidToPG(token),
-		ShareLinkID: uuidToPG(linkID), UserID: uuidToPG(userID),
+		Action: seatcapacity.ActionConsumeInvitation, SubjectID: uuidToPG(token),
+		InvitationID: uuidToPG(token), UserID: uuidToPG(userID),
 		NextAttemptAt: pgtype.Timestamptz{Time: time.Now().Add(time.Minute), Valid: true},
 	})
 	if err != nil {
@@ -142,7 +142,7 @@ func TestSeatCapacityIntentCannotRegressOrBeDeletedByStaleWorker(t *testing.T) {
 	})
 
 	rows, err := queries.TransitionSeatCapacityIntent(ctx, db.TransitionSeatCapacityIntentParams{
-		NextAction: seatcapacity.ActionConfirm, CurrentAction: seatcapacity.ActionClaimShareJoin,
+		NextAction: seatcapacity.ActionConfirm, CurrentAction: seatcapacity.ActionConsumeInvitation,
 		MemberID: uuidToPG(memberID), OperationToken: uuidToPG(token),
 		NextAttemptAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 	})
@@ -152,15 +152,15 @@ func TestSeatCapacityIntentCannotRegressOrBeDeletedByStaleWorker(t *testing.T) {
 
 	_, err = queries.UpsertSeatCapacityIntent(ctx, db.UpsertSeatCapacityIntentParams{
 		WorkspaceID: uuidToPG(uuid.UUID(workspaceID.Bytes)), OperationToken: uuidToPG(token),
-		Action: seatcapacity.ActionClaimShareJoin, SubjectID: uuidToPG(token),
-		ShareLinkID: uuidToPG(linkID), UserID: uuidToPG(userID),
+		Action: seatcapacity.ActionConsumeInvitation, SubjectID: uuidToPG(token),
+		InvitationID: uuidToPG(token), UserID: uuidToPG(userID),
 		NextAttemptAt: pgtype.Timestamptz{Time: time.Now().Add(time.Minute), Valid: true},
 	})
 	if !errors.Is(err, pgx.ErrNoRows) {
 		t.Fatalf("regressive upsert error = %v, want pgx.ErrNoRows", err)
 	}
 	if err := queries.DeleteSeatCapacityIntentForAction(ctx, db.DeleteSeatCapacityIntentForActionParams{
-		OperationToken: uuidToPG(token), Action: seatcapacity.ActionClaimShareJoin,
+		OperationToken: uuidToPG(token), Action: seatcapacity.ActionConsumeInvitation,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -380,162 +380,6 @@ func TestSeatCapacityWorkspaceDeletionCannotRegressConcurrentConfirm(t *testing.
 	}
 	if intent.Action != seatcapacity.ActionConfirm || !intent.MemberID.Valid {
 		t.Fatalf("workspace deletion regressed concurrent confirm: %+v", intent)
-	}
-}
-
-func TestShareJoinCapacityIntentReusesDeadLetterAndSerializesConcurrentCreates(t *testing.T) {
-	ctx := context.Background()
-	queries := db.New(testPool)
-	workspaceID := parseUUID(testWorkspaceID)
-	shareLinkID, userID := uuid.New(), uuid.New()
-	cleanup := func() {
-		_, _ = testPool.Exec(ctx, `
-			DELETE FROM seat_capacity_outbox
-			WHERE workspace_id = $1 AND share_link_id = $2 AND user_id = $3
-		`, workspaceID, shareLinkID, userID)
-	}
-	cleanup()
-	t.Cleanup(cleanup)
-
-	create := func(candidate uuid.UUID) (db.SeatCapacityOutbox, error) {
-		return queries.CreateOrReactivateShareJoinCapacityIntent(ctx, db.CreateOrReactivateShareJoinCapacityIntentParams{
-			WorkspaceID: workspaceID, OperationToken: uuidToPG(candidate),
-			ShareLinkID: uuidToPG(shareLinkID), UserID: uuidToPG(userID),
-			NextAttemptAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		})
-	}
-
-	first, err := create(uuid.New())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := testPool.Exec(ctx, `
-		UPDATE seat_capacity_outbox
-		SET attempt_count = 10, dead_lettered_at = now(), last_error = 'stuck'
-		WHERE operation_token = $1
-	`, first.OperationToken); err != nil {
-		t.Fatal(err)
-	}
-	second, err := create(uuid.New())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if second.OperationToken != first.OperationToken {
-		t.Fatalf("dead-letter retry token=%v, want original %v", second.OperationToken, first.OperationToken)
-	}
-	if second.DeadLetteredAt.Valid || second.AttemptCount != 0 || second.LastError.Valid {
-		t.Fatalf("dead-letter retry was not reactivated: %+v", second)
-	}
-
-	cleanup()
-	start := make(chan struct{})
-	results := make(chan db.SeatCapacityOutbox, 2)
-	errs := make(chan error, 2)
-	var wg sync.WaitGroup
-	for range 2 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			<-start
-			intent, createErr := create(uuid.New())
-			results <- intent
-			errs <- createErr
-		}()
-	}
-	close(start)
-	wg.Wait()
-	close(results)
-	close(errs)
-	for createErr := range errs {
-		if createErr != nil {
-			t.Fatal(createErr)
-		}
-	}
-	var token pgtype.UUID
-	for intent := range results {
-		if !token.Valid {
-			token = intent.OperationToken
-		} else if intent.OperationToken != token {
-			t.Fatalf("concurrent creates returned different tokens: %v and %v", token, intent.OperationToken)
-		}
-	}
-	var count int
-	if err := testPool.QueryRow(ctx, `
-		SELECT count(*) FROM seat_capacity_outbox
-		WHERE workspace_id = $1 AND share_link_id = $2 AND user_id = $3
-	`, workspaceID, shareLinkID, userID).Scan(&count); err != nil {
-		t.Fatal(err)
-	}
-	if count != 1 {
-		t.Fatalf("logical share join rows=%d, want 1", count)
-	}
-}
-
-func TestStaleSeatCapacityWorkerCannotMutateReactivatedIntent(t *testing.T) {
-	ctx := context.Background()
-	queries := db.New(testPool)
-	workspaceID := parseUUID(testWorkspaceID)
-	shareLinkID, userID := uuid.New(), uuid.New()
-	created, err := queries.CreateOrReactivateShareJoinCapacityIntent(ctx, db.CreateOrReactivateShareJoinCapacityIntentParams{
-		WorkspaceID: workspaceID, OperationToken: uuidToPG(uuid.New()),
-		ShareLinkID: uuidToPG(shareLinkID), UserID: uuidToPG(userID),
-		NextAttemptAt: pgtype.Timestamptz{Time: time.Now().Add(-time.Hour), Valid: true},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		_, _ = testPool.Exec(ctx, `DELETE FROM seat_capacity_outbox WHERE operation_token = $1`, created.OperationToken)
-	})
-	claimed, err := queries.ClaimNextDueSeatCapacityIntent(ctx, pgtype.Timestamptz{Time: time.Now().Add(5 * time.Minute), Valid: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if claimed.OperationToken != created.OperationToken || !claimed.LeaseToken.Valid {
-		t.Fatalf("claimed unexpected intent: %+v", claimed)
-	}
-	if _, err := queries.CreateOrReactivateShareJoinCapacityIntent(ctx, db.CreateOrReactivateShareJoinCapacityIntentParams{
-		WorkspaceID: workspaceID, OperationToken: uuidToPG(uuid.New()),
-		ShareLinkID: uuidToPG(shareLinkID), UserID: uuidToPG(userID),
-		NextAttemptAt: pgtype.Timestamptz{Time: time.Now().Add(5 * time.Minute), Valid: true},
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	transitioned, err := queries.TransitionClaimedSeatCapacityIntent(ctx, db.TransitionClaimedSeatCapacityIntentParams{
-		NextAction: seatcapacity.ActionRelease, CurrentAction: claimed.Action,
-		OperationToken: claimed.OperationToken, LeaseToken: claimed.LeaseToken,
-		NextAttemptAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-	})
-	if err != nil || transitioned != 0 {
-		t.Fatalf("stale transition rows=%d err=%v, want 0", transitioned, err)
-	}
-	failed, err := queries.MarkClaimedSeatCapacityIntentFailed(ctx, db.MarkClaimedSeatCapacityIntentFailedParams{
-		LastError: "stale", NextAttemptAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		OperationToken: claimed.OperationToken, Action: claimed.Action, LeaseToken: claimed.LeaseToken,
-	})
-	if err != nil || failed != 0 {
-		t.Fatalf("stale failure rows=%d err=%v, want 0", failed, err)
-	}
-	deadLettered, err := queries.MarkClaimedSeatCapacityIntentDeadLettered(ctx, db.MarkClaimedSeatCapacityIntentDeadLetteredParams{
-		LastError: "stale", OperationToken: claimed.OperationToken,
-		Action: claimed.Action, LeaseToken: claimed.LeaseToken,
-	})
-	if err != nil || deadLettered != 0 {
-		t.Fatalf("stale dead letter rows=%d err=%v, want 0", deadLettered, err)
-	}
-	deleted, err := queries.DeleteClaimedSeatCapacityIntent(ctx, db.DeleteClaimedSeatCapacityIntentParams{
-		OperationToken: claimed.OperationToken, Action: claimed.Action, LeaseToken: claimed.LeaseToken,
-	})
-	if err != nil || deleted != 0 {
-		t.Fatalf("stale delete rows=%d err=%v, want 0", deleted, err)
-	}
-	intent, err := queries.GetSeatCapacityIntent(ctx, created.OperationToken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if intent.Action != seatcapacity.ActionClaimShareJoin || intent.DeadLetteredAt.Valid || intent.LeaseToken.Valid {
-		t.Fatalf("reactivated intent was changed by stale worker: %+v", intent)
 	}
 }
 

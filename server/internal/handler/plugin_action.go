@@ -752,7 +752,7 @@ func (h *Handler) CreatePluginComment(w http.ResponseWriter, r *http.Request) {
 	// as the user should behave like the user's, minus only what was refused on
 	// purpose (mention dispatch).
 	h.publish(protocol.EventCommentCreated, uuidToString(caller.WorkspaceID), authorType, uuidToString(authorID), map[string]any{
-		"comment":             commentToResponse(comment, nil, nil),
+		"comment":             commentToResponse(comment, nil),
 		"issue_title":         issue.Title,
 		"issue_assignee_type": textToPtr(issue.AssigneeType),
 		"issue_assignee_id":   uuidToPtr(issue.AssigneeID),

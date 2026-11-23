@@ -252,22 +252,8 @@ func TestPrivateProjectSubtreeRunsAreRedacted(t *testing.T) {
 	}
 }
 
-func TestPrivateProjectCommentAndAttachmentByID(t *testing.T) {
+func TestPrivateProjectAttachmentByID(t *testing.T) {
 	f := newPrivateProjectFixture(t)
-	react := func(userID string) int {
-		req := withURLParam(asUser(newRequest(http.MethodPost, "/api/comments/"+f.secretComment+"/reactions", map[string]any{"emoji": "👍"}), userID), "commentId", f.secretComment)
-		rec := httptest.NewRecorder()
-		testHandler.AddReaction(rec, req)
-		return rec.Code
-	}
-	if got := react(f.outsider); got != http.StatusNotFound {
-		t.Errorf("outsider reaction on secret comment = %d, want 404", got)
-	}
-	if got := react(f.insider); got >= 400 {
-		t.Errorf("insider reaction on secret comment = %d, want success", got)
-	}
-	testPool.Exec(context.Background(), `DELETE FROM comment_reaction WHERE comment_id = $1`, f.secretComment)
-
 	attachmentID := dbfx.Insert(t, "attachment", testutil.Cols{
 		"workspace_id":  testWorkspaceID,
 		"issue_id":      f.secretIssue,

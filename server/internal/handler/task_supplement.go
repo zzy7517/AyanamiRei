@@ -391,7 +391,7 @@ func (h *Handler) CreateTaskSupplement(w http.ResponseWriter, r *http.Request) {
 		ViaPluginID: created.ViaPluginID, Revision: created.Revision,
 		RecoverySettledAt: created.RecoverySettledAt, DeletedAt: created.DeletedAt,
 	}
-	resp := commentToResponse(comment, nil, nil)
+	resp := commentToResponse(comment, nil)
 	resp.IssueRevision = created.IssueRevision
 	applyCommentSupplements(&resp, []CommentSupplementResponse{{
 		TaskID:        uuidToString(created.SupplementTaskID),
@@ -423,7 +423,7 @@ func (h *Handler) writeExistingTaskSupplement(w http.ResponseWriter, r *http.Req
 		writeError(w, http.StatusInternalServerError, "failed to load additional message")
 		return
 	}
-	resp := commentToResponse(comment, nil, nil)
+	resp := commentToResponse(comment, nil)
 	applyCommentSupplements(&resp, h.listCommentSupplements(r.Context(), existing.WorkspaceID, []pgtype.UUID{existing.CommentID})[uuidToString(existing.CommentID)])
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -621,7 +621,7 @@ func (h *Handler) publishCommentSupplementUpdate(ctx context.Context, workspaceI
 	if err != nil {
 		return
 	}
-	resp := commentToResponse(comment, nil, nil)
+	resp := commentToResponse(comment, nil)
 	applyCommentSupplements(&resp, h.listCommentSupplements(ctx, workspaceID, []pgtype.UUID{commentID})[uuidToString(commentID)])
 	h.publish(protocol.EventCommentUpdated, uuidToString(workspaceID), "system", "", map[string]any{"comment": resp})
 }

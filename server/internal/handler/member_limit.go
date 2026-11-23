@@ -19,9 +19,9 @@ import (
 // Cloud caps the members of a workspace on the Free plan through the
 // "members" gate. Every path that adds a member checks it:
 //
-//   - Creating an invitation or joining by share link counts members plus
-//     live pending invitations, because each pending invitation already holds
-//     a slot it can still turn into a member.
+//   - Creating an invitation counts members plus live pending invitations,
+//     because each pending invitation already holds a slot it can still turn
+//     into a member.
 //   - Accepting an invitation counts members only: its own invitation is the
 //     slot it holds.
 //

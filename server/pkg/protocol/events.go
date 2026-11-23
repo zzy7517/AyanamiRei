@@ -15,15 +15,11 @@ const (
 	EventIssueAgentReplied = "issue:agent_replied"
 
 	// Comment events
-	EventCommentCreated       = "comment:created"
-	EventCommentUpdated       = "comment:updated"
-	EventCommentDeleted       = "comment:deleted"
-	EventCommentResolved      = "comment:resolved"
-	EventCommentUnresolved    = "comment:unresolved"
-	EventReactionAdded        = "reaction:added"
-	EventReactionRemoved      = "reaction:removed"
-	EventIssueReactionAdded   = "issue_reaction:added"
-	EventIssueReactionRemoved = "issue_reaction:removed"
+	EventCommentCreated    = "comment:created"
+	EventCommentUpdated    = "comment:updated"
+	EventCommentDeleted    = "comment:deleted"
+	EventCommentResolved   = "comment:resolved"
+	EventCommentUnresolved = "comment:unresolved"
 
 	// Agent events
 	EventAgentStatus   = "agent:status"

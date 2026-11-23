@@ -25,8 +25,6 @@ const (
 	EventTaskCompleted             = "task.completed"
 	EventTaskFailed                = "task.failed"
 	EventTaskCancelled             = "task.cancelled"
-	EventReactionAdded             = "reaction.added"
-	EventReactionRemoved           = "reaction.removed"
 	EventAttachmentAttached        = "attachment.attached"
 	EventAttachmentDetached        = "attachment.detached"
 )
@@ -38,7 +36,7 @@ var WakeupTypes = []string{
 	EventIssueUpdated, EventIssueStatusChanged, EventIssueAssigneeChanged, EventIssueParentChanged,
 	EventIssueProjectChanged, EventIssueLabelsChanged, EventIssuePropertiesChanged, EventIssueMetadataChanged,
 	EventCommentCreated, EventCommentUpdated, EventCommentDeleted, EventCommentResolved, EventCommentUnresolved,
-	EventReactionAdded, EventReactionRemoved, EventAttachmentAttached, EventAttachmentDetached,
+	EventAttachmentAttached, EventAttachmentDetached,
 }
 
 // Lifecycle events exist on the platform but cannot wake their own issue:

@@ -195,9 +195,9 @@ WHERE m.workspace_id = sqlc.arg('workspace_id')
 
 -- name: ListAgentIDsSeenByGuest :many
 -- The agents a guest (MUL-9420) meets in its projects: as an issue's
--- assignee or creator, a comment's author, a reaction, an activity entry, a
--- subscriber or a project lead. A guest is shown only these, to render their
--- names and avatars, not the workspace's agent directory.
+-- assignee or creator, a comment's author, an activity entry, a subscriber or
+-- a project lead. A guest is shown only these, to render their names and
+-- avatars, not the workspace's agent directory.
 WITH visible_issue AS (
     SELECT i.id, i.assignee_type, i.assignee_id, i.creator_type, i.creator_id
     FROM issue i
@@ -213,14 +213,6 @@ SELECT v.creator_id FROM visible_issue v WHERE v.creator_type = 'agent'
 UNION
 SELECT c.author_id FROM comment c JOIN visible_issue v ON v.id = c.issue_id
 WHERE c.author_type = 'agent'
-UNION
-SELECT cr.actor_id FROM comment_reaction cr
-JOIN comment c ON c.id = cr.comment_id
-JOIN visible_issue v ON v.id = c.issue_id
-WHERE cr.actor_type = 'agent'
-UNION
-SELECT r.actor_id FROM issue_reaction r JOIN visible_issue v ON v.id = r.issue_id
-WHERE r.actor_type = 'agent'
 UNION
 SELECT a.actor_id FROM activity_log a JOIN visible_issue v ON v.id = a.issue_id
 WHERE a.actor_type = 'agent' AND a.actor_id IS NOT NULL

@@ -758,16 +758,6 @@ type Comment struct {
 	SuppressedAgentIds []pgtype.UUID      `json:"suppressed_agent_ids"`
 }
 
-type CommentReaction struct {
-	ID          pgtype.UUID        `json:"id"`
-	CommentID   pgtype.UUID        `json:"comment_id"`
-	WorkspaceID pgtype.UUID        `json:"workspace_id"`
-	ActorType   string             `json:"actor_type"`
-	ActorID     pgtype.UUID        `json:"actor_id"`
-	Emoji       string             `json:"emoji"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-}
-
 type ContactSalesInquiry struct {
 	ID              pgtype.UUID        `json:"id"`
 	FirstName       string             `json:"first_name"`
@@ -1279,16 +1269,6 @@ type IssuePullRequestExclusion struct {
 	ExcludedByType pgtype.Text        `json:"excluded_by_type"`
 	ExcludedByID   pgtype.UUID        `json:"excluded_by_id"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-}
-
-type IssueReaction struct {
-	ID          pgtype.UUID        `json:"id"`
-	IssueID     pgtype.UUID        `json:"issue_id"`
-	WorkspaceID pgtype.UUID        `json:"workspace_id"`
-	ActorType   string             `json:"actor_type"`
-	ActorID     pgtype.UUID        `json:"actor_id"`
-	Emoji       string             `json:"emoji"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type IssueSourceContext struct {
@@ -1871,7 +1851,6 @@ type SeatCapacityOutbox struct {
 	SubjectID      pgtype.UUID        `json:"subject_id"`
 	MemberID       pgtype.UUID        `json:"member_id"`
 	InvitationID   pgtype.UUID        `json:"invitation_id"`
-	ShareLinkID    pgtype.UUID        `json:"share_link_id"`
 	UserID         pgtype.UUID        `json:"user_id"`
 	ExpiresAt      pgtype.Timestamptz `json:"expires_at"`
 	DeliveredAt    pgtype.Timestamptz `json:"delivered_at"`
@@ -2314,17 +2293,4 @@ type WorkspaceMcpServer struct {
 	CreatedBy   pgtype.UUID        `json:"created_by"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-}
-
-type WorkspaceShareLink struct {
-	ID          pgtype.UUID        `json:"id"`
-	WorkspaceID pgtype.UUID        `json:"workspace_id"`
-	Code        string             `json:"code"`
-	CreatedBy   pgtype.UUID        `json:"created_by"`
-	Role        string             `json:"role"`
-	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
-	MaxUses     pgtype.Int4        `json:"max_uses"`
-	UseCount    int32              `json:"use_count"`
-	IsActive    bool               `json:"is_active"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }

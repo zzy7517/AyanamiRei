@@ -129,24 +129,10 @@ describe("deduplicateInboxItems", () => {
     expect(merged[0]?.details).toEqual({ task_id: "task-1", comment_id: "task-1" });
   });
 
-  it("leaves a reaction to lead only when nothing else unread has an entry", () => {
-    const withReply = deduplicateInboxItems([
-      item({ id: "reaction", type: "reaction_added", created_at: "2026-06-15T08:00:00Z", details: { emoji: "👍", comment_id: "old-comment" } }),
-      item({ id: "reply", created_at: "2026-06-15T08:02:00Z", details: { comment_id: "comment-2" } }),
-    ]);
-    expect(withReply[0]?.details?.comment_id).toBe("comment-2");
-
-    const alone = deduplicateInboxItems([
-      item({ id: "reaction", type: "reaction_added", created_at: "2026-06-15T08:00:00Z", details: { emoji: "👍", comment_id: "old-comment" } }),
-      item({ id: "status", type: "status_changed", created_at: "2026-06-15T08:02:00Z", details: { to: "in_review" } }),
-    ]);
-    expect(alone[0]?.details?.comment_id).toBe("old-comment");
-  });
-
-  it("opens a read issue at the newest notification's entry, a reaction included", () => {
+  it("opens a read issue at the newest notification's entry", () => {
     const merged = deduplicateInboxItems([
       item({ id: "reply", read: true, created_at: "2026-06-15T08:00:00Z", details: { comment_id: "comment-2" } }),
-      item({ id: "reaction", type: "reaction_added", read: true, created_at: "2026-06-15T08:02:00Z", details: { emoji: "👍", comment_id: "old-comment" } }),
+      item({ id: "later", type: "doc_comment", read: true, created_at: "2026-06-15T08:02:00Z", details: { comment_id: "old-comment" } }),
     ]);
 
     expect(merged[0]?.details?.comment_id).toBe("old-comment");

@@ -234,7 +234,7 @@ func TestIssueWakeupMutationTrustedActor(t *testing.T) {
 	dbfx.Cleanup(t, "DELETE FROM issue_wakeup_receipt WHERE wakeup_id IN(SELECT id FROM issue_wakeup WHERE issue_id=$1)", issue)
 	comment := dbfx.Comment(t, issue, "agent original", testutil.Cols{"author_type": "agent", "author_id": agent})
 	svc := service.IssueWakeupService{Tasks: testHandler.TaskService}
-	w, err := svc.Create(context.Background(), parseUUID(issue), parseUUID(testUserID), pgtype.UUID{}, service.WakeupInput{AgentID: agent, Kind: "event", Mode: "continuous", EventTypes: []string{"comment.updated", "issue.metadata_changed", "reaction.added", "reaction.removed"}, Instruction: "inspect"})
+	w, err := svc.Create(context.Background(), parseUUID(issue), parseUUID(testUserID), pgtype.UUID{}, service.WakeupInput{AgentID: agent, Kind: "event", Mode: "continuous", EventTypes: []string{"comment.updated", "issue.metadata_changed"}, Instruction: "inspect"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,8 +266,6 @@ func TestIssueWakeupMutationTrustedActor(t *testing.T) {
 	call(testHandler.UpdateComment, withURLParam(newRequest("PATCH", "/", map[string]any{"content": "own wakeup edit"}), "commentId", comment), true)
 	req := withURLParams(newRequest("PUT", "/", map[string]any{"value": "secret"}), "id", issue, "key", "test")
 	call(testHandler.SetIssueMetadataKey, req, true)
-	call(testHandler.AddIssueReaction, withURLParam(newRequest("POST", "/", map[string]any{"emoji": "👍"}), "id", issue), true)
-	call(testHandler.RemoveIssueReaction, withURLParam(newRequest("DELETE", "/", map[string]any{"emoji": "👍"}), "id", issue), true)
 	if count() != 1 {
 		t.Fatalf("own run caused wakeup: %d", count())
 	}

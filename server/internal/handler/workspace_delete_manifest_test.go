@@ -58,7 +58,6 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"chat_wakeup":                        workspaceDelete,
 	"client_usage_daily":                 workspaceDeleteDetach,
 	"comment":                            workspaceDelete,
-	"comment_reaction":                   workspaceDelete,
 	"contact_sales_inquiry":              workspaceDeleteKeep,
 	"daemon_connection":                  workspaceDelete,
 	"daemon_token":                       workspaceDelete,
@@ -95,7 +94,6 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"issue_pr_automation":                workspaceDelete,
 	"issue_pull_request":                 workspaceDelete,
 	"issue_pull_request_exclusion":       workspaceDelete,
-	"issue_reaction":                     workspaceDelete,
 	"issue_source_context":               workspaceDelete,
 	"issue_source_context_object_intent": workspaceDeleteSettle,
 	"issue_status":                       workspaceDelete,
@@ -181,7 +179,6 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"app_tool_class_override":            workspaceDelete,
 	"workspace":                          workspaceDelete,
 	"workspace_invitation":               workspaceDelete,
-	"workspace_share_link":               workspaceDelete,
 	"issue_project_scope":                workspaceDelete,
 }
 

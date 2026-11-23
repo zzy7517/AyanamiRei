@@ -150,57 +150,6 @@ func (h *Handler) beginCapacityConsume(ctx context.Context, workspaceID, token, 
 	return err == nil, err
 }
 
-func (h *Handler) beginShareJoinCapacity(ctx context.Context, workspaceID, shareLinkID, userID uuid.UUID) (uuid.UUID, error) {
-	if !h.seatCapacityEnabled() {
-		return uuid.Nil, nil
-	}
-	q, unlock, err := h.lockSeatCapacityWorkspace(ctx, workspaceID)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("%w: acquire workspace capacity lock: %v", errSeatCapacityUnavailable, err)
-	}
-	defer unlock()
-	intent, err := q.CreateOrReactivateShareJoinCapacityIntent(ctx, db.CreateOrReactivateShareJoinCapacityIntentParams{
-		WorkspaceID: uuidToPG(workspaceID), OperationToken: uuidToPG(uuid.New()),
-		ShareLinkID: uuidToPG(shareLinkID), UserID: uuidToPG(userID),
-		NextAttemptAt: seatcapacity.RecoveryDue(time.Now()),
-	})
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("record share-join capacity intent: %w", err)
-	}
-	token := uuid.UUID(intent.OperationToken.Bytes)
-	decision, err := h.SeatCapacity.ClaimShareJoin(ctx, workspaceID, token)
-	if err != nil {
-		if seatcapacity.IsRateLimited(err) {
-			if deleteErr := deleteCapacityIntentForAction(ctx, q, token, seatcapacity.ActionClaimShareJoin); deleteErr != nil {
-				return uuid.Nil, fmt.Errorf("discard rate-limited share-join capacity intent: %w", deleteErr)
-			}
-			return uuid.Nil, fmt.Errorf("claim share-join capacity: %w", err)
-		}
-		if seatcapacity.IsCapacityOvercommitted(err) {
-			if deleteErr := deleteCapacityIntentForAction(ctx, q, token, seatcapacity.ActionClaimShareJoin); deleteErr != nil {
-				return uuid.Nil, fmt.Errorf("discard overcommitted share-join capacity intent: %w", deleteErr)
-			}
-			return uuid.Nil, errSeatCapacityOvercommitted
-		}
-		return uuid.Nil, fmt.Errorf("%w: %v", errSeatCapacityUnavailable, err)
-	}
-	if !decision.Managed {
-		return uuid.Nil, deleteCapacityIntentForAction(ctx, q, token, seatcapacity.ActionClaimShareJoin)
-	}
-	if !decision.Allowed {
-		if deleteErr := deleteCapacityIntentForAction(ctx, q, token, seatcapacity.ActionClaimShareJoin); deleteErr != nil {
-			return uuid.Nil, fmt.Errorf("discard rejected share-join capacity intent: %w", deleteErr)
-		}
-		return uuid.Nil, errSeatCapacityFull
-	}
-	if err := q.MarkSeatCapacityIntentDelivered(ctx, db.MarkSeatCapacityIntentDeliveredParams{
-		OperationToken: uuidToPG(token), Action: seatcapacity.ActionClaimShareJoin,
-	}); err != nil {
-		return uuid.Nil, err
-	}
-	return token, nil
-}
-
 func transitionCapacityIntentToConfirm(ctx context.Context, q *db.Queries, token, memberID uuid.UUID, currentAction string) error {
 	rows, err := q.TransitionSeatCapacityIntent(ctx, db.TransitionSeatCapacityIntentParams{
 		NextAction: seatcapacity.ActionConfirm, CurrentAction: currentAction,

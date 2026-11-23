@@ -51,7 +51,7 @@ func removeNotificationMember(t *testing.T, userID, memberID, method string) {
 
 func TestNotification_CurrentMembership(t *testing.T) {
 	for _, source := range []string{
-		"issue reaction", "comment reaction", "created assignee", "updated assignee", "previous assignee",
+		"created assignee", "updated assignee", "previous assignee",
 		"description mention created", "description mention updated", "comment mention",
 		"all", "subscriber comment", "subscriber status", "subscriber task failure", "parent subscriber",
 	} {
@@ -72,16 +72,6 @@ func TestNotification_CurrentMembership(t *testing.T) {
 				expectedType := "mentioned"
 				content := "[@Recipient](mention://member/" + recipient + ")"
 				switch source {
-				case "issue reaction":
-					e.Type = protocol.EventIssueReactionAdded
-					payload["reaction"] = handler.IssueReactionResponse{Emoji: "👍"}
-					payload["creator_type"], payload["creator_id"] = "member", recipient
-					expectedType = "reaction_added"
-				case "comment reaction":
-					e.Type = protocol.EventReactionAdded
-					payload["reaction"] = handler.ReactionResponse{Emoji: "👍"}
-					payload["comment_author_type"], payload["comment_author_id"], payload["comment_id"] = "member", recipient, commentID
-					expectedType = "reaction_added"
 				case "created assignee", "updated assignee", "previous assignee":
 					e.Type = protocol.EventIssueCreated
 					issue.AssigneeType, issue.AssigneeID = &memberType, &recipient

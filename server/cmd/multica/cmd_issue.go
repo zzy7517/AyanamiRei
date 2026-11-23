@@ -553,7 +553,7 @@ var validIssueSortColumns = []string{
 
 // validIssueFields are the top-level keys /api/issues actually emits for
 // `issue list` — i.e. the JSON tags of handler.IssueResponse
-// (server/internal/handler/issue.go), minus reactions/attachments/
+// (server/internal/handler/issue.go), minus attachments/
 // source_context, which are omitempty and never set by the list endpoint
 // (detail-only). TestValidIssueFieldsMatchListEndpointShape guards this
 // against drifting from that struct. There is no plain "assignee" field —

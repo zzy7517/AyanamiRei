@@ -300,7 +300,7 @@ func TestTextBaselinesIgnoreUnrelatedAggregateRevisionChanges(t *testing.T) {
 		t.Fatalf("description after stale overwrite = %q, want the overwrite", storedDescription)
 	}
 
-	// A reaction/resolve-style aggregate bump on the comment must likewise not
+	// A resolve-style aggregate bump on the comment must likewise not
 	// reject a body edit whose content baseline is still current.
 	if _, err := testPool.Exec(ctx, `UPDATE comment SET revision = revision + 1 WHERE id = $1`, commentID); err != nil {
 		t.Fatalf("bump comment revision: %v", err)
@@ -802,8 +802,6 @@ func TestAuxiliaryVisibleMutationsAdvanceOwnerRevisionExactlyOnce(t *testing.T) 
 	}
 	t.Cleanup(func() {
 		testPool.Exec(ctx, `DELETE FROM attachment WHERE issue_id = $1 OR comment_id = $2`, issueID, commentID)
-		testPool.Exec(ctx, `DELETE FROM comment_reaction WHERE comment_id = $1`, commentID)
-		testPool.Exec(ctx, `DELETE FROM issue_reaction WHERE issue_id = $1`, issueID)
 		testPool.Exec(ctx, `DELETE FROM issue_to_label WHERE issue_id = $1`, issueID)
 		testPool.Exec(ctx, `DELETE FROM issue_label WHERE id = $1`, labelID)
 		testPool.Exec(ctx, `DELETE FROM comment WHERE id = $1`, commentID)
@@ -839,64 +837,20 @@ func TestAuxiliaryVisibleMutationsAdvanceOwnerRevisionExactlyOnce(t *testing.T) 
 		t.Fatalf("duplicate label detach = (%+v, %v), want no-op", detached, err)
 	}
 
-	issueReaction := db.AddIssueReactionParams{IssueID: issueUUID, WorkspaceID: workspaceUUID, ActorType: "member", ActorID: userUUID, Emoji: "eyes"}
-	addedIssueReaction, err := testHandler.Queries.AddIssueReaction(ctx, issueReaction)
-	if err != nil || addedIssueReaction.IssueRevision != 4 {
-		t.Fatalf("add issue reaction = (%+v, %v), want revision 4", addedIssueReaction, err)
-	}
-	addedIssueReaction, err = testHandler.Queries.AddIssueReaction(ctx, issueReaction)
-	if err != nil || addedIssueReaction.IssueRevision != 0 {
-		t.Fatalf("duplicate issue reaction = (%+v, %v), want no-op", addedIssueReaction, err)
-	}
-	removedIssueReaction, err := testHandler.Queries.RemoveIssueReaction(ctx, db.RemoveIssueReactionParams{
-		IssueID: issueUUID, ActorType: "member", ActorID: userUUID, Emoji: "eyes",
-	})
-	if err != nil || !removedIssueReaction.Changed || removedIssueReaction.IssueRevision != 5 {
-		t.Fatalf("remove issue reaction = (%+v, %v), want revision 5", removedIssueReaction, err)
-	}
-	removedIssueReaction, err = testHandler.Queries.RemoveIssueReaction(ctx, db.RemoveIssueReactionParams{
-		IssueID: issueUUID, ActorType: "member", ActorID: userUUID, Emoji: "eyes",
-	})
-	if err != nil || removedIssueReaction.Changed || removedIssueReaction.IssueRevision != 0 {
-		t.Fatalf("duplicate issue reaction removal = (%+v, %v), want no-op", removedIssueReaction, err)
-	}
-
-	commentReaction := db.AddReactionParams{CommentID: commentUUID, WorkspaceID: workspaceUUID, ActorType: "member", ActorID: userUUID, Emoji: "thumbs_up"}
-	addedCommentReaction, err := testHandler.Queries.AddReaction(ctx, commentReaction)
-	if err != nil || addedCommentReaction.CommentRevision != 2 {
-		t.Fatalf("add comment reaction = (%+v, %v), want revision 2", addedCommentReaction, err)
-	}
-	addedCommentReaction, err = testHandler.Queries.AddReaction(ctx, commentReaction)
-	if err != nil || addedCommentReaction.CommentRevision != 0 {
-		t.Fatalf("duplicate comment reaction = (%+v, %v), want no-op", addedCommentReaction, err)
-	}
-	removedCommentReaction, err := testHandler.Queries.RemoveReaction(ctx, db.RemoveReactionParams{
-		CommentID: commentUUID, ActorType: "member", ActorID: userUUID, Emoji: "thumbs_up",
-	})
-	if err != nil || !removedCommentReaction.Changed || removedCommentReaction.CommentRevision != 3 {
-		t.Fatalf("remove comment reaction = (%+v, %v), want revision 3", removedCommentReaction, err)
-	}
-	removedCommentReaction, err = testHandler.Queries.RemoveReaction(ctx, db.RemoveReactionParams{
-		CommentID: commentUUID, ActorType: "member", ActorID: userUUID, Emoji: "thumbs_up",
-	})
-	if err != nil || removedCommentReaction.Changed || removedCommentReaction.CommentRevision != 0 {
-		t.Fatalf("duplicate comment reaction removal = (%+v, %v), want no-op", removedCommentReaction, err)
-	}
-
 	attachmentID := uuid.New()
 	createdAttachment, err := testHandler.Queries.CreateAttachment(ctx, db.CreateAttachmentParams{
 		ID: pgtype.UUID{Bytes: attachmentID, Valid: true}, WorkspaceID: workspaceUUID,
 		IssueID: issueUUID, CommentID: commentUUID, UploaderType: "member", UploaderID: userUUID,
 		Filename: "aux.txt", Url: "/aux.txt", ContentType: "text/plain", SizeBytes: 1,
 	})
-	if err != nil || createdAttachment.IssueRevision != 6 || createdAttachment.CommentRevision != 4 {
-		t.Fatalf("create attachment = (%+v, %v), want issue/comment revisions 6/4", createdAttachment, err)
+	if err != nil || createdAttachment.IssueRevision != 4 || createdAttachment.CommentRevision != 2 {
+		t.Fatalf("create attachment = (%+v, %v), want issue/comment revisions 4/2", createdAttachment, err)
 	}
 	deletedAttachment, err := testHandler.Queries.DeleteAttachment(ctx, db.DeleteAttachmentParams{
 		ID: pgtype.UUID{Bytes: attachmentID, Valid: true}, WorkspaceID: workspaceUUID,
 	})
-	if err != nil || !deletedAttachment.Changed || deletedAttachment.IssueRevision != 7 || deletedAttachment.CommentRevision != 5 {
-		t.Fatalf("delete attachment = (%+v, %v), want issue/comment revisions 7/5", deletedAttachment, err)
+	if err != nil || !deletedAttachment.Changed || deletedAttachment.IssueRevision != 5 || deletedAttachment.CommentRevision != 3 {
+		t.Fatalf("delete attachment = (%+v, %v), want issue/comment revisions 5/3", deletedAttachment, err)
 	}
 
 	unboundAttachmentID := pgtype.UUID{Bytes: uuid.New(), Valid: true}
@@ -910,8 +864,8 @@ func TestAuxiliaryVisibleMutationsAdvanceOwnerRevisionExactlyOnce(t *testing.T) 
 	linkedAttachment, err := testHandler.Queries.LinkAttachmentsToIssue(ctx, db.LinkAttachmentsToIssueParams{
 		IssueID: issueUUID, WorkspaceID: workspaceUUID, AttachmentIds: []pgtype.UUID{unboundAttachmentID}, BumpRevision: true,
 	})
-	if err != nil || linkedAttachment.LinkedCount != 1 || linkedAttachment.IssueRevision != 8 {
-		t.Fatalf("link attachment = (%+v, %v), want one link and issue revision 8", linkedAttachment, err)
+	if err != nil || linkedAttachment.LinkedCount != 1 || linkedAttachment.IssueRevision != 6 {
+		t.Fatalf("link attachment = (%+v, %v), want one link and issue revision 6", linkedAttachment, err)
 	}
 	linkedAttachment, err = testHandler.Queries.LinkAttachmentsToIssue(ctx, db.LinkAttachmentsToIssueParams{
 		IssueID: issueUUID, WorkspaceID: workspaceUUID, AttachmentIds: []pgtype.UUID{unboundAttachmentID}, BumpRevision: true,
@@ -924,8 +878,8 @@ func TestAuxiliaryVisibleMutationsAdvanceOwnerRevisionExactlyOnce(t *testing.T) 
 		Key: "revision-test", Value: []byte(`"value"`), ID: issueUUID, WorkspaceID: workspaceUUID,
 	}
 	metadataIssue, err := testHandler.Queries.SetIssueMetadataKey(ctx, metadataParams)
-	if err != nil || metadataIssue.Revision != 9 {
-		t.Fatalf("set metadata = (%+v, %v), want revision 9", metadataIssue, err)
+	if err != nil || metadataIssue.Revision != 7 {
+		t.Fatalf("set metadata = (%+v, %v), want revision 7", metadataIssue, err)
 	}
 	_, err = testHandler.Queries.SetIssueMetadataKey(ctx, metadataParams)
 	if !errors.Is(err, pgx.ErrNoRows) {
@@ -934,65 +888,65 @@ func TestAuxiliaryVisibleMutationsAdvanceOwnerRevisionExactlyOnce(t *testing.T) 
 	currentMetadataIssue, err := testHandler.Queries.GetIssueInWorkspace(ctx, db.GetIssueInWorkspaceParams{
 		ID: issueUUID, WorkspaceID: workspaceUUID,
 	})
-	if err != nil || currentMetadataIssue.Revision != 9 {
-		t.Fatalf("issue after duplicate metadata set = (%+v, %v), want revision 9", currentMetadataIssue, err)
+	if err != nil || currentMetadataIssue.Revision != 7 {
+		t.Fatalf("issue after duplicate metadata set = (%+v, %v), want revision 7", currentMetadataIssue, err)
 	}
 	deletedMetadataIssue, err := testHandler.Queries.DeleteIssueMetadataKey(ctx, db.DeleteIssueMetadataKeyParams{
 		Key: metadataParams.Key, ID: issueUUID, WorkspaceID: workspaceUUID,
 	})
-	if err != nil || deletedMetadataIssue.Revision != 10 {
-		t.Fatalf("delete metadata = (%+v, %v), want revision 10", deletedMetadataIssue, err)
+	if err != nil || deletedMetadataIssue.Revision != 8 {
+		t.Fatalf("delete metadata = (%+v, %v), want revision 8", deletedMetadataIssue, err)
 	}
 
 	propertyParams := db.SetIssuePropertyValueParams{
 		Key: "revision-test", Value: []byte(`42`), ID: issueUUID, WorkspaceID: workspaceUUID,
 	}
 	propertyIssue, err := testHandler.Queries.SetIssuePropertyValue(ctx, propertyParams)
-	if err != nil || propertyIssue.Revision != 11 {
-		t.Fatalf("set property = (%+v, %v), want revision 11", propertyIssue, err)
+	if err != nil || propertyIssue.Revision != 9 {
+		t.Fatalf("set property = (%+v, %v), want revision 9", propertyIssue, err)
 	}
 	propertyIssue, err = testHandler.Queries.SetIssuePropertyValue(ctx, propertyParams)
-	if err != nil || propertyIssue.Revision != 11 {
-		t.Fatalf("duplicate property set = (%+v, %v), want unchanged revision 11", propertyIssue, err)
+	if err != nil || propertyIssue.Revision != 9 {
+		t.Fatalf("duplicate property set = (%+v, %v), want unchanged revision 9", propertyIssue, err)
 	}
 	propertyIssue, err = testHandler.Queries.DeleteIssuePropertyValue(ctx, db.DeleteIssuePropertyValueParams{
 		Key: propertyParams.Key, ID: issueUUID, WorkspaceID: workspaceUUID,
 	})
-	if err != nil || propertyIssue.Revision != 12 {
-		t.Fatalf("delete property = (%+v, %v), want revision 12", propertyIssue, err)
+	if err != nil || propertyIssue.Revision != 10 {
+		t.Fatalf("delete property = (%+v, %v), want revision 10", propertyIssue, err)
 	}
 
 	resolved, err := testHandler.Queries.ResolveComment(ctx, db.ResolveCommentParams{
 		ID: commentUUID, ResolvedByType: pgtype.Text{String: "member", Valid: true}, ResolvedByID: userUUID,
 	})
-	if err != nil || resolved.Revision != 6 {
-		t.Fatalf("resolve comment = (%+v, %v), want revision 6", resolved, err)
+	if err != nil || resolved.Revision != 4 {
+		t.Fatalf("resolve comment = (%+v, %v), want revision 4", resolved, err)
 	}
 	resolved, err = testHandler.Queries.ResolveComment(ctx, db.ResolveCommentParams{
 		ID: commentUUID, ResolvedByType: pgtype.Text{String: "member", Valid: true}, ResolvedByID: userUUID,
 	})
-	if err != nil || resolved.Revision != 6 {
-		t.Fatalf("duplicate resolve = (%+v, %v), want unchanged revision 6", resolved, err)
+	if err != nil || resolved.Revision != 4 {
+		t.Fatalf("duplicate resolve = (%+v, %v), want unchanged revision 4", resolved, err)
 	}
 	unresolved, err := testHandler.Queries.UnresolveComment(ctx, commentUUID)
-	if err != nil || unresolved.Revision != 7 {
-		t.Fatalf("unresolve comment = (%+v, %v), want revision 7", unresolved, err)
+	if err != nil || unresolved.Revision != 5 {
+		t.Fatalf("unresolve comment = (%+v, %v), want revision 5", unresolved, err)
 	}
 	unresolved, err = testHandler.Queries.UnresolveComment(ctx, commentUUID)
-	if err != nil || unresolved.Revision != 7 {
-		t.Fatalf("duplicate unresolve = (%+v, %v), want unchanged revision 7", unresolved, err)
+	if err != nil || unresolved.Revision != 5 {
+		t.Fatalf("duplicate unresolve = (%+v, %v), want unchanged revision 5", unresolved, err)
 	}
 
 	statusIssue, err := testHandler.Queries.UpdateIssueStatus(ctx, db.UpdateIssueStatusParams{
 		ID: issueUUID, Status: "in_progress", WorkspaceID: workspaceUUID,
 	})
-	if err != nil || statusIssue.Revision != 13 {
-		t.Fatalf("update status = (%+v, %v), want revision 13", statusIssue, err)
+	if err != nil || statusIssue.Revision != 11 {
+		t.Fatalf("update status = (%+v, %v), want revision 11", statusIssue, err)
 	}
 	statusIssue, err = testHandler.Queries.UpdateIssueStatus(ctx, db.UpdateIssueStatusParams{
 		ID: issueUUID, Status: "in_progress", WorkspaceID: workspaceUUID,
 	})
-	if err != nil || statusIssue.Revision != 13 {
-		t.Fatalf("duplicate status update = (%+v, %v), want unchanged revision 13", statusIssue, err)
+	if err != nil || statusIssue.Revision != 11 {
+		t.Fatalf("duplicate status update = (%+v, %v), want unchanged revision 11", statusIssue, err)
 	}
 }

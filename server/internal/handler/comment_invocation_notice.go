@@ -71,7 +71,7 @@ func (h *Handler) noteTriggerFailure(ctx context.Context, issue db.Issue, conten
 	}
 	comment := created.Comment()
 	h.publish(protocol.EventCommentCreated, uuidToString(issue.WorkspaceID), "system", "", map[string]any{
-		"comment":             commentToResponse(comment, nil, nil),
+		"comment":             commentToResponse(comment, nil),
 		"issue_title":         issue.Title,
 		"issue_assignee_type": textToPtr(issue.AssigneeType),
 		"issue_assignee_id":   uuidToPtr(issue.AssigneeID),

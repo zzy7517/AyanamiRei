@@ -4411,8 +4411,8 @@ func TestRunIssueListRejectsDirectionWithoutDirectionalSort(t *testing.T) {
 // sampleIssueResponse returns a handler.IssueResponse populated the way the
 // /api/issues list endpoint actually populates one (ListIssues in
 // server/internal/handler/issue.go) — every field a real "issue list
-// --output json" row carries. Reactions, Attachments, and SourceContext are
-// left zero-valued on purpose: they are `omitempty` and ListIssues never
+// --output json" row carries. Attachments and SourceContext are left
+// zero-valued on purpose: they are `omitempty` and ListIssues never
 // sets them (detail-only), so a real list payload never carries those keys.
 // This is the single source of truth for both fullTestIssue (the --fields
 // filtering fixture) and the drift guard below, so the two can't diverge
@@ -5203,7 +5203,6 @@ func TestCompactCommentsDropsReaderNoise(t *testing.T) {
 		"resolved_at":       nil,
 		"resolved_by_id":    nil,
 		"attachments":       []any{},
-		"reactions":         []any{},
 		"reply_count":       float64(0),
 		"content_truncated": false,
 		"last_activity_at":  "2026-08-07T03:00:00Z",
@@ -5217,7 +5216,7 @@ func TestCompactCommentsDropsReaderNoise(t *testing.T) {
 	}}
 	compactComments(comments)
 
-	for _, k := range []string{"issue_id", "source_task_id", "updated_at", "parent_id", "resolved_at", "resolved_by_id", "attachments", "reactions"} {
+	for _, k := range []string{"issue_id", "source_task_id", "updated_at", "parent_id", "resolved_at", "resolved_by_id", "attachments"} {
 		if _, ok := comments[0][k]; ok {
 			t.Errorf("compact kept reader-noise field %q", k)
 		}

@@ -18,7 +18,6 @@ const (
 	GroupStatusChanges = "status_changes"
 	GroupComments      = "comments"
 	GroupMentions      = "mentions"
-	GroupReactions     = "reactions"
 	GroupUpdates       = "updates"
 	GroupAgentActivity = "agent_activity"
 	GroupNewIssues     = "new_issues"
@@ -41,7 +40,6 @@ var typeGroups = map[string]string{
 	"mentioned":          GroupMentions,
 	"doc_comment":        GroupComments,
 	"doc_mentioned":      GroupMentions,
-	"reaction_added":     GroupReactions,
 	"priority_changed":   GroupUpdates,
 	"start_date_changed": GroupUpdates,
 	"due_date_changed":   GroupUpdates,
@@ -65,8 +63,9 @@ var typeGroups = map[string]string{
 
 // legacyTypes are types earlier releases wrote and this server no longer
 // does. Their rows remain, so clients keep labels and filter groups for them,
-// but Deliver refuses them. Retiring a type moves it here rather than
-// deleting it.
+// but Deliver refuses them. A type retired from this fork is not parked here:
+// it leaves the registry and the client's type list together, and a migration
+// deletes its rows.
 var legacyTypes = []string{
 	"review_requested",
 	"task_completed",

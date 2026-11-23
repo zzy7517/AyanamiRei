@@ -858,7 +858,7 @@ func (h *Handler) RunQuickAction(w http.ResponseWriter, r *http.Request) {
 	}
 	comment := created.Comment()
 
-	resp := commentToResponse(comment, nil, nil)
+	resp := commentToResponse(comment, nil)
 	resp.IssueRevision = created.IssueRevision
 	h.publish(protocol.EventCommentCreated, workspaceID, actorType, actorID, map[string]any{
 		"comment":             resp,

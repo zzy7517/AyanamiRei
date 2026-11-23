@@ -78,8 +78,6 @@ var routeParamsOutsideProjects = map[string]outsideProjectParam{
 	"members/{memberId}":             {why: "a workspace membership"},
 	"invitations/{id}":               {why: "the caller's own workspace invitation"},
 	"invitations/{invitationId}":     {why: "a workspace invitation"},
-	"share-links/{code}":             {why: "a workspace join link"},
-	"share-links/{linkId}":           {why: "a workspace join link"},
 	"tokens/{id}":                    {why: "the caller's own access token"},
 	"checkout-sessions/{sessionId}":  {why: "a billing checkout"},
 	"themes/{themeId}":               {why: "a theme store entry"},

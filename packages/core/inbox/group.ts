@@ -37,8 +37,7 @@ function inboxTimelineTarget(item: InboxItem): string | undefined {
 /**
  * The row a group renders as, with `details.comment_id` naming the timeline
  * entry it opens at. Unread, it opens at the oldest unread comment or run, so
- * the issue reads forward from there; a reaction leads only when nothing
- * else unread has an entry, since the comment it marks is usually old.
+ * the issue reads forward from there.
  * Unread with no entry at all (a status change, an assignment), it opens
  * where the reader left off rather than at a comment already read. Read, it
  * opens at the newest notification's entry. An app notification lands on its
@@ -54,8 +53,7 @@ export function withCommentAnchor(
   const unread = group.filter((item) => item.read !== true);
   const anchor =
     unread.length > 0
-      ? (unread.findLast((item) => item.type !== "reaction_added" && !!inboxTimelineTarget(item)) ??
-        unread.findLast((item) => !!inboxTimelineTarget(item)))
+      ? unread.findLast((item) => !!inboxTimelineTarget(item))
       : group.find((item) => !!inboxTimelineTarget(item));
   const target = anchor ? inboxTimelineTarget(anchor) : undefined;
   if (target === row.details?.comment_id) return row;

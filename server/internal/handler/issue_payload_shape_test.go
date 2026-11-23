@@ -158,7 +158,7 @@ func fullyPopulatedIssue(t *testing.T) db.Issue {
 }
 
 // jsonKeys marshals a value and returns its top-level JSON keys. Fields tagged
-// omitempty (reactions, attachments, labels) are absent from both renderings
+// omitempty (attachments, labels) are absent from both renderings
 // here by construction: they are optional decorations the client already
 // nil-guards, not part of the core issue shape this test pins.
 func jsonKeys(t *testing.T, v any) []string {

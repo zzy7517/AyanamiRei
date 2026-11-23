@@ -40,7 +40,6 @@ type TimelineEntry struct {
 	// Set only on comments produced by a quick action run. Unforgeable: there
 	// is no request field for it on the generic comment endpoint.
 	QuickActionID  *string              `json:"quick_action_id,omitempty"`
-	Reactions      []ReactionResponse   `json:"reactions,omitempty"`
 	Attachments    []AttachmentResponse `json:"attachments,omitempty"`
 	ResolvedAt     *string              `json:"resolved_at,omitempty"`
 	ResolvedByType *string              `json:"resolved_by_type,omitempty"`
@@ -278,8 +277,8 @@ func (h *Handler) mergeTimeline(r *http.Request, comments []db.Comment, activiti
 	return out
 }
 
-// commentsToEntries fetches reactions + attachments for the given comments in
-// one batch each and returns enriched TimelineEntry slices preserving order.
+// commentsToEntries fetches attachments for the given comments in one batch
+// and returns enriched TimelineEntry slices preserving order.
 func (h *Handler) commentsToEntries(r *http.Request, comments []db.Comment) []TimelineEntry {
 	if len(comments) == 0 {
 		return nil
@@ -288,7 +287,6 @@ func (h *Handler) commentsToEntries(r *http.Request, comments []db.Comment) []Ti
 	for i, c := range comments {
 		ids[i] = c.ID
 	}
-	reactions := h.groupReactions(r, ids)
 	attachments := h.groupAttachments(r, ids)
 	supplements := h.listCommentSupplements(r.Context(), comments[0].WorkspaceID, ids)
 
@@ -310,7 +308,6 @@ func (h *Handler) commentsToEntries(r *http.Request, comments []db.Comment) []Ti
 			CreatedAt:      timestampToString(c.CreatedAt),
 			UpdatedAt:      &updatedAt,
 			Revision:       c.Revision,
-			Reactions:      reactions[cid],
 			Attachments:    attachments[cid],
 			ResolvedAt:     timestampToPtr(c.ResolvedAt),
 			ResolvedByType: textToPtr(c.ResolvedByType),

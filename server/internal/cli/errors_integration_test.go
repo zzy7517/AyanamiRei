@@ -242,9 +242,6 @@ func TestHelperStatusErrorsAreClassified(t *testing.T) {
 		{"DeleteJSON (project delete)", func(c *APIClient, ctx context.Context) error {
 			return c.DeleteJSON(ctx, "/api/projects/abc")
 		}},
-		{"DeleteJSONWithBody (issue reaction remove)", func(c *APIClient, ctx context.Context) error {
-			return c.DeleteJSONWithBody(ctx, "/api/issues/abc/reactions", map[string]any{"emoji": "+1"})
-		}},
 		{"UploadFile (issue attachment)", func(c *APIClient, ctx context.Context) error {
 			_, err := c.UploadFile(ctx, []byte("x"), "x.txt", "abc")
 			return err

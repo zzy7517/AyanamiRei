@@ -21,8 +21,8 @@ import (
 // run a repeat, and a firing that hits either one starts no run of its own:
 //
 //   - acknowledged: every input came from the agent itself, so it already
-//     knows. An issue, comment, reaction or attachment event the agent
-//     produced never wakes it. A satisfied condition its own unfinished run on
+//     knows. An issue, comment or attachment event the agent produced never
+//     wakes it. A satisfied condition its own unfinished run on
 //     the issue brought about does not wake it either, when the rule is the
 //     platform's or the agent set it up itself; a person's condition rule
 //     carries an instruction the running agent does not have, so it still

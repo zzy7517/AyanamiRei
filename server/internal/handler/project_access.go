@@ -102,7 +102,7 @@ func (h *Handler) requireProjectVisible(w http.ResponseWriter, r *http.Request, 
 }
 
 // requireIssueIDVisible is requireProjectVisible for objects that carry only
-// an issue id (comments, attachments, reactions).
+// an issue id (comments, attachments).
 func (h *Handler) requireIssueIDVisible(w http.ResponseWriter, r *http.Request, workspaceID string, issueID pgtype.UUID, status int, notFoundMsg string) bool {
 	if !issueID.Valid {
 		return true

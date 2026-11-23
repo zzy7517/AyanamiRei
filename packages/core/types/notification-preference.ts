@@ -3,8 +3,6 @@ export type NotificationGroupKey =
   | "status_changes"
   | "comments"
   | "chat_replies"
-  // No notification uses this group any more; apps/mobile still lists it.
-  | "reactions"
   | "updates"
   | "new_issues"
   | "agent_activity"

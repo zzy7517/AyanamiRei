@@ -46,10 +46,8 @@ var guestRoutes = compileGuestRoutes([]string{
 	"GET /api/issues/*/active-task",
 	"GET /api/issues/*/duplicates",
 
-	// Commenting, reacting and following.
+	// Commenting and following.
 	"POST /api/issues/*/comments",
-	"POST /api/issues/*/reactions",
-	"DELETE /api/issues/*/reactions",
 	"POST /api/issues/*/subscribe",
 	"POST /api/issues/*/unsubscribe",
 	"POST /api/issues/*/read",
@@ -59,8 +57,6 @@ var guestRoutes = compileGuestRoutes([]string{
 	// The same delete under the path clients use when they promise to keep
 	// the replies (#8296); the handler still allows only the author.
 	"DELETE /api/comments/*/keep-replies",
-	"POST /api/comments/*/reactions",
-	"DELETE /api/comments/*/reactions",
 
 	// Projects shared with the guest.
 	"GET /api/projects",

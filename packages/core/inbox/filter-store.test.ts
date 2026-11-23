@@ -158,7 +158,6 @@ describe("notification dimensions", () => {
 
   it("groups every notification kind, unknown ones as system", () => {
     expect(inboxTypeGroup("new_comment")).toBe("comment");
-    expect(inboxTypeGroup("reaction_added")).toBe("comment");
     expect(inboxTypeGroup("issue_subscribed")).toBe("assign");
     expect(inboxTypeGroup("children_done")).toBe("change");
     expect(inboxTypeGroup("agent_blocked")).toBe("run");
