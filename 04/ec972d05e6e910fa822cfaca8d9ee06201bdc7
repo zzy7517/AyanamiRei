@@ -1,0 +1,21 @@
+server/internal/featureflags/keys.go
+  s_fc0852876b2926::t_1e9a2dca7ff180 94-99
+server/internal/featureflags/keys_test.go
+  s_fc0852876b2926::t_705a949d1cb87b 1-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "04ec972d05e6e910fa822cfaca8d9ee06201bdc7",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
