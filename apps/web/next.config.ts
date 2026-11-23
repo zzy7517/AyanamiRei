@@ -7,7 +7,6 @@ import {
   resolveDocsUrl,
   resolveRemoteApiUrl,
 } from "./config/runtime-urls";
-import { createMDX } from "fumadocs-mdx/next";
 
 // Load root .env so local next.config.ts rewrites see REMOTE_API_URL / DOCS_URL.
 // Production requests use proxy.ts runtime rewrites, which read process.env
@@ -57,10 +56,10 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 80, 85],
-    localPatterns: [
-      { pathname: "/images/**", search: "" },
-      { pathname: "/usecases/**", search: "" },
-    ],
+    // No route optimizes local images any more. Keep the allowlist empty so
+    // workspace-private sources (/uploads, /api attachments) can never enter
+    // the optimizer by default; a future pattern has to be added deliberately.
+    localPatterns: [],
   },
   async rewrites() {
     return {
@@ -111,6 +110,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withMDX = createMDX();
-
-export default withMDX(nextConfig);
+export default nextConfig;

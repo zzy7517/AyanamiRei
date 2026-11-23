@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 
 /**
- * Installable web manifest. Start at /inbox so session-aware proxy routing
- * opens the workspace or login; the marketing host's root would open the landing
- * page even for a signed-in user.
+ * Installable web manifest. Start at /inbox: the proxy resolves it like any
+ * legacy route, so a session opens the last workspace's inbox and a session
+ * without a workspace (or no session at all) lands on /login.
  *
  * Standard icons share desktop artwork. The maskable SVG supplies full-bleed
  * artwork for launcher cropping; regenerate raster sizes from those source assets.

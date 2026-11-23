@@ -89,9 +89,8 @@ describe("proxy legacy workspace route redirects", () => {
   });
 
   it("sends logged-in legacy URLs without a last workspace cookie to login", () => {
-    // Not root: the root-path rule below leaves "/" on the public site for the
-    // official marketing hosts even with a session, so bouncing there would
-    // dead-end on the landing page. /login resolves against the workspace list
+    // Not root: the root redirect needs a `last_workspace_slug` cookie, and
+    // this visitor has none. /login resolves against the workspace list
     // instead. The deep-link query is dropped because feeding a legacy path
     // back through `next` would return here and loop.
     expect(
@@ -99,36 +98,8 @@ describe("proxy legacy workspace route redirects", () => {
     ).toBe("https://app.multica.test/login");
   });
 
-  it.each(["multica.ai", "www.multica.ai"])(
-    "resolves a slugless session off the marketing host %s instead of stranding it",
-    (host) => {
-      expect(
-        redirectLocation("/inbox", { multica_logged_in: "1" }, host),
-      ).toBe(`https://${host}/login`);
-    },
-  );
-
   it("does not redirect workspace-scoped URLs whose first segment is already a slug", () => {
     expect(redirectLocation("/acme/projects", sessionCookies)).toBeNull();
-  });
-
-  it("redirects app-host root URLs to the last workspace", () => {
-    expect(redirectLocation("/", sessionCookies)).toBe(
-      "https://app.multica.test/acme/issues",
-    );
-  });
-
-  it.each(["multica.ai", "www.multica.ai"])(
-    "does not redirect public marketing root on %s",
-    (host) => {
-      expect(redirectLocation("/", sessionCookies, host)).toBeNull();
-    },
-  );
-
-  it("still redirects explicit legacy app routes on the public marketing host", () => {
-    expect(redirectLocation("/issues/ABC-123", sessionCookies, "multica.ai")).toBe(
-      "https://multica.ai/acme/issues/ABC-123",
-    );
   });
 });
 
@@ -263,6 +234,11 @@ describe("proxy runtime upstream rewrites", () => {
 });
 
 describe("proxy root and locale handling", () => {
+  const sessionCookies = {
+    multica_logged_in: "1",
+    last_workspace_slug: "acme",
+  };
+
   it("redirects logged-in root visits to the last workspace", () => {
     const res = proxy(
       makeRequest("/", {
@@ -277,6 +253,25 @@ describe("proxy root and locale handling", () => {
     );
   });
 
+  it("preserves the query string on the root redirect", () => {
+    expect(
+      redirectLocation("/?view=board", sessionCookies),
+    ).toBe("https://app.multica.test/acme/issues?view=board");
+  });
+
+  it("redirects a session without a known workspace from the root to login", () => {
+    // First login, or cleared cookies: the workspace list lives behind the
+    // session, not the proxy, so /login resolves onboarding / first workspace
+    // / new workspace instead.
+    expect(redirectLocation("/", { multica_logged_in: "1" })).toBe(
+      "https://app.multica.test/login",
+    );
+  });
+
+  it("redirects the logged-out root to login", () => {
+    expect(redirectLocation("/")).toBe("https://app.multica.test/login");
+  });
+
   it("forwards locale on login requests", () => {
     const res = proxy(makeRequest("/login", { "multica-locale": "zh-Hans" }));
 
@@ -286,63 +281,17 @@ describe("proxy root and locale handling", () => {
       res.headers.get(`x-middleware-request-${MULTICA_LOCALE_HEADER}`),
     ).toBe("zh-Hans");
   });
-});
 
-describe("proxy marketing-site language URLs", () => {
-  const localeOf = (res: Response) => res.headers.get(`x-middleware-request-${MULTICA_LOCALE_HEADER}`);
-  const withAcceptLanguage = (path: string, acceptLanguage: string) =>
-    new NextRequest(`https://www.multica.ai${path}`, { headers: { "accept-language": acceptLanguage } });
+  it("forwards locale on workspace routes", () => {
+    const res = proxy(makeRequest("/acme/issues", { "multica-locale": "ja" }));
 
-  it.each([
-    ["/zh", "/", "zh-Hans"],
-    ["/zh/download", "/download", "zh-Hans"],
-    ["/ko/usecases/auto-data-analysis", "/usecases/auto-data-analysis", "ko"],
-    ["/ja/about?ref=x", "/about?ref=x", "ja"],
-  ])("serves %s as %s in its language", (path, page, locale) => {
-    const res = proxy(makeRequest(path, { "multica-locale": "en" }));
-
+    expect(res.status).toBe(200);
     expect(res.headers.get("location")).toBeNull();
-    expect(res.headers.get("x-middleware-rewrite")).toBe(`https://app.multica.test${page}`);
-    expect(localeOf(res)).toBe(locale);
-  });
-
-  it("keeps English URLs English for visitors who have not picked a language", () => {
-    const res = proxy(withAcceptLanguage("/download", "zh-CN,zh;q=0.9"));
-
-    expect(res.headers.get("location")).toBeNull();
-    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
-    expect(localeOf(res)).toBe("en");
-  });
-
-  it("keeps locales without a translated site on the English URL", () => {
-    const res = proxy(makeRequest("/about", { "multica-locale": "fr" }));
-
-    expect(res.headers.get("location")).toBeNull();
-    expect(localeOf(res)).toBe("fr");
-  });
-
-  it.each([
-    ["/", { "multica-locale": "zh-Hans" }, "/zh"],
-    ["/download?started=mac", { "multica-locale": "ko" }, "/ko/download?started=mac"],
-    ["/about", { "multica-locale": "zh-Hant" }, "/zh/about"],
-  ])("sends %s to the language the visitor picked", (path, cookies, location) => {
-    expect(redirectLocation(path, cookies, "www.multica.ai")).toBe(`https://www.multica.ai${location}`);
-  });
-
-  it("leaves app routes under a language-like slug to the app", () => {
-    const res = proxy(makeRequest("/zh/issues", { "multica-locale": "ja" }));
-
-    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
-    expect(localeOf(res)).toBe("ja");
-  });
-
-  it("keeps the bare root of an existing workspace with a language slug", () => {
-    const res = proxy(makeRequest("/ko", { multica_logged_in: "1", last_workspace_slug: "ko" }));
-
-    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(
+      res.headers.get(`x-middleware-request-${MULTICA_LOCALE_HEADER}`),
+    ).toBe("ja");
   });
 });
-
 
 describe("upload route bypasses the buffering proxy", () => {
   it.each(["/api/upload-file", "/api/upload-file/"])(

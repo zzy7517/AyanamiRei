@@ -5,13 +5,10 @@
 @import "../../../packages/ui/styles/theme-variables.css";
 @import "../../../packages/ui/styles/appearance.css";
 @import "../../../packages/ui/styles/base.css";
-@import "./custom.css";
-@import "./landing.css";
 
-/* The marketing site is light-only: `.landing-light` re-declares the tokens
-   (custom.css), and `dark:` utilities inside it must not fire either. The
-   exclusion sits in `:where()` so `dark:` keeps its (0,2,0) specificity. */
-@custom-variant dark (&:is(.dark *):where(:not(.landing-light, .landing-light *)));
+/* Class-based dark mode: `dark:` utilities fire under next-themes' `.dark`
+   class (Tailwind's default would key off prefers-color-scheme instead). */
+@custom-variant dark (&:is(.dark *));
 
 @source "../../../packages/ui/**/*.{ts,tsx}";
 @source "../../../packages/core/**/*.{ts,tsx}";

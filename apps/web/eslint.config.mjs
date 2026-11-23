@@ -11,7 +11,6 @@ export default [
   {
     files: ["app/**/*.{ts,tsx}"],
     ignores: [
-      "app/(landing)/**",
       "**/*.test.{ts,tsx}",
       "**/test/**/*.{ts,tsx}",
     ],

@@ -37,17 +37,10 @@ const ALLOWED_QUERY_PARAMS = new Set([
   "gclid",
 ]);
 
-// Path segments that are capabilities rather than page names. Invitation ids
-// are bearer-ish links, so report the route shape, not the value.
-const REDACTED_PATH_PATTERNS: Array<[RegExp, string]> = [
-  [/^\/invite\/[^/]+/, "/invite/[id]"],
-];
-
 /**
- * Reduce a URL to what is safe to send to Google Analytics: origin + path
- * (with capability segments masked) + allowlisted query params. The hash is
- * always dropped. Returns "" for empty or unparseable input, which GA treats
- * as "not set".
+ * Reduce a URL to what is safe to send to Google Analytics: origin + path +
+ * allowlisted query params. The hash is always dropped. Returns "" for empty
+ * or unparseable input, which GA treats as "not set".
  */
 export function sanitizeAnalyticsUrl(raw: string | undefined | null): string {
   const parts = analyticsUrlParts(raw);
@@ -57,9 +50,9 @@ export function sanitizeAnalyticsUrl(raw: string | undefined | null): string {
 
 /**
  * True when the raw URL carries something sanitizeAnalyticsUrl would strip
- * (a non-allowlisted query param or a capability path segment). GA's own
- * history-change page views read the live URL directly, so the component
- * stops GA for this document once the loaded tag may have observed one.
+ * (a non-allowlisted query param). GA's own history-change page views read
+ * the live URL directly, so the component stops GA for this document once
+ * the loaded tag may have observed one.
  */
 export function isSensitiveAnalyticsUrl(raw: string | undefined | null): boolean {
   if (!raw) return false;
@@ -82,7 +75,6 @@ const WORKSPACE_SECTIONS = new Set([
   "docs",
   "inbox",
   "issues",
-  "members",
   "projects",
   "runtimes",
   "settings",
@@ -139,14 +131,6 @@ function analyticsUrlParts(
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
 
   let sensitive = false;
-  let pathname = url.pathname;
-  for (const [pattern, replacement] of REDACTED_PATH_PATTERNS) {
-    if (pattern.test(pathname)) {
-      sensitive = true;
-      pathname = pathname.replace(pattern, replacement);
-    }
-  }
-
   const kept = new URLSearchParams();
   url.searchParams.forEach((value, key) => {
     if (ALLOWED_QUERY_PARAMS.has(key)) kept.append(key, value);
@@ -155,7 +139,7 @@ function analyticsUrlParts(
   const search = kept.toString();
 
   return {
-    sanitized: `${url.origin}${pathname}${search ? `?${search}` : ""}`,
+    sanitized: `${url.origin}${url.pathname}${search ? `?${search}` : ""}`,
     sensitive,
   };
 }

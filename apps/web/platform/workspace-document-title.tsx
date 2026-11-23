@@ -60,8 +60,9 @@ export function WorkspaceDocumentTitle() {
     if (document.title !== documentTitle) document.title = documentTitle;
   }, [documentTitle, url]);
 
-  // Leaving the dashboard entirely (logout, workspace switcher, landing) drops
-  // back to the site title so the stale issue name never outlives its page.
+  // Leaving the dashboard entirely (logout, workspace switcher, auth pages)
+  // drops back to the site title so the stale issue name never outlives its
+  // page.
   useEffect(() => {
     return () => {
       document.title = SITE_TITLE;

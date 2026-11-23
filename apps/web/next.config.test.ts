@@ -3,13 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { hasLocalMatch } from "next/dist/shared/lib/match-local-pattern";
 
 vi.mock("dotenv", () => ({ config: vi.fn() }));
-vi.mock("fumadocs-mdx/next", () => ({
-  createMDX: () => (config: unknown) => config,
-}));
 
 import nextConfig from "./next.config";
 
 describe("image optimization paths", () => {
+  // No route optimizes local images any more, and the optimizer must never
+  // serve workspace-private sources. The allowlist stays empty so a future
+  // pattern has to be added deliberately, with these re-checked.
   it.each([
     "/uploads/workspaces/workspace/attachment.png",
     "/api/attachments/attachment/download",
@@ -18,11 +18,4 @@ describe("image optimization paths", () => {
   ])("rejects private or unexpected sources: %s", (url) => {
     expect(hasLocalMatch(nextConfig.images?.localPatterns, url)).toBe(false);
   });
-
-  it.each(["/images/hero.png", "/usecases/team/screenshot.webp"])(
-    "keeps landing images available: %s",
-    (url) => {
-      expect(hasLocalMatch(nextConfig.images?.localPatterns, url)).toBe(true);
-    },
-  );
 });

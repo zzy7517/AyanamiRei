@@ -1,18 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { LOCALE_COOKIE, type SupportedLocale } from "@multica/core/i18n";
 import {
-  isSupportedLocale,
   MULTICA_LOCALE_HEADER,
   resolveLocaleFromSignals,
 } from "./lib/locale-routing";
-import {
-  isLandingPath,
-  landingPathLocale,
-  localizeHref,
-  splitLandingLocale,
-} from "./lib/landing-locale-path";
 import { runtimeRewriteDestination } from "./config/runtime-urls";
-import { isOfficialMarketingHost } from "./lib/public-host";
 
 // Old workspace-scoped route segments that existed before the URL refactor
 // (pre-#1131). Any URL with these as the FIRST segment is a legacy URL that
@@ -45,42 +37,6 @@ function nextWithLocale(req: NextRequest, locale = resolveLocale(req)): NextResp
   const headers = new Headers(req.headers);
   headers.set(MULTICA_LOCALE_HEADER, locale);
   return NextResponse.next({ request: { headers } });
-}
-
-// The marketing site has one URL per language: English at the root, the
-// others under /zh, /ko and /ja (lib/landing-locale-path). Returns null for
-// paths that are not marketing pages.
-function routeLandingLocale(
-  req: NextRequest,
-  hasSession: boolean,
-  lastSlug: string | undefined,
-): NextResponse | null {
-  const { pathname } = req.nextUrl;
-  const prefixed = splitLandingLocale(pathname);
-  if (prefixed) {
-    // A workspace that took a language prefix as its slug before the prefix
-    // was reserved keeps its bare root for its members.
-    if (prefixed.path === "/" && hasSession && lastSlug === pathname.slice(1)) return null;
-    const url = req.nextUrl.clone();
-    url.pathname = prefixed.path;
-    const headers = new Headers(req.headers);
-    headers.set(MULTICA_LOCALE_HEADER, prefixed.locale);
-    return NextResponse.rewrite(url, { request: { headers } });
-  }
-  if (!isLandingPath(pathname)) return null;
-
-  // A remembered language choice goes to that language's URL. Without one the
-  // root URL stays English — the same page crawlers index — and the page
-  // offers the browser's language rather than switching to it.
-  const cookie = req.cookies.get(LOCALE_COOKIE)?.value ?? null;
-  const chosen = isSupportedLocale(cookie) ? landingPathLocale(cookie) : "en";
-  if (chosen !== "en") {
-    const url = req.nextUrl.clone();
-    url.pathname = localizeHref(chosen, pathname);
-    return NextResponse.redirect(url);
-  }
-  const resolved = resolveLocale(req);
-  return nextWithLocale(req, landingPathLocale(resolved) === "en" ? resolved : "en");
 }
 
 // Next.js 16 renamed `middleware` → `proxy`. API surface (NextRequest /
@@ -118,12 +74,10 @@ export function proxy(req: NextRequest) {
     }
 
     // Logged-in but no cookie yet (never opened a workspace, or the cookie was
-    // cleared). Root is the wrong destination: the root-path rule below leaves
-    // `/` on the public site for the official marketing hosts even with a
-    // session, so bouncing there dead-ends on the landing page instead of
-    // reaching the app. /login already resolves an authenticated visitor
-    // against their workspace list — including pending invitations and the
-    // no-workspace-yet case — and replaces to the right destination. Deep-link
+    // cleared). Root is the wrong destination: it lands on `/{lastSlug}/issues`
+    // only with a slug cookie, and this visitor has none. /login already
+    // resolves an authenticated visitor against their workspace list and the
+    // no-workspace-yet case, and replaces to the right destination. Deep-link
     // path and query are dropped rather than passed as `next`: they are legacy
     // segments themselves, so feeding one back would land here again.
     url.pathname = "/login";
@@ -131,27 +85,21 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // --- Root path: redirect logged-in users to their last workspace ---
-  // The official cloud host also serves the public marketing site. Visiting
-  // https://multica.ai/ must remain a public-site navigation even when a local
-  // desktop/runtime session has fresh auth cookies; explicit app routes such
-  // as /acme/issues and legacy /issues still route to the workspace app.
-  if (
-    pathname === "/" &&
-    hasSession &&
-    lastSlug &&
-    !isOfficialMarketingHost(req.nextUrl.hostname)
-  ) {
+  // --- Root path: straight into the product ---
+  // "/" is not a page. A session with a remembered workspace opens that
+  // workspace's issue board; everyone else — no session yet, or a session
+  // that has never opened a workspace (first login, cleared cookies) — goes
+  // to /login, which resolves an authenticated visitor against their
+  // workspace list (onboarding / first workspace / new workspace) and
+  // replaces to the right destination.
+  if (pathname === "/") {
     const url = req.nextUrl.clone();
-    url.pathname = `/${lastSlug}/issues`;
+    url.pathname = hasSession && lastSlug ? `/${lastSlug}/issues` : "/login";
     return NextResponse.redirect(url);
   }
 
-  const landing = routeLandingLocale(req, hasSession, lastSlug);
-  if (landing) return landing;
-
   // --- Default: forward locale header to RSC, no redirect/rewrite ---
-  // Covers logged-out root path, /login, /:slug/*, and everything else.
+  // Covers /login, /:slug/*, and everything else.
   return nextWithLocale(req);
 }
 
