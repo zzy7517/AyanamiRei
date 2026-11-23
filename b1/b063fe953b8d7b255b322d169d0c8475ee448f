@@ -1,0 +1,21 @@
+package.json
+  s_fc0852876b2926::t_f898ab900e8e0d 76
+pnpm-lock.yaml
+  s_fc0852876b2926::t_27881fe8612349 444,462,511,813,816,819,880,1032,17212-17220,19875,19903,19939,19947,19954,19972,20003,20037,22309,22318,24440,25103-25132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "b1b063fe953b8d7b255b322d169d0c8475ee448f",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhongzhuan/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
