@@ -49,7 +49,7 @@ func TestQuickActionOptionalTargetRollback(t *testing.T) {
 					workspace_id, name, assignee_type, assignee_id, prompt, created_by_type, created_by_id
 				)
 				SELECT gen_random_uuid(), target, target, gen_random_uuid(), 'Review this issue', 'member', gen_random_uuid()
-				FROM (VALUES ('agent'), ('squad')) AS targets(target)
+				FROM (VALUES ('agent')) AS targets(target)
 			`); err != nil {
 				t.Fatalf("insert targeted actions: %v", err)
 			}

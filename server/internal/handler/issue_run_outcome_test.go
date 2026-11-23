@@ -220,35 +220,27 @@ func TestUpdateIssueOutcomeVisibilityDoesNotLogInvocationDenial(t *testing.T) {
 	// has a member creator. Enqueue and outcome visibility judge those separately.
 	callerTask := dbfx.Task(t, actor, testutil.Cols{"issue_id": callerIssue, "runtime_id": runtimeID, "status": "running"})
 
-	for _, targetType := range []string{"agent", "squad"} {
-		t.Run(targetType, func(t *testing.T) {
-			leader := dbfx.Agent(t, "outcome private "+targetType, runtimeID)
-			targetID := leader
-			if targetType == "squad" {
-				targetID = dbfx.Squad(t, "outcome private squad", leader)
-			}
-			issueID := dbfx.Issue(t, "outcome promotion "+targetType, testutil.Cols{
-				"status": "backlog", "assignee_type": targetType, "assignee_id": targetID,
-			})
-			dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE issue_id = $1`, issueID)
-			var logs bytes.Buffer
-			prev := slog.Default()
-			slog.SetDefault(slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelWarn})))
-			t.Cleanup(func() { slog.SetDefault(prev) })
+	privateAgent := dbfx.Agent(t, "outcome private agent", runtimeID)
+	issueID := dbfx.Issue(t, "outcome promotion", testutil.Cols{
+		"status": "backlog", "assignee_type": "agent", "assignee_id": privateAgent,
+	})
+	dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE issue_id = $1`, issueID)
+	var logs bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelWarn})))
+	t.Cleanup(func() { slog.SetDefault(prev) })
 
-			var resp IssueResponse
-			testutil.Call(t, testHandler.UpdateIssue, asRun(withURLParam(
-				newRequest("PUT", "/api/issues/"+issueID, map[string]any{"status": "todo"}), "id", issueID), actor, callerTask)).
-				Want(http.StatusOK).JSON(&resp)
-			if resp.RunOutcome != nil {
-				t.Errorf("run_outcome = %+v, want none without invocation permission", resp.RunOutcome)
-			}
-			if got := taskCountFor(t, issueID, leader); got != 1 {
-				t.Fatalf("tasks = %d, want promotion to start one run", got)
-			}
-			if strings.Contains(logs.String(), "agent invoke denied") {
-				t.Errorf("outcome visibility logged a denial after enqueue:\n%s", logs.String())
-			}
-		})
+	var resp IssueResponse
+	testutil.Call(t, testHandler.UpdateIssue, asRun(withURLParam(
+		newRequest("PUT", "/api/issues/"+issueID, map[string]any{"status": "todo"}), "id", issueID), actor, callerTask)).
+		Want(http.StatusOK).JSON(&resp)
+	if resp.RunOutcome != nil {
+		t.Errorf("run_outcome = %+v, want none without invocation permission", resp.RunOutcome)
+	}
+	if got := taskCountFor(t, issueID, privateAgent); got != 1 {
+		t.Fatalf("tasks = %d, want promotion to start one run", got)
+	}
+	if strings.Contains(logs.String(), "agent invoke denied") {
+		t.Errorf("outcome visibility logged a denial after enqueue:\n%s", logs.String())
 	}
 }

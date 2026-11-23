@@ -15,8 +15,7 @@ import (
 // existing task, `deferred`, or `blocked`? A silent no-op is never acceptable.
 //
 // Two invariants this contract exists to protect:
-//
-//  1. Whether the business object was written (comment saved, issue updated)
+// 1. Whether the business object was written (comment saved, issue updated)
 //     and whether the agent was actually triggered are DIFFERENT facts. A
 //     comment can persist while one of its mentions is blocked — callers must
 //     be able to express partial success.
@@ -77,7 +76,7 @@ const (
 // private-agent invoke returns Type/ID (already known to the caller from their
 // own request) but never a Name they were not otherwise entitled to.
 type DispatchTarget struct {
-	Type string `json:"type"` // "agent" | "squad"
+	Type string `json:"type"` // "agent"
 	ID   string `json:"id"`
 	Name string `json:"name,omitempty"`
 }

@@ -189,9 +189,8 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 	workingAgentID := createHandlerTestAgent(t, "working-agents-running", []byte(`{}`))
 	queuedAgentID := createHandlerTestAgent(t, "working-agents-queued", []byte(`{}`))
 
-	// An agent owned by someone else keeps the squad fixtures mutually
-	// exclusive: it can lead a squad without accidentally satisfying the
-	// "leader owned by me" branch.
+	// Issues are created by an agent someone else owns, so the creator side
+	// alone satisfies no My Issues relation.
 	var outsiderUserID string
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO "user" (name, email)
@@ -224,63 +223,11 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		testPool.Exec(ctx, `DELETE FROM agent WHERE id = $1`, outsiderAgentID)
 	})
 
-	insertedSquadIDs := make([]string, 0, 3)
-	insertSquad := func(name, leaderID string) string {
-		t.Helper()
-		var squadID string
-		if err := testPool.QueryRow(ctx, `
-			INSERT INTO squad (
-				workspace_id, name, description, leader_id, creator_id
-			)
-			VALUES ($1, $2, '', $3, $4)
-			RETURNING id
-		`,
-			testWorkspaceID,
-			name,
-			leaderID,
-			testUserID,
-		).Scan(&squadID); err != nil {
-			t.Fatalf("insert squad %q: %v", name, err)
-		}
-		insertedSquadIDs = append(insertedSquadIDs, squadID)
-		return squadID
-	}
-	directMemberSquadID := insertSquad(
-		"working-agents-direct-member-squad",
-		outsiderAgentID,
-	)
-	ownedLeaderSquadID := insertSquad(
-		"working-agents-owned-leader-squad",
-		workingAgentID,
-	)
-	ownedMemberSquadID := insertSquad(
-		"working-agents-owned-member-squad",
-		outsiderAgentID,
-	)
-	if _, err := testPool.Exec(ctx, `
-		INSERT INTO squad_member (squad_id, member_type, member_id)
-		VALUES
-			($1, 'member', $2),
-			($3, 'agent', $4)
-	`,
-		directMemberSquadID,
-		testUserID,
-		ownedMemberSquadID,
-		workingAgentID,
-	); err != nil {
-		t.Fatalf("insert squad involvement fixtures: %v", err)
-	}
-	t.Cleanup(func() {
-		for _, squadID := range insertedSquadIDs {
-			testPool.Exec(ctx, `DELETE FROM squad WHERE id = $1`, squadID)
-		}
-	})
-
 	// Insert source issues directly: this test is about the working-agent
 	// projection, so it must not inherit unrelated CreateIssue validation or
-	// side effects. The fixtures cover every direct My Issues relation plus
-	// owned-leader squads (included) and non-leader squad memberships (excluded).
-	insertedIssueIDs := make([]string, 0, 6)
+	// side effects. The fixtures cover every My Issues relation plus an issue
+	// that is in none of them.
+	insertedIssueIDs := make([]string, 0, 3)
 	insertIssue := func(
 		title, creatorType, creatorID string,
 		assigneeType, assigneeID any,
@@ -331,27 +278,6 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		nil,
 		nil,
 	)
-	directMemberSquadIssueID := insertIssue(
-		"working-agent-direct-member-squad",
-		"agent",
-		outsiderAgentID,
-		"squad",
-		directMemberSquadID,
-	)
-	ownedLeaderSquadIssueID := insertIssue(
-		"working-agent-owned-leader-squad",
-		"agent",
-		outsiderAgentID,
-		"squad",
-		ownedLeaderSquadID,
-	)
-	ownedMemberSquadIssueID := insertIssue(
-		"working-agent-owned-member-squad",
-		"agent",
-		outsiderAgentID,
-		"squad",
-		ownedMemberSquadID,
-	)
 	t.Cleanup(func() {
 		for _, issueID := range insertedIssueIDs {
 			testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, issueID)
@@ -368,10 +294,10 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		t.Fatalf("insert autopilot run: %v", err)
 	}
 
-	// Nine running tasks on one agent: six issue relations, chat, autopilot,
+	// Six running tasks on one agent: three issue relations, chat, autopilot,
 	// and quick-create (no source FK). The autopilot task also carries issue_id
 	// to prove source precedence keeps it out of type=issue.
-	insertedTaskIDs := make([]string, 0, 10)
+	insertedTaskIDs := make([]string, 0, 7)
 	for _, fixture := range []struct {
 		agentID        string
 		status         string
@@ -382,9 +308,6 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		{workingAgentID, "running", assignedIssueID, nil, nil},
 		{workingAgentID, "running", ownedAgentIssueID, nil, nil},
 		{workingAgentID, "running", outsideIssueID, nil, nil},
-		{workingAgentID, "running", directMemberSquadIssueID, nil, nil},
-		{workingAgentID, "running", ownedLeaderSquadIssueID, nil, nil},
-		{workingAgentID, "running", ownedMemberSquadIssueID, nil, nil},
 		{workingAgentID, "running", nil, chatSessionID, nil},
 		{workingAgentID, "running", assignedIssueID, nil, autopilotRunID},
 		{workingAgentID, "running", nil, nil, nil},
@@ -424,27 +347,21 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 	}{
 		{
 			name:      "all sources",
-			wantCount: 9,
-			wantIssueIDs: []string{
-				assignedIssueID,
-				ownedAgentIssueID,
-				outsideIssueID,
-				directMemberSquadIssueID,
-				ownedLeaderSquadIssueID,
-				ownedMemberSquadIssueID,
-			},
-		},
-		{
-			name:      "issue",
-			query:     "?type=issue",
 			wantCount: 6,
 			wantIssueIDs: []string{
 				assignedIssueID,
 				ownedAgentIssueID,
 				outsideIssueID,
-				directMemberSquadIssueID,
-				ownedLeaderSquadIssueID,
-				ownedMemberSquadIssueID,
+			},
+		},
+		{
+			name:      "issue",
+			query:     "?type=issue",
+			wantCount: 3,
+			wantIssueIDs: []string{
+				assignedIssueID,
+				ownedAgentIssueID,
+				outsideIssueID,
 			},
 		},
 		{
@@ -457,21 +374,19 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		{
 			name:      "mine defaults to any",
 			query:     "?type=issue&scope=mine",
-			wantCount: 3,
+			wantCount: 2,
 			wantIssueIDs: []string{
 				assignedIssueID,
 				ownedAgentIssueID,
-				ownedLeaderSquadIssueID,
 			},
 		},
 		{
 			name:      "mine any",
 			query:     "?type=issue&scope=mine&relation=any",
-			wantCount: 3,
+			wantCount: 2,
 			wantIssueIDs: []string{
 				assignedIssueID,
 				ownedAgentIssueID,
-				ownedLeaderSquadIssueID,
 			},
 		},
 		{
@@ -489,10 +404,9 @@ func TestListWorkspaceWorkingAgents(t *testing.T) {
 		{
 			name:      "mine involved",
 			query:     "?type=issue&scope=mine&relation=involved",
-			wantCount: 2,
+			wantCount: 1,
 			wantIssueIDs: []string{
 				ownedAgentIssueID,
-				ownedLeaderSquadIssueID,
 			},
 		},
 	} {

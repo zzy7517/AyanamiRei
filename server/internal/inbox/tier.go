@@ -62,8 +62,7 @@ func SubscriptionDelivery(reason string, prefs map[string]string, isSomeoneElses
 }
 
 // IssueOwner is who an issue is assigned to, resolved to the human behind it:
-// the assigned member, or the owner of the assigned agent. A squad assignee
-// has no single owner, so a squad's issue is nobody's own.
+// the assigned member, or the owner of the assigned agent.
 type IssueOwner struct {
 	assigned bool
 	ownerID  string
@@ -82,20 +81,16 @@ func LoadIssueOwner(ctx context.Context, queries *db.Queries, issue db.Issue) (I
 	if !issue.AssigneeID.Valid {
 		return IssueOwner{}, nil
 	}
-	switch issue.AssigneeType.String {
-	case "member":
+	if issue.AssigneeType.String == "member" {
 		return IssueOwner{assigned: true, ownerID: util.UUIDToString(issue.AssigneeID)}, nil
-	case "agent":
-		agent, err := queries.GetAgent(ctx, issue.AssigneeID)
-		if err != nil {
-			return IssueOwner{}, err
-		}
-		owner := ""
-		if agent.OwnerID.Valid {
-			owner = util.UUIDToString(agent.OwnerID)
-		}
-		return IssueOwner{assigned: true, ownerID: owner}, nil
-	default:
-		return IssueOwner{assigned: true}, nil
 	}
+	agent, err := queries.GetAgent(ctx, issue.AssigneeID)
+	if err != nil {
+		return IssueOwner{}, err
+	}
+	owner := ""
+	if agent.OwnerID.Valid {
+		owner = util.UUIDToString(agent.OwnerID)
+	}
+	return IssueOwner{assigned: true, ownerID: owner}, nil
 }

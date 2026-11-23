@@ -3197,56 +3197,6 @@ func TestBatchBacklogToTodoByAgentTriggersAssignee(t *testing.T) {
 	}
 }
 
-// TestBacklogToTodoByAgentTriggersSquadLeader covers the squad branch of
-// the backlog→active trigger when the actor is an agent: the leader agent
-// of a squad must wake when one of its squad-assigned backlog issues is
-// promoted by another agent (or by the leader itself acting from a task
-// on a different issue). The task-issue self-loop guard must allow this —
-// only a true same-issue self-loop should be suppressed.
-func TestBacklogToTodoByAgentTriggersSquadLeader(t *testing.T) {
-	if testHandler == nil {
-		t.Skip("database not available")
-	}
-	ctx := context.Background()
-
-	leaderAgent := createHandlerTestAgent(t, "Backlog Squad Leader", nil)
-	driverAgent := createHandlerTestAgent(t, "Backlog Squad Driver", nil)
-	driverTask := createHandlerTestTaskForAgent(t, driverAgent)
-
-	squadID := dbfx.Squad(t, "Backlog Trigger Squad", leaderAgent)
-
-	req := newRequest("POST", "/api/issues?workspace_id="+testWorkspaceID, map[string]any{
-		"title":         "Squad backlog issue",
-		"status":        "backlog",
-		"assignee_type": "squad",
-		"assignee_id":   squadID,
-	})
-	w := testutil.Call(t, testHandler.CreateIssue, req).Want(http.StatusCreated)
-	var created IssueResponse
-	json.NewDecoder(w.Body).Decode(&created)
-	t.Cleanup(func() {
-		testPool.Exec(ctx, `DELETE FROM agent_task_queue WHERE issue_id = $1`, created.ID)
-		testPool.Exec(ctx, `DELETE FROM issue WHERE id = $1`, created.ID)
-	})
-
-	// Driver agent (not the leader, task is on no specific issue) promotes
-	// the squad-assigned backlog issue. Squad leader must be enqueued.
-	req = newRequest("PUT", "/api/issues/"+created.ID, map[string]any{"status": "todo"})
-	req = withURLParam(req, "id", created.ID)
-	req.Header.Set("X-Agent-ID", driverAgent)
-	req.Header.Set("X-Task-ID", driverTask)
-	w = testutil.Call(t, testHandler.UpdateIssue, req).Want(http.StatusOK)
-
-	var leaderTasks int
-	dbfx.QueryRow(t,
-		`SELECT count(*) FROM agent_task_queue WHERE issue_id = $1 AND agent_id = $2 AND status = 'queued'`,
-		created.ID, leaderAgent,
-	).Scan(&leaderTasks)
-	if leaderTasks != 1 {
-		t.Fatalf("expected exactly 1 squad-leader task after agent-driven backlog→todo on squad issue, got %d", leaderTasks)
-	}
-}
-
 func TestDaemonRegisterMissingWorkspaceReturns404(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/daemon/register", bytes.NewBufferString(`{
 		"workspace_id":"00000000-0000-0000-0000-000000000001",

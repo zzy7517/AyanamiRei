@@ -21,7 +21,7 @@ func init() { issueCmd.AddCommand(newIssueWakeupCommand()) }
 func newIssueWakeupCommand() *cobra.Command {
 	wake := &cobra.Command{Use: "wakeup", Short: "Manage event and time wakeups that start ordinary runs"}
 	wake.AddCommand(&cobra.Command{Use: "events", Short: "List supported event types and filters", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.PrintJSON(os.Stdout, map[string]any{"event_types": eventcontract.WakeupTypes, "platform_only_event_types": eventcontract.LifecycleTypes, "platform_only_reason": "Creation precedes subscription; deletion withdraws the issue's wakeups.", "scope": "Event rules match events on the issue they are registered on. To wait on another issue, use the --until-issue condition.", "filters": []string{"filter_agent_id (task events; legacy mutation alias)", "filter_task_id (task events only)", "filter_actor_type + filter_actor_id (member or agent; mutation events only)"}, "modes": []string{"once (default)", "continuous"}, "conditions": []string{"--until-status KEY", "--until-assignee member|agent|squad:ID", "--until-label LABEL_ID", "--until-property PROPERTY_ID=VALUE", "--until-children-done [--stage N]", "--until-pr checks|merged|conflicts", "--until-issue ISSUE [--until-issue-state done|ended|in_review|blocked]"}, "loop_protection": "Events from the registering run and runs started by the same rule are excluded when source identity is available. Repeating rules stop after --max-fires runs (default 20 for continuous event rules). A rule is paused when its trigger chain passes through it a third time without a person in between, or when it starts more than 12 runs in an hour."})
+		return cli.PrintJSON(os.Stdout, map[string]any{"event_types": eventcontract.WakeupTypes, "platform_only_event_types": eventcontract.LifecycleTypes, "platform_only_reason": "Creation precedes subscription; deletion withdraws the issue's wakeups.", "scope": "Event rules match events on the issue they are registered on. To wait on another issue, use the --until-issue condition.", "filters": []string{"filter_agent_id (task events; legacy mutation alias)", "filter_task_id (task events only)", "filter_actor_type + filter_actor_id (member or agent; mutation events only)"}, "modes": []string{"once (default)", "continuous"}, "conditions": []string{"--until-status KEY", "--until-assignee member|agent:ID", "--until-label LABEL_ID", "--until-property PROPERTY_ID=VALUE", "--until-children-done [--stage N]", "--until-pr checks|merged|conflicts", "--until-issue ISSUE [--until-issue-state done|ended|in_review|blocked]"}, "loop_protection": "Events from the registering run and runs started by the same rule are excluded when source identity is available. Repeating rules stop after --max-fires runs (default 20 for continuous event rules). A rule is paused when its trigger chain passes through it a third time without a person in between, or when it starts more than 12 runs in an hour."})
 	}})
 	for _, action := range []string{"list", "get", "disable", "create", "update", "trigger", "delete", "checkin", "runs"} {
 		action := action
@@ -76,7 +76,7 @@ func newIssueWakeupCommand() *cobra.Command {
 			c.Flags().String("on-timeout", "", "At the deadline: end (default) or wake (event rules run the target once to handle it)")
 			c.Long += " Conditions let the platform check stored facts itself and wake the target only when they hold: use one --until-* flag instead of --event. A condition that already holds fires on the next check, except --until-pr checks, which waits for a newer finished result."
 			c.Flags().String("until-status", "", "Condition: this issue's status becomes KEY")
-			c.Flags().String("until-assignee", "", "Condition: this issue is assigned to member|agent|squad:ID")
+			c.Flags().String("until-assignee", "", "Condition: this issue is assigned to member|agent:ID")
 			c.Flags().String("until-label", "", "Condition: this issue has the label LABEL_ID")
 			c.Flags().String("until-property", "", "Condition: property PROPERTY_ID equals VALUE (PROPERTY_ID=VALUE; VALUE may be JSON)")
 			c.Flags().Bool("until-children-done", false, "Condition: every sub-issue is closed (or those up to --stage)")
@@ -262,7 +262,7 @@ func wakeupConditionFromFlags(ctx context.Context, cmd *cobra.Command, client *c
 	if v, _ := cmd.Flags().GetString("until-assignee"); v != "" {
 		kind, id, ok := strings.Cut(v, ":")
 		if !ok || id == "" {
-			return nil, fmt.Errorf("--until-assignee takes member|agent|squad:ID")
+			return nil, fmt.Errorf("--until-assignee takes member|agent:ID")
 		}
 		conditions = append(conditions, map[string]any{"type": "issue_field", "field": "assignee", "assignee_type": kind, "assignee_id": id})
 	}

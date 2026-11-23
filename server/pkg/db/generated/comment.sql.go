@@ -1492,9 +1492,8 @@ type ListReconcilableCommentsForIssueSinceParams struct {
 // return 'agent' comments so those explicit mentions can be replayed.
 //
 // The handler rechecks current routing and permissions. For agent authors it
-// accepts explicit mentions, plus worker-to-assigned-leader replies already
-// recorded in this run's planned inputs. Timestamp-only implicit agent replies
-// remain excluded. Replays are scoped to the completing agent, never a fan-out.
+// accepts explicit mentions only: a timestamp alone never replays an implicit
+// agent reply. Replays are scoped to the completing agent, never a fan-out.
 // Ordered ASC so later comments coalesce onto the follow-up created by the first.
 func (q *Queries) ListReconcilableCommentsForIssueSince(ctx context.Context, arg ListReconcilableCommentsForIssueSinceParams) ([]Comment, error) {
 	rows, err := q.db.Query(ctx, listReconcilableCommentsForIssueSince,

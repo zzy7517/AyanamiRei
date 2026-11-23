@@ -119,7 +119,6 @@ func TestAutopilotDispatchAdmitsClickerNotCreator(t *testing.T) {
 	ap := db.Autopilot{
 		WorkspaceID:   util.MustParseUUID(workspaceID),
 		AssigneeID:    util.MustParseUUID(agentID),
-		AssigneeType:  "agent",
 		ExecutionMode: "run_only",
 		Status:        "active",
 		CreatedByType: "member",

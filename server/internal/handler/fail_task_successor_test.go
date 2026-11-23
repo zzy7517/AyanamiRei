@@ -380,8 +380,8 @@ func taskStatusByID(t *testing.T, id string) string {
 // That routes the enqueue through enqueueMentionTaskWithCommentPlan, which
 // normalizes the unique violation into the bare ErrDuplicatePendingTask sentinel
 // instead of surfacing the pgconn error. The reclaim branch has to recognise that
-// shape too, otherwise every squad-leader / displaced-agent / mentioned-agent
-// rerun losing this race reports a hard failure to the operator.
+// shape too, otherwise every displaced-agent / mentioned-agent rerun losing this
+// race reports a hard failure to the operator.
 func TestFailTaskAndRerunConcurrently_NonAssigneeTarget(t *testing.T) {
 	if testHandler == nil || testPool == nil {
 		t.Skip("database not available")

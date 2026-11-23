@@ -261,10 +261,9 @@ func TestUnbindAgentsAndDeleteRuntime_KeepsAutopilotConfig(t *testing.T) {
 	var autopilotID string
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO autopilot (
-			workspace_id, title, description, assignee_type, assignee_id,
+			workspace_id, title, description, assignee_id,
 			created_by_type, created_by_id, status, execution_mode
-		)
-		VALUES ($1, 'unbind autopilot', 'do the thing', 'agent', $2, 'member', $3, 'active', 'run_only')
+		) VALUES ($1, 'unbind autopilot', 'do the thing', $2, 'member', $3, 'active', 'run_only')
 		RETURNING id
 	`, testWorkspaceID, agentID, testUserID).Scan(&autopilotID); err != nil {
 		t.Fatalf("insert autopilot: %v", err)

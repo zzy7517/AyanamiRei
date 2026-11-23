@@ -45,7 +45,7 @@ const (
 	//
 	// Naming several domains is not the "content inventory" this rules out. The
 	// ban is on restating the BODY's section headings, which the agent reads for
-	// free once it opens the skill. Nouns like "squad" or "autopilot" are how
+	// free once it opens the skill. Nouns like "agent" or "autopilot" are how
 	// the task arrives — they are trigger wording, and after MUL-6986 one
 	// description has to do the recall work eight used to.
 	maxDescriptionChars = 300
@@ -338,12 +338,12 @@ func TestLegacyRedirectsFollowTheDaemonsBrief(t *testing.T) {
 // nine-into-one merge (MUL-6986).
 //
 // Before the merge, each domain advertised its own description in the
-// always-loaded listing, so an agent looking for "how does squad routing work"
-// matched on the word "squad". Collapsing to one skill removes seven of those
-// eight surfaces, and the remaining description is the only thing an agent sees
-// before deciding to open the skill. If a domain's trigger word is not in it,
-// that domain became strictly harder to find than it was before — which is the
-// one regression this merge is not allowed to cause.
+// always-loaded listing, so an agent looking for "how does autopilot routing
+// work" matched on the word "autopilot". Collapsing to one skill removes seven
+// of those eight surfaces, and the remaining description is the only thing an
+// agent sees before deciding to open the skill. If a domain's trigger word is
+// not in it, that domain became strictly harder to find than it was before —
+// which is the one regression this merge is not allowed to cause.
 //
 // The map must also stay exhaustive: adding a reference without adding its
 // trigger word ships contracts that nothing advertises.
@@ -357,7 +357,6 @@ func TestPlatformSkillDescriptionNamesEveryDomain(t *testing.T) {
 		"references/batch-changes.md": "batch",
 		"references/mentions.md":      "mention",
 		"references/agents.md":        "agent",
-		"references/squads.md":        "squad",
 		"references/autopilots.md":    "autopilot",
 		"references/projects.md":      "project",
 		"references/runtimes.md":      "runtime",
@@ -421,7 +420,7 @@ func TestPlatformSkillCoversPlatformContracts(t *testing.T) {
 			file: "SKILL.md",
 			want: []string{
 				// Must-fix from review: "load on demand" is not "load exactly
-				// one". A task that creates a squad, assigns it an issue and
+				// one". A task that creates an agent, assigns it an issue and
 				// writes a mention needs three references, and wording that
 				// implies one would have the agent act on contracts it never
 				// read — the recall loss the merge is not allowed to cause.
@@ -433,7 +432,6 @@ func TestPlatformSkillCoversPlatformContracts(t *testing.T) {
 				"references/sub-issues.md",
 				"references/mentions.md",
 				"references/agents.md",
-				"references/squads.md",
 				"references/autopilots.md",
 				"references/projects.md",
 				"references/runtimes.md",
@@ -571,7 +569,7 @@ func TestPlatformSkillCoversPlatformContracts(t *testing.T) {
 		{
 			file: "references/mentions.md",
 			want: []string{
-				"(member|agent|squad|issue|all)/([0-9a-fA-F-]+|all)",
+				"(member|agent|issue|all)/([0-9a-fA-F-]+|all)",
 				"canonical inline links with visible label text",
 				"Text removed by HTML sanitization",
 				"reference links, images, autolinks, titles",
@@ -625,33 +623,6 @@ func TestPlatformSkillCoversPlatformContracts(t *testing.T) {
 			},
 		},
 		{
-			file: "references/squads.md",
-			want: []string{
-				"A squad is not an agent",
-				"squad's `leader_id` agent",
-				"squad members are not automatically fanned out",
-				"multica squad member set-role",
-				"mention://squad/<squad-id>",
-				"recording squad activity",
-				// The debugging entry point must stay a bounded two-step read
-				// (MUL-5442): a roots-only scan alone never returns reply
-				// bodies, where mention triggers and failure reasons live.
-				"--roots-only --summary",
-				"--thread <thread-id> --tail 30",
-				"scan the roots first, then open the threads",
-				// MUL-5850: the reads carry --compact, matching the brief and
-				// the router's bounded-reads rule.
-				"--roots-only --summary --compact --output json",
-				"--thread <thread-id> --tail 30 --compact --output json",
-			},
-			notWant: []string{
-				// MUL-5696: no unbounded comment pull. Both shapes contradict
-				// the brief's "two bounded reads, never one bulk pull".
-				"multica issue comment list <issue-id> --output json",
-				"--recent 10",
-			},
-		},
-		{
 			file: "references/autopilots.md",
 			want: []string{
 				"An autopilot is not an agent",
@@ -662,7 +633,9 @@ func TestPlatformSkillCoversPlatformContracts(t *testing.T) {
 				"Do not run `trigger`",
 				"webhook tokens",
 				"{{date}}",
-				"squad's leader agent",
+				// The assignee is always an agent, and --agent is the flag
+				// that retargets one.
+				"multica autopilot update <autopilot-id> --agent <agent-name-or-id>",
 				// A schedule with no --timezone silently runs in UTC, which is
 				// the one wrong assumption here that recurs daily.
 				"runs in **UTC**",

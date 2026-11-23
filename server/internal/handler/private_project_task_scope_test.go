@@ -161,33 +161,6 @@ func TestPrivateProjectWorkingIssuesHiddenFromAggregates(t *testing.T) {
 	if ids, found := workingIssues(f.insider); !found || !slices.Contains(ids, f.secretIssue) {
 		t.Errorf("insider working agent found=%v issue_ids=%v; want the private issue", found, ids)
 	}
-
-	squadID := createCommentTriggerPreviewSquad(t, f.marker+" squad", agentID)
-	if _, err := testPool.Exec(context.Background(),
-		`INSERT INTO squad_member (squad_id, member_type, member_id) VALUES ($1, 'agent', $2)`, squadID, agentID,
-	); err != nil {
-		t.Fatalf("insert squad member: %v", err)
-	}
-	t.Cleanup(func() {
-		testPool.Exec(context.Background(), `DELETE FROM squad_member WHERE squad_id = $1`, squadID)
-	})
-	squadMember := func(userID string) SquadMemberStatusResponse {
-		req := squadScopeReq(userID, http.MethodGet, "/api/squads/"+squadID+"/members/status", nil, map[string]string{"id": squadID})
-		var resp SquadMemberStatusListResponse
-		testutil.Call(t, testHandler.ListSquadMemberStatus, req).Want(http.StatusOK).JSON(&resp)
-		if len(resp.Members) != 1 {
-			t.Fatalf("squad members = %+v, want one", resp.Members)
-		}
-		return resp.Members[0]
-	}
-	hidden := squadMember(f.outsider)
-	if len(hidden.ActiveIssues) != 0 || hidden.Status == nil || *hidden.Status != "working" {
-		t.Errorf("outsider squad member = status %v issues %+v; want working with no issues", hidden.Status, hidden.ActiveIssues)
-	}
-	visible := squadMember(f.insider)
-	if len(visible.ActiveIssues) != 1 || visible.ActiveIssues[0].IssueID != f.secretIssue {
-		t.Errorf("insider squad member issues = %+v, want the private issue", visible.ActiveIssues)
-	}
 }
 
 func TestPrivateProjectQuickCreateHistoryRequiresTargetAndParent(t *testing.T) {

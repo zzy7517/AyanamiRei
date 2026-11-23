@@ -28,12 +28,11 @@ func availableCommandsSection(t *testing.T, brief string) string {
 // across them, so a pointer it carries has to resolve in each one, not only in
 // the issue brief.
 var availableCommandsKinds = map[string]TaskContextForEnv{
-	"issue":        {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve"},
-	"issue-reply":  {IssueID: "issue-1", TriggerCommentID: "c-1", AgentID: "a-1", AgentName: "Eve"},
-	"chat":         {ChatSessionID: "chat-1", AgentID: "a-1", AgentName: "Eve"},
-	"chat-slack":   {ChatSessionID: "chat-1", ChatChannelType: ChannelTypeSlack, AgentID: "a-1", AgentName: "Eve"},
-	"autopilot":    {AutopilotRunID: "run-1", AutopilotID: "ap-1", AgentID: "a-1", AgentName: "Eve"},
-	"squad-leader": {IssueID: "issue-1", IsSquadLeader: true, AgentID: "a-1", AgentName: "Eve"},
+	"issue":       {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve"},
+	"issue-reply": {IssueID: "issue-1", TriggerCommentID: "c-1", AgentID: "a-1", AgentName: "Eve"},
+	"chat":        {ChatSessionID: "chat-1", AgentID: "a-1", AgentName: "Eve"},
+	"chat-slack":  {ChatSessionID: "chat-1", ChatChannelType: ChannelTypeSlack, AgentID: "a-1", AgentName: "Eve"},
+	"autopilot":   {AutopilotRunID: "run-1", AutopilotID: "ap-1", AgentID: "a-1", AgentName: "Eve"},
 }
 
 // TestAvailableCommandsKeepsCompressedContracts pins what MUL-8292 kept when it

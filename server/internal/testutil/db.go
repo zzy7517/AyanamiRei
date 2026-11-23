@@ -253,28 +253,6 @@ func (f *Fixture) Task(t TB, agentID string, over ...Cols) string {
 	}, over))
 }
 
-// Squad inserts a squad led by leaderID.
-func (f *Fixture) Squad(t TB, name, leaderID string, over ...Cols) string {
-	t.Helper()
-	return f.Insert(t, "squad", merge(Cols{
-		"workspace_id": f.WorkspaceID,
-		"name":         name,
-		"description":  "",
-		"leader_id":    leaderID,
-		"creator_id":   f.UserID,
-	}, over))
-}
-
-// SquadMember adds an agent or member to a squad.
-func (f *Fixture) SquadMember(t TB, squadID, memberType, memberID string, over ...Cols) string {
-	t.Helper()
-	return f.Insert(t, "squad_member", merge(Cols{
-		"squad_id":    squadID,
-		"member_type": memberType,
-		"member_id":   memberID,
-	}, over))
-}
-
 // Project inserts a project.
 func (f *Fixture) Project(t TB, title string, over ...Cols) string {
 	t.Helper()

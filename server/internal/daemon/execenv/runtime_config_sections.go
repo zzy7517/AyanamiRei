@@ -303,17 +303,6 @@ func writeAvailableCommands(b *strings.Builder, ctx TaskContextForEnv) {
 	// every agent checkout of one repo pushes and pops the same list (MUL-8989:
 	// a `git stash pop` applied another agent's edits).
 	b.WriteString(sharedStashRule)
-	// Squad maintenance is squad-leader surface: an agent that leads no squad
-	// has no squad to change roles in, so this shipped to every run as dead
-	// weight (MUL-5442). IsSquadLeader is a PER-TASK role (the daemon derives
-	// it from the claim's is_leader_task / squad_id), so gating brief content
-	// on it does cost byte-stability across runs of one session whenever the
-	// role flips. That is an owner-accepted tradeoff, not an open action item;
-	// the decision is recorded in MUL-5811.
-	if ctx.IsSquadLeader {
-		b.WriteString("### Squad maintenance\n")
-		b.WriteString("- `multica squad member set-role <squad-id> --member-id <id> --member-type <agent|member> --role <role> [--output json]` — change role in place (use this instead of remove+add).\n\n")
-	}
 }
 
 // sharedStashRule keeps agents off the stash list in managed checkouts and
@@ -676,9 +665,6 @@ func writeWorkflowAutopilot(b *strings.Builder) {
 // Step 2 owns the scan requirement; per-turn hints supply facts and commands.
 // Use roots-only summaries before bounded thread reads: recent limits threads,
 // not replies. A server-computed delta can satisfy the scan.
-//
-// Squad dispatch leaves work in progress until a later turn confirms delivery.
-// The per-task leader role may change brief bytes across a resumed session.
 func writeWorkflowIssue(b *strings.Builder, ctx TaskContextForEnv) {
 	b.WriteString("**Every issue turn runs the same workflow.** The per-turn user message carries what triggered this run — an assignment handoff, or a triggering comment with its id and your `--parent` value — plus this issue's real id and ready-to-run context-read commands; assemble other calls from `## Available Commands`.\n\n")
 
@@ -693,14 +679,10 @@ func writeWorkflowIssue(b *strings.Builder, ctx TaskContextForEnv) {
 	} else {
 		b.WriteString("3. If any part of what this turn will produce is what the issue itself asks for, set `in_progress` FIRST (skip when the issue is already `in_progress`, or when your Agent Identity forbids status writes): the board should show the issue being worked while you work, not only after. The kind of activity — research, design, planning, review — never decides this; only whether the output is part of THIS issue's ask. Then complete " + step3Rest)
 	}
-	if ctx.IsSquadLeader {
-		b.WriteString("4. **Post your final results as a comment** (unless your outcome is `no_action` — see the no_action rule in your Squad Operating Protocol): post it with `multica issue comment add` using the platform-correct non-inline mode from ## Comment Formatting (never inline `--content`). When the per-turn user message carries a triggering comment, reply in its thread with the `--parent` value it gives you for THIS turn (never one from an earlier turn); when it lists several threads, post one reply per thread. With no triggering comment, post a new top-level comment. Your results are only visible to the user if posted via this CLI call; text in your terminal or run logs is NOT delivered.\n")
-	} else {
-		b.WriteString("4. **Post your final results as a comment — this step is mandatory**: post it with `multica issue comment add` using the platform-correct non-inline mode from ## Comment Formatting (never inline `--content`). When the per-turn user message carries a triggering comment, reply in its thread with the `--parent` value it gives you for THIS turn (never one from an earlier turn); when it lists several threads, post one reply per thread. With no triggering comment, post a new top-level comment. `## Output` states why this call is the only delivery channel.\n")
-	}
+	b.WriteString("4. **Post your final results as a comment — this step is mandatory**: post it with `multica issue comment add` using the platform-correct non-inline mode from ## Comment Formatting (never inline `--content`). When the per-turn user message carries a triggering comment, reply in its thread with the `--parent` value it gives you for THIS turn (never one from an earlier turn); when it lists several threads, post one reply per thread. With no triggering comment, post a new top-level comment. `## Output` states why this call is the only delivery channel.\n")
 	if ctx.HasProjectWorkflow {
 		b.WriteString("5. Before exiting, confirm the issue sits where things actually stand: you ran the matching command from `[Project workflow]`, or you left it at its current step on purpose because its work continues.\n\n")
-		writeIssueStatusRulesForWorkflow(b, ctx)
+		writeIssueStatusRulesForWorkflow(b)
 		return
 	}
 	b.WriteString("5. Before exiting, confirm the status still matches where things actually stand.\n\n")
@@ -710,9 +692,6 @@ func writeWorkflowIssue(b *strings.Builder, ctx TaskContextForEnv) {
 	b.WriteString("- You delivered what the issue itself asks for and it awaits acceptance → `in_review`. Delivering an issue assigned to you — including a sub-issue in a chain or stage — always lands here; stage barriers and parent notifications depend on that signal. `done` stays human.\n")
 	b.WriteString("- The issue's work continues beyond this turn — you dispatched sub-issues, or delivered one part with more underway → `in_progress`.\n")
 	b.WriteString("- You cannot proceed without something you are missing → `blocked`, and post a comment explaining the blocker unless your Agent Identity forbids issue comments.\n")
-	if ctx.IsSquadLeader {
-		b.WriteString("- Squad leader: dispatching members is not delivery — a dispatch turn leaves the parent `in_progress`, and it moves to `in_review` only on the later turn (a member update or stage-barrier re-trigger) where you confirm the overall goal is met.\n")
-	}
 	// A custom catalog needs one reminder that workflow updates use exact keys.
 	if len(ctx.IssueStatuses) > 0 {
 		b.WriteString("- The workflow rules above refer to exact built-in status keys, not categories. Custom statuses share lifecycle semantics only, not built-in automation behavior.\n")
@@ -728,16 +707,13 @@ func writeWorkflowIssue(b *strings.Builder, ctx TaskContextForEnv) {
 // [Project workflow] block carries the step's own commands; this section only
 // says that block is the contract. It is fixed text, so the cache prefix splits
 // into just two forms: with and without a workflow.
-func writeIssueStatusRulesForWorkflow(b *strings.Builder, ctx TaskContextForEnv) {
+func writeIssueStatusRulesForWorkflow(b *strings.Builder) {
 	b.WriteString("**Issue status — this issue follows its project workflow** (skip any status call your Agent Identity forbids)\n\n")
 	b.WriteString("`[Project workflow]` in the per-turn message is this issue's status contract: its statuses, the step it is at, and the commands that finish that step. Move this issue only with its commands.\n\n")
 	b.WriteString("- You finished the work of your step → run its Step done command. Entering a step that hands off reassigns the issue and starts that handler's run.\n")
 	b.WriteString("- What you received needs rework at an earlier step → run its Needs changes command, when it has one.\n")
 	b.WriteString("- The issue's work continues beyond this turn — you dispatched sub-issues, or delivered one part with more underway → leave it at its current step.\n")
 	b.WriteString("- You cannot proceed without something you are missing → follow its Can't proceed line, and post a comment explaining the blocker unless your Agent Identity forbids issue comments.\n")
-	if ctx.IsSquadLeader {
-		b.WriteString("- Squad leader: dispatching members is not delivery — a dispatch turn leaves the parent at its current step, and you run Step done only on the later turn (a member update or stage-barrier re-trigger) where you confirm the overall goal is met.\n")
-	}
 	b.WriteString("- Your turn produced none of the issue's own deliverable — you answered a question or consulted on work owned elsewhere → write nothing, at any point; questions, discussion, and acknowledgements never touch status. This no-write default is what keeps concurrent runs from flapping the board.\n\n")
 }
 
@@ -770,7 +746,7 @@ const platformSkillName = "multica-platform"
 // description, repeated in the brief's recall hint for agents that never read
 // the skill listing. TestPlatformSkillDomainsMatchDescription keeps it equal to
 // the description, so a new reference cannot ship without reaching the brief.
-const platformSkillDomains = "issue and PR contracts, sub-issues, batch changes, saved views, comment charts and files, mentions, inbox, agents, squads, autopilots, projects, runtimes, local environments, skill import, themes"
+const platformSkillDomains = "issue and PR contracts, sub-issues, batch changes, saved views, comment charts and files, mentions, inbox, agents, autopilots, projects, runtimes, local environments, skill import, themes"
 
 // subIssueContractsSkill returns how the brief should refer to the skill
 // carrying the sub-issue contracts, and whether any such skill is installed.
@@ -979,11 +955,7 @@ func writeOutput(b *strings.Builder, kind taskKind, ctx TaskContextForEnv) {
 			writeInlineBlocksPolicy(b)
 		}
 	default:
-		if ctx.IsSquadLeader {
-			b.WriteString("⚠️ **Final results MUST be delivered via `multica issue comment add`** — unless your outcome is `no_action`, which your Squad Operating Protocol states in full. For every other outcome (`action`, `failed`) a comment is mandatory. The user does NOT see your terminal output or run logs — only comments on the issue.\n\n")
-		} else {
-			b.WriteString("⚠️ **Final results MUST be delivered via `multica issue comment add`.** The user does NOT see your terminal output or run logs — only comments on the issue.\n\n")
-		}
+		b.WriteString("⚠️ **Final results MUST be delivered via `multica issue comment add`.** The user does NOT see your terminal output or run logs — only comments on the issue.\n\n")
 		b.WriteString("**Post only your final result, before this turn exits — one comment, or one reply per thread when the per-turn message lists several threads.** Do NOT post progress updates or plans along the way. Only a scheduled wakeup check whose `[WAKEUP]` block offers `multica issue wakeup checkin` may check in instead of commenting, when it found nothing that needs a reply.\n\n")
 		b.WriteString("Keep comments concise and natural — state the outcome, not the process.\n\n")
 		b.WriteString("**Delivering files here:** pass `--attachment <path>` to `multica issue comment add` (repeatable) — the only way a screenshot or artifact reaches the reader.\n")

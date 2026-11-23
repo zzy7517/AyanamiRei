@@ -1,7 +1,6 @@
 # Autopilots
 
-An autopilot is not an agent. It is a rule that dispatches work to an agent, or
-to a squad's leader agent.
+An autopilot is not an agent. It is a rule that dispatches work to an agent.
 
 ## Core model
 
@@ -29,8 +28,7 @@ Execution modes:
 multica autopilot list --output json
 multica autopilot get <autopilot-id> --output json
 multica autopilot create --title "<title>" --description "<task prompt>" --agent <agent-name-or-id> --mode create_issue|run_only --output json
-multica autopilot create --title "<title>" --description "<task prompt>" --squad <squad-name-or-id> --mode create_issue|run_only --output json
-multica autopilot update <autopilot-id> --squad <squad-name-or-id> --output json
+multica autopilot update <autopilot-id> --agent <agent-name-or-id>
 multica autopilot update <autopilot-id> --status active|paused --output json
 multica autopilot runs <autopilot-id> --output json
 multica autopilot trigger-add <autopilot-id> --kind schedule --cron "0 9 * * *" --timezone Asia/Shanghai --output json
@@ -39,13 +37,8 @@ multica autopilot trigger <autopilot-id> --output json
 multica autopilot trigger-rotate-url <autopilot-id> <trigger-id> --yes --output json
 ```
 
-The assignee flags `--agent`, `--squad`, and `--squad-id` are mutually exclusive.
-On `update`, any of them retargets the autopilot (`--agent` moves a squad
-autopilot back to a single agent); leave them all out to keep the current
-assignee.
-
-A CLI that answers `unknown flag: --squad` predates squad assignees: assign the
-squad in the web app, or ask the user to update the CLI.
+On `update`, `--agent` retargets the autopilot; leave it out to keep the
+current assignee.
 
 Do not run `trigger`, `delete`, `trigger-delete`, or `trigger-rotate-url` to
 test — those are real side effects. Use `trigger` only when the user explicitly
@@ -77,10 +70,9 @@ material into comments, logs, docs, or PRs.
 
 1. `multica autopilot get <id> --output json` — status, mode, assignee, triggers.
 2. `multica autopilot runs <id> --output json` — run status and failure reason.
-3. If assigned to a squad, inspect the squad: `multica squad get <squad-id> --output json`; execution goes to the leader.
-4. Inspect the target agent/runtime: `multica agent get <agent-id> --output json` and `multica runtime list --output json`.
-5. For webhooks, inspect delivery status: `queued` means the worker has not completed dispatch; `failed` carries the worker error. A provider retry with the same `X-GitHub-Delivery` / `Idempotency-Key` reuses the original delivery.
-6. For `create_issue`, inspect the created issue if the run records one.
+3. Inspect the target agent/runtime: `multica agent get <agent-id> --output json` and `multica runtime list --output json`.
+4. For webhooks, inspect delivery status: `queued` means the worker has not completed dispatch; `failed` carries the worker error. A provider retry with the same `X-GitHub-Delivery` / `Idempotency-Key` reuses the original delivery.
+5. For `create_issue`, inspect the created issue if the run records one.
 
 ## Access
 

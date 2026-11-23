@@ -154,15 +154,14 @@ func childDoneEntries(t *testing.T, parentID string) []childDoneEntry {
 }
 
 type childDoneRunRow struct {
-	ID, AgentID, SquadID, Note, Status, WakeupID string
-	Leader                                       bool
+	ID, AgentID, Note, Status, WakeupID string
 }
 
 // childDoneRuns lists the runs the parent's rule started, oldest first.
 func childDoneRuns(t *testing.T, parentID string) []childDoneRunRow {
 	t.Helper()
-	rows, err := testPool.Query(context.Background(), `SELECT id::text, agent_id::text, COALESCE(squad_id::text, ''),
-		COALESCE(handoff_note, ''), status, context->>'wakeup_id', COALESCE(is_leader_task, false)
+	rows, err := testPool.Query(context.Background(), `SELECT id::text, agent_id::text,
+		COALESCE(handoff_note, ''), status, context->>'wakeup_id'
 		FROM agent_task_queue WHERE issue_id = $1 AND context->>'wakeup_system' = 'child_done'
 		ORDER BY created_at, id`, parentID)
 	if err != nil {
@@ -172,7 +171,7 @@ func childDoneRuns(t *testing.T, parentID string) []childDoneRunRow {
 	runs := []childDoneRunRow{}
 	for rows.Next() {
 		var r childDoneRunRow
-		if err := rows.Scan(&r.ID, &r.AgentID, &r.SquadID, &r.Note, &r.Status, &r.WakeupID, &r.Leader); err != nil {
+		if err := rows.Scan(&r.ID, &r.AgentID, &r.Note, &r.Status, &r.WakeupID); err != nil {
 			t.Fatal(err)
 		}
 		runs = append(runs, r)
@@ -201,7 +200,7 @@ func TestChildDoneWakesAgentAssignee(t *testing.T) {
 	updateChildStatus(t, fx.child.ID, "done")
 
 	runs := childDoneRuns(t, fx.parent.ID)
-	if len(runs) != 1 || runs[0].AgentID != agentID || runs[0].Leader || runs[0].WakeupID == "" {
+	if len(runs) != 1 || runs[0].AgentID != agentID || runs[0].WakeupID == "" {
 		t.Fatalf("runs = %+v, want one run for the parent's agent", runs)
 	}
 	for _, want := range []string{service.ChildDoneDefaultInstruction, "condition.met", `"all":true`} {
@@ -366,60 +365,18 @@ func TestChildDoneNotifiesMemberAssignee(t *testing.T) {
 	}
 }
 
-// A squad parent wakes its leader in the leader role; it does not fan out to
-// members.
-func TestChildDoneWakesSquadLeader(t *testing.T) {
+// Waking the parent's assignee is a hand-off between two different issues,
+// never a self-loop, even when the same agent owns the finished child
+// (MUL-2808, MUL-3969).
+func TestChildDoneWakesAssigneeWhoeverOwnedTheChild(t *testing.T) {
 	fx := newChildDoneFixture(t, "in_progress")
-	sq := newSquadCommentTriggerFixture(t)
-	setIssueAssigneeDirect(t, fx.parent.ID, "squad", sq.SquadID)
+	agentID := handlerTestAgentID(t)
+	setIssueAssigneeDirect(t, fx.parent.ID, "agent", agentID)
+	setIssueAssigneeDirect(t, fx.child.ID, "agent", agentID)
 
 	updateChildStatus(t, fx.child.ID, "done")
-
-	runs := childDoneRuns(t, fx.parent.ID)
-	if len(runs) != 1 || runs[0].AgentID != sq.LeaderID || !runs[0].Leader || runs[0].SquadID != sq.SquadID {
-		t.Fatalf("runs = %+v, want one leader run", runs)
-	}
-}
-
-// Waking the parent's assignee is a hand-off between two different issues,
-// never a self-loop, whoever owned the finished child (MUL-2808, MUL-3969).
-func TestChildDoneWakesAssigneeWhoeverOwnedTheChild(t *testing.T) {
-	cases := map[string]func(t *testing.T, fx childDoneFixture) string{
-		"same agent owns the child": func(t *testing.T, fx childDoneFixture) string {
-			agentID := handlerTestAgentID(t)
-			setIssueAssigneeDirect(t, fx.parent.ID, "agent", agentID)
-			setIssueAssigneeDirect(t, fx.child.ID, "agent", agentID)
-			return agentID
-		},
-		"child squad led by the parent's agent": func(t *testing.T, fx childDoneFixture) string {
-			sq := newSquadCommentTriggerFixture(t)
-			setIssueAssigneeDirect(t, fx.parent.ID, "agent", sq.LeaderID)
-			setIssueAssigneeDirect(t, fx.child.ID, "squad", sq.SquadID)
-			return sq.LeaderID
-		},
-		"two squads share a leader": func(t *testing.T, fx childDoneFixture) string {
-			sq := newSquadCommentTriggerFixture(t)
-			other := dbfx.Squad(t, "Child Done Shared Leader Squad", sq.LeaderID)
-			setIssueAssigneeDirect(t, fx.parent.ID, "squad", sq.SquadID)
-			setIssueAssigneeDirect(t, fx.child.ID, "squad", other)
-			return sq.LeaderID
-		},
-		"same squad owns the child": func(t *testing.T, fx childDoneFixture) string {
-			sq := newSquadCommentTriggerFixture(t)
-			setIssueAssigneeDirect(t, fx.parent.ID, "squad", sq.SquadID)
-			setIssueAssigneeDirect(t, fx.child.ID, "squad", sq.SquadID)
-			return sq.LeaderID
-		},
-	}
-	for name, setup := range cases {
-		t.Run(name, func(t *testing.T) {
-			fx := newChildDoneFixture(t, "in_progress")
-			agentID := setup(t, fx)
-			updateChildStatus(t, fx.child.ID, "done")
-			if got := countPendingTasksForAgent(t, fx.parent.ID, agentID); got != 1 {
-				t.Fatalf("pending parent runs for the assignee = %d, want 1", got)
-			}
-		})
+	if got := countPendingTasksForAgent(t, fx.parent.ID, agentID); got != 1 {
+		t.Fatalf("pending parent runs for the assignee = %d, want 1", got)
 	}
 }
 
@@ -675,32 +632,32 @@ func TestChildDoneRateLimitPausesRule(t *testing.T) {
 	}
 }
 
-// TestStageLeaderPrepareTimeoutRetryCanAdvanceNextStage covers the server half
-// of MUL-4923's recovery chain: a stage barrier wakes the squad leader, the
+// TestStageWakeupPrepareTimeoutRetryCanAdvanceNextStage covers the server half
+// of MUL-4923's recovery chain: a stage barrier wakes the parent's agent, the
 // pre-start attempt fails with the daemon's timeout reason, the atomic retry
-// preserves the leader, squad and wakeup provenance, and that retry can
-// promote the parked next stage as the leader actor.
-func TestStageLeaderPrepareTimeoutRetryCanAdvanceNextStage(t *testing.T) {
+// preserves the agent and wakeup provenance, and that retry can promote the
+// parked next stage as the agent's actor.
+func TestStageWakeupPrepareTimeoutRetryCanAdvanceNextStage(t *testing.T) {
 	if testHandler == nil || testPool == nil {
 		t.Skip("database not available")
 	}
 	ctx := context.Background()
 	fx := newChildDoneFixture(t, "in_progress")
-	sq := newSquadCommentTriggerFixture(t)
-	setIssueAssigneeDirect(t, fx.parent.ID, "squad", sq.SquadID)
-	setIssueAssigneeDirect(t, fx.child.ID, "squad", sq.SquadID)
+	agentID := handlerTestAgentID(t)
+	setIssueAssigneeDirect(t, fx.parent.ID, "agent", agentID)
+	setIssueAssigneeDirect(t, fx.child.ID, "agent", agentID)
 	dbfx.Exec(t, `UPDATE issue SET stage = 1 WHERE id = $1`, fx.child.ID)
 
-	// Stage 2 exists but is deliberately parked. The server wakes the leader at
-	// the Stage 1 barrier; only the leader decides to promote this child.
+	// Stage 2 exists but is deliberately parked. The server wakes the agent at
+	// the Stage 1 barrier; only the agent decides to promote this child.
 	w := httptest.NewRecorder()
 	req := newRequest("POST", "/api/issues?workspace_id="+testWorkspaceID, map[string]any{
 		"title":           "stage 2 after prepare timeout",
 		"status":          "backlog",
 		"parent_issue_id": fx.parent.ID,
 		"stage":           2,
-		"assignee_type":   "squad",
-		"assignee_id":     sq.SquadID,
+		"assignee_type":   "agent",
+		"assignee_id":     agentID,
 	})
 	testHandler.CreateIssue(w, req)
 	if w.Code != http.StatusCreated {
@@ -714,44 +671,43 @@ func TestStageLeaderPrepareTimeoutRetryCanAdvanceNextStage(t *testing.T) {
 
 	updateChildStatus(t, fx.child.ID, "done")
 	runs := childDoneRuns(t, fx.parent.ID)
-	if len(runs) != 1 || !runs[0].Leader || runs[0].SquadID != sq.SquadID || !strings.Contains(runs[0].Note, `"next_stage":2`) {
-		t.Fatalf("stage barrier wake = %+v, want a leader run naming stage 2", runs)
+	if len(runs) != 1 || runs[0].AgentID != agentID || !strings.Contains(runs[0].Note, `"next_stage":2`) {
+		t.Fatalf("stage barrier wake = %+v, want a run for the parent's agent naming stage 2", runs)
 	}
 	original := runs[0]
 	dbfx.Exec(t, `UPDATE agent_task_queue SET status = 'dispatched', dispatched_at = now() WHERE id = $1`, original.ID)
 	if _, err := testHandler.TaskService.FailTask(ctx, parseUUID(original.ID), "task preparation timed out after 5m0s", "", "", "", "timeout", false, "", ""); err != nil {
-		t.Fatalf("fail original leader task: %v", err)
+		t.Fatalf("fail original task: %v", err)
 	}
 
-	var retryID, retryStatus, retrySquadID, retryWakeupID string
-	var retryLeader bool
+	var retryID, retryStatus, retryAgentID, retryWakeupID string
 	var retryAttempt int32
-	dbfx.QueryRow(t, `SELECT id::text, status, is_leader_task, squad_id::text, COALESCE(context->>'wakeup_id', ''), attempt
+	dbfx.QueryRow(t, `SELECT id::text, status, agent_id::text, COALESCE(context->>'wakeup_id', ''), attempt
 		FROM agent_task_queue WHERE parent_task_id = $1`, original.ID).
-		Scan(&retryID, &retryStatus, &retryLeader, &retrySquadID, &retryWakeupID, &retryAttempt)
-	if retryStatus != "queued" || retryAttempt != 2 || !retryLeader || retrySquadID != original.SquadID || retryWakeupID != original.WakeupID {
-		t.Fatalf("retry provenance = status:%q attempt:%d leader:%v squad:%q wakeup:%q; want queued attempt 2 with the original leader context",
-			retryStatus, retryAttempt, retryLeader, retrySquadID, retryWakeupID)
+		Scan(&retryID, &retryStatus, &retryAgentID, &retryWakeupID, &retryAttempt)
+	if retryStatus != "queued" || retryAttempt != 2 || retryAgentID != agentID || retryWakeupID != original.WakeupID {
+		t.Fatalf("retry provenance = status:%q attempt:%d agent:%s wakeup:%q; want queued attempt 2 with the original agent and wakeup context",
+			retryStatus, retryAttempt, retryAgentID, retryWakeupID)
 	}
 	dbfx.Exec(t, `UPDATE agent_task_queue SET status = 'running', dispatched_at = now(), started_at = now() WHERE id = $1`, retryID)
 
 	// Act through the normal issue handler with the retry task as the agent
-	// identity: the operation the stage wake asks the leader to perform.
+	// identity: the operation the stage wake asks the agent to perform.
 	w = httptest.NewRecorder()
 	req = newRequest("PUT", "/api/issues/"+stage2.ID, map[string]any{"status": "todo"})
-	req.Header.Set("X-Agent-ID", sq.LeaderID)
+	req.Header.Set("X-Agent-ID", agentID)
 	req.Header.Set("X-Task-ID", retryID)
 	req = withURLParam(req, "id", stage2.ID)
 	testHandler.UpdateIssue(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("retry leader promote Stage 2: expected 200, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("retry promote Stage 2: expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 	var stage2Status string
 	dbfx.QueryRow(t, `SELECT status FROM issue WHERE id = $1`, stage2.ID).Scan(&stage2Status)
 	if stage2Status != "todo" {
 		t.Fatalf("Stage 2 status = %q, want todo", stage2Status)
 	}
-	if got := countPendingTasksForAgent(t, stage2.ID, sq.LeaderID); got != 1 {
-		t.Fatalf("promoted Stage 2 queued %d leader tasks, want 1", got)
+	if got := countPendingTasksForAgent(t, stage2.ID, agentID); got != 1 {
+		t.Fatalf("promoted Stage 2 queued %d runs for the assignee, want 1", got)
 	}
 }

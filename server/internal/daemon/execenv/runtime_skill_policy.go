@@ -29,6 +29,21 @@ func cleanRuntimeSkillKey(key string) (string, bool) {
 	return filepath.ToSlash(cleaned), true
 }
 
+// ClaudeSkillSettings returns the --settings content that hides the runtime
+// skills a task may not use, or nil when the task disables none. It is for
+// launches that carry their settings with them instead of running inside a
+// prepared environment.
+func ClaudeSkillSettings(envRoot string, disabled []RuntimeSkillRefForEnv, workspaceSkills []SkillContextForEnv) ([]byte, error) {
+	if len(disabled) == 0 {
+		return nil, nil
+	}
+	path, err := prepareClaudeSkillSettings(envRoot, disabled, workspaceSkills)
+	if err != nil || path == "" {
+		return nil, err
+	}
+	return os.ReadFile(path)
+}
+
 func prepareClaudeSkillSettings(envRoot string, disabled []RuntimeSkillRefForEnv, workspaceSkills []SkillContextForEnv) (string, error) {
 	path := filepath.Join(envRoot, claudeRuntimeSkillSettingsFile)
 	if len(disabled) == 0 {

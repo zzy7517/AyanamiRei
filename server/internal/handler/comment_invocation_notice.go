@@ -20,7 +20,7 @@ func (h *Handler) noteCommentInvocationDenied(ctx context.Context, issue db.Issu
 	for _, outcome := range outcomes {
 		// invocation_not_allowed hides private/foreign targets;
 		// target_unavailable covers malformed mention ids and targets that are
-		// gone (archived agent, missing squad). Both leave the mention looking
+		// gone (archived agent). Both leave the mention looking
 		// successful on the saved comment, so both need a receipt. Runtime
 		// refusals are excluded: noteBlockedRuntimeTargets already leaves their
 		// own, more specific notice.

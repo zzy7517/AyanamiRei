@@ -1323,33 +1323,33 @@ func TestAgentStatusChangeOnDefaultIgnoresStep(t *testing.T) {
 	agentUpdateIssue(t, issueID, agentID, taskID, map[string]any{"status": "in_review"}).Want(http.StatusOK)
 }
 
-// A handoff away from an issue a squad owns offers to stop — and stops — the
-// runs made on the squad's behalf, recording who stopped them.
-func TestHandoffStopsPreviousSquadRuns(t *testing.T) {
+// A handoff away from an issue an agent owns offers to stop — and stops — the
+// agent's runs on it, recording who stopped them. Another agent's waiting run
+// on the same issue is not the assignee's and is left alone.
+func TestHandoffStopsPreviousAssigneeRuns(t *testing.T) {
 	seedTestCatalog(t)
 	agentID := seededReadyAgentID(t)
-	squadID := dbfx.Squad(t, "Workflow review squad "+workflowTestSuffix(), agentID)
-	projectID := createWorkflowTestProject(t, "Workflow squad stop project")
+	projectID := createWorkflowTestProject(t, "Workflow agent stop project")
 	setColumnHandoff(t, projectID, "in_progress", map[string]any{"handler": map[string]any{"type": "member", "id": testUserID}}).Want(http.StatusOK)
-	setColumnHandoff(t, projectID, "in_review", map[string]any{"handler": map[string]any{"type": "squad", "id": squadID}}).Want(http.StatusOK)
-	issueID := dbfx.Issue(t, "squad reviewing", testutil.Cols{
-		"project_id": projectID, "status": "in_review", "assignee_type": "squad", "assignee_id": squadID,
+	setColumnHandoff(t, projectID, "in_review", handToAgent(agentID, "Review the PR.")).Want(http.StatusOK)
+	issueID := dbfx.Issue(t, "agent reviewing", testutil.Cols{
+		"project_id": projectID, "status": "in_review", "assignee_type": "agent", "assignee_id": agentID,
 	})
 	var runtimeID string
 	dbfx.QueryRow(t, `SELECT runtime_id::text FROM agent WHERE id = $1`, agentID).Scan(&runtimeID)
 	running := dbfx.Task(t, agentID, testutil.Cols{
-		"issue_id": issueID, "squad_id": squadID, "runtime_id": runtimeID, "status": "running", "started_at": time.Now(),
+		"issue_id": issueID, "runtime_id": runtimeID, "status": "running", "started_at": time.Now(),
 	})
-	otherSquad := dbfx.Squad(t, "Another squad sharing the leader "+workflowTestSuffix(), agentID)
-	unrelated := dbfx.Task(t, agentID, testutil.Cols{
-		"issue_id": issueID, "squad_id": otherSquad, "runtime_id": runtimeID, "status": "deferred", "fire_at": time.Now(),
+	bystander := createHandlerTestAgent(t, "Workflow bystander "+workflowTestSuffix(), nil)
+	unrelated := dbfx.Task(t, bystander, testutil.Cols{
+		"issue_id": issueID, "runtime_id": runtimeID, "status": "deferred", "fire_at": time.Now(),
 	})
 
 	var preview WorkflowHandoffPreviewResponse
 	req := withURLParam(newRequest("GET", "/api/issues/"+issueID+"/workflow-handoff?status=in_progress", nil), "id", issueID)
 	testutil.Call(t, testHandler.PreviewWorkflowHandoff, req).Want(http.StatusOK).JSON(&preview)
 	if len(preview.PreviousRuns) != 1 || preview.PreviousRuns[0].TaskID != running {
-		t.Fatalf("preview runs = %+v, want the squad's run", preview.PreviousRuns)
+		t.Fatalf("preview runs = %+v, want the agent's run", preview.PreviousRuns)
 	}
 
 	updateIssueForTest(t, issueID, map[string]any{"status": "in_progress", "stop_previous_assignee_runs": true}).Want(http.StatusOK)
@@ -1359,11 +1359,11 @@ func TestHandoffStopsPreviousSquadRuns(t *testing.T) {
 	var memberName string
 	dbfx.QueryRow(t, `SELECT name FROM "user" WHERE id = $1`, testUserID).Scan(&memberName)
 	if status != "cancelled" || stoppedBy == nil || *stoppedBy != memberName {
-		t.Fatalf("squad run = %s stopped by %v, want cancelled by %s", status, stoppedBy, memberName)
+		t.Fatalf("agent run = %s stopped by %v, want cancelled by %s", status, stoppedBy, memberName)
 	}
 	dbfx.QueryRow(t, `SELECT status FROM agent_task_queue WHERE id = $1`, unrelated).Scan(&status)
 	if status != "deferred" {
-		t.Fatalf("handoff cancelled another squad's waiting run: %s", status)
+		t.Fatalf("handoff cancelled another agent's waiting run: %s", status)
 	}
 }
 

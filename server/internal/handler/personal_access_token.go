@@ -175,6 +175,15 @@ func (h *Handler) RenewCurrentPersonalAccessToken(w http.ResponseWriter, r *http
 	// and we need the row, not just the user.
 	authHeader := r.Header.Get("Authorization")
 	rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// The pre-shared token authenticates like a PAT but has no row and no
+	// expiry, so there is nothing to extend: the "never expires" answer, not
+	// a renewal. A daemon holding it polls this endpoint like any other.
+	if _, ok := auth.ResolveSharedToken(rawToken); ok {
+		writeJSON(w, http.StatusOK, RenewPATResponse{ExpiresAt: "", Renewed: false})
+		return
+	}
+
 	if rawToken == "" || rawToken == authHeader || !strings.HasPrefix(rawToken, "mul_") {
 		writeError(w, http.StatusBadRequest, "only personal access tokens can be renewed")
 		return

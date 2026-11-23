@@ -817,10 +817,10 @@ func (h *Handler) createManualCommentSubIssue(w http.ResponseWriter, r *http.Req
 }
 
 type preparedAgentCommentSubIssue struct {
-	agentID, squadID, runtimeID pgtype.UUID
-	prompt, priority, dueDate   string
-	projectID                   pgtype.UUID
-	attachmentIDs               []pgtype.UUID
+	agentID, runtimeID        pgtype.UUID
+	prompt, priority, dueDate string
+	projectID                 pgtype.UUID
+	attachmentIDs             []pgtype.UUID
 }
 
 func (h *Handler) prepareAgentCommentSubIssue(w http.ResponseWriter, r *http.Request, workspaceID pgtype.UUID, input QuickCreateIssueRequest) (*preparedAgentCommentSubIssue, error) {
@@ -828,33 +828,16 @@ func (h *Handler) prepareAgentCommentSubIssue(w http.ResponseWriter, r *http.Req
 	if prompt == "" {
 		return nil, sourceContextBadRequest("prompt is required")
 	}
-	hasAgent := strings.TrimSpace(input.AgentID) != ""
-	hasSquad := strings.TrimSpace(input.SquadID) != ""
-	if hasAgent == hasSquad {
-		return nil, sourceContextBadRequest("exactly one of agent_id or squad_id is required")
+	if strings.TrimSpace(input.AgentID) == "" {
+		return nil, sourceContextBadRequest("agent_id is required")
 	}
 	priority := strings.ToLower(strings.TrimSpace(input.Priority))
 	if priority != "" && priority != "urgent" && priority != "high" && priority != "medium" && priority != "low" {
 		return nil, sourceContextBadRequest("invalid priority")
 	}
-	var agentID, squadID pgtype.UUID
-	if hasSquad {
-		parsed, err := util.ParseUUID(strings.TrimSpace(input.SquadID))
-		if err != nil {
-			return nil, sourceContextBadRequest("invalid squad_id")
-		}
-		squadID = parsed
-		squad, err := h.Queries.GetSquadInWorkspace(r.Context(), db.GetSquadInWorkspaceParams{ID: squadID, WorkspaceID: workspaceID})
-		if err != nil || squad.ArchivedAt.Valid {
-			return nil, sourceContextBadRequest("squad not found or archived")
-		}
-		agentID = squad.LeaderID
-	} else {
-		parsed, err := util.ParseUUID(strings.TrimSpace(input.AgentID))
-		if err != nil {
-			return nil, sourceContextBadRequest("invalid agent_id")
-		}
-		agentID = parsed
+	agentID, err := util.ParseUUID(strings.TrimSpace(input.AgentID))
+	if err != nil {
+		return nil, sourceContextBadRequest("invalid agent_id")
 	}
 	if status, message := h.validateAssigneePair(r.Context(), r, util.UUIDToString(workspaceID), pgtype.Text{String: "agent", Valid: true}, agentID); status != 0 {
 		writeError(w, status, message)
@@ -918,7 +901,7 @@ func (h *Handler) prepareAgentCommentSubIssue(w http.ResponseWriter, r *http.Req
 		projectID = parsed
 	}
 	return &preparedAgentCommentSubIssue{
-		agentID: agentID, squadID: squadID, runtimeID: agent.RuntimeID,
+		agentID: agentID, runtimeID: agent.RuntimeID,
 		prompt: prompt, priority: priority, dueDate: dueDate,
 		projectID: projectID, attachmentIDs: attachmentIDs,
 	}, nil
@@ -932,7 +915,7 @@ func (h *Handler) createAgentCommentSubIssue(w http.ResponseWriter, r *http.Requ
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"code": "source_context_quick_create_unsupported", "error": "selected agent runtime must be updated before using captured context"})
 		return errSourceContextResponseWritten
 	}
-	task, err := h.TaskService.EnqueueQuickCreateTaskWithSourceContext(r.Context(), workspaceID, userID, prepared.agentID, prepared.squadID, prepared.prompt, prepared.priority, prepared.dueDate, prepared.projectID, capture.SourceIssueID, prepared.attachmentIDs, capture)
+	task, err := h.TaskService.EnqueueQuickCreateTaskWithSourceContext(r.Context(), workspaceID, userID, prepared.agentID, prepared.prompt, prepared.priority, prepared.dueDate, prepared.projectID, capture.SourceIssueID, prepared.attachmentIDs, capture)
 	if err != nil {
 		return err
 	}

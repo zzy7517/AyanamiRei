@@ -872,6 +872,15 @@ func (h *Handler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to delete project subscribers")
 		return
 	}
+	// Task pairs name projects by id only, so a deleted project's pairs go
+	// with it.
+	if _, err := qtx.DeleteIssueProjectScopesByProject(r.Context(), db.DeleteIssueProjectScopesByProjectParams{
+		ProjectID:   project.ID,
+		WorkspaceID: project.WorkspaceID,
+	}); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to delete project scope")
+		return
+	}
 	if err := qtx.DeleteProject(r.Context(), db.DeleteProjectParams{
 		ID:          project.ID,
 		WorkspaceID: project.WorkspaceID,

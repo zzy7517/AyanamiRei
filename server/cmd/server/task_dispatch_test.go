@@ -60,7 +60,7 @@ func TestPrivateProjectQuickCreateDispatchOmitsPrompt(t *testing.T) {
 	registerListeners(bus, fb, newPrivateProjectAudience(q))
 	tasks := service.NewTaskService(q, testPool, nil, bus)
 	const prompt = "Confidential client acquisition terms"
-	task, err := tasks.EnqueueQuickCreateTask(ctx, ppUUID(testWorkspaceID), ppUUID(testUserID), ppUUID(agent), pgtype.UUID{}, prompt, "", "", ppUUID(project), pgtype.UUID{}, nil)
+	task, err := tasks.EnqueueQuickCreateTask(ctx, ppUUID(testWorkspaceID), ppUUID(testUserID), ppUUID(agent), prompt, "", "", ppUUID(project), pgtype.UUID{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

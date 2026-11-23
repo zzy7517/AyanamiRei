@@ -12,7 +12,7 @@ import (
 )
 
 const listConversationRootOwners = `-- name: ListConversationRootOwners :many
-SELECT DISTINCT ON (agent_id) agent_id, squad_id
+SELECT DISTINCT t.agent_id
 FROM agent_task_queue t
 WHERE t.issue_id = $1 AND t.agent_id IS NOT NULL
   AND (t.trigger_comment_id = $2 OR $2 = ANY(t.coalesced_comment_ids) OR EXISTS (
@@ -20,7 +20,6 @@ WHERE t.issue_id = $1 AND t.agent_id IS NOT NULL
       WHERE s.task_id = t.id AND s.issue_id = t.issue_id
         AND s.comment_id = $2 AND s.status = 'delivered'
   ))
-ORDER BY agent_id, (squad_id IS NOT NULL) DESC, created_at DESC, id DESC
 `
 
 type ListConversationRootOwnersParams struct {
@@ -28,31 +27,25 @@ type ListConversationRootOwnersParams struct {
 	TriggerCommentID pgtype.UUID `json:"trigger_comment_id"`
 }
 
-type ListConversationRootOwnersRow struct {
-	AgentID pgtype.UUID `json:"agent_id"`
-	SquadID pgtype.UUID `json:"squad_id"`
-}
-
-// Preserve the newest non-null squad per agent, including terminal tasks.
 // A root folded into a queued task keeps its owner after the merge repoints
 // trigger_comment_id at the newer comment and moves the root into
 // coalesced_comment_ids (MUL-8416).
 // A delivered supplement establishes ownership even when the root did not
 // start a separate task. Pending or failed delivery does not establish it.
 // Routing does not need execution context, results, or other issue threads.
-func (q *Queries) ListConversationRootOwners(ctx context.Context, arg ListConversationRootOwnersParams) ([]ListConversationRootOwnersRow, error) {
+func (q *Queries) ListConversationRootOwners(ctx context.Context, arg ListConversationRootOwnersParams) ([]pgtype.UUID, error) {
 	rows, err := q.db.Query(ctx, listConversationRootOwners, arg.IssueID, arg.TriggerCommentID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListConversationRootOwnersRow{}
+	items := []pgtype.UUID{}
 	for rows.Next() {
-		var i ListConversationRootOwnersRow
-		if err := rows.Scan(&i.AgentID, &i.SquadID); err != nil {
+		var agent_id pgtype.UUID
+		if err := rows.Scan(&agent_id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, agent_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

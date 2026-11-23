@@ -24,10 +24,10 @@ import (
 // Contract highlights:
 //   - Running one is NOT a new dispatch path. It renders the prompt, posts an
 //     ordinary comment carrying optional target mention markup (marked with
-//     quick_action_id), and hands off to triggerTasksForComment. Permission, attribution, squad routing,
-//     the execution log, and pending-task coalescing are inherited from the
-//     comment path rather than reimplemented — the MUL-3375 lesson about four
-//     drifting copies of one trigger decision.
+//     quick_action_id), and hands off to triggerTasksForComment. Permission,
+//     attribution, the execution log, and pending-task coalescing are inherited
+//     from the comment path rather than reimplemented — the MUL-3375 lesson
+//     about four drifting copies of one trigger decision.
 //   - PERMISSION IS CHECKED IN EXACTLY ONE PLACE: RunQuickAction. The list
 //     endpoint does no permission work and hides nothing beyond `private`
 //     ownership. Filtering the sidebar by invoke permission was tried and
@@ -69,7 +69,7 @@ var quickActionTemplateTokenRe = regexp.MustCompile(`\{\{[^}]*\}\}`)
 // The prompt is appended verbatim to a comment that then runs through the
 // normal mention pipeline, so a mention inside it acts on every click:
 //
-//   - agent / squad / all -> enqueues a SECOND target beside the configured
+//   - agent / all -> enqueues a SECOND target beside the configured
 //     one, breaking the invariant the permission model rests on (a public
 //     action runs exactly the target it was validated against). The sidebar
 //     reports only the first outcome, so the extra run is invisible.
@@ -80,7 +80,7 @@ var quickActionTemplateTokenRe = regexp.MustCompile(`\{\{[^}]*\}\}`)
 //
 // `mention://issue/...` is the sole exception: it renders as a link and
 // reaches nobody, so a prompt may legitimately point at related work.
-var quickActionSideEffectMentionRe = regexp.MustCompile(`mention://(agent|squad|member|all)/`)
+var quickActionSideEffectMentionRe = regexp.MustCompile(`mention://(agent|member|all)/`)
 
 // Types
 
@@ -164,7 +164,7 @@ func validateQuickActionPrompt(raw string) (string, error) {
 		return "", fmt.Errorf("template variables are not supported yet; remove %s — the agent already reads this issue", token)
 	}
 	if quickActionSideEffectMentionRe.MatchString(prompt) {
-		return "", fmt.Errorf("the prompt cannot @mention an agent, squad, or person; a quick action reaches exactly the one target it is bound to (an issue link is fine)")
+		return "", fmt.Errorf("the prompt cannot @mention an agent or person; a quick action reaches exactly the one target it is bound to (an issue link is fine)")
 	}
 	return prompt, nil
 }
@@ -173,9 +173,10 @@ func validateQuickActionAssignee(assigneeType, assigneeID string) error {
 	if assigneeType == "" && assigneeID == "" {
 		return nil
 	}
-	if assigneeType != "agent" && assigneeType != "squad" {
-		return fmt.Errorf("assignee_type must be \"agent\" or \"squad\"")
+	if assigneeType != "agent" {
+		return fmt.Errorf("assignee_type must be \"agent\"")
 	}
+
 	if strings.TrimSpace(assigneeID) == "" {
 		return fmt.Errorf("assignee_id is required")
 	}
@@ -196,37 +197,13 @@ func normalizeQuickActionVisibility(raw string) (string, error) {
 // Target resolution
 
 // resolveQuickActionTarget loads the execution target. A missing/archived
-// agent, or a missing/archived squad, resolves to Found=false — the caller
-// renders that as an unavailable target rather than failing the whole list.
+// agent resolves to Found=false — the caller renders that as an unavailable
+// target rather than failing the whole list.
 func (h *Handler) resolveQuickActionTarget(ctx context.Context, qa db.QuickAction) quickActionTarget {
 	switch qa.AssigneeType {
 	case "":
 		// An intentionally unset target is available, not an orphaned binding.
 		return quickActionTarget{Found: true}
-	case "squad":
-		squad, err := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{
-			ID:          qa.AssigneeID,
-			WorkspaceID: qa.WorkspaceID,
-		})
-		if err != nil || squad.ArchivedAt.Valid {
-			return quickActionTarget{}
-		}
-		leader, err := h.Queries.GetAgent(ctx, squad.LeaderID)
-		if err != nil || leader.ArchivedAt.Valid {
-			return quickActionTarget{}
-		}
-		avatar := ""
-		if squad.AvatarUrl.Valid {
-			avatar = squad.AvatarUrl.String
-		}
-		return quickActionTarget{
-			Agent:       leader,
-			Name:        squad.Name,
-			AvatarURL:   avatar,
-			MentionType: "squad",
-			MentionID:   uuidToString(squad.ID),
-			Found:       true,
-		}
 	default:
 		agent, err := h.Queries.GetAgent(ctx, qa.AssigneeID)
 		if err != nil || agent.ArchivedAt.Valid || uuidToString(agent.WorkspaceID) != uuidToString(qa.WorkspaceID) {
@@ -271,23 +248,22 @@ func (h *Handler) agentInvocableByEveryone(ctx context.Context, agent db.Agent) 
 
 // quickActionCatalog is a batched resolver for the list endpoint.
 //
-// The single-row path issues a GetAgent (plus GetSquad) AND a
-// ListAgentInvocationTargets per action. At the 30-action cap that is 60-90
-// sequential round-trips on every sidebar and settings load. This loads the
-// workspace's agents, squads, and invocation targets in THREE queries and
-// answers from memory. Workspaces are small-team scale, so listing all agents
+// The single-row path issues a GetAgent AND a ListAgentInvocationTargets per
+// action. At the 30-action cap that is 60 sequential round-trips on every
+// sidebar and settings load. This loads the workspace's agents and invocation
+// targets in TWO queries and answers from memory. Workspaces are small-team scale, so listing all agents
 // costs less than thirty point lookups.
 type quickActionCatalog struct {
 	agents map[string]db.Agent
-	squads map[string]db.Squad
+
 	// publicAgents holds agent ids every workspace member may invoke.
 	publicAgents map[string]bool
 }
 
 func (h *Handler) loadQuickActionCatalog(ctx context.Context, workspaceID pgtype.UUID) quickActionCatalog {
 	cat := quickActionCatalog{
-		agents:       map[string]db.Agent{},
-		squads:       map[string]db.Squad{},
+		agents: map[string]db.Agent{},
+
 		publicAgents: map[string]bool{},
 	}
 
@@ -302,12 +278,6 @@ func (h *Handler) loadQuickActionCatalog(ctx context.Context, workspaceID pgtype
 	for _, a := range agents {
 		cat.agents[uuidToString(a.ID)] = a
 		agentIDs = append(agentIDs, a.ID)
-	}
-
-	if squads, err := h.Queries.ListSquads(ctx, workspaceID); err == nil {
-		for _, sq := range squads {
-			cat.squads[uuidToString(sq.ID)] = sq
-		}
 	}
 
 	if len(agentIDs) > 0 {
@@ -330,19 +300,7 @@ func (c quickActionCatalog) resolve(qa db.QuickAction) (quickActionTarget, bool)
 	if qa.AssigneeType == "" {
 		return quickActionTarget{Found: true}, true
 	}
-	if qa.AssigneeType == "squad" {
-		squad, ok := c.squads[uuidToString(qa.AssigneeID)]
-		if !ok || squad.ArchivedAt.Valid {
-			return quickActionTarget{}, false
-		}
-		leader, ok := c.agents[uuidToString(squad.LeaderID)]
-		if !ok {
-			return quickActionTarget{}, false
-		}
-		name := squad.Name
-		return quickActionTarget{Agent: leader, Name: name, Found: true},
-			c.publicAgents[uuidToString(leader.ID)] && leader.PermissionMode == "public_to"
-	}
+
 	agent, ok := c.agents[uuidToString(qa.AssigneeID)]
 	if !ok {
 		return quickActionTarget{}, false

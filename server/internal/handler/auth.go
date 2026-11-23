@@ -222,18 +222,27 @@ func (h *Handler) findOrCreateUser(ctx context.Context, email string) (user db.U
 		return user, false, nil
 	}
 
-	name := email
-	if at := strings.Index(email, "@"); at > 0 {
-		name = email[:at]
-	}
-	created, err := h.Queries.CreateUser(ctx, db.CreateUserParams{
-		Name:  name,
-		Email: email,
-	})
+	created, err := createUserWithEmail(ctx, h.Queries, email)
 	if err != nil {
 		return db.User{}, false, err
 	}
 	return created, true, nil
+}
+
+// createUserWithEmail opens the account an email names, with no verification
+// step of its own: every caller has already decided the signup may happen. The
+// display name is the local part of the address. q may be a transaction, which
+// is how startup opens the pre-shared token's account together with its
+// workspace.
+func createUserWithEmail(ctx context.Context, q *db.Queries, email string) (db.User, error) {
+	name := email
+	if at := strings.Index(email, "@"); at > 0 {
+		name = email[:at]
+	}
+	return q.CreateUser(ctx, db.CreateUserParams{
+		Name:  name,
+		Email: email,
+	})
 }
 
 // signupSourceFromRequest reads the attribution cookie the web frontend

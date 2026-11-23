@@ -162,7 +162,12 @@ func firstForwardedHost(h string) string {
 	return strings.TrimSpace(h)
 }
 
-func checkOrigin(r *http.Request) bool {
+// CheckOrigin reports whether a browser-facing WebSocket handshake may proceed:
+// same-origin (directly, or through a trusted proxy that named the public
+// host), or an explicitly allowed origin. Requests without an Origin header
+// are not browsers and pass. Shared by every browser-facing WebSocket
+// endpoint so they cannot drift apart.
+func CheckOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	if origin == "" {
 		return true
@@ -213,7 +218,7 @@ const (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: checkOrigin,
+	CheckOrigin: CheckOrigin,
 }
 
 // scopeKey is the composite key used to look up a "room" of subscribers.
@@ -698,8 +703,18 @@ func (h *Hub) Snapshot() map[string]any {
 	}
 }
 
-// authenticateToken validates a JWT or PAT string and returns the user ID.
+// authenticateToken validates the pre-shared token, a JWT or a PAT string and
+// returns the user ID.
 func authenticateToken(tokenStr string, pr PATResolver, ctx context.Context) (string, string) {
+	// The pre-shared token (MULTICA_AUTH_TOKEN) is the operator's own
+	// credential and is accepted wherever a PAT is. It is checked first: the
+	// operator chooses the string, so there is no prefix to branch on.
+	if uid, ok := auth.ResolveSharedToken(tokenStr); ok {
+		if auth.IsTemporarilyDisabledUserID(uid) {
+			return "", `{"error":"account disabled"}`
+		}
+		return uid, ""
+	}
 	if strings.HasPrefix(tokenStr, "mul_") {
 		if pr == nil {
 			return "", `{"error":"invalid token"}`

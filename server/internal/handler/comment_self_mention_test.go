@@ -126,7 +126,7 @@ func TestCommentSelfMention_SourceIssueAndThread(t *testing.T) {
 				t.Errorf("queued tasks after edit = %d, want %d", got, wantQueued)
 			}
 			if mode == "same thread" {
-				completeWorkerReplyRun(t, taskID)
+				completeAgentRun(t, taskID)
 				if got := countQueuedOrDispatched(t, agentID, issueID); got != 0 {
 					t.Errorf("completion replay queued %d self-triggered tasks, want 0", got)
 				}

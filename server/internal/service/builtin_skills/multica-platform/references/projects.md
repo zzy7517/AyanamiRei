@@ -150,10 +150,10 @@ the mention-link form instead, with the project UUID from
 
 Every client makes it navigable, with different presentation: web and desktop
 render a chip carrying the project's icon and current title, while mobile
-renders an ordinary link that opens the project on tap. Unlike `@agent` /
-`@squad`, it is a pure link: the mention parser does not recognize `project` at
-all, so it enqueues nothing and notifies nobody — the same no-side-effect
-contract as an `issue` mention.
+renders an ordinary link that opens the project on tap. Unlike `@agent`, it is
+a pure link: the mention parser does not recognize `project` at all, so it
+enqueues nothing and notifies nobody — the same no-side-effect contract as an
+`issue` mention.
 
 Prefer this form over pasting the project's URL. Web and desktop do unfurl a
 bare in-app project URL into that same chip, but mobile does not — there a
@@ -188,7 +188,7 @@ add/update/remove mutate durable workspace state and affect future tasks. Ask be
 ## Project workflows
 
 A project can use a workflow: its ordered status columns, where a column may
-hand the issue off to a handler — a fixed agent, squad or member, the project
+hand the issue off to a handler — a fixed agent or member, the project
 lead, or the issue's creator. When the issue's project uses one, the per-turn
 prompt carries a `[Project workflow]` block. Its statuses and commands are
 the whole status contract for this issue: the built-in moves in the issues
@@ -242,7 +242,7 @@ issue inside a workflow needs none of them.
   `multica project workflow get <project-id>`, which returns the effective
   workflow with `uses_default: true` when the project has none set.
 - One step: `multica workflow handoff set <workflow> <status-key>` with
-  `--handler` (`none`, `project_lead`, `creator`, or a member/agent/squad),
+  `--handler` (`none`, `project_lead`, `creator`, or a member/agent),
   `--instructions` / `--instructions-file`, `--next`, `--back`. Flags you do
   not pass keep their current value. The change applies to every project on
   that workflow; `--copy-for-project <project-id>` saves it on a copy only that

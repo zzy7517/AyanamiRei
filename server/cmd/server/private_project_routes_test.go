@@ -16,12 +16,14 @@ import (
 
 	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/projectaccess"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
 	dbfx "github.com/multica-ai/multica/server/internal/testutil"
 	"github.com/multica-ai/multica/server/internal/util"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/pkg/featureflag"
 )
 
 // A route parameter is keyed by the literal path segment before it and its
@@ -54,6 +56,7 @@ var projectScopedRouteParams = map[string]privateRouteResolver{
 	"triggers/{triggerId}":             func(f *privateRouteFixture, _ string) string { return f.autopilotTrigger() },
 	"deliveries/{deliveryId}":          func(f *privateRouteFixture, _ string) string { return f.webhookDelivery() },
 	"inbox/{id}":                       func(f *privateRouteFixture, caller string) string { return f.inboxItem(caller) },
+	"project-scope/{treeId}":           func(f *privateRouteFixture, _ string) string { return f.issueProjectTree() },
 	// The inbox is where a member route names an issue as {issueId}; the
 	// caller has a notification about it, so marking it read has an effect.
 	"issues/{issueId}": func(f *privateRouteFixture, caller string) string { f.inboxItem(caller); return f.issue() },
@@ -96,7 +99,6 @@ var routeParamsOutsideProjects = map[string]outsideProjectParam{
 	"files/{fileId}":                 {why: "a skill file"},
 	"versions/{version}":             {why: "a skill version"},
 	"mcp-servers/{serverId}":         {why: "a workspace MCP server"},
-	"squads/{id}":                    {why: "a workspace squad"},
 	"labels/{id}":                    {why: "a workspace label"},
 	"labels/{labelId}":               {why: "a workspace label", value: func(f *privateRouteFixture) string { return f.shared.labelID }},
 	"properties/{id}":                {why: "a workspace issue property definition"},
@@ -206,6 +208,15 @@ func (f *privateRouteFixture) issue() string {
 	})
 }
 
+// issueProjectTree is a pending tree of the private issue, on the private project.
+func (f *privateRouteFixture) issueProjectTree() string {
+	return f.once("issueProjectTree", func() string {
+		return f.fx.Insert(f.t, "issue_project_scope", dbfx.Cols{
+			"workspace_id": f.fx.WorkspaceID, "issue_id": f.issue(), "project_id": f.projectID, "base_branch": "main",
+		})
+	})
+}
+
 func (f *privateRouteFixture) comment() string {
 	return f.once("comment", func() string { return f.fx.Comment(f.t, f.issue(), "Private route probe comment") })
 }
@@ -299,7 +310,7 @@ func (f *privateRouteFixture) autopilot() string {
 	return f.once("autopilot", func() string {
 		return f.fx.Insert(f.t, "autopilot", dbfx.Cols{
 			"workspace_id": f.fx.WorkspaceID, "title": "Private route probe autopilot", "project_id": f.projectID,
-			"assignee_type": "agent", "assignee_id": f.shared.agentID, "status": "paused", "execution_mode": "run_only",
+			"assignee_id": f.shared.agentID, "status": "paused", "execution_mode": "run_only",
 			"created_by_type": "member", "created_by_id": f.shared.insiderID,
 		})
 	})
@@ -453,6 +464,7 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	fx.Cleanup(t, `DELETE FROM project WHERE workspace_id = $1`, fx.WorkspaceID)
 	fx.Cleanup(t, `DELETE FROM autopilot WHERE workspace_id = $1`, fx.WorkspaceID)
 	fx.Cleanup(t, `DELETE FROM issue WHERE workspace_id = $1`, fx.WorkspaceID)
+	fx.Cleanup(t, `DELETE FROM issue_project_scope WHERE workspace_id = $1`, fx.WorkspaceID)
 	fx.Cleanup(t, `DELETE FROM issue_source_context WHERE workspace_id = $1`, fx.WorkspaceID)
 
 	// Both callers are admins, so role checks pass and only project
@@ -491,7 +503,13 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	t.Setenv("LOCAL_UPLOAD_BASE_URL", "")
 	shared.uploadDir = t.TempDir()
 	t.Setenv("LOCAL_UPLOAD_DIR", shared.uploadDir)
-	router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+	// The task-tree routes answer 404 while task_sessions_v1 is off, which is
+	// the missing-id answer too: probe them as a deployment with it on.
+	flags := featureflag.NewStaticProvider()
+	flags.Set(featureflags.TaskSessionsV1, featureflag.Rule{Default: true})
+	router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{
+		FeatureFlags: featureflag.NewService(flags),
+	})
 	call := func(token, method, path, body string) routeAnswer {
 		var req *http.Request
 		switch method {

@@ -53,8 +53,8 @@ func addIssueBatchUpdateFlags(cmd *cobra.Command) {
 	f.Bool("ids-stdin", false, "Read issue ids from stdin, one per line (in addition to arguments)")
 	f.String("status", "", "New status")
 	f.String("priority", "", "New priority")
-	f.String("assignee", "", "New assignee name (member, agent, or squad; fuzzy match)")
-	f.String("assignee-id", "", "New assignee UUID — member, agent, or squad (mutually exclusive with --assignee)")
+	f.String("assignee", "", "New assignee name (member or agent; fuzzy match)")
+	f.String("assignee-id", "", "New assignee UUID — member or agent (mutually exclusive with --assignee)")
 	f.Bool("unassign", false, "Remove the assignee")
 	f.String("project", "", "Project ID (use --project \"\" to clear)")
 	f.String("start-date", "", "Start date (YYYY-MM-DD; pass empty string to clear)")
@@ -147,7 +147,7 @@ func buildIssueBatchUpdateBody(ctx context.Context, client *cli.APIClient, cmd *
 		updates["assignee_type"] = nil
 		updates["assignee_id"] = nil
 	} else if flags.Changed("assignee") || flags.Changed("assignee-id") {
-		aType, aID, ok, err := pickAssigneeFromFlags(ctx, client, cmd, "assignee", "assignee-id", issueAssigneeKinds)
+		aType, aID, ok, err := pickAssigneeFromFlags(ctx, client, cmd, "assignee", "assignee-id", memberOrAgentKinds)
 		if err != nil {
 			return nil, fmt.Errorf("resolve assignee: %w", err)
 		}

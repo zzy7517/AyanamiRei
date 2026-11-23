@@ -15,7 +15,6 @@ type claimedTask struct {
 	ChatChannelType       string              `json:"chat_channel_type,omitempty"`
 	ChatNoticeLocale      string              `json:"chat_notice_locale,omitempty"`
 	ChatType              string              `json:"chat_type,omitempty"`
-	IsLeaderTask          bool                `json:"is_leader_task,omitempty"`
 	AuthToken             string              `json:"auth_token,omitempty"`
 	RemoteMCPConnections  []json.RawMessage   `json:"remote_mcp_connections,omitempty"`
 	ConnectedApps         []json.RawMessage   `json:"connected_apps,omitempty"`
@@ -28,7 +27,6 @@ type claimedTask struct {
 	ProjectDescription    string              `json:"project_description,omitempty"`
 	HandoffNote           string              `json:"handoff_note,omitempty"`
 	CoalescedComments     []claimedComment    `json:"coalesced_comments,omitempty"`
-	TriggerCommentID      string              `json:"trigger_comment_id,omitempty"`
 	TriggerCommentContent string              `json:"trigger_comment_content,omitempty"`
 	TriggerAuthorName     string              `json:"trigger_author_name,omitempty"`
 	ProjectResources      []claimedResource   `json:"project_resources,omitempty"`
@@ -41,7 +39,6 @@ type claimedTask struct {
 	QuickCreateSourceContext json.RawMessage `json:"quick_create_source_context,omitempty"`
 	ProjectID                string          `json:"project_id,omitempty"`
 	ParentIssueID            string          `json:"parent_issue_id,omitempty"`
-	SquadID                  string          `json:"squad_id,omitempty"`
 }
 
 type claimedAgent struct {

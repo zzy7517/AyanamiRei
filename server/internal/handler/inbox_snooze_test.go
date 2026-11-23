@@ -195,7 +195,6 @@ func TestInboxRowsWrittenIntoASnoozeJoinItUnlessTheyWakeIt(t *testing.T) {
 		{"new_comment", `{}`},
 		{"status_changed", `{}`},
 		{"mentioned", `{"mention_via":"all"}`},
-		{"mentioned", `{"mention_via":"squad"}`},
 	} {
 		row := create(quiet.notifType, quiet.details)
 		if !inbox.IsSnoozed(row, time.Now()) {
@@ -203,8 +202,8 @@ func TestInboxRowsWrittenIntoASnoozeJoinItUnlessTheyWakeIt(t *testing.T) {
 		}
 	}
 	rows := f.snoozed(t)
-	if len(rows) != 1 || rows[0].Updates != 4 {
-		t.Fatalf("snoozed = %+v, want one issue with 4 updates", rows)
+	if len(rows) != 1 || rows[0].Updates != 3 {
+		t.Fatalf("snoozed = %+v, want one issue with 3 updates", rows)
 	}
 	if ids := inboxIssueIDs(f.list(t)); ids[f.issueID] != 0 {
 		t.Fatalf("listed issues = %v, want the snoozed issue still out", ids)
@@ -217,8 +216,8 @@ func TestInboxRowsWrittenIntoASnoozeJoinItUnlessTheyWakeIt(t *testing.T) {
 	if got := len(f.snoozed(t)); got != 0 {
 		t.Fatalf("snoozed after the wake = %d, want 0", got)
 	}
-	if ids := inboxIssueIDs(f.list(t)); ids[f.issueID] != 6 {
-		t.Fatalf("listed issues = %v, want all six rows back", ids)
+	if ids := inboxIssueIDs(f.list(t)); ids[f.issueID] != 5 {
+		t.Fatalf("listed issues = %v, want all five rows back", ids)
 	}
 
 	// Without a snooze a new row is written as before.
@@ -340,7 +339,6 @@ func TestWakesSnooze(t *testing.T) {
 		{"mentioned", `{"mention_via":"member"}`, true},
 		{"mentioned", `{}`, true},
 		{"mentioned", `{"mention_via":"all"}`, false},
-		{"mentioned", `{"mention_via":"squad"}`, false},
 		{"new_comment", `{}`, false},
 		{"status_changed", `{}`, false},
 		{"reaction_added", `{}`, false},

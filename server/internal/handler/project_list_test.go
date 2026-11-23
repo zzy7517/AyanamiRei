@@ -19,7 +19,7 @@ func TestParseProjectListQueryRejectsUnknownValues(t *testing.T) {
 		"status=done",
 		"priority=p0",
 		"lead=someone",
-		"lead=squad:" + testUserID,
+		"lead=user:" + testUserID,
 		"lead=member:not-a-uuid",
 		"sort=updated",
 		"direction=up",

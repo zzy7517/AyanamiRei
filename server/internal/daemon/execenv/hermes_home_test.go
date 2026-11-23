@@ -875,7 +875,7 @@ func TestHermesTerminalEnvPassthrough(t *testing.T) {
 					"MULTICA_AUTOPILOT_RUN_ID":                   "autopilot_run_fixture",
 					"MULTICA_AUTOPILOT_ID":                       "autopilot_fixture",
 					"MULTICA_QUICK_CREATE_TASK_ID":               "quick_create_fixture",
-					"MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_TYPE": "squad",
+					"MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_TYPE": "agent",
 					"MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_ID":   "aaaa1111-2222-3333-4444-555555555555",
 					"MULTICA_QUICK_CREATE_ATTACHMENT_IDS":        `["attachment_fixture"]`,
 					"UNRELATED_SECRET":                           "unrelated_fixture",

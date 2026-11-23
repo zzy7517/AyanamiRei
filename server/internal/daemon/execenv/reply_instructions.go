@@ -166,11 +166,11 @@ func activeThreadID(triggerThreadID, triggerCommentID string) string {
 // Write UTF-8 with --content-file so shell substitution, pipeline encoding, and
 // heredoc boundaries cannot alter the body or swallow trailing flags. Cleanup
 // must depend on a successful post. The template is shared across providers.
-func BuildCommentReplyInstructions(provider, issueID, triggerCommentID string, squadLeader bool) string {
+func BuildCommentReplyInstructions(provider, issueID, triggerCommentID string) string {
 	if triggerCommentID == "" {
 		return ""
 	}
-	return buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID, squadLeader)
+	return buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID)
 }
 
 // buildCommentReplyInstructionsSlim is the compressed reply-instructions
@@ -186,15 +186,7 @@ func BuildCommentReplyInstructions(provider, issueID, triggerCommentID string, s
 // canonical `## Comment Formatting` section the same brief carries, so
 // repeating it inline at every comment-triggered step 7 would be
 // duplication, not signal.
-func buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID string, squadLeader bool) string {
-	// The squad leader's `no_action` exit (recorded via `squad activity`) is
-	// the one path where posting no comment is correct — the imperative must
-	// carry its own carve-out so a later line never contradicts the
-	// no_action rule injected above it (MUL-5442 #6493 review).
-	lead := "Post your reply as a comment — always use the trigger comment ID below, "
-	if squadLeader {
-		lead = "Unless your outcome is `no_action`, post your reply as a comment — always use the trigger comment ID below, "
-	}
+func buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID string) string {
 	// Cleanup is GATED on the post succeeding, never a separate statement.
 	// Agents hand the whole snippet to one shell call, and an unconditional
 	// cleanup line runs — and SUCCEEDS — after a failed post, so the call's
@@ -218,7 +210,7 @@ func buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID strin
 		// variant checks $LASTEXITCODE — which carries the exit code of the
 		// last NATIVE command — and propagates it instead.
 		return fmt.Sprintf(
-			lead+
+			"Post your reply as a comment — always use the trigger comment ID below, "+
 				"do NOT reuse --parent values from previous turns in this session.\n\n"+
 				"Write the body file first — never pipe via `--content-stdin` (PowerShell drops non-ASCII; full rules: ## Comment Formatting above). Use the variant for the shell your command tool runs:\n\n"+
 				"PowerShell:\n\n"+
@@ -233,7 +225,7 @@ func buildCommentReplyInstructionsSlim(provider, issueID, triggerCommentID strin
 		)
 	}
 	return fmt.Sprintf(
-		lead+
+		"Post your reply as a comment — always use the trigger comment ID below, "+
 			"do NOT reuse --parent values from previous turns in this session.\n\n"+
 			"Write the body file first (rules: ## Comment Formatting above — MUL-2904 / #4182):\n\n"+
 			"    multica issue comment add %s --parent %s --content-file ./reply.md --output table && rm ./reply.md\n\n"+
@@ -278,7 +270,7 @@ type ThreadReplyTarget struct {
 // the OS split.
 //
 // Returns "" for fewer than two targets; callers keep the single-parent path.
-func BuildMultiThreadCommentReplyInstructions(issueID string, targets []ThreadReplyTarget, squadLeader bool) string {
+func BuildMultiThreadCommentReplyInstructions(issueID string, targets []ThreadReplyTarget) string {
 	if issueID == "" || len(targets) < 2 {
 		return ""
 	}
@@ -288,19 +280,8 @@ func BuildMultiThreadCommentReplyInstructions(issueID string, targets []ThreadRe
 		targetLines += fmt.Sprintf("%d. thread %s → reply with `--parent %s`\n", i+1, tgt.ThreadID, tgt.ParentID)
 	}
 
-	// Same carve-out as the single-thread cookbook (MUL-5442 #6493 review):
-	// the leader's no_action exit must not be contradicted by this later
-	// imperative, and the scope sentence must govern the ENTIRE fan-out
-	// block — every obligation below ("multiple replies are required", the
-	// posting order, the per-thread file rule) sits under the "Otherwise" —
-	// not just the first verb. Ordinary agents keep the unconditional form
-	// byte-for-byte.
-	lead := "This run coalesced comments from %d DISTINCT threads. Post ONE reply per thread"
-	if squadLeader {
-		lead = "This run coalesced comments from %d DISTINCT threads. **If your outcome is `no_action`, skip this ENTIRE fan-out block — post no replies at all and exit via `multica squad activity` as your leader rules direct; everything below applies only otherwise.** Otherwise, post ONE reply per thread"
-	}
 	return fmt.Sprintf(
-		lead+" — %d in total. This OVERRIDES the \"post exactly one comment per run\" rule: for THIS run multiple replies are required and correct. Do NOT merge separate threads into one comment or post twice in the same thread.\n\n"+
+		"This run coalesced comments from %d DISTINCT threads. Post ONE reply per thread — %d in total. This OVERRIDES the \"post exactly one comment per run\" rule: for THIS run multiple replies are required and correct. Do NOT merge separate threads into one comment or post twice in the same thread.\n\n"+
 			"Reply targets, in posting order — OLDEST thread first, the newest (triggering) thread LAST. Use the exact `--parent` for each; never reuse a `--parent` from an earlier turn:\n"+
 			"%s\n"+
 			"Write and post each reply exactly as `## Comment Formatting` above directs, with ONE multi-thread delta: use a DISTINCT body file per thread (./reply-1.md, ./reply-2.md, …) so one reply's content can never leak into another's.\n",

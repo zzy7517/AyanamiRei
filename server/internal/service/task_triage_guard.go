@@ -15,7 +15,7 @@ import (
 //
 // The rule is narrower than "an issue in Triage runs nothing": Triage has no
 // EXECUTOR. Nothing may derive one from the issue — the assignee, a prefilled
-// owner, a squad leader, an automatic retry — because that is precisely what
+// owner, an automatic retry — because that is precisely what
 // the triager is still deciding. Prefilling an owner is how a run starts today,
 // and the triager must record its reasoning as a comment, so without this the
 // triager would dispatch the very owner it was only proposing.
@@ -50,7 +50,7 @@ type RunOrigin int
 
 const (
 	// OriginDerived: the executor was worked out from the issue — its assignee,
-	// its squad's leader, the parent of a finished sub-issue, a retry of an
+	// the parent of a finished sub-issue, a retry of an
 	// earlier run. Refused in Triage.
 	OriginDerived RunOrigin = iota
 	// OriginNamed: a person wrote this agent's name — an @mention, or a reply

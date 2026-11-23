@@ -330,7 +330,6 @@ type RepoData struct {
 // ProjectResourceData is the wire shape for a project resource included in a
 // claim response. The daemon reads this list and writes it into the agent's
 // working directory so skills/agents can discover project-scoped context.
-//
 // resource_ref is type-specific JSON; the daemon doesn't interpret it beyond
 // well-known fields like url for github_repo. New types can be added without
 // changing this struct.
@@ -375,8 +374,6 @@ type TaskIssueStatusData struct {
 // in the per-turn prompt, never in the cached runtime brief.
 type TaskProjectWorkflowData struct {
 	Brief string `json:"brief"`
-	// stepMoved selects the server-side leader briefing without changing the wire.
-	stepMoved bool
 }
 
 // ClaimParentIssue points a sub-issue's run at its parent issue, where the
@@ -459,9 +456,7 @@ type AgentTaskResponse struct {
 	Attempt            int32                    `json:"attempt"`
 	MaxAttempts        int32                    `json:"max_attempts"`
 	ParentTaskID       *string                  `json:"parent_task_id,omitempty"`
-	IsLeaderTask       bool                     `json:"is_leader_task,omitempty"`
-	LeaderRoleResolved bool                     `json:"leader_role_resolved,omitempty"` // claim-only capability, always true here: IsLeaderTask/SquadID authoritatively answer "is this a leader run", so the daemon must not infer the role from briefing text. Servers predating it make no such promise — before #4951 they sent no is_leader_task at all, after it they sent the flag without guaranteeing a briefing — so a daemon seeing no capability keeps the legacy inference. Never rendered into a prompt; see daemon.taskIsSquadLeader (MUL-5811). Mirror field: internal/daemon/types.go, same JSON name
-	DocsEnabled        bool                     `json:"docs_enabled,omitempty"`         // the docs_v1 flag at claim time. The daemon writes the `multica doc` and mention://doc lines into the agent brief only when true, so agents are not pointed at an API that answers 403 docs_disabled. Mirror field: internal/daemon/types.go, same JSON name
+	DocsEnabled        bool                     `json:"docs_enabled,omitempty"` // the docs_v1 flag at claim time. The daemon writes the `multica doc` and mention://doc lines into the agent brief only when true, so agents are not pointed at an API that answers 403 docs_disabled. Mirror field: internal/daemon/types.go, same JSON name
 	Agent              *TaskAgentData           `json:"agent,omitempty"`
 	ConnectedApps      []ConnectedAppData       `json:"connected_apps,omitempty"` // daemon-claim only: per-run app capabilities mounted through runtime MCP overlays
 	Repos              []RepoData               `json:"repos,omitempty"`
@@ -556,7 +551,7 @@ type AgentTaskResponse struct {
 	IssueStateDeltaKnown     bool                 `json:"issue_state_delta_known,omitempty"`
 	IssueChangedFields       []string             `json:"issue_changed_fields,omitempty"`        // subset of title,description in that order; empty alongside IssueStateDeltaKnown means unchanged. Fields outside that set (status, assignee, priority, labels, parent, due date, stage, project, metadata) are NOT compared and must never be reported as checked. Status and assignee are out because IssueStatus / IssueAssigneeType / IssueAssigneeID ship their current values on every claim, so no comparison is needed to learn them; priority is out because it does not change what the agent does
 	IssueStatus              string               `json:"issue_status,omitempty"`                // the issue's status key at claim time. Sent whether or not the delta is known: the agent needs it to decide workflow step 3 ("already in progress?") without a read
-	IssueAssigneeType        string               `json:"issue_assignee_type,omitempty"`         // "agent", "member" or "squad" at claim time; empty when unassigned. With IssueAssigneeID, lets the agent tell "mine" from "someone else's" without a read
+	IssueAssigneeType        string               `json:"issue_assignee_type,omitempty"`         // "agent" or "member" at claim time; empty when unassigned. With IssueAssigneeID, lets the agent tell "mine" from "someone else's" without a read
 	IssueAssigneeID          string               `json:"issue_assignee_id,omitempty"`           // assignee UUID at claim time; empty when unassigned
 	ChatSessionID            string               `json:"chat_session_id,omitempty"`             // non-empty for chat tasks
 	ChatChannelType          string               `json:"chat_channel_type,omitempty"`           // "slack" when the chat session is backed by an IM channel; empty for a web-only chat. Makes the agent channel-aware (read history from the channel, not Multica)
@@ -585,8 +580,6 @@ type AgentTaskResponse struct {
 	WakeupSystemRule         string               `json:"wakeup_system_rule,omitempty"`      // set when a platform rule (e.g. child_done) started the run
 	WakeupJoined             string               `json:"wakeup_joined,omitempty"`           // wakeups that fired while this run waited to start and joined it instead of queuing their own
 	HandoffNote              string               `json:"handoff_note,omitempty"`            // legacy assignment handoff instruction retained for installed clients; rendered by the daemon only in the per-turn prompt
-	SquadID                  string               `json:"squad_id,omitempty"`                // for quick-create tasks where the picker was a squad; Agent is still the resolved leader
-	SquadName                string               `json:"squad_name,omitempty"`              // display name for the picker squad
 	ParentIssueID            string               `json:"parent_issue_id,omitempty"`         // for quick-create tasks opened from "Add sub issue" — UUID of the parent issue the new issue should be filed under
 	ParentIssueIdentifier    string               `json:"parent_issue_identifier,omitempty"` // human-readable identifier (e.g. MUL-123) of the quick-create parent issue, resolved on claim for prompt context
 	// ParentIssue is the parent of the issue this run works on, for issue-bound
@@ -826,13 +819,11 @@ type CoalescedCommentData struct {
 // Field names match the runtime/dashboard usage rows exactly so the client can
 // feed it to the same `estimateCost` / `estimateCacheSavings` helpers without
 // an adapter.
-//
 // CostUsdTicks is the provider's own price for these tokens (1e-10 USD) and is
 // nil when the provider reported none — the client then estimates that slice
 // from its rate table. A pointer, not a zero value: 0 ticks is a real answer
 // ("the provider says this was free") and must stay distinguishable from
 // "the provider said nothing".
-//
 // CreditsMicros is the provider's charge in millionths of its own credit unit,
 // nil for token-metered providers. It is never converted to USD.
 type TaskUsageData struct {
@@ -944,7 +935,6 @@ func taskToResponse(t db.AgentTaskQueue, workspaceID string) AgentTaskResponse {
 		Attempt:                t.Attempt,
 		MaxAttempts:            t.MaxAttempts,
 		ParentTaskID:           uuidToPtr(t.ParentTaskID),
-		IsLeaderTask:           t.IsLeaderTask,
 		CreatedAt:              timestampToString(t.CreatedAt),
 		TriggerCommentID:       uuidToPtr(t.TriggerCommentID),
 		CoalescedCommentIDs:    uuidsToStrings(t.CoalescedCommentIds),
@@ -988,7 +978,6 @@ func taskCancellationActorToResponse(t db.AgentTaskQueue) *TaskCancellationActor
 // the user's home directory prefix or their account name. The chip is
 // rendered in transcripts that frequently end up in screen shares,
 // screenshots, and recordings, so this function is the only guard.
-//
 //   - For standard tasks, it validates the adjacent workspace/task segments
 //     by their stable ID suffixes, then strips everything before them. This
 //     accepts both legacy `<wsUUID>/<taskShort>` roots and readable
@@ -1053,7 +1042,6 @@ func matchesTaskPathSegment(segment, taskID string) bool {
 // execenv.taskKey — the LAST 12 hex chars of the task id. Kept inline here so
 // the agent handler has zero imports from the daemon package (which would
 // create an unwanted cycle between handler and daemon).
-//
 // It must keep taking the TAIL. A UUIDv7's leading hex chars are timestamp
 // bits shared by every task created within ~65.5s (#7326); the daemon stopped
 // reading from that end, and this reconstruction only matches while both sides
@@ -1202,6 +1190,28 @@ func (h *Handler) loadAgentRuntimeAvailability(ctx context.Context, agents []db.
 func deriveAgentRuntimeAvailability(runtime db.AgentRuntime, now time.Time) string {
 	status := pgtype.Text{String: runtime.Status, Valid: runtime.Status != ""}
 	return deriveRuntimeAvailability(status, runtime.LastSeenAt, now)
+}
+
+// deriveRuntimeAvailability owns the shared three-state runtime reachability
+// policy that agent projections use.
+func deriveRuntimeAvailability(
+	runtimeStatus pgtype.Text,
+	lastSeen pgtype.Timestamptz,
+	now time.Time,
+) string {
+	if !runtimeStatus.Valid {
+		return "offline"
+	}
+	if runtimeStatus.String == "online" {
+		return "online"
+	}
+	if !lastSeen.Valid {
+		return "offline"
+	}
+	if now.Sub(lastSeen.Time) < 5*time.Minute {
+		return "unstable"
+	}
+	return "offline"
 }
 
 func (h *Handler) ListAgents(w http.ResponseWriter, r *http.Request) {
@@ -1873,7 +1883,6 @@ type UpdateAgentRequest struct {
 // workspaceAlwaysRedactSecrets reports whether the workspace has opted
 // into unconditional redaction of secret-bearing fields (currently
 // `mcp_config`) on read responses, regardless of the caller's role.
-//
 // The legacy JSON key is still `always_redact_env` for backwards-
 // compatibility with workspaces that flipped the setting before MUL-2600
 // shipped. The setting no longer affects `custom_env` because that field
@@ -1915,7 +1924,6 @@ func canViewAgentSecrets(agent db.Agent, userID string, memberRole string) bool 
 // redaction in ListAgents / GetAgent. The caller still receives the
 // canonical form in the HTTP response; only the broadcast copy is
 // redacted.
-//
 // composio_toolkit_allowlist follows the same fan-out rule: every
 // workspace member subscribes to agent:created/updated/archived, so
 // a non-redacted broadcast would leak the agent owner's per-toolkit
@@ -1974,7 +1982,6 @@ func suppressComposioToolkitAllowlist(resp *AgentResponse) {
 // without needing a CITEXT or per-query LOWER(). Empty / whitespace-only
 // strings are dropped and duplicates collapsed so a sloppy UI payload
 // can't waste DB row-length or surface twice in the response.
-//
 // Contract:
 //   - nil in → nil out: "field absent / explicit null" preserved. Combined
 //     with sqlc.narg('composio_toolkit_allowlist')::text[] in UpdateAgent,
@@ -2013,7 +2020,6 @@ func normaliseComposioToolkitAllowlist(in []string) []string {
 // an agent with a host owner/admin token can do an unrelated mutation
 // (e.g. flip max_concurrent_tasks) on a target agent and harvest the
 // target's mcp_config from the mutation response. MUL-2600.
-//
 // composio_toolkit_allowlist is redacted under the same logic: an agent
 // runs with its host owner's PAT, so a mutation against a sibling agent
 // could otherwise return the sibling owner's allowlist in the response.
@@ -2787,7 +2793,6 @@ func existingThinkingCapabilityRejection(provider, value string) string {
 // thinkingCapabilityUnknownRejection covers the ambiguous case: the provider
 // name does not say which binary is installed and no catalog has been reported
 // yet, so we can neither confirm nor deny the capability.
-//
 // It deliberately does NOT reuse the "does not support" sentence. That claim
 // would be actively wrong for a jcode runtime — sending its owner off to look
 // for a limitation that does not exist — whereas naming the missing evidence
@@ -2841,7 +2846,6 @@ const (
 // ambiguousACPEffortProviders are providers whose name does not determine which
 // binary is actually installed, so "not discovered yet" cannot be read as
 // "supported".
-//
 // `hermes` is the only one: it covers jcode (advertises an effort and applies
 // it) and Hermes Agent (advertises none). reasonix is deliberately absent — that
 // provider means one binary, which does support an effort, so an undiscovered
@@ -2853,7 +2857,6 @@ var ambiguousACPEffortProviders = map[string]bool{
 
 // acpThinkingDecision answers whether this runtime may carry a thinking level,
 // consulting the model catalog its daemon reported.
-//
 // acpEffortPresent means "allow". Providers outside the ACP-catalog set, and
 // unambiguous ACP providers with no catalog yet, are reported as present — their
 // capability is already settled by the provider name. Only an ambiguous provider
@@ -3012,7 +3015,6 @@ func (h *Handler) RestoreAgent(w http.ResponseWriter, r *http.Request) {
 // action. Same permission gate as archive (canManageAgent — owner or
 // workspace admin/owner). Each cancelled row triggers a task:cancelled WS
 // event so connected clients clear their live cards immediately.
-//
 // Note: a `running` task on the daemon side won't actually halt for up to
 // ~5 seconds (daemon polls GetTaskStatus on that interval). The DB row is
 // marked cancelled instantly, but the child process keeps going briefly;
@@ -3435,11 +3437,10 @@ func (h *Handler) GetWorkspaceAgentActivity30d(w http.ResponseWriter, r *http.Re
 // (queued/dispatched/running/waiting_local_directory), which is the current
 // workload presence derives from, plus each agent's most recent OUTCOME task
 // (completed/failed only), which is no longer part of presence since #1823 and
-// only feeds the Squad hover card's "last activity" line. Cancelled tasks are
+// only feeds the agent hover card's "last activity" line. Cancelled tasks are
 // excluded from the outcome half by design — cancel is a procedural signal
 // ("attempt aborted"), not an outcome, so it must not mask a prior failure.
 // Per-agent filtering happens in the front-end against this snapshot.
-//
 // The outcome half is deliberately still served here so shipped desktop builds
 // keep working; MUL-5436 tracks moving it to a dedicated lazy endpoint.
 func (h *Handler) ListWorkspaceAgentTaskSnapshot(w http.ResponseWriter, r *http.Request) {

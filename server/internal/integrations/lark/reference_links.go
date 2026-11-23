@@ -29,7 +29,7 @@ func (p *Patcher) linkReplyReferences(ctx context.Context, workspaceID pgtype.UU
 	loaded := false
 	return channel.LinkReferences(content, func(kind, reference string) string {
 		switch kind {
-		case "issue", "project", "agent", "squad", "member":
+		case "issue", "project", "agent", "member":
 		default:
 			return ""
 		}

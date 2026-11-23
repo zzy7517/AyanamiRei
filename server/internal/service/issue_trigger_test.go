@@ -34,7 +34,6 @@ func TestWillEnqueueRunNamesWhyAWriteStartsNoRun(t *testing.T) {
 	agentID := f.Agent(t, "ready agent", runtimeID)
 	unboundAgentID := f.Agent(t, "unbound agent", "")
 	archivedAgentID := f.Agent(t, "archived agent", runtimeID, testutil.Cols{"archived_at": testutil.Raw("now()")})
-	squadID := f.Squad(t, "squad with unbound leader", f.Agent(t, "unbound leader", ""))
 	svc := &IssueService{Queries: q, TaskService: NewTaskService(q, pool, nil, events.New())}
 
 	assigned := func(assigneeType, assigneeID, status string) testutil.Cols {
@@ -76,8 +75,6 @@ func TestWillEnqueueRunNamesWhyAWriteStartsNoRun(t *testing.T) {
 		{name: "member creation in backlog", issue: assigned("member", userID, "backlog"), input: create},
 		{name: "member promotion while in triage", issue: inTriage(assigned("member", userID, "todo")), input: promote},
 		{name: "member promotion out of backlog", issue: assigned("member", userID, "todo"), input: promote},
-		{name: "squad assignment while in triage", issue: inTriage(assigned("squad", squadID, "todo")), input: assign, want: dispatch.ReasonIssueInTriage},
-		{name: "squad assignment into backlog", issue: assigned("squad", squadID, "backlog"), input: assign, want: dispatch.ReasonDeferred},
 		{name: "agent without a runtime", issue: assigned("agent", unboundAgentID, "todo"), input: assign, want: dispatch.ReasonAgentRuntimeRequired},
 		{name: "archived agent", issue: assigned("agent", archivedAgentID, "todo"), input: assign, want: dispatch.ReasonTargetUnavailable},
 		{name: "agent the caller cannot invoke", issue: assigned("agent", agentID, "todo"), input: assign,
@@ -88,7 +85,6 @@ func TestWillEnqueueRunNamesWhyAWriteStartsNoRun(t *testing.T) {
 			probe: IssueTriggerProbe{SuppressActiveSelfAssignment: yes}, want: dispatch.ReasonAlreadyActive},
 		{name: "promotion with a run already pending", issue: assigned("agent", agentID, "todo"), input: promote,
 			pendingTask: true, want: dispatch.ReasonCoalesced},
-		{name: "squad whose leader has no runtime", issue: assigned("squad", squadID, "todo"), input: assign, want: dispatch.ReasonAgentRuntimeRequired},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			issueID := f.Issue(t, tc.name, tc.issue)

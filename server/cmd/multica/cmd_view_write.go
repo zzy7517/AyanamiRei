@@ -176,7 +176,7 @@ func addViewDefinitionFlags(cmd *cobra.Command, clearable bool) {
 	f := cmd.Flags()
 	f.StringArray("status", nil, "Status key or name to match")
 	f.StringArray("priority", nil, "Priority to match: "+strings.Join(validIssuePriorities, ", "))
-	f.StringArray("assignee", nil, "Assignee to match: member, agent or squad name, email, or ID")
+	f.StringArray("assignee", nil, "Assignee to match: member or agent name, email, or ID")
 	f.Bool("include-no-assignee", false, "Also match unassigned issues")
 	f.StringArray("creator", nil, "Creator to match: member or agent name, email, or ID")
 	f.StringArray("project-filter", nil, "Project to match (name, ID, or ID prefix); not available on project views")
@@ -538,7 +538,7 @@ func (b *viewDefinitionBuilder) applyFilters(query map[string]any, scopeType str
 		query[list.key] = values
 	}
 	if b.changed("assignee") {
-		actors, err := b.actors("assignee", issueAssigneeKinds)
+		actors, err := b.actors("assignee", memberOrAgentKinds)
 		if err != nil {
 			return err
 		}

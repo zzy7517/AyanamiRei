@@ -77,11 +77,11 @@ func TestCommentMergeTerminalOutcome(t *testing.T) {
 	}
 }
 
-// TestDecideSuppressedLeaderOutcome: the self-trigger-suppressed squad leader's
+// TestDecideSelfSuppressedOutcome: the self-trigger-suppressed agent's
 // active-task check must never fake success — a query error is a non-success
 // internal_error, a confirmed active run defers, and a confirmed-none is
 // self_trigger_suppressed (MUL-4525, Elon round 4).
-func TestDecideSuppressedLeaderOutcome(t *testing.T) {
+func TestDecideSelfSuppressedOutcome(t *testing.T) {
 	cases := []struct {
 		name       string
 		active     bool
@@ -96,7 +96,7 @@ func TestDecideSuppressedLeaderOutcome(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			status, reason := decideSuppressedLeaderOutcome(tc.active, tc.err)
+			status, reason := decideSelfSuppressedOutcome(tc.active, tc.err)
 			if status != tc.wantStatus || reason != tc.wantReason {
 				t.Errorf("got %s/%s, want %s/%s", status, reason, tc.wantStatus, tc.wantReason)
 			}

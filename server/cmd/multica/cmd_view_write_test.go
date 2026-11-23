@@ -86,8 +86,6 @@ func newViewWriteServer(t *testing.T) *viewWriteServer {
 			write([]any{map[string]any{"user_id": testViewWriteMemberUUID, "name": "Bohan", "email": "bohan@example.com"}})
 		case r.Method == http.MethodGet && r.URL.Path == "/api/agents":
 			write([]any{map[string]any{"id": testViewWriteAgentUUID, "name": "Lambda"}})
-		case r.Method == http.MethodGet && r.URL.Path == "/api/squads":
-			write([]any{})
 		case r.Method == http.MethodGet && r.URL.Path == "/api/properties":
 			write(map[string]any{"properties": []any{
 				map[string]any{"id": "p-sev", "name": "Severity", "type": "select", "config": map[string]any{

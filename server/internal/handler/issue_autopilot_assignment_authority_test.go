@@ -29,11 +29,11 @@ import (
 var runOnlyFixtureSeq atomic.Int64
 
 // runOnlyAutopilotFixture is the run_only shape: a member-created autopilot with
-// a live run, and a dispatched leader task attributed to the trigger owner, with
+// a live run, and a dispatched task attributed to the trigger owner, with
 // NO issue of its own — the state a scan run works in.
 type runOnlyAutopilotFixture struct {
-	LeaderAgentID string
-	LeaderTaskID  string
+	RunnerAgentID string
+	RunnerTaskID  string
 	AutopilotID   string
 	RunID         string
 	RuntimeID     string
@@ -47,7 +47,7 @@ func newRunOnlyAutopilotFixture(t *testing.T, targetAgentID, triggerOwnerUserID 
 	t.Helper()
 
 	runtimeID := handlerTestRuntimeID(t)
-	leaderID := dbfx.Agent(t, fmt.Sprintf("mul6951-run-only-leader-%d", runOnlyFixtureSeq.Add(1)), runtimeID, testutil.Cols{
+	runnerID := dbfx.Agent(t, fmt.Sprintf("mul6951-run-only-agent-%d", runOnlyFixtureSeq.Add(1)), runtimeID, testutil.Cols{
 		"permission_mode": "public_to",
 		"visibility":      "workspace",
 	})
@@ -78,11 +78,11 @@ func newRunOnlyAutopilotFixture(t *testing.T, targetAgentID, triggerOwnerUserID 
 			taskCols[k] = v
 		}
 	}
-	taskID := dbfx.Task(t, leaderID, taskCols)
+	taskID := dbfx.Task(t, runnerID, taskCols)
 
 	return runOnlyAutopilotFixture{
-		LeaderAgentID: leaderID,
-		LeaderTaskID:  taskID,
+		RunnerAgentID: runnerID,
+		RunnerTaskID:  taskID,
 		AutopilotID:   autopilotID,
 		RunID:         runID,
 		RuntimeID:     runtimeID,
@@ -101,7 +101,7 @@ func noHumanOnRun() testutil.Cols {
 }
 
 // topLevelIssueRequest is a parentless `issue create` with an assignee, spoken by
-// an agent run — the request a run_only leader makes when it turns scan results
+// an agent run — the request a run_only run makes when it turns scan results
 // into work.
 func topLevelIssueRequest(t *testing.T, assigneeType, assigneeID, status, actorAgentID, taskID string) *http.Request {
 	t.Helper()
@@ -240,7 +240,7 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 
 		var created IssueResponse
 		testutil.Call(t, testHandler.CreateIssue,
-			topLevelIssueRequest(t, "agent", workerID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
+			topLevelIssueRequest(t, "agent", workerID, "todo", fx.RunnerAgentID, fx.RunnerTaskID),
 		).Want(http.StatusCreated).JSON(&created)
 		cleanupAutopilotChildIssue(t, created.ID)
 
@@ -256,26 +256,14 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 		}
 	})
 
-	t.Run("top-level create accepts a private-leader squad", func(t *testing.T) {
-		workerID, ownerID, _ := privateAgentTestFixture(t)
-		squadID := dbfx.Squad(t, "MUL-6951 squad "+t.Name(), workerID, testutil.Cols{"creator_id": ownerID})
-		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
-
-		var created IssueResponse
-		testutil.Call(t, testHandler.CreateIssue,
-			topLevelIssueRequest(t, "squad", squadID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
-		).Want(http.StatusCreated).JSON(&created)
-		cleanupAutopilotChildIssue(t, created.ID)
-	})
-
 	t.Run("backlog child parks without enqueueing", func(t *testing.T) {
 		workerID, ownerID, _ := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
-		parentID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		parentID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
 		var created IssueResponse
 		testutil.Call(t, testHandler.CreateIssue,
-			autopilotChildIssueRequest(t, "agent", workerID, parentID, "backlog", fx.LeaderAgentID, fx.LeaderTaskID),
+			autopilotChildIssueRequest(t, "agent", workerID, parentID, "backlog", fx.RunnerAgentID, fx.RunnerTaskID),
 		).Want(http.StatusCreated).JSON(&created)
 		cleanupAutopilotChildIssue(t, created.ID)
 
@@ -294,7 +282,7 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 
 		var created IssueResponse
 		testutil.Call(t, testHandler.CreateIssue,
-			autopilotChildIssueRequest(t, "agent", workerID, parentID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
+			autopilotChildIssueRequest(t, "agent", workerID, parentID, "todo", fx.RunnerAgentID, fx.RunnerTaskID),
 		).Want(http.StatusCreated).JSON(&created)
 		cleanupAutopilotChildIssue(t, created.ID)
 
@@ -309,7 +297,7 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 			fx := newRunOnlyAutopilotFixture(t, workerID, plainMemberID)
 
 			testutil.Call(t, testHandler.CreateIssue,
-				topLevelIssueRequest(t, "agent", workerID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
+				topLevelIssueRequest(t, "agent", workerID, "todo", fx.RunnerAgentID, fx.RunnerTaskID),
 			).Want(http.StatusForbidden)
 		})
 
@@ -318,7 +306,7 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 			fx := newRunOnlyAutopilotFixture(t, workerID, ownerID, noHumanOnRun())
 
 			testutil.Call(t, testHandler.CreateIssue,
-				topLevelIssueRequest(t, "agent", workerID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
+				topLevelIssueRequest(t, "agent", workerID, "todo", fx.RunnerAgentID, fx.RunnerTaskID),
 			).Want(http.StatusForbidden)
 		})
 
@@ -338,7 +326,7 @@ func TestCreateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 			dbfx.Cleanup(t, `DELETE FROM issue WHERE id = $1`, foreignIssueID)
 
 			testutil.Call(t, testHandler.CreateIssue,
-				autopilotChildIssueRequest(t, "agent", workerID, foreignIssueID, "todo", fx.LeaderAgentID, fx.LeaderTaskID),
+				autopilotChildIssueRequest(t, "agent", workerID, foreignIssueID, "todo", fx.RunnerAgentID, fx.RunnerTaskID),
 			).Want(http.StatusBadRequest)
 		})
 	})
@@ -357,7 +345,7 @@ func TestUpdateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
 		issueID := seedMemberIssue(t, otherMemberID)
 
-		agentAssigns(t, fx.LeaderAgentID, fx.LeaderTaskID, issueID, workerID).Want(http.StatusOK)
+		agentAssigns(t, fx.RunnerAgentID, fx.RunnerTaskID, issueID, workerID).Want(http.StatusOK)
 
 		if got := assigneeOf(t, issueID); got != workerID {
 			t.Fatalf("assignee = %q, want %q", got, workerID)
@@ -370,9 +358,9 @@ func TestUpdateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 	t.Run("assigns an issue it created itself", func(t *testing.T) {
 		workerID, ownerID, _ := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
-		issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
-		agentAssigns(t, fx.LeaderAgentID, fx.LeaderTaskID, issueID, workerID).Want(http.StatusOK)
+		agentAssigns(t, fx.RunnerAgentID, fx.RunnerTaskID, issueID, workerID).Want(http.StatusOK)
 
 		if got := assigneeOf(t, issueID); got != workerID {
 			t.Fatalf("assignee = %q, want %q", got, workerID)
@@ -382,9 +370,9 @@ func TestUpdateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 	t.Run("run's human holds no invoke rights", func(t *testing.T) {
 		workerID, _, plainMemberID := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, plainMemberID)
-		issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
-		agentAssigns(t, fx.LeaderAgentID, fx.LeaderTaskID, issueID, workerID).Want(http.StatusForbidden)
+		agentAssigns(t, fx.RunnerAgentID, fx.RunnerTaskID, issueID, workerID).Want(http.StatusForbidden)
 
 		if got := assigneeOf(t, issueID); got != "" {
 			t.Fatalf("issue was assigned to %q", got)
@@ -394,9 +382,9 @@ func TestUpdateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 	t.Run("run carries no human", func(t *testing.T) {
 		workerID, ownerID, _ := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID, noHumanOnRun())
-		issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
-		agentAssigns(t, fx.LeaderAgentID, fx.LeaderTaskID, issueID, workerID).Want(http.StatusForbidden)
+		agentAssigns(t, fx.RunnerAgentID, fx.RunnerTaskID, issueID, workerID).Want(http.StatusForbidden)
 
 		if got := assigneeOf(t, issueID); got != "" {
 			t.Fatalf("issue was assigned to %q", got)
@@ -412,13 +400,13 @@ func TestUpdateIssue_AutopilotRunAssignsPrivateAgent(t *testing.T) {
 		t.Run("run already "+status, func(t *testing.T) {
 			workerID, ownerID, _ := privateAgentTestFixture(t)
 			fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
-			issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+			issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
 			// The originator is intact and would otherwise admit — only the task
 			// reaching a terminal state withdraws it.
-			dbfx.Exec(t, `UPDATE agent_task_queue SET status = $1 WHERE id = $2`, status, fx.LeaderTaskID)
+			dbfx.Exec(t, `UPDATE agent_task_queue SET status = $1 WHERE id = $2`, status, fx.RunnerTaskID)
 
-			agentAssigns(t, fx.LeaderAgentID, fx.LeaderTaskID, issueID, workerID).Want(http.StatusForbidden)
+			agentAssigns(t, fx.RunnerAgentID, fx.RunnerTaskID, issueID, workerID).Want(http.StatusForbidden)
 
 			if got := assigneeOf(t, issueID); got != "" {
 				t.Fatalf("a %s run assigned the issue to %q", status, got)
@@ -453,10 +441,10 @@ func TestBatchUpdateIssues_AutopilotRunAssign(t *testing.T) {
 	t.Run("assigns every issue when the run's human holds rights", func(t *testing.T) {
 		workerID, ownerID, otherMemberID := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID)
-		ownIssueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		ownIssueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 		otherIssueID := seedMemberIssue(t, otherMemberID)
 
-		batchAssignAsRun(t, otherMemberID, fx.LeaderAgentID, fx.LeaderTaskID, workerID, ownIssueID, otherIssueID).
+		batchAssignAsRun(t, otherMemberID, fx.RunnerAgentID, fx.RunnerTaskID, workerID, ownIssueID, otherIssueID).
 			Want(http.StatusOK)
 
 		for _, id := range []string{ownIssueID, otherIssueID} {
@@ -473,9 +461,9 @@ func TestBatchUpdateIssues_AutopilotRunAssign(t *testing.T) {
 		// now reachable through ordinary permissions rather than a borrow scope.
 		workerID, _, plainMemberID := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, plainMemberID)
-		issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
-		batchAssignAsRun(t, plainMemberID, fx.LeaderAgentID, fx.LeaderTaskID, workerID, issueID).
+		batchAssignAsRun(t, plainMemberID, fx.RunnerAgentID, fx.RunnerTaskID, workerID, issueID).
 			Want(http.StatusOK)
 
 		if got := assigneeOf(t, issueID); got != "" {
@@ -489,9 +477,9 @@ func TestBatchUpdateIssues_AutopilotRunAssign(t *testing.T) {
 	t.Run("assigns nothing when the run carries no human", func(t *testing.T) {
 		workerID, ownerID, plainMemberID := privateAgentTestFixture(t)
 		fx := newRunOnlyAutopilotFixture(t, workerID, ownerID, noHumanOnRun())
-		issueID := createUnassignedIssueAsRun(t, fx.LeaderAgentID, fx.LeaderTaskID)
+		issueID := createUnassignedIssueAsRun(t, fx.RunnerAgentID, fx.RunnerTaskID)
 
-		batchAssignAsRun(t, plainMemberID, fx.LeaderAgentID, fx.LeaderTaskID, workerID, issueID).
+		batchAssignAsRun(t, plainMemberID, fx.RunnerAgentID, fx.RunnerTaskID, workerID, issueID).
 			Want(http.StatusOK)
 
 		if got := assigneeOf(t, issueID); got != "" {

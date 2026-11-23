@@ -14,8 +14,8 @@ import (
 )
 
 // isAssignmentRecipientType reports whether an assignee can own a subscriber
-// or inbox row. Squads are routing objects whose work runs through the leader;
-// they are not user identities and have no inbox to consume.
+// or inbox row: members and agents can, anything else is not a user identity
+// and has no inbox to consume.
 func isAssignmentRecipientType(assigneeType string) bool {
 	return assigneeType == "member" || assigneeType == "agent"
 }

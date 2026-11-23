@@ -144,8 +144,6 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"skill_file":                         workspaceDelete,
 	"skill_to_label":                     workspaceDelete,
 	"skill_version":                      workspaceDelete,
-	"squad":                              workspaceDelete,
-	"squad_member":                       workspaceDelete,
 	"sys_cron_executions":                workspaceDeleteKeep,
 	"theme_store_download":               workspaceDeleteKeep, // per registry theme, not workspace-owned
 	"task_context_receipt":               workspaceDelete,
@@ -184,6 +182,7 @@ var workspaceDeletionManifest = map[string]workspaceDeleteAction{
 	"workspace":                          workspaceDelete,
 	"workspace_invitation":               workspaceDelete,
 	"workspace_share_link":               workspaceDelete,
+	"issue_project_scope":                workspaceDelete,
 }
 
 func TestWorkspaceDeletionManifestCoversPublicSchema(t *testing.T) {

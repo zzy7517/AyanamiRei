@@ -30,6 +30,7 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/multica-ai/multica/server/internal/cli"
+	"github.com/multica-ai/multica/server/internal/daemon/agenthooks"
 	"github.com/multica-ai/multica/server/internal/daemon/execenv"
 	"github.com/multica-ai/multica/server/internal/daemon/localenv"
 	"github.com/multica-ai/multica/server/internal/daemon/repocache"
@@ -196,12 +197,8 @@ func taskMulticaEnvironment(task Task, provider, agentName, token, configRoot, w
 		"TEMP":                 tempDir,
 	}
 	if task.QuickCreatePrompt != "" {
-		assigneeType, assigneeID := "agent", task.AgentID
-		if task.SquadID != "" {
-			assigneeType, assigneeID = "squad", task.SquadID
-		}
-		env["MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_TYPE"] = assigneeType
-		env["MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_ID"] = assigneeID
+		env["MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_TYPE"] = "agent"
+		env["MULTICA_QUICK_CREATE_DEFAULT_ASSIGNEE_ID"] = task.AgentID
 	}
 	if runtime.GOOS != "windows" {
 		return env
@@ -623,6 +620,17 @@ type Daemon struct {
 	// directly. Reset when the WS (re)connects, so a server upgrade that
 	// bounces the connection re-probes the batch route (MUL-4257).
 	batchClaimUnsupported atomic.Bool
+
+	// terminalServer mirrors the latest heartbeat ack's terminal capability;
+	// terminalWake tells terminalLoop that it changed.
+	terminalServer atomic.Bool
+	terminalWake   chan struct{}
+	terminalMu     sync.Mutex
+	terminalCancel context.CancelFunc // ends the connection terminalLoop is holding
+
+	// agentHooks receives the lifecycle of the agent sessions the terminal
+	// starts. Nil when the daemon could not start it.
+	agentHooks *agenthooks.Manager
 	// wsClaimHTTPFallbackAfter is set after an uncertain WS claim outcome. Once
 	// the safety delay elapses, the next claim bypasses WS once and uses HTTP so
 	// a flaky reconnecting WS cannot starve queued tasks indefinitely.
@@ -834,6 +842,7 @@ func New(cfg Config, logger *slog.Logger) *Daemon {
 		reconcile:                   newReconcileBroadcaster(),
 		workspaceChanges:            newWorkspaceChangeSignal(),
 		wsRPC:                       newWSRPCClient(wsRPCResponseGrace),
+		terminalWake:                make(chan struct{}, 1),
 		environments:                newEnvironmentService(cfg, client, environmentIgnoreCommands(cfg.Agents), logger),
 	}
 	d.activeEnvRootsCond = sync.NewCond(&d.activeEnvRootsMu)
@@ -2111,6 +2120,15 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	}
 	defer healthLn.Close()
 
+	// One hook receiver per daemon: every agent session the terminal starts
+	// reports its turns to it. Without one the terminal hosts shells only.
+	if hooks, err := agenthooks.New(agenthooks.Options{Logger: d.logger}); err != nil {
+		d.logger.Warn("agent hooks: receiver not started; the terminal starts no agent sessions", "error", err)
+	} else {
+		d.agentHooks = hooks
+		defer hooks.Close()
+	}
+
 	agentNames := make([]string, 0, len(d.agents()))
 	for name := range d.agents() {
 		agentNames = append(agentNames, name)
@@ -2200,7 +2218,10 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	taskWakeups := make(chan taskWakeup, 256)
 	go d.taskWakeupLoop(ctx, taskWakeups)
 	go d.heartbeatLoop(ctx)
+	go d.terminalLoop(ctx)
+	go d.reportTurnEnds(ctx)
 	go d.gcLoop(ctx)
+	go d.treeWorkerLoop(ctx)
 	go d.autoUpdateLoop(ctx)
 	go d.tokenRenewalLoop(ctx)
 	go d.environments.run(ctx)
@@ -2211,7 +2232,7 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	// readiness wait blocks on, so success is reported only after startup
 	// actually completed, not merely because the health port came up.
 	d.ready.Store(true)
-	d.logger.Debug("background loops launched (workspace-sync, terminal-report-replay, task-wakeup, heartbeat, gc, auto-update, token-renewal); health now reporting ready")
+	d.logger.Debug("background loops launched (workspace-sync, terminal-report-replay, task-wakeup, heartbeat, gc, task-trees, auto-update, token-renewal); health now reporting ready")
 	err = d.pollLoop(ctx, taskWakeups)
 	d.logger.Debug("daemon main loop returning", "error", err)
 	return err
@@ -4721,6 +4742,7 @@ func (d *Daemon) handleHeartbeatActions(ctx context.Context, runtimeID string, r
 	if resp == nil {
 		return
 	}
+	d.noteTerminalServer(terminalServerOffered(resp))
 	if resp.PendingUpdate != nil || resp.PendingModelList != nil || resp.PendingLocalSkills != nil || resp.PendingLocalSkillImport != nil {
 		d.logger.Debug("heartbeat: pending actions",
 			"runtime_id", runtimeID,
@@ -6282,7 +6304,7 @@ func (d *Daemon) handleTask(ctx context.Context, task Task, slot *taskSlotLease)
 			// exempt env root, so the directory would accumulate one env
 			// root per task forever — the exact cost the exemption was
 			// meant to trade away for a user's own files.
-			if assignment, _ := localDirectoryAssignmentForTask(task, d.cfg.DaemonID); assignment != nil && !assignment.UsesWorktree() {
+			if assignment, _ := findLocalDirectoryAssignment(task.ProjectResources, d.cfg.DaemonID); assignment != nil && !assignment.UsesWorktree() {
 				meta.LocalDirectory = true
 			}
 			if err := execenv.WriteGCMeta(result.EnvRoot, meta, taskLog); err != nil {
@@ -6456,7 +6478,7 @@ func (d *Daemon) acquireLocalDirectoryLockIfNeeded(ctx context.Context, task Tas
 	if len(task.ProjectResources) == 0 || d.cfg.DaemonID == "" {
 		return nil, false
 	}
-	assignment, err := localDirectoryAssignmentForTask(task, d.cfg.DaemonID)
+	assignment, err := findLocalDirectoryAssignment(task.ProjectResources, d.cfg.DaemonID)
 	if err != nil {
 		taskLog.Error("local_directory: resolve resource failed", "error", err)
 		if failErr := d.reportTerminalTask(ctx, terminalTaskReport{
@@ -8367,7 +8389,6 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 		AutopilotSource:                  task.AutopilotSource,
 		AutopilotTriggerPayload:          strings.TrimSpace(string(task.AutopilotTriggerPayload)),
 		QuickCreatePrompt:                task.QuickCreatePrompt,
-		IsSquadLeader:                    taskIsSquadLeader(task),
 		RequestingUserName:               task.RequestingUserName,
 		RequestingUserProfileDescription: task.RequestingUserProfileDescription,
 		InitiatorType:                    task.InitiatorType,
@@ -8469,16 +8490,15 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	}
 	// Resolve any local_directory assignment again here so runTask can plumb
 	// LocalWorkDir into execenv. handleTask already validated + locked the
-	// path for worker tasks; leader tasks intentionally skip the assignment.
-	localAssignment, _ := localDirectoryAssignmentForTask(task, d.cfg.DaemonID)
+	// path.
+	localAssignment, _ := findLocalDirectoryAssignment(task.ProjectResources, d.cfg.DaemonID)
 	// Reuse intentionally skipped for local_directory tasks: the prior
 	// WorkDir is the user's own path (always present) but the reuse path
 	// loses the envRoot association the GC loop needs, and re-running
 	// Prepare against a stable user path is cheap (no clone, no copy).
-	// Leader tasks have no localAssignment; shouldReusePriorWorkdir separately
-	// requires Prepare-time managed-env provenance and a daemon-owned marker
-	// before allowing reuse, so a pre-fix leader session recorded against
-	// local_directory still fails closed.
+	// shouldReusePriorWorkdir separately requires Prepare-time managed-env
+	// provenance and a daemon-owned marker before allowing reuse, so a prior
+	// workdir recorded against a local_directory is never reused.
 	var agentMcpConfig json.RawMessage
 	var effectiveMcpConfig json.RawMessage
 	var cursorMcpAuthSource string

@@ -65,18 +65,9 @@ func TestConversationRootOwnersReadOnlyRoutingData(t *testing.T) {
 	otherIssueID := dbfx.Issue(t, "Other issue")
 	rootID := dbfx.Comment(t, issueID, "No explicit owner")
 	otherRootID := dbfx.Comment(t, issueID, "Another root")
-	oldSquad := dbfx.Squad(t, "Old root squad", agentA)
-	newSquad := dbfx.Squad(t, "New root squad", agentA)
 	for i := 0; i < 96; i++ {
-		squad := any(nil)
-		if i == 0 {
-			squad = oldSquad
-		}
-		if i == 1 {
-			squad = newSquad
-		}
 		dbfx.Task(t, agentA, testutil.Cols{
-			"issue_id": issueID, "trigger_comment_id": rootID, "runtime_id": handlerTestRuntimeID(t), "status": "completed", "squad_id": squad,
+			"issue_id": issueID, "trigger_comment_id": rootID, "runtime_id": handlerTestRuntimeID(t), "status": "completed",
 			"created_at": time.Date(2026, 1, 1, 0, 0, i, 0, time.UTC),
 			"context":    testutil.Raw(`jsonb_build_object('large',repeat('x',65536))`),
 			"result":     testutil.Raw(`jsonb_build_object('large',repeat('y',65536))`),
@@ -100,19 +91,12 @@ func TestConversationRootOwnersReadOnlyRoutingData(t *testing.T) {
 	if !owned || len(triggers) != 2 {
 		t.Fatalf("owned=%t triggers=%d, want two root owners", owned, len(triggers))
 	}
+	owners := make(map[string]bool, len(triggers))
 	for _, trigger := range triggers {
-		switch uuidToString(trigger.Agent.ID) {
-		case agentA:
-			if trigger.Squad == nil || uuidToString(trigger.Squad.ID) != newSquad {
-				t.Fatal("lost newest non-null squad")
-			}
-		case agentB:
-			if trigger.Squad != nil {
-				t.Fatal("invented squad")
-			}
-		default:
-			t.Fatal("routed unrelated task owner")
-		}
+		owners[uuidToString(trigger.Agent.ID)] = true
+	}
+	if !owners[agentA] || !owners[agentB] {
+		t.Fatalf("root owners = %v, want %s and %s", owners, agentA, agentB)
 	}
 	if observer.reads != 1 || observer.rows != 2 || observer.payload {
 		t.Fatalf("routing read: reads=%d rows=%d payload=%t; want one narrow row per owner", observer.reads, observer.rows, observer.payload)
@@ -140,7 +124,7 @@ func TestConversationRootOwnersReadOnlyRoutingData(t *testing.T) {
 	// even though the comment did not start a separate task (#9060).
 	supplementTask := dbfx.Task(t, agentA, testutil.Cols{
 		"issue_id": issueID, "trigger_comment_id": otherRootID,
-		"runtime_id": handlerTestRuntimeID(t), "status": "completed", "squad_id": newSquad,
+		"runtime_id": handlerTestRuntimeID(t), "status": "completed",
 	})
 	dbfx.Exec(t, `INSERT INTO task_supplement
 		(task_id, workspace_id, issue_id, comment_id, author_id, client_request_id, status)
@@ -151,7 +135,7 @@ func TestConversationRootOwnersReadOnlyRoutingData(t *testing.T) {
 		dbfx.Exec(t, `UPDATE task_supplement SET status=$1 WHERE task_id=$2`, status, supplementTask)
 		got, owned := h.routeConversationOwnersForRoot(ctx, issue, empty, testUserID, commentTriggerComputeOptions{})
 		if status == "delivered" {
-			if !owned || len(got) != 1 || uuidToString(got[0].Agent.ID) != agentA || got[0].Squad == nil || uuidToString(got[0].Squad.ID) != newSquad {
+			if !owned || len(got) != 1 || uuidToString(got[0].Agent.ID) != agentA {
 				t.Fatalf("delivered supplement lost its terminal turn owner: owned=%t triggers=%d", owned, len(got))
 			}
 		} else if owned || len(got) != 0 {

@@ -123,8 +123,6 @@ var guestEmptyReads = []struct {
 	{compileGuestRoutes([]string{"GET /api/chat/pending-tasks"})[0], `{"tasks":[]}`},
 	{compileGuestRoutes([]string{"GET /api/chat/pending-tasks/has-any"})[0], `{"has_pending":false}`},
 	{compileGuestRoutes([]string{"GET /api/runtimes"})[0], `[]`},
-	{compileGuestRoutes([]string{"GET /api/squads"})[0], `[]`},
-	{compileGuestRoutes([]string{"GET /api/squads/involved"})[0], `{"squad_ids":[]}`},
 	{compileGuestRoutes([]string{"GET /api/working-agents"})[0], `[]`},
 	{compileGuestRoutes([]string{"GET /api/issue-wakeup-summaries"})[0], `[]`},
 	{compileGuestRoutes([]string{"GET /api/issue-wakeup-paused"})[0], `[]`},

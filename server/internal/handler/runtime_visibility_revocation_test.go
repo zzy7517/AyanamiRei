@@ -319,7 +319,6 @@ func TestRevokeRuntimeWorkspaceAccess(t *testing.T) {
 	memberAutopilotID := dbfx.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id":    testWorkspaceID,
 		"title":           "Runtime Privacy Member Autopilot",
-		"assignee_type":   "agent",
 		"assignee_id":     memberAgentID,
 		"status":          "active",
 		"execution_mode":  "run_only",

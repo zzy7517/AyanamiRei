@@ -30,7 +30,7 @@ import (
 
 // IssueService is the shared issue-creation entry point for HTTP and channel
 // callers. It keeps numbering, duplicate guards, attachments, broadcasts,
-// analytics, and agent/squad enqueue aligned. Callers resolve transport inputs
+// analytics, and agent enqueue aligned. Callers resolve transport inputs
 // into IssueCreateParams; the service does not depend on http.Request.
 type IssueService struct {
 	Queries   *db.Queries
@@ -272,8 +272,7 @@ func (s *IssueService) Create(ctx context.Context, p IssueCreateParams, opts Iss
 //     Ordinary creates keep their existing event-before-enqueue ordering.
 //  9. Publish EventIssueCreated to the bus (payload via opts.BroadcastPayload).
 //  10. Capture the IssueCreated analytics event.
-//  11. Enqueue the ordinary agent task or trigger the squad leader when the
-//     issue is assigned and not in `backlog`.
+//  11. Enqueue the agent task when the issue is assigned and not in `backlog`.
 //
 // Validation that lives in the service (parent existence, project
 // workspace membership, parent → project back-fill) is enforced here so
@@ -617,18 +616,13 @@ func (s *IssueService) createOnce(ctx context.Context, p IssueCreateParams, opts
 					"task_id", util.UUIDToString(assignedTask.ID),
 					"error", err)
 			}
-		} else if s.shouldEnqueueSquadLeaderOnAssign(ctx, issue) {
-			// AssignedAgentRunFireAt currently belongs to channel /issue, which
-			// always resolves an agent assignee. Preserve the ordinary squad path
-			// for any future caller that supplies the option with a squad.
-			s.enqueueSquadLeaderTask(ctx, issue, pgtype.UUID{}, p.CreatorType, actorID)
 		}
 	}
 
 	s.publishIssueCreated(issue, attachments, labels, p.CreatorType, actorID, opts)
 	s.captureCreatedAnalytics(issue, p.CreatorType, actorID, opts)
 	if opts.AssignedAgentRunFireAt.IsZero() {
-		assignedTaskID = s.maybeEnqueueOnAssign(ctx, issue, p.CreatorType, actorID, opts.AssignedAgentRunFireAt)
+		assignedTaskID = s.maybeEnqueueOnAssign(ctx, issue, opts.AssignedAgentRunFireAt)
 	}
 	// Creating an issue already assigned to an agent is the member delegating
 	// work. The run itself is attributed through the creator fallback, which
@@ -945,7 +939,7 @@ func (s *IssueService) createWorkflow(ctx context.Context, qtx *db.Queries, p Is
 	return def, err
 }
 
-func (s *IssueService) maybeEnqueueOnAssign(ctx context.Context, issue db.Issue, creatorType, actorID string, agentRunFireAt time.Time) pgtype.UUID {
+func (s *IssueService) maybeEnqueueOnAssign(ctx context.Context, issue db.Issue, agentRunFireAt time.Time) pgtype.UUID {
 	if !issue.AssigneeType.Valid || !issue.AssigneeID.Valid {
 		return pgtype.UUID{}
 	}
@@ -981,9 +975,6 @@ func (s *IssueService) maybeEnqueueOnAssign(ctx context.Context, issue db.Issue,
 		} else {
 			return task.ID
 		}
-	}
-	if s.shouldEnqueueSquadLeaderOnAssign(ctx, issue) {
-		s.enqueueSquadLeaderTask(ctx, issue, pgtype.UUID{}, creatorType, actorID)
 	}
 	return pgtype.UUID{}
 }
@@ -1029,66 +1020,4 @@ func agentAssigneeVerdict(ctx context.Context, lookup RuntimeLookup, issue db.Is
 		return AgentVerdict{}, false
 	}
 	return verdict, !verdict.Blocked()
-}
-
-func (s *IssueService) shouldEnqueueSquadLeaderOnAssign(ctx context.Context, issue db.Issue) bool {
-	if issue.TriageState.Valid || issuestatus.Effective(ctx, s.Queries, issue.WorkspaceID, issue.Status) == "backlog" {
-		return false
-	}
-	return s.isSquadLeaderReady(ctx, issue)
-}
-
-func (s *IssueService) isSquadLeaderReady(ctx context.Context, issue db.Issue) bool {
-	if !issue.AssigneeType.Valid || issue.AssigneeType.String != "squad" || !issue.AssigneeID.Valid {
-		return false
-	}
-	squad, err := s.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{
-		ID:          issue.AssigneeID,
-		WorkspaceID: issue.WorkspaceID,
-	})
-	if err != nil {
-		return false
-	}
-	agent, err := s.Queries.GetAgent(ctx, squad.LeaderID)
-	if err != nil {
-		return false
-	}
-	verdict, err := AgentReadiness(ctx, s.runtimeLookup(s.Queries), agent)
-	if err != nil {
-		return false
-	}
-	return verdict.Ready()
-}
-
-func (s *IssueService) enqueueSquadLeaderTask(ctx context.Context, issue db.Issue, triggerCommentID pgtype.UUID, authorType, authorID string) {
-	squad, err := s.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{
-		ID:          issue.AssigneeID,
-		WorkspaceID: issue.WorkspaceID,
-	})
-	if err != nil {
-		return
-	}
-	hasPending, err := s.Queries.HasPendingTaskForIssueAndAgent(ctx, db.HasPendingTaskForIssueAndAgentParams{
-		IssueID: issue.ID,
-		AgentID: squad.LeaderID,
-		// Key dedup on the reviewed head (TEN-356).
-		HeadSha: headShaText(s.TaskService.ResolveIssueReviewSHA(ctx, issue.ID)),
-	})
-	if err != nil || hasPending {
-		return
-	}
-	if _, err := s.TaskService.EnqueueTaskForSquadLeader(ctx, issue, squad.LeaderID, squad.ID, triggerCommentID, OriginDerived); err != nil {
-		slog.Warn("enqueue squad leader task on create failed",
-			"issue_id", util.UUIDToString(issue.ID),
-			"squad_id", util.UUIDToString(squad.ID),
-			"leader_id", util.UUIDToString(squad.LeaderID),
-			"error", err)
-		return
-	}
-	// A member creating an issue assigned to a squad delegates the same way as
-	// one assigned to an agent (see Create). A trigger comment, when present,
-	// already recorded its author at enqueue.
-	if !triggerCommentID.Valid && authorType == "member" {
-		s.TaskService.RecordHumanDelegation(ctx, attribution.DirectHumanRun(issue.CreatorID, attribution.EvidenceIssueAssignment, issue.ID))
-	}
 }

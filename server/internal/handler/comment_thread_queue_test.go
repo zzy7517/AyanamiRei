@@ -114,6 +114,67 @@ func TestCommentThreadQueuesMergeAndExecuteIndependently(t *testing.T) {
 	}
 }
 
+// A /note comment never starts an agent. Completion replay keeps that promise
+// for a note that names the completing agent and was never delivered, while the
+// same mention without the prefix starts the follow-up.
+func TestCompletionReplaySkipsNoteComments(t *testing.T) {
+	ctx := context.Background()
+	runtimeID := dbfx.Runtime(t, "note replay runtime")
+	agentID := dbfx.Agent(t, "note replay agent", runtimeID)
+	issueID := dbfx.Issue(t, "note replay issue", testutil.Cols{"assignee_type": "agent", "assignee_id": agentID})
+	root := dbfx.Comment(t, issueID, "Coordinate this work")
+	taskID := dbfx.Task(t, agentID, testutil.Cols{"runtime_id": runtimeID, "issue_id": issueID, "status": "running", "trigger_comment_id": root})
+	t.Cleanup(func() { dbfx.Exec(t, "DELETE FROM agent_task_queue WHERE issue_id = $1", issueID) })
+	mention := "[@Agent](mention://agent/" + agentID + ") the pipeline is still red"
+	note := dbfx.Comment(t, issueID, "/note "+mention, testutil.Cols{"parent_id": root})
+	plain := dbfx.Comment(t, issueID, mention, testutil.Cols{"parent_id": root})
+	dbfx.Exec(t, "UPDATE agent_task_queue SET status='completed', completed_at=now(), delivered_comment_ids=ARRAY[$2::uuid] WHERE id=$1", taskID, root)
+	completed, err := testHandler.Queries.GetAgentTask(ctx, parseUUID(taskID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Both comments must reach the replay filter; otherwise a silent note would
+	// only prove that the query scope excluded it.
+	reachable, err := testHandler.Queries.ListReconcilableCommentsForIssueSince(ctx, db.ListReconcilableCommentsForIssueSinceParams{
+		CommentThreadID: completed.CommentThreadID, TaskID: completed.ID, IssueID: completed.IssueID, Since: completed.CreatedAt,
+		PlannedCommentIds: completed.CoalescedCommentIds, AgentID: completed.AgentID,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{note, plain} {
+		found := false
+		for _, c := range reachable {
+			found = found || uuidToString(c.ID) == id
+		}
+		if !found {
+			t.Fatalf("comment %s never reached the replay filter", id)
+		}
+	}
+	testHandler.reconcileCommentsOnCompletion(ctx, &completed)
+	tasks, err := testHandler.Queries.ListTasksByIssue(ctx, parseUUID(issueID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var followups []db.AgentTaskQueue
+	for _, task := range tasks {
+		if task.Status != "completed" {
+			followups = append(followups, task)
+		}
+	}
+	if len(followups) != 1 {
+		t.Fatalf("completion replay left %d open runs, want only the plain mention's follow-up", len(followups))
+	}
+	if uuidToString(followups[0].TriggerCommentID) != plain {
+		t.Fatalf("follow-up trigger = %s, want the plain mention %s", uuidToString(followups[0].TriggerCommentID), plain)
+	}
+	for _, id := range followups[0].CoalescedCommentIds {
+		if uuidToString(id) == note {
+			t.Fatal("the /note comment was planned as run input")
+		}
+	}
+}
+
 // Clients place a queued run under the newest comment it answers. Folding a
 // reply into that run leaves its status alone, so only task:coalesced moves the
 // run's block under the reply on open issue pages.

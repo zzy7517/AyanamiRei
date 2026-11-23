@@ -214,20 +214,15 @@ func (h *Handler) steerCommentAgentTriggers(ctx context.Context, issue db.Issue,
 			kept = append(kept, trigger)
 			continue
 		}
-		// Some trigger routes (a worker's reply reaching its assigned leader)
-		// do not pass the invoke gate, so an agent author is re-checked here.
+		// An agent author is re-checked against the invoke gate, so steering a turn
+		// never widens what that turn's trigger admitted.
 		if actorType == "agent" && !h.agentMaySteer(ctx, trigger.Agent, actorID, originatorUserID, uuidToString(issue.WorkspaceID)) {
 			kept = append(kept, trigger)
 			continue
 		}
 		// The comment is its own request id: it binds to a turn at most once.
-		var leaderSquadID pgtype.UUID
-		if trigger.Squad != nil {
-			leaderSquadID = trigger.Squad.ID
-		}
 		bound, err := h.bindCommentSteer(ctx, db.BindCommentTaskSupplementParams{
-			RequiredLeaderSquadID: leaderSquadID,
-			TaskID:                taskID, IssueID: issue.ID, AgentID: trigger.Agent.ID, WorkspaceID: issue.WorkspaceID,
+			TaskID: taskID, IssueID: issue.ID, AgentID: trigger.Agent.ID, WorkspaceID: issue.WorkspaceID,
 			AuthorType: comment.AuthorType, MaxAgentBindings: maxAgentSteersPerTurn, MaxBindingsPerAgent: maxAgentSteersPerAgentPerTurn,
 			CommentID: comment.ID, AuthorID: comment.AuthorID, ClientRequestID: comment.ID,
 		})

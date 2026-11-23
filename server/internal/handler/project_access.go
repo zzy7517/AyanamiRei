@@ -221,32 +221,23 @@ func (h *Handler) sourceContextProjectVisible(r *http.Request, workspaceID, proj
 }
 
 // requireAssigneeCanAccessProject refuses handing an issue in a private
-// project to an agent (or a squad, through its leader) whose owner cannot
-// see that project (MUL-8472). Enqueue enforces the same rule
-// (service.ErrProjectAccessDenied); checking at assignment turns what would be
-// a run that never starts into an explicit 403 with a stable reason code.
+// project to an agent whose owner cannot see that project (MUL-8472). Enqueue
+// enforces the same rule (service.ErrProjectAccessDenied); checking at
+// assignment turns what would be a run that never starts into an explicit 403
+// with a stable reason code.
 func (h *Handler) requireAssigneeCanAccessProject(w http.ResponseWriter, r *http.Request, workspaceID pgtype.UUID, assigneeType pgtype.Text, assigneeID, projectID pgtype.UUID) bool {
 	if !projectID.Valid || !assigneeType.Valid || !assigneeID.Valid {
 		return true
 	}
-	ctx := r.Context()
-	agentID := assigneeID
-	switch assigneeType.String {
-	case "agent":
-	case "squad":
-		squad, err := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{ID: assigneeID, WorkspaceID: workspaceID})
-		if err != nil {
-			return true // validateAssigneePair owns the missing-squad answer
-		}
-		agentID = squad.LeaderID
-	default:
+	if assigneeType.String != "agent" {
 		return true
 	}
+	ctx := r.Context()
 	project, err := h.Queries.GetProjectInWorkspace(ctx, db.GetProjectInWorkspaceParams{ID: projectID, WorkspaceID: workspaceID})
 	if err != nil || project.Visibility != projectaccess.VisibilityPrivate {
 		return true
 	}
-	agent, err := h.Queries.GetAgent(ctx, agentID)
+	agent, err := h.Queries.GetAgent(ctx, assigneeID)
 	if err != nil || !agent.OwnerID.Valid {
 		return true
 	}

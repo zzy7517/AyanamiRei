@@ -148,10 +148,6 @@ func (h *Handler) childDoneSystemWakeup(r *http.Request, parent db.Issue) (*syst
 		if agent, e := h.Queries.GetAgentInWorkspace(ctx, db.GetAgentInWorkspaceParams{ID: parent.AssigneeID, WorkspaceID: parent.WorkspaceID}); e == nil {
 			out.Target = &systemWakeupTarget{Type: "agent", ID: uuidToString(agent.ID), Name: agent.Name}
 		}
-	case parent.AssigneeType.String == "squad":
-		if squad, e := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{ID: parent.AssigneeID, WorkspaceID: parent.WorkspaceID}); e == nil {
-			out.Target = &systemWakeupTarget{Type: "squad", ID: uuidToString(squad.ID), Name: squad.Name}
-		}
 	}
 	if out.Blocked == "" && issuestatus.Effective(ctx, h.Queries, parent.WorkspaceID, parent.Status) == "backlog" {
 		out.Blocked = "backlog"

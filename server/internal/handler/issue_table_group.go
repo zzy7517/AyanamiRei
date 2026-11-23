@@ -124,7 +124,6 @@ func statusOrderExpression(categoryExpr string) string {
 // ONE catalog read: the custom key -> category map behind the GROUP BY rewrite,
 // and the category -> concrete keys expansion that predicate() looks up (it has
 // no context or Querier of its own).
-//
 // One read, not three. A board can load four column branches as separate
 // HTTP requests, so a per-call `ExpandCategories` + `CustomKeyCategories` pair
 // would multiply catalog SELECTs behind one surface load.
@@ -260,7 +259,6 @@ func (h *Handler) resolveIssueTableGroup(w http.ResponseWriter, r *http.Request,
 			groupSortExpr: `LOWER(COALESCE(CASE split_part(group_value, ':', 1)
   WHEN 'member' THEN (SELECT u.name FROM "user" u WHERE u.id = split_part(group_value, ':', 2)::uuid)
   WHEN 'agent' THEN (SELECT a.name FROM agent a WHERE a.workspace_id = $1 AND a.id = split_part(group_value, ':', 2)::uuid)
-  WHEN 'squad' THEN (SELECT s.name FROM squad s WHERE s.workspace_id = $1 AND s.id = split_part(group_value, ':', 2)::uuid)
 END, ''))`,
 		}, true
 	case "project":
@@ -513,7 +511,7 @@ func (group resolvedIssueTableGroup) orderExpression(addArg func(any) string) st
 		}
 		return statusOrderExpression("group_value")
 	case "assignee":
-		return "CASE split_part(group_value, ':', 1) WHEN 'member' THEN 0 WHEN 'agent' THEN 1 WHEN 'squad' THEN 2 ELSE 3 END"
+		return "CASE split_part(group_value, ':', 1) WHEN 'member' THEN 0 WHEN 'agent' THEN 1 ELSE 2 END"
 	case "project":
 		return "CASE WHEN group_value = '__no_project__' THEN 0 ELSE 1 END"
 	case "parent":

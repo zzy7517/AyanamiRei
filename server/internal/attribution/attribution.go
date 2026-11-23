@@ -231,8 +231,8 @@ type CommentFacts struct {
 // ClassifyComment resolves attribution for a comment-triggered run from
 // already-fetched comment facts. agentAuthoredSource selects the label used
 // when the trigger comment is agent-authored: SourceCommentSource for the
-// issue-assignee-reacting path, SourceDelegation for an explicit mention /
-// thread-parent / squad-leader path. The returned UserID is byte-identical to
+// issue-assignee-reacting path, SourceDelegation for an explicit mention or
+// thread-parent path. The returned UserID is byte-identical to
 // the legacy originator resolution so authorization behavior is unchanged.
 func ClassifyComment(f CommentFacts, agentAuthoredSource Source) Result {
 	switch f.AuthorType {

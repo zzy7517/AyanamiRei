@@ -54,9 +54,9 @@ LEFT JOIN "user" actor_user ON actor_user.id=actor_member.user_id
  UNION ALL
  -- The child-done system rule of each open parent that still waits for a
  -- sub-issue: every child when unstaged, else its lowest unfinished stage.
- -- Its target is the parent's assignee (a squad's leader) at the moment.
+  -- Its target is the parent's assignee at the moment.
  SELECT w.id,w.issue_id,p.title,ws.issue_prefix||'-'||p.number,
-  COALESCE(ta.id,leader.id),COALESCE(ta.name,leader.name,''),w.kind,w.mode,w.event_types,NULL::text,
+    ta.id,COALESCE(ta.name,''),w.kind,w.mode,w.event_types,NULL::text,
   NULL::uuid,''::text,NULL::uuid,NULL::text,NULL::uuid,
   NULL::bigint,NULL::text,w.timezone,
   NULL::timestamptz,w.enabled,w.revision,w.disabled_at,w.last_task_id,w.last_error,w.created_at,
@@ -70,8 +70,8 @@ LEFT JOIN "user" actor_user ON actor_user.id=actor_member.user_id
  JOIN issue p ON p.id=w.issue_id AND p.workspace_id=w.workspace_id
  JOIN workspace ws ON ws.id=p.workspace_id
  LEFT JOIN agent ta ON p.assignee_type='agent' AND ta.id=p.assignee_id AND ta.workspace_id=p.workspace_id
- LEFT JOIN squad sq ON p.assignee_type='squad' AND sq.id=p.assignee_id AND sq.workspace_id=p.workspace_id
- LEFT JOIN agent leader ON leader.id=sq.leader_id AND leader.workspace_id=p.workspace_id
+
+
  CROSS JOIN LATERAL (
   SELECT bool_or(ci.stage IS NOT NULL) AS staged,
    min(ci.stage) FILTER(WHERE ci.stage IS NOT NULL AND NOT (ci.status IN ('done','cancelled') OR EXISTS(SELECT 1 FROM issue_status cs WHERE cs.workspace_id=ci.workspace_id AND cs.key=ci.status AND cs.category IN ('done','closed')))) AS stage,

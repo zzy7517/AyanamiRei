@@ -474,22 +474,14 @@ func appendIssueTableInvolvedPredicate(where []string, addArg func(any) string, 
 }
 
 // issueTableInvolvedPredicate matches issues assigned to an agent the user
-// owns, or to a squad led by an agent the user owns.
+// owns.
 func issueTableInvolvedPredicate(userRef string) string {
 	return fmt.Sprintf(`(
-    (i.assignee_type = 'agent' AND i.assignee_id IN (
+    i.assignee_type = 'agent' AND i.assignee_id IN (
        SELECT a.id FROM agent a
         WHERE a.workspace_id = $1
           AND a.owner_id     = %[1]s::uuid
-    ))
-    OR (i.assignee_type = 'squad' AND i.assignee_id IN (
-       SELECT s.id
-         FROM squad s
-         JOIN agent a ON a.id = s.leader_id
-        WHERE s.workspace_id = $1
-          AND a.workspace_id = $1
-          AND a.owner_id     = %[1]s::uuid
-    ))
+    )
 )`, userRef)
 }
 

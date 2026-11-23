@@ -10,6 +10,9 @@ const (
 	EventIssueAttachmentsChanged = "issue_attachments:changed"
 	// Personal: one member's unread mark on an issue changed (MUL-8438).
 	EventIssueUnreadChanged = "issue_unread:changed"
+	// The agent of an issue replied: the task list's "new reply" marker,
+	// null once a member has seen the reply.
+	EventIssueAgentReplied = "issue:agent_replied"
 
 	// Comment events
 	EventCommentCreated       = "comment:created"
@@ -179,11 +182,6 @@ const (
 	EventAutopilotDeleted  = "autopilot:deleted"
 	EventAutopilotRunStart = "autopilot:run_start"
 	EventAutopilotRunDone  = "autopilot:run_done"
-
-	// Squad events
-	EventSquadCreated = "squad:created"
-	EventSquadUpdated = "squad:updated"
-	EventSquadDeleted = "squad:deleted"
 
 	// Daemon events
 	EventDaemonHeartbeat               = "daemon:heartbeat"

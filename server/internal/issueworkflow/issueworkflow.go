@@ -37,7 +37,6 @@ import (
 const (
 	HandlerNone        = "none"
 	HandlerAgent       = "agent"
-	HandlerSquad       = "squad"
 	HandlerMember      = "member"
 	HandlerProjectLead = "project_lead"
 	HandlerCreator     = "creator"
@@ -145,7 +144,7 @@ func BuiltInDefaultKeys() []string {
 }
 
 // Handler names who receives an issue when it enters a step. ID is set only
-// for the concrete types (agent, squad, member).
+// for the concrete types (agent, member).
 type Handler struct {
 	Type string `json:"type"`
 	ID   string `json:"id,omitempty"`
@@ -171,7 +170,7 @@ type Definition struct {
 // HandsOff reports whether entering the step reassigns the issue.
 func (s Step) HandsOff() bool {
 	switch s.Handler.Type {
-	case HandlerAgent, HandlerSquad, HandlerMember, HandlerProjectLead, HandlerCreator:
+	case HandlerAgent, HandlerMember, HandlerProjectLead, HandlerCreator:
 		return true
 	}
 	return false
@@ -474,7 +473,7 @@ func NormalizeHandoff(s Step) Step {
 		s.Handler.Type = HandlerNone
 	}
 	switch s.Handler.Type {
-	case HandlerAgent, HandlerSquad, HandlerMember:
+	case HandlerAgent, HandlerMember:
 	default:
 		// Only the concrete handler types carry an id; a stale one left
 		// by a type switch in the form would otherwise be stored.
@@ -497,12 +496,12 @@ func ValidateHandoff(s Step, def Definition) error {
 	}
 	switch s.Handler.Type {
 	case HandlerNone, HandlerProjectLead:
-	case HandlerAgent, HandlerSquad, HandlerMember:
+	case HandlerAgent, HandlerMember:
 		if s.Handler.ID == "" {
 			return invalid("choose a %s to hand off to", s.Handler.Type)
 		}
 	case HandlerCreator:
-		return invalid("hand off to an agent, a squad, a member or the project lead")
+		return invalid("hand off to an agent, a member or the project lead")
 	default:
 		return invalid("unknown handler type %q", s.Handler.Type)
 	}
@@ -604,7 +603,7 @@ func ForProjectRow(ctx context.Context, q Querier, project db.Project) (*Definit
 // handler (project lead, creator) has nobody to resolve to.
 func ResolveHandler(step Step, project db.Project, issueCreatorType string, issueCreatorID pgtype.UUID) (assigneeType string, assigneeID pgtype.UUID, ok bool) {
 	switch step.Handler.Type {
-	case HandlerAgent, HandlerSquad, HandlerMember:
+	case HandlerAgent, HandlerMember:
 		var id pgtype.UUID
 		if err := id.Scan(step.Handler.ID); err != nil || !id.Valid {
 			return "", pgtype.UUID{}, false

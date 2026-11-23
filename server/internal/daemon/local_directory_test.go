@@ -141,83 +141,6 @@ func TestFindLocalDirectoryAssignment(t *testing.T) {
 	})
 }
 
-func TestAcquireLocalDirectoryLockSkipsSquadLeaderTasks(t *testing.T) {
-	t.Parallel()
-
-	const daemonID = "d-mine"
-	tmp := t.TempDir()
-	raw, err := json.Marshal(localDirectoryRef{LocalPath: tmp, DaemonID: daemonID})
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	resources := []ProjectResourceData{
-		{ID: "r1", ResourceType: localDirectoryResourceType, ResourceRef: raw},
-	}
-
-	worker := Task{
-		ID:               "worker-task",
-		ProjectResources: resources,
-	}
-	assignment, err := localDirectoryAssignmentForTask(worker, daemonID)
-	if err != nil {
-		t.Fatalf("worker assignment: %v", err)
-	}
-	if assignment == nil {
-		t.Fatal("worker assignment is nil")
-	}
-
-	d := &Daemon{
-		cfg:            Config{DaemonID: daemonID},
-		localPathLocks: NewLocalPathLocker(),
-		logger:         slog.Default(),
-	}
-	leader := Task{
-		ID:               "leader-task",
-		IsLeaderTask:     true,
-		ProjectResources: resources,
-	}
-	leaderAssignment, err := localDirectoryAssignmentForTask(leader, daemonID)
-	if err != nil {
-		t.Fatalf("leader assignment: %v", err)
-	}
-	if leaderAssignment != nil {
-		t.Fatalf("leader assignment = %+v, want nil", leaderAssignment)
-	}
-	leaderRelease, abort := d.acquireLocalDirectoryLockIfNeeded(context.Background(), leader, slog.Default(), newTestTaskSlot(0))
-	if abort {
-		t.Fatal("leader lock acquisition aborted")
-	}
-	if leaderRelease != nil {
-		t.Fatal("leader lock acquisition returned a release callback")
-	}
-	if got := d.localPathLocks.Holder(assignment.RealPath); got != "" {
-		t.Fatalf("holder after leader skip = %q, want empty", got)
-	}
-
-	release, abort := d.acquireLocalDirectoryLockIfNeeded(context.Background(), worker, slog.Default(), newTestTaskSlot(0))
-	if abort {
-		t.Fatal("worker lock acquisition aborted")
-	}
-	if release == nil {
-		t.Fatal("worker lock acquisition returned nil release")
-	}
-	defer release()
-	if got := d.localPathLocks.Holder(assignment.RealPath); got != worker.ID {
-		t.Fatalf("holder = %q, want %q", got, worker.ID)
-	}
-
-	leaderRelease, abort = d.acquireLocalDirectoryLockIfNeeded(context.Background(), leader, slog.Default(), newTestTaskSlot(0))
-	if abort {
-		t.Fatal("leader lock acquisition aborted")
-	}
-	if leaderRelease != nil {
-		t.Fatal("leader lock acquisition returned a release callback")
-	}
-	if got := d.localPathLocks.Holder(assignment.RealPath); got != worker.ID {
-		t.Fatalf("holder after leader skip = %q, want %q", got, worker.ID)
-	}
-}
-
 func TestValidateLocalPath(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("blacklist constants are POSIX-only in this test")
@@ -919,7 +842,7 @@ func TestAcquireLocalDirectoryLockSkipsWorktreeMode(t *testing.T) {
 		{ID: "r1", ResourceType: localDirectoryResourceType, ResourceRef: raw},
 	}
 
-	assignment, err := localDirectoryAssignmentForTask(Task{ID: "t1", ProjectResources: resources}, daemonID)
+	assignment, err := findLocalDirectoryAssignment(resources, daemonID)
 	if err != nil {
 		t.Fatalf("assignment: %v", err)
 	}
@@ -1003,7 +926,7 @@ func TestAcquireLocalDirectoryLockRejectsUnknownExecutionMode(t *testing.T) {
 		{ID: "r1", ResourceType: localDirectoryResourceType, ResourceRef: raw},
 	}
 
-	assignment, err := localDirectoryAssignmentForTask(Task{ID: "t1", ProjectResources: resources}, daemonID)
+	assignment, err := findLocalDirectoryAssignment(resources, daemonID)
 	if err != nil {
 		t.Fatalf("assignment: %v", err)
 	}
@@ -1075,10 +998,8 @@ func TestValidateExecutionModeAcceptsKnownModes(t *testing.T) {
 	}
 }
 
-// TestLocalDirectoryLockExempt pins the discriminator itself. IsLeaderTask is
-// listed explicitly because it is the flag the original carve-out keyed on, and
-// the whole defect in issue #7344 was that it is false on every chat task the
-// server has ever inserted.
+// TestLocalDirectoryLockExempt pins the discriminator itself: only a chat task
+// skips the path mutex, whatever else the task carries.
 func TestLocalDirectoryLockExempt(t *testing.T) {
 	t.Parallel()
 
@@ -1088,9 +1009,7 @@ func TestLocalDirectoryLockExempt(t *testing.T) {
 		want bool
 	}{
 		{"chat task", Task{ChatSessionID: "sess-1"}, true},
-		{"chat task dispatched in the leader role", Task{ChatSessionID: "sess-1", IsLeaderTask: true}, true},
 		{"issue task", Task{IssueID: "issue-1"}, false},
-		{"issue task in the leader role", Task{IssueID: "issue-1", IsLeaderTask: true}, false},
 		{"autopilot task", Task{AutopilotRunID: "run-1"}, false},
 	}
 	for _, tc := range cases {
@@ -1127,7 +1046,7 @@ func TestChatTaskSkipsPathMutexButKeepsAssignment(t *testing.T) {
 	chat := Task{ID: "chat-task", ChatSessionID: "sess-1", ProjectResources: resources}
 
 	// Property 1: the chat task still binds to the user's directory.
-	chatAssignment, err := localDirectoryAssignmentForTask(chat, daemonID)
+	chatAssignment, err := findLocalDirectoryAssignment(chat.ProjectResources, daemonID)
 	if err != nil {
 		t.Fatalf("chat assignment: %v", err)
 	}
@@ -1225,7 +1144,7 @@ func TestChatTaskOnWorktreeResourceKeepsAssignment(t *testing.T) {
 		ProjectResources: []ProjectResourceData{{ID: "r1", ResourceType: localDirectoryResourceType, ResourceRef: raw}},
 	}
 
-	assignment, err := localDirectoryAssignmentForTask(chat, daemonID)
+	assignment, err := findLocalDirectoryAssignment(chat.ProjectResources, daemonID)
 	if err != nil {
 		t.Fatalf("chat assignment: %v", err)
 	}

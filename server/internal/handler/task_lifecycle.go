@@ -147,9 +147,9 @@ func (h *Handler) PinTaskSession(w http.ResponseWriter, r *http.Request) {
 type RerunIssueRequest struct {
 	// TaskID identifies the execution-log row the user clicked retry on.
 	// When set, the rerun targets the agent that ran that specific task
-	// (and reuses its leader/worker role) rather than the issue's current
-	// assignee — so clicking retry on row that belonged to a now-displaced
-	// agent re-fires that same agent, not the new assignee.
+	// rather than the issue's current assignee — so clicking retry on a row
+	// that belonged to a now-displaced agent re-fires that same agent, not
+	// the new assignee.
 	TaskID string `json:"task_id,omitempty"`
 }
 

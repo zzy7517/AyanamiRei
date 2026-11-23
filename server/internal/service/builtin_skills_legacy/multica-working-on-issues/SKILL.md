@@ -17,7 +17,7 @@ multica-platform  →  references/issues.md
 ```
 
 Load the `multica-platform` skill and open that file. Its routing table also
-names the reference for every other platform domain: mentions, agents, squads,
+names the reference for every other platform domain: mentions, agents,
 autopilots, projects, runtimes, and skill import.
 
 The contracts were reorganized, not shortened — with one exception. The issue

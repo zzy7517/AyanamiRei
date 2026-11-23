@@ -86,7 +86,6 @@ func TestAutopilotRunOnlyTaskTerminalEventsUpdateRun(t *testing.T) {
 				WorkspaceID:        parseUUID(testWorkspaceID),
 				Title:              "Run-only listener " + tc.name,
 				Description:        pgtype.Text{String: "Run listener regression test", Valid: true},
-				AssigneeType:       "agent",
 				AssigneeID:         parseUUID(agentID),
 				Status:             "active",
 				ExecutionMode:      "run_only",
@@ -182,7 +181,6 @@ func dispatchCreateIssueAutopilot(t *testing.T, title string) linkedIssueAutopil
 		WorkspaceID:        parseUUID(testWorkspaceID),
 		Title:              title,
 		Description:        pgtype.Text{String: "VEN-661 / VEN-662 regression test", Valid: true},
-		AssigneeType:       "agent",
 		AssigneeID:         parseUUID(agentID),
 		Status:             "active",
 		ExecutionMode:      "create_issue",
@@ -543,7 +541,7 @@ func TestAutopilotCreateIssueMentionEnqueuedBeforeDispatch(t *testing.T) {
 	registerAutopilotListeners(bus, apSvc)
 	ap, err := queries.CreateAutopilot(ctx, db.CreateAutopilotParams{
 		WorkspaceID: parseUUID(testWorkspaceID), Title: "Dispatch order autopilot",
-		AssigneeType: "agent", AssigneeID: parseUUID(ownerID), Status: "active",
+		AssigneeID: parseUUID(ownerID), Status: "active",
 		ExecutionMode: "create_issue", IssueTitleTemplate: pgtype.Text{String: "Dispatch order issue", Valid: true},
 		CreatedByType: "member", CreatedByID: parseUUID(testUserID),
 	})
@@ -610,7 +608,7 @@ func TestAutopilotCreateIssueDeliveryBetweenEnqueueAndLink(t *testing.T) {
 	registerAutopilotListeners(bus, apSvc)
 	ap, err := queries.CreateAutopilot(ctx, db.CreateAutopilotParams{
 		WorkspaceID: parseUUID(testWorkspaceID), Title: "Link window autopilot",
-		AssigneeType: "agent", AssigneeID: parseUUID(agentID), Status: "active",
+		AssigneeID: parseUUID(agentID), Status: "active",
 		ExecutionMode: "create_issue", IssueTitleTemplate: pgtype.Text{String: "Link window issue", Valid: true},
 		CreatedByType: "member", CreatedByID: parseUUID(testUserID),
 	})
@@ -773,7 +771,6 @@ func TestAutopilotDispatchSkipsWhenRuntimeOffline(t *testing.T) {
 		WorkspaceID:        parseUUID(testWorkspaceID),
 		Title:              "Offline-runtime autopilot",
 		Description:        pgtype.Text{String: "MUL-1899 admission test", Valid: true},
-		AssigneeType:       "agent",
 		AssigneeID:         parseUUID(agentID),
 		Status:             "active",
 		ExecutionMode:      "run_only",
@@ -862,7 +859,6 @@ func TestAutopilotCreateIssueDispatchCreatesIssueWhenRuntimeOffline(t *testing.T
 		WorkspaceID:        parseUUID(testWorkspaceID),
 		Title:              "Offline create-issue autopilot",
 		Description:        pgtype.Text{String: "WS-1325 regression test", Valid: true},
-		AssigneeType:       "agent",
 		AssigneeID:         parseUUID(agentID),
 		Status:             "active",
 		ExecutionMode:      "create_issue",
@@ -916,7 +912,7 @@ func TestAutopilotCreateIssueDispatchCreatesIssueWhenRuntimeOffline(t *testing.T
 
 // TestManualTriggerDoesNotErrorOnPostAdmissionSkip locks in PR #2888 review
 // fix #2: if the dispatcher decides to skip after the admission gate has
-// already passed (e.g. the leader's runtime went offline between admission
+// already passed (e.g. the assignee's runtime went offline between admission
 // and task creation), DispatchAutopilot must return (run, nil) with
 // status='skipped' rather than (nil, err). Without this, manual trigger
 // surfaces a 500 to the user even though the work was correctly suppressed
@@ -974,7 +970,6 @@ func TestManualTriggerDoesNotErrorOnPostAdmissionSkip(t *testing.T) {
 		WorkspaceID:        parseUUID(testWorkspaceID),
 		Title:              "Manual-trigger skip autopilot",
 		Description:        pgtype.Text{String: "PR #2888 review fix #2", Valid: true},
-		AssigneeType:       "agent",
 		AssigneeID:         parseUUID(agentID),
 		Status:             "active",
 		ExecutionMode:      "run_only",

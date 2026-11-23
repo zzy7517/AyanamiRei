@@ -286,33 +286,34 @@ func TestQoderStepLeaseReleasesDatabaseConnection(t *testing.T) {
 	testutil.Call(t, testHandler.StopQoderConnection, vcsHandlerRequest("POST", "/qoder/stop", nil, "")).Want(200)
 }
 
-func TestQoderSquadQuickCreate(t *testing.T) {
+// Quick-create targets an agent directly: a Qoder Cloud agent takes the task
+// like any other, and the bridge's attachment limit is enforced at the endpoint.
+func TestQoderAgentQuickCreate(t *testing.T) {
 	if testHandler == nil {
 		t.Skip("database not available")
 	}
-	runtimeID := dbfx.Runtime(t, "Qoder squad quick-create", testutil.Cols{"provider": "qoder_cloud"})
-	leaderID := dbfx.Agent(t, "Qoder squad leader", runtimeID, testutil.Cols{"runtime_config": `{"qoder_agent_id":"agent_1"}`})
-	squadID := dbfx.Squad(t, "Qoder quick-create squad", leaderID)
-	dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE agent_id=$1`, leaderID)
+	runtimeID := dbfx.Runtime(t, "Qoder agent quick-create", testutil.Cols{"provider": "qoder_cloud"})
+	agentID := dbfx.Agent(t, "Qoder quick-create agent", runtimeID, testutil.Cols{"runtime_config": `{"qoder_agent_id":"agent_1"}`})
+	dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE agent_id=$1`, agentID)
 
 	var response QuickCreateIssueResponse
 	testutil.Call(t, testHandler.QuickCreateIssue, newRequest(http.MethodPost, "/api/issues/quick-create", map[string]any{
-		"squad_id": squadID, "prompt": "Add a settings page",
+		"agent_id": agentID, "prompt": "Add a settings page",
 	})).Want(http.StatusAccepted).JSON(&response)
 
-	var agentID string
+	var gotAgentID string
 	var raw []byte
-	dbfx.QueryRow(t, `SELECT agent_id::text, context FROM agent_task_queue WHERE id=$1`, response.TaskID).Scan(&agentID, &raw)
+	dbfx.QueryRow(t, `SELECT agent_id::text, context FROM agent_task_queue WHERE id=$1`, response.TaskID).Scan(&gotAgentID, &raw)
 	var qc service.QuickCreateContext
 	if err := json.Unmarshal(raw, &qc); err != nil {
 		t.Fatal(err)
 	}
-	if agentID != leaderID || qc.SquadID != squadID {
-		t.Fatalf("quick-create must route to the Qoder leader and retain the squad: agent=%s context=%+v", agentID, qc)
+	if gotAgentID != agentID || qc.Prompt != "Add a settings page" {
+		t.Fatalf("quick-create must route to the Qoder agent and keep the prompt: agent=%s context=%+v", gotAgentID, qc)
 	}
 
 	testutil.Call(t, testHandler.QuickCreateIssue, newRequest(http.MethodPost, "/api/issues/quick-create", map[string]any{
-		"squad_id": squadID, "prompt": "Read the screenshot", "attachment_ids": []string{"019ec09d-6222-722b-bdfa-427b105d80be"},
+		"agent_id": agentID, "prompt": "Read the screenshot", "attachment_ids": []string{"019ec09d-6222-722b-bdfa-427b105d80be"},
 	})).Want(http.StatusUnprocessableEntity)
 }
 

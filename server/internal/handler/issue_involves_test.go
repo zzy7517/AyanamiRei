@@ -11,28 +11,20 @@ import (
 )
 
 // involvesFixture seeds, for a single test, the data needed to exercise the
-// `involves_user_id` filter — owned agent and squad canonical leader (via
-// squad.leader_id, NOT a squad_member copy row) — plus negative shapes for
-// shared squads where the user or one of their agents is only a member, and a
-// parallel set in a second workspace so cross-workspace negative tests can
-// prove subquery-level isolation.
+// `involves_user_id` filter: an agent the user owns, one someone else owns, and
+// a mirror of the owned agent in a second workspace so the cross-workspace
+// negative test can prove subquery-level isolation.
 type involvesFixture struct {
 	// All IDs are in the primary handler-test workspace unless noted otherwise.
 	userID  string // the "me" user the filter is keyed on (== testUserID)
 	otherID string // a different user in the same workspace
 
-	ownedAgentID    string // agent.owner_id = userID — matches
-	otherAgentID    string // agent.owner_id = otherID — must NOT match
-	squadMemberID   string // squad with userID as human member (other leader) — must NOT match
-	squadLeaderID   string // squad whose leader_id is an agent owned by userID — matches
-	squadAgentMemID string // squad with an owned-agent as squad_member row (other leader) — must NOT match
+	ownedAgentID string // agent.owner_id = userID — matches
+	otherAgentID string // agent.owner_id = otherID — must NOT match
 
 	// Other workspace, mirror objects — used by ExcludesOtherWorkspace* tests
-	otherWsID            string
-	otherWsAgent         string // owned by userID but in other workspace
-	otherWsSquadMember   string // squad with userID as human member, in other ws
-	otherWsSquadLeader   string // squad whose leader is userID's agent (in other ws)
-	otherWsSquadAgentMem string // squad with userID's agent as member (in other ws)
+	otherWsID    string
+	otherWsAgent string // owned by userID but in other workspace
 }
 
 func setupInvolvesFixture(t *testing.T) *involvesFixture {
@@ -65,40 +57,7 @@ func setupInvolvesFixture(t *testing.T) *involvesFixture {
 	fx.otherAgentID = insertAgent(t, ctx, testWorkspaceID, runtimeID, fx.otherID,
 		fmt.Sprintf("Involves Other Agent %d", suffix))
 
-	// --- a squad we already have to satisfy NOT NULL leader_id ---
-	leaderForMemberSquad := insertAgent(t, ctx, testWorkspaceID, runtimeID, fx.otherID,
-		fmt.Sprintf("Involves Leader-for-MemberSquad %d", suffix))
-	fx.squadMemberID = insertSquad(t, ctx, testWorkspaceID, leaderForMemberSquad,
-		fmt.Sprintf("InvolvesSquadMember-%d", suffix))
-	// Add the test user as a human member.
-	if _, err := testPool.Exec(ctx, `
-		INSERT INTO squad_member (squad_id, member_type, member_id) VALUES ($1, 'member', $2)
-	`, fx.squadMemberID, fx.userID); err != nil {
-		t.Fatalf("add squad human member: %v", err)
-	}
-
-	// --- squad with leader = our owned agent — branch (3). Critically, we do
-	// NOT insert a squad_member row for the leader, so the test exercises the
-	// canonical squad.leader_id path. ---
-	fx.squadLeaderID = insertSquad(t, ctx, testWorkspaceID, fx.ownedAgentID,
-		fmt.Sprintf("InvolvesSquadLeader-%d", suffix))
-
-	// --- squad whose agent member is our owned agent — branch (4) ---
-	leaderForAgentMemSquad := insertAgent(t, ctx, testWorkspaceID, runtimeID, fx.otherID,
-		fmt.Sprintf("Involves Leader-for-AgentMemSquad %d", suffix))
-	fx.squadAgentMemID = insertSquad(t, ctx, testWorkspaceID, leaderForAgentMemSquad,
-		fmt.Sprintf("InvolvesSquadAgentMem-%d", suffix))
-	// Use a fresh owned agent so the squad_member row is the only signal —
-	// keeps branch (4) independent from branch (1)/(3).
-	branch4Agent := insertAgent(t, ctx, testWorkspaceID, runtimeID, fx.userID,
-		fmt.Sprintf("Involves Branch4 Agent %d", suffix))
-	if _, err := testPool.Exec(ctx, `
-		INSERT INTO squad_member (squad_id, member_type, member_id) VALUES ($1, 'agent', $2)
-	`, fx.squadAgentMemID, branch4Agent); err != nil {
-		t.Fatalf("add squad agent member: %v", err)
-	}
-
-	// --- second workspace, mirroring all four shapes for cross-ws negatives ---
+	// --- second workspace, mirroring the owned agent for cross-ws negatives ---
 	var otherWsID string
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO workspace (name, slug, description, issue_prefix)
@@ -125,36 +84,11 @@ func setupInvolvesFixture(t *testing.T) *involvesFixture {
 		) VALUES ($1, NULL, $2, 'cloud', 'other_ws_runtime', 'online', $3, '{}'::jsonb, now())
 		RETURNING id
 	`, otherWsID, fmt.Sprintf("OtherWs Runtime %d", suffix), "other-ws-runtime").Scan(&otherRuntimeID); err != nil {
-		t.Fatalf("create other-ws runtime: %v", err)
+		t.Fatalf("create other runtime: %v", err)
 	}
 
 	fx.otherWsAgent = insertAgent(t, ctx, otherWsID, otherRuntimeID, fx.userID,
 		fmt.Sprintf("OtherWs Owned Agent %d", suffix))
-
-	leaderForOtherWsMemberSquad := insertAgent(t, ctx, otherWsID, otherRuntimeID, fx.otherID,
-		fmt.Sprintf("OtherWs Leader-for-MemberSquad %d", suffix))
-	fx.otherWsSquadMember = insertSquad(t, ctx, otherWsID, leaderForOtherWsMemberSquad,
-		fmt.Sprintf("OtherWsSquadMember-%d", suffix))
-	if _, err := testPool.Exec(ctx, `
-		INSERT INTO squad_member (squad_id, member_type, member_id) VALUES ($1, 'member', $2)
-	`, fx.otherWsSquadMember, fx.userID); err != nil {
-		t.Fatalf("add other-ws squad member: %v", err)
-	}
-
-	fx.otherWsSquadLeader = insertSquad(t, ctx, otherWsID, fx.otherWsAgent,
-		fmt.Sprintf("OtherWsSquadLeader-%d", suffix))
-
-	leaderForOtherWsAgentMemSquad := insertAgent(t, ctx, otherWsID, otherRuntimeID, fx.otherID,
-		fmt.Sprintf("OtherWs Leader-for-AgentMemSquad %d", suffix))
-	fx.otherWsSquadAgentMem = insertSquad(t, ctx, otherWsID, leaderForOtherWsAgentMemSquad,
-		fmt.Sprintf("OtherWsSquadAgentMem-%d", suffix))
-	otherWsBranch4Agent := insertAgent(t, ctx, otherWsID, otherRuntimeID, fx.userID,
-		fmt.Sprintf("OtherWs Branch4 Agent %d", suffix))
-	if _, err := testPool.Exec(ctx, `
-		INSERT INTO squad_member (squad_id, member_type, member_id) VALUES ($1, 'agent', $2)
-	`, fx.otherWsSquadAgentMem, otherWsBranch4Agent); err != nil {
-		t.Fatalf("add other-ws squad agent member: %v", err)
-	}
 
 	return fx
 }
@@ -173,21 +107,6 @@ func insertAgent(t *testing.T, ctx context.Context, workspaceID, runtimeID, owne
 		t.Fatalf("create agent %q: %v", name, err)
 	}
 	t.Cleanup(func() { testPool.Exec(context.Background(), `DELETE FROM agent WHERE id = $1`, id) })
-	return id
-}
-
-func insertSquad(t *testing.T, ctx context.Context, workspaceID, leaderAgentID, name string) string {
-	t.Helper()
-	var id string
-	// creator_id is loose (no FK) — reuse testUserID to keep the row valid.
-	if err := testPool.QueryRow(ctx, `
-		INSERT INTO squad (workspace_id, name, leader_id, creator_id)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id
-	`, workspaceID, name, leaderAgentID, testUserID).Scan(&id); err != nil {
-		t.Fatalf("create squad %q: %v", name, err)
-	}
-	t.Cleanup(func() { testPool.Exec(context.Background(), `DELETE FROM squad WHERE id = $1`, id) })
 	return id
 }
 
@@ -290,39 +209,7 @@ func TestListIssues_InvolvesUserID_MatchesOwnedAgentAssignee(t *testing.T) {
 	wantID := insertIssueTo(t, ctx, testWorkspaceID,
 		"issue assigned to my owned agent", "agent", fx.ownedAgentID)
 	if got := listIssuesInvolves(t, fx.userID); !containsIssueID(got, wantID) {
-		t.Fatalf("branch (1) miss: owned-agent assignee not surfaced (want %s, got %v)", wantID, got)
-	}
-}
-
-func TestListIssues_InvolvesUserID_ExcludesSquadHumanMember(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	issueID := insertIssueTo(t, ctx, testWorkspaceID,
-		"issue assigned to a shared squad I'm a human member of", "squad", fx.squadMemberID)
-	if got := listIssuesInvolves(t, fx.userID); containsIssueID(got, issueID) {
-		t.Fatalf("shared squad human-member assignee should not surface in involves_user_id (id=%s, got=%v)", issueID, got)
-	}
-}
-
-func TestListIssues_InvolvesUserID_MatchesLeaderViaCanonicalRelation(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	// Fixture deliberately omits the squad_member leader-copy row, so this
-	// can only match if the SQL reads squad.leader_id directly.
-	wantID := insertIssueTo(t, ctx, testWorkspaceID,
-		"issue assigned to a squad my agent leads", "squad", fx.squadLeaderID)
-	if got := listIssuesInvolves(t, fx.userID); !containsIssueID(got, wantID) {
-		t.Fatalf("squad-leader-via-canonical assignee not surfaced (want %s, got %v)", wantID, got)
-	}
-}
-
-func TestListIssues_InvolvesUserID_ExcludesSquadAgentMember(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	issueID := insertIssueTo(t, ctx, testWorkspaceID,
-		"issue assigned to another squad where my agent is only a member", "squad", fx.squadAgentMemID)
-	if got := listIssuesInvolves(t, fx.userID); containsIssueID(got, issueID) {
-		t.Fatalf("non-leader squad agent-member assignee should not surface in involves_user_id (id=%s, got=%v)", issueID, got)
+		t.Fatalf("owned-agent assignee not surfaced (want %s, got %v)", wantID, got)
 	}
 }
 
@@ -331,9 +218,9 @@ func TestListIssues_InvolvesUserID_ExcludesSquadAgentMember(t *testing.T) {
 // Nails the semantics: `involves_user_id` MUST NOT surface issues whose
 // assignee is the user themself (member type). Direct member assignment is
 // the meaning of `assignee_id` (tab 1 "Assigned to me"); the two tabs must
-// produce disjoint result sets. If anyone adds a fifth UNION branch
-// `(assignee_type='member' AND assignee_id=involves_user_id)` back in, this
-// test fails.
+// produce disjoint result sets. If anyone adds an
+// `(assignee_type='member' AND assignee_id=involves_user_id)` branch back in,
+// this test fails.
 func TestListIssues_InvolvesUserID_ExcludesDirectMemberAssignee(t *testing.T) {
 	ctx := context.Background()
 	fx := setupInvolvesFixture(t)
@@ -374,39 +261,6 @@ func TestListIssues_InvolvesUserID_ExcludesOtherWorkspaceAgent(t *testing.T) {
 	}
 }
 
-func TestListIssues_InvolvesUserID_ExcludesOtherWorkspaceLeader(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	issueID := insertIssueTo(t, ctx, testWorkspaceID,
-		"cross-ws squad-leader assignee must not leak", "squad", fx.otherWsSquadLeader)
-	if got := listIssuesInvolves(t, fx.userID); containsIssueID(got, issueID) {
-		t.Fatalf("workspace isolation violated: cross-workspace squad-leader surfaced (id=%s); full result: %v",
-			issueID, got)
-	}
-}
-
-func TestListIssues_InvolvesUserID_ExcludesOtherWorkspaceSquadMember(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	issueID := insertIssueTo(t, ctx, testWorkspaceID,
-		"cross-ws squad-human-member assignee must not leak", "squad", fx.otherWsSquadMember)
-	if got := listIssuesInvolves(t, fx.userID); containsIssueID(got, issueID) {
-		t.Fatalf("workspace isolation violated: cross-workspace squad-human-member surfaced (id=%s); full result: %v",
-			issueID, got)
-	}
-}
-
-func TestListIssues_InvolvesUserID_ExcludesOtherWorkspaceSquadAgentMember(t *testing.T) {
-	ctx := context.Background()
-	fx := setupInvolvesFixture(t)
-	issueID := insertIssueTo(t, ctx, testWorkspaceID,
-		"cross-ws squad-agent-member assignee must not leak", "squad", fx.otherWsSquadAgentMem)
-	if got := listIssuesInvolves(t, fx.userID); containsIssueID(got, issueID) {
-		t.Fatalf("workspace isolation violated: cross-workspace squad-agent-member surfaced (id=%s); full result: %v",
-			issueID, got)
-	}
-}
-
 // ---- combo + boundary ----
 
 // involves_user_id and creator_id must AND together — combining narrowing
@@ -414,7 +268,7 @@ func TestListIssues_InvolvesUserID_ExcludesOtherWorkspaceSquadAgentMember(t *tes
 func TestListIssues_InvolvesUserID_CombinesWithCreatorID(t *testing.T) {
 	ctx := context.Background()
 	fx := setupInvolvesFixture(t)
-	// Issue with creator = otherID: involves matches (branch 1) but creator
+	// Issue with creator = otherID: involves matches (owned agent) but creator
 	// filter must exclude it.
 	exclude := insertIssueTo(t, ctx, testWorkspaceID,
 		"involves matches but creator does not", "agent", fx.ownedAgentID)
@@ -455,25 +309,25 @@ func TestListIssues_InvolvesUserID_InvalidUUIDReturns400(t *testing.T) {
 	}
 }
 
-// Grouped path also exercises canonical-leader resolution and excludes
-// non-leader squad memberships, guarding the dynamic SQL builder.
-func TestListGroupedIssues_InvolvesUserID_MatchesLeaderViaCanonicalRelation(t *testing.T) {
+// The grouped path has its own SQL builder, so it needs its own positive and
+// its own exclusion of an agent the user does not own.
+func TestListGroupedIssues_InvolvesUserID_MatchesOwnedAgentAssignee(t *testing.T) {
 	ctx := context.Background()
 	fx := setupInvolvesFixture(t)
 	wantID := insertIssueTo(t, ctx, testWorkspaceID,
-		"grouped: squad my agent leads", "squad", fx.squadLeaderID)
-	humanMemberID := insertIssueTo(t, ctx, testWorkspaceID,
-		"grouped: shared squad where I am a human member", "squad", fx.squadMemberID)
-	agentMemberID := insertIssueTo(t, ctx, testWorkspaceID,
-		"grouped: squad where my agent is only a member", "squad", fx.squadAgentMemID)
+		"grouped: my owned agent", "agent", fx.ownedAgentID)
+	mineID := insertIssueTo(t, ctx, testWorkspaceID,
+		"grouped: assigned to me", "member", fx.userID)
+	theirID := insertIssueTo(t, ctx, testWorkspaceID,
+		"grouped: someone else's agent", "agent", fx.otherAgentID)
 	got := listGroupedIssuesInvolves(t, fx.userID)
 	if !containsIssueID(got, wantID) {
-		t.Fatalf("grouped squad-leader-via-canonical not surfaced (want %s, got %v)", wantID, got)
+		t.Fatalf("grouped owned-agent assignee not surfaced (want %s, got %v)", wantID, got)
 	}
-	if containsIssueID(got, humanMemberID) {
-		t.Fatalf("grouped shared squad human-member should not surface (id=%s, got=%v)", humanMemberID, got)
+	if containsIssueID(got, mineID) {
+		t.Fatalf("grouped member-direct assignee should not surface (id=%s, got=%v)", mineID, got)
 	}
-	if containsIssueID(got, agentMemberID) {
-		t.Fatalf("grouped non-leader squad agent-member should not surface (id=%s, got=%v)", agentMemberID, got)
+	if containsIssueID(got, theirID) {
+		t.Fatalf("grouped agent owned by someone else should not surface (id=%s, got=%v)", theirID, got)
 	}
 }

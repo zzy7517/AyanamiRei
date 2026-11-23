@@ -27,8 +27,8 @@ import (
 // issue_wakeup row with system_rule set: the shared condition, receipts,
 // runaway protection, activity and run model apply. What differs is owned by
 // the platform: it has no fixed agent or creator (the target is the parent's
-// assignee when it fires, a squad's leader for a squad, an inbox notification
-// for a member), it cannot be deleted or edited by agents, and it is evaluated
+// assignee when it fires: an agent run for an agent, an inbox notification for
+// a member), it cannot be deleted or edited by agents, and it is evaluated
 // when sub-issues change instead of on a polling schedule.
 const (
 	SystemRuleChildDone = "child_done"
@@ -300,13 +300,12 @@ func (s *IssueWakeupService) ensureRule(ctx context.Context, parent db.Issue) er
 	return tx.Commit(ctx)
 }
 
-// wakeTarget is who a system rule reaches: the parent's agent, its squad's
-// leader, or its member assignee. Agent is set only when it can run.
+// wakeTarget is who a system rule reaches: the parent's agent or its member
+// assignee. Agent is set only when it can run.
 type wakeTarget struct {
-	Type    string // agent | squad | member | none
-	ID      pgtype.UUID
-	Agent   db.Agent
-	SquadID pgtype.UUID
+	Type  string // agent | member | none
+	ID    pgtype.UUID
+	Agent db.Agent
 }
 
 func (t wakeTarget) key() string {
@@ -329,23 +328,6 @@ func resolveWakeTarget(ctx context.Context, q *db.Queries, issue db.Issue) (wake
 		}
 		if err == nil && usable(agent) {
 			target.Agent = agent
-		}
-		return target, nil
-	case "squad":
-		squad, err := q.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{ID: issue.AssigneeID, WorkspaceID: issue.WorkspaceID})
-		if errors.Is(err, pgx.ErrNoRows) {
-			return target, nil
-		}
-		if err != nil {
-			return target, err
-		}
-		target.SquadID = squad.ID
-		leader, err := q.GetAgentInWorkspace(ctx, db.GetAgentInWorkspaceParams{ID: squad.LeaderID, WorkspaceID: issue.WorkspaceID})
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return target, err
-		}
-		if err == nil && usable(leader) {
-			target.Agent = leader
 		}
 		return target, nil
 	}
@@ -701,7 +683,7 @@ func (s *IssueWakeupService) dispatchSystem(ctx context.Context, prev db.IssueWa
 	task, err = q.CreateWakeupTask(ctx, db.CreateWakeupTaskParams{
 		ID: dbid.NewV7(), AgentID: agent.ID, RuntimeID: agent.RuntimeID, IssueID: issue.ID, Priority: priorityToInt(issue.Priority),
 		TriggerSummary: pgtype.Text{String: "Wakeup: sub-issues closed", Valid: true}, HandoffNote: pgtype.Text{String: noteText, Valid: true},
-		IsLeaderTask: pgtype.Bool{Bool: current.Type == "squad", Valid: current.Type == "squad"}, SquadID: current.SquadID,
+
 		OriginatorUserID: attr.UserID, AccountableUserID: attr.AccountableUserID, OriginatorSource: source, DelegatedFromTaskID: delegatedFrom,
 		RuleVersionID: attr.RuleVersionID, TriggerEvidenceKind: pgtype.Text{String: "issue_wakeup", Valid: true}, TriggerEvidenceRefID: w.ID,
 		HeadSha: headSHA, WakeupContext: contextJSON, RuntimeMcpOverlay: overlay.Overlay, RuntimeConnectedApps: overlay.ConnectedApps,

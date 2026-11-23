@@ -1,14 +1,14 @@
 -- name: ListIssues :many
 -- involves_user_id widens the assignee filter to surface issues where the user
--- is *indirectly* the assignee — via an owned agent or a squad led by an owned
--- agent. The semantics intentionally exclude direct member assignment
+-- is *indirectly* the assignee — via an owned agent. The semantics
+-- intentionally exclude direct member assignment
 -- (`assignee_type='member' AND assignee_id=involves_user_id`) because that is
 -- already the meaning of the `assignee_id` filter (tab 1 "Assigned to me"),
 -- and the two filters must produce disjoint result sets.
 SELECT i.id, i.workspace_id, i.title, i.description, i.status, i.priority,
        i.assignee_type, i.assignee_id, i.creator_type, i.creator_id, i.requester_user_id,
        i.parent_issue_id, i.position, i.start_date, i.due_date, i.created_at, i.updated_at, i.last_activity_at, i.number, i.project_id, i.metadata, i.stage, i.properties,
-       i.revision, i.duplicate_of_issue_id
+       i.revision, i.duplicate_of_issue_id, i.completed_at, i.agent_replied_at
 FROM issue i
 WHERE i.workspace_id = $1
   AND (sqlc.narg('status')::text IS NULL OR i.status = sqlc.narg('status'))
@@ -24,22 +24,10 @@ WHERE i.workspace_id = $1
   AND (sqlc.narg('metadata_filter')::jsonb IS NULL OR i.metadata @> sqlc.narg('metadata_filter')::jsonb)
   AND (
     sqlc.narg('involves_user_id')::uuid IS NULL
-    -- (1) assignee is an agent owned by the user
+    -- assignee is an agent owned by the user
     OR (i.assignee_type = 'agent' AND i.assignee_id IN (
           SELECT a.id FROM agent a
            WHERE a.workspace_id = $1
-             AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
-    ))
-    -- (2) assignee is a squad whose canonical leader is an agent owned by the
-    -- user. We read squad.leader_id directly rather than relying on a
-    -- squad_member row, because the leader copy in squad_member is best-effort
-    -- (see squad.go AddSquadMember error handling).
-    OR (i.assignee_type = 'squad' AND i.assignee_id IN (
-          SELECT s.id
-            FROM squad s
-            JOIN agent a ON a.id = s.leader_id
-           WHERE s.workspace_id = $1
-             AND a.workspace_id = $1
              AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
     ))
   )
@@ -502,6 +490,10 @@ cleared_environment_configs AS (
 -- so their receipts are swept here by the issue_id copied onto each row.
 cleared_task_context_receipts AS (
     DELETE FROM task_context_receipt WHERE issue_id IN (SELECT target.id FROM target)
+),
+-- A task's project + branch pairs have no FK to it and go with it.
+cleared_project_scopes AS (
+    DELETE FROM issue_project_scope WHERE issue_id IN (SELECT target.id FROM target)
 )
 DELETE FROM issue WHERE issue.id IN (SELECT target.id FROM target);
 
@@ -511,7 +503,7 @@ DELETE FROM issue WHERE issue.id IN (SELECT target.id FROM target);
 SELECT i.id, i.workspace_id, i.title, i.description, i.status, i.priority,
        i.assignee_type, i.assignee_id, i.creator_type, i.creator_id, i.requester_user_id,
        i.parent_issue_id, i.position, i.start_date, i.due_date, i.created_at, i.updated_at, i.last_activity_at, i.number, i.project_id, i.metadata, i.stage, i.properties,
-       i.revision, i.duplicate_of_issue_id
+       i.revision, i.duplicate_of_issue_id, i.completed_at, i.agent_replied_at
 FROM issue i
 WHERE i.workspace_id = $1
   -- Negate only known terminal keys so an unknown legacy key remains visible.
@@ -589,14 +581,6 @@ WHERE i.workspace_id = $1
            WHERE a.workspace_id = $1
              AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
     ))
-    OR (i.assignee_type = 'squad' AND i.assignee_id IN (
-          SELECT s.id
-            FROM squad s
-            JOIN agent a ON a.id = s.leader_id
-           WHERE s.workspace_id = $1
-             AND a.workspace_id = $1
-             AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
-    ))
   )
 ORDER BY i.position ASC, i.created_at DESC;
 
@@ -620,14 +604,6 @@ WHERE i.workspace_id = $1
     OR (i.assignee_type = 'agent' AND i.assignee_id IN (
           SELECT a.id FROM agent a
            WHERE a.workspace_id = $1
-             AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
-    ))
-    OR (i.assignee_type = 'squad' AND i.assignee_id IN (
-          SELECT s.id
-            FROM squad s
-            JOIN agent a ON a.id = s.leader_id
-           WHERE s.workspace_id = $1
-             AND a.workspace_id = $1
              AND a.owner_id     = sqlc.narg('involves_user_id')::uuid
     ))
   );

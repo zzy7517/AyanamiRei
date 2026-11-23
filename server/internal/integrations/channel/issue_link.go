@@ -21,7 +21,7 @@ func IssueWebLink(appURL, workspaceSlug, identifier string) string {
 func ReferenceWebLink(appURL, workspaceSlug, kind, id string) string {
 	route := map[string]string{
 		"issue": "issues", "project": "projects", "agent": "agents",
-		"squad": "squads", "member": "members",
+		"member": "members",
 	}[kind]
 	if appURL == "" || workspaceSlug == "" || id == "" || route == "" {
 		return ""

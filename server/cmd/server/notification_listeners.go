@@ -760,10 +760,8 @@ func notifyDelegatedIssueCreated(
 
 // notifyMentionedMembers creates inbox items for each @mentioned member,
 // excluding the actor and any IDs in the skip set. When an @all mention is
-// present, all workspace members are notified (excluding agents). An @squad
-// mention only triggers the squad leader (handled by the comment-trigger
-// path); it does not notify the squad's human members. Returns the members
-// that received a row.
+// present, all workspace members are notified (excluding agents). Returns the
+// members that received a row.
 func notifyMentionedMembers(
 	bus *events.Bus,
 	queries *db.Queries,

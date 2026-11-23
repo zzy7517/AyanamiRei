@@ -34,7 +34,7 @@ func issueWithAgentAssignee() db.Issue {
 	}
 }
 
-func TestHasAgentOrSquadMention(t *testing.T) {
+func TestHasAgentMention(t *testing.T) {
 	tests := []struct {
 		name    string
 		content string
@@ -42,7 +42,6 @@ func TestHasAgentOrSquadMention(t *testing.T) {
 	}{
 		{"plain", "just a plain comment", false},
 		{"agent", fmt.Sprintf("[@Agent](mention://agent/%s) please fix", agentAssigneeID), true},
-		{"squad", "[@Squad](mention://squad/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa) please coordinate", true},
 		{"member only", fmt.Sprintf("[@Bob](mention://member/%s) take a look", memberID), false},
 		{"issue only", "[PAN-1](mention://issue/44c266e7-f6dd-4be3-9140-5ac40233f79c) is related", false},
 		{"all only", "[@all](mention://all/all) heads up", false},
@@ -50,9 +49,9 @@ func TestHasAgentOrSquadMention(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := hasAgentOrSquadMention(parseMentionsForTest(tt.content))
+			got := hasAgentMention(parseMentionsForTest(tt.content))
 			if got != tt.want {
-				t.Errorf("hasAgentOrSquadMention() = %v, want %v", got, tt.want)
+				t.Errorf("hasAgentMention() = %v, want %v", got, tt.want)
 			}
 		})
 	}

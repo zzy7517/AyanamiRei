@@ -90,6 +90,12 @@ type IssueResponse struct {
 	// LastActivityAt is the latest semantic issue activity. It stays nullable
 	// while the operator-run historical backfill is incomplete.
 	LastActivityAt *string `json:"last_activity_at"`
+	// CompletedAt is when the issue's status entered done or closed; null
+	// while it is in any other category.
+	CompletedAt *string `json:"completed_at"`
+	// AgentRepliedAt is when the issue's agent last replied, for the "new reply"
+	// marker of the task list; null once a member has seen the reply.
+	AgentRepliedAt *string `json:"agent_replied_at"`
 	// Metadata is the per-issue KV map (see issue_metadata.go). Always emitted
 	// (empty object when unset) so frontend code can `issue.metadata[key]`
 	// without nil-guarding the parent field.
@@ -138,17 +144,14 @@ var validIssueStatusCategories = issuestatus.Categories()
 // Status sort ranks by the CONCRETE status key, in the catalog's own display
 // order. Sorting is a display question, so it resolves on status; only behavior
 // decisions aggregate on the four lifecycle categories (MUL-7379).
-//
 // Ranking by category instead collapses the seven built-ins into four buckets —
 // Backlog ties with Todo, and In Progress / In Review / Blocked all tie — which
 // leaves the created_at tiebreak deciding the visible order of a list the user
 // explicitly asked to sort by status.
-//
 // issueTableStatusOrder is the same "board order" the status GROUPING path
 // already builds, so sorting and grouping now share one source of truth instead
 // of drifting apart. Archived statuses are included because issues stay on them
 // after archival and still have to rank somewhere real.
-//
 // Keeping the indexed column bare avoids the per-row issue_effective_status()
 // call that would otherwise turn a bounded page into a workspace scan.
 func (h *Handler) issueStatusSortExpression(
@@ -174,7 +177,6 @@ func (h *Handler) issueStatusSortExpression(
 // for the enum CHECK that migration 337 dropped, so every write path must route
 // through it — a missed entrypoint is how an unresolvable key would reach the
 // column.
-//
 // Returning the resolved key (rather than a bare bool) is load-bearing:
 // resolution is case- and whitespace-insensitive, so `"  HUMAN_REVIEW "` and
 // `"human_review"` both validate. Writing the caller's raw string back would
@@ -219,14 +221,12 @@ var errIssueStatusArchivedRace = errors.New("issue status was archived while the
 // assertIssueStatusStillActive is the write half of the archive race guard. It
 // takes the SHARED catalog lock and RE-RESOLVES the status inside the caller's
 // transaction.
-//
 // The re-resolve is the part that actually closes the race. Handlers resolve a
 // status up front, before any transaction, to answer a bad request with a clean
 // 400 — but an archive can commit between that pre-flight check and the write.
 // Re-checking here, under the lock, means the status is provably active at the
 // moment the row is written. ArchiveIssueStatus holds the EXCLUSIVE side around
 // retirement, so the two orderings are both covered:
-//
 //   - archive first: it commits, this re-resolve then fails and the write is
 //     rejected, so no new assignment lands on an archived status;
 //   - writer first: archive blocks until this transaction commits, then its
@@ -346,7 +346,6 @@ func validateIssueEnum(w http.ResponseWriter, field, value string, allowed []str
 // CUSTOM. The pure builders below map built-ins directly and leave custom
 // statuses empty, so this is the step that makes the
 // field authoritative on every payload a client caches or buckets by.
-//
 // Uses one Resolver for the whole slice: built-in statuses cost no query, and a
 // page full of custom ones costs one catalog read rather than one per row. The
 // Resolver includes ARCHIVED statuses, because an issue left on an archived
@@ -367,12 +366,10 @@ func (h *Handler) fillStatusCategories(ctx context.Context, wsID pgtype.UUID, hi
 // the catalog at most once, so a page of custom-status rows costs one query
 // rather than one per row. Creating a filler per row would reintroduce the N+1
 // this exists to avoid. (MUL-6243)
-//
 // originals are the duplicate originals the caller's rows point at, collected
 // with appendDuplicateOriginal. A page passes them so they resolve in one read
 // up front, the way labelsByIssue loads a page's labels; an original that was
 // not passed still resolves, one read per distinct original. (MUL-7349)
-//
 // hidden is the reader's hidden projects: an original in one of them is left
 // off like a missing one (MUL-8472). Broadcasts, which reach every member,
 // pass the zero value; per-reader filtering of those is the fanout's job.
@@ -511,6 +508,8 @@ func issueToResponse(i db.Issue, issuePrefix string) IssueResponse {
 		UpdatedAt:          timestampToString(i.UpdatedAt),
 		Revision:           i.Revision,
 		LastActivityAt:     timestampToNanoPtr(i.LastActivityAt),
+		CompletedAt:        timestampToNanoPtr(i.CompletedAt),
+		AgentRepliedAt:     timestampToNanoPtr(i.AgentRepliedAt),
 		Metadata:           parseIssueMetadata(i.Metadata),
 		Properties:         parseIssueProperties(i.Properties),
 	}
@@ -550,6 +549,8 @@ func issueListRowToResponse(i db.ListIssuesRow, issuePrefix string) IssueRespons
 		UpdatedAt:          timestampToString(i.UpdatedAt),
 		Revision:           i.Revision,
 		LastActivityAt:     timestampToNanoPtr(i.LastActivityAt),
+		CompletedAt:        timestampToNanoPtr(i.CompletedAt),
+		AgentRepliedAt:     timestampToNanoPtr(i.AgentRepliedAt),
 		Metadata:           parseIssueMetadata(i.Metadata),
 		Properties:         parseIssueProperties(i.Properties),
 	}
@@ -621,6 +622,8 @@ func openIssueRowToResponse(i db.ListOpenIssuesRow, issuePrefix string) IssueRes
 		UpdatedAt:          timestampToString(i.UpdatedAt),
 		Revision:           i.Revision,
 		LastActivityAt:     timestampToNanoPtr(i.LastActivityAt),
+		CompletedAt:        timestampToNanoPtr(i.CompletedAt),
+		AgentRepliedAt:     timestampToNanoPtr(i.AgentRepliedAt),
 		Metadata:           parseIssueMetadata(i.Metadata),
 		Properties:         parseIssueProperties(i.Properties),
 	}
@@ -1408,10 +1411,10 @@ func (h *Handler) ListIssues(w http.ResponseWriter, r *http.Request) {
 		projectFilter = id
 	}
 	// involves_user_id widens the assignee filter to surface issues where the
-	// user is the indirect assignee (their owned agent, or a squad led by an
-	// agent they own). Direct member-assignment is excluded by design — that is
-	// the meaning of `assignee_id` (tab 1), and tab 3 must be disjoint from
-	// tab 1.
+	// user is the indirect assignee (an agent they own). Direct
+	// member-assignment is excluded by design — that is the meaning of
+	// `assignee_id` (tab 1), and tab 3 must be disjoint from tab 1.
+
 	var involvesUserFilter pgtype.UUID
 	if u := r.URL.Query().Get("involves_user_id"); u != "" {
 		id, ok := parseUUIDOrBadRequest(w, u, "involves_user_id")
@@ -1537,9 +1540,10 @@ func (h *Handler) ListIssues(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// assignee_types narrows the list to issues assigned to the given actor
-	// kinds (member / agent / squad). Mirrors the same param on
-	// ListGroupedIssues so the workspace Members/Agents tabs can filter
-	// server-side instead of post-filtering loaded pages on the client.
+	// kinds (member / agent). Mirrors the same param on ListGroupedIssues so
+	// the workspace Members/Agents tabs can filter server-side instead of
+	// post-filtering loaded pages on the client.
+
 	assigneeTypesFilter := splitCommaParam(r.URL.Query().Get("assignee_types"))
 	for _, assigneeType := range assigneeTypesFilter {
 		if !isIssueActorType(assigneeType) {
@@ -2012,7 +2016,7 @@ func splitCommaParam(raw string) []string {
 }
 
 func isIssueActorType(s string) bool {
-	return s == "member" || s == "agent" || s == "squad"
+	return s == "member" || s == "agent"
 }
 
 func parseUUIDParamList(w http.ResponseWriter, raw, fieldName string) ([]pgtype.UUID, bool) {
@@ -2410,10 +2414,10 @@ FROM ranked
 WHERE rn > %s AND rn <= %s + %s
 ORDER BY
 	CASE assignee_type
-		WHEN 'member' THEN 0
+				WHEN 'member' THEN 0
 		WHEN 'agent' THEN 1
-		WHEN 'squad' THEN 2
-		ELSE 3
+		ELSE 2
+
 	END,
 	assignee_type NULLS LAST,
 	assignee_id NULLS LAST,
@@ -2631,7 +2635,6 @@ const listChildrenByParentsLimit = 200
 // ListChildrenByParents returns the union of children for the
 // provided parent ids. Replaces the N-call fan-out Swimlane would otherwise
 // have to make on mount (one /issues/:id/children per visible parent lane).
-//
 // Workspace scope is enforced at the query level — any parent_id that doesn't
 // belong to the caller's workspace simply yields zero children, so callers
 // can't probe parents across workspace boundaries.
@@ -2758,31 +2761,24 @@ func (h *Handler) ChildIssueProgress(w http.ResponseWriter, r *http.Request) {
 }
 
 // QuickCreateIssueRequest is the body for POST /api/issues/quick-create. The
-// user picks an actor (agent or squad) in the modal and types one line of
-// natural language; the server validates the actor's reachability up front,
-// queues a quick-create task, and returns 202 immediately. The agent
-// translates the prompt into a `multica issue create` invocation in the
-// background; success and failure both surface as inbox notifications to
-// the requester.
-//
-// Exactly one of AgentID / SquadID is required. When SquadID is set, the
-// task is enqueued against the squad's leader agent and the leader receives
-// the same Operating Protocol briefing it would for an issue assigned to
-// the squad, so it can choose to delegate to a squad member as usual.
-//
+// user picks an agent in the modal and types one line of natural language; the
+// server validates the agent's reachability up front, queues a quick-create
+// task, and returns 202 immediately. The agent translates the prompt into a
+// `multica issue create` invocation in the background; success and failure
+// both surface as inbox notifications to the requester.
+// AgentID is required.
 // ProjectID is optional and lets the modal target a specific project so
 // the agent's `multica issue create` invocation passes `--project <uuid>`
 // instead of letting it default. The frontend remembers the user's last
 // pick per workspace, so frequent users skip retyping "in project X".
-//
 // ParentIssueID is optional and is set by the "Add sub issue" entry point
 // when the modal is opened from an existing issue. The agent passes it
 // through as `--parent <uuid>` so the new issue is filed as a sub-issue,
 // keeping the sub-issue intent of the entry point regardless of whether
 // the user submits via manual or agent mode.
 type QuickCreateIssueRequest struct {
-	AgentID       string   `json:"agent_id,omitempty"`
-	SquadID       string   `json:"squad_id,omitempty"`
+	AgentID string `json:"agent_id,omitempty"`
+
 	Prompt        string   `json:"prompt"`
 	Priority      string   `json:"priority,omitempty"`
 	DueDate       string   `json:"due_date,omitempty"`
@@ -2823,10 +2819,8 @@ func (h *Handler) QuickCreateIssue(w http.ResponseWriter, r *http.Request) {
 		dueDate = parsed.Time.Format("2006-01-02")
 	}
 
-	hasAgent := strings.TrimSpace(req.AgentID) != ""
-	hasSquad := strings.TrimSpace(req.SquadID) != ""
-	if hasAgent == hasSquad {
-		writeError(w, http.StatusBadRequest, "exactly one of agent_id or squad_id is required")
+	if strings.TrimSpace(req.AgentID) == "" {
+		writeError(w, http.StatusBadRequest, "agent_id is required")
 		return
 	}
 
@@ -2845,48 +2839,16 @@ func (h *Handler) QuickCreateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve the actor to the agent that will actually run the task. For
-	// agent picks that's the agent itself; for squad picks it's the squad's
-	// leader agent. The leader receives a squad-leader briefing on dispatch
-	// (see daemon.go), matching the behavior of an issue assigned to the
-	// squad — picking a squad here is functionally "ask the squad leader to
-	// create this issue, on behalf of the squad".
-	var agentUUID pgtype.UUID
-	var squadUUID pgtype.UUID
-	if hasSquad {
-		var ok bool
-		squadUUID, ok = parseUUIDOrBadRequest(w, req.SquadID, "squad_id")
-		if !ok {
-			return
-		}
-		squad, err := h.Queries.GetSquadInWorkspace(r.Context(), db.GetSquadInWorkspaceParams{
-			ID:          squadUUID,
-			WorkspaceID: wsUUID,
-		})
-		if err != nil {
-			writeError(w, http.StatusNotFound, "squad not found")
-			return
-		}
-		if squad.ArchivedAt.Valid {
-			writeError(w, http.StatusBadRequest, "squad is archived")
-			return
-		}
-		agentUUID = squad.LeaderID
-	} else {
-		var ok bool
-		agentUUID, ok = parseUUIDOrBadRequest(w, req.AgentID, "agent_id")
-		if !ok {
-			return
-		}
+	agentUUID, ok := parseUUIDOrBadRequest(w, req.AgentID, "agent_id")
+	if !ok {
+		return
 	}
 
 	// Reuse the same workspace-membership / archived / private-agent
 	// ownership rules as `validateAssigneePair` so a user can't POST a
 	// private agent_id they shouldn't be able to dispatch (the frontend
-	// filters them out, but the handler is the trust boundary). Squad
-	// picks reach this with the resolved leader agent; the same rules
-	// apply — a private leader behind a squad the user can't reach
-	// should still be rejected.
+	// filters them out, but the handler is the trust boundary).
+
 	if status, msg := h.validateAssigneePair(
 		r.Context(), r, workspaceID,
 		pgtype.Text{String: "agent", Valid: true},
@@ -3006,7 +2968,7 @@ func (h *Handler) QuickCreateIssue(w http.ResponseWriter, r *http.Request) {
 		parentIssueUUID = pid
 	}
 
-	task, err := h.TaskService.EnqueueQuickCreateTask(r.Context(), wsUUID, requesterUUID, agentUUID, squadUUID, prompt, priority, dueDate, projectUUID, parentIssueUUID, attachmentIDs)
+	task, err := h.TaskService.EnqueueQuickCreateTask(r.Context(), wsUUID, requesterUUID, agentUUID, prompt, priority, dueDate, projectUUID, parentIssueUUID, attachmentIDs)
 	if err != nil {
 		if errors.Is(err, service.ErrProjectAccessDenied) {
 			h.writeDispatchBlocked(w, http.StatusForbidden, ReasonProjectAccessBlocked)
@@ -3052,7 +3014,6 @@ func (h *Handler) isRuntimeOnline(ctx context.Context, runtimeID pgtype.UUID) bo
 // CLI version the daemon reported at registration time (stored on the runtime
 // row's metadata.cli_version). Returns (0, nil) when the version is
 // acceptable, otherwise (status, payload) ready to hand to writeJSON.
-//
 // Failure shape is stable so the modal can branch on the `code` field and
 // surface a "needs upgrade" hint that points at the specific runtime:
 //
@@ -3067,7 +3028,7 @@ func (h *Handler) checkQuickCreateDaemonVersion(ctx context.Context, source stri
 }
 
 // checkQuickCreateQoderLimits keeps attachment-backed quick-create blocked:
-// the bridge can run squad leaders, but cannot draft from these attachments.
+// the bridge can run agents, but cannot draft from these attachments.
 func (h *Handler) checkQuickCreateQoderLimits(ctx context.Context, source string, runtimeID pgtype.UUID, attachments bool) (int, map[string]any) {
 	if !attachments {
 		return 0, nil
@@ -3371,7 +3332,7 @@ func (h *Handler) CreateIssue(w http.ResponseWriter, r *http.Request) {
 		// found" rather than a 403 that leaks nothing about which input was wrong.
 		// The row itself is no longer needed: the assignee gate keys on the actor's
 		// originator, not on a scope bound to the parent (MUL-6951).
-		if assigneeType.Valid && (assigneeType.String == "agent" || assigneeType.String == "squad") {
+		if assigneeType.Valid && assigneeType.String == "agent" {
 			parent, err := h.Queries.GetIssueInWorkspace(r.Context(), db.GetIssueInWorkspaceParams{
 				ID:          parentIssueID,
 				WorkspaceID: wsUUID,
@@ -3534,12 +3495,13 @@ func (h *Handler) CreateIssue(w http.ResponseWriter, r *http.Request) {
 	} else if creatorType == "agent" {
 		// MUL-4305: an agent creating an issue via the ordinary create path
 		// carries no explicit origin, which historically left the new issue
-		// unattributed. Any run later derived from it (agent assignment,
-		// squad-leader trigger) then lost the top-of-chain human originator,
-		// so A2A @-mentions from those runs failed the canInvokeAgent gate
-		// against private agents. Stamp the acting task as the issue's origin
-		// so resolveOriginatorForIssueTask can inherit its originator — the
-		// same trick CreateComment uses with comment.source_task_id (MUL-4015).
+		// unattributed. Any run later derived from it (agent assignment) then
+		// lost the top-of-chain human originator, so A2A @-mentions from those
+		// runs failed the canInvokeAgent gate against private agents. Stamp the
+		// acting task as the issue's origin so resolveOriginatorForIssueTask
+		// can inherit its originator — the same trick CreateComment uses with
+		// comment.source_task_id (MUL-4015).
+
 		//
 		// The task id is taken from the SERVER-trusted X-Task-ID: the auth
 		// middleware deletes whatever the client sent and re-stamps
@@ -3735,8 +3697,9 @@ type UpdateIssueRequest struct {
 	// a run and is never stored on the issue itself.
 	HandoffNote string `json:"handoff_note,omitempty"`
 	// StopPreviousAssigneeRuns, when a status change hands the issue off to a
-	// project workflow step's handler, cancels the active runs of the agent or
-	// squad it was taken from. Ignored when the write does not hand off.
+	// project workflow step's handler, cancels the active runs of the agent
+	// it was taken from. Ignored when the write does not hand off.
+
 	// (MUL-7420)
 	StopPreviousAssigneeRuns bool `json:"stop_previous_assignee_runs,omitempty"`
 	// EnterWorkflowStep makes a project move enter the destination workflow's
@@ -4229,7 +4192,7 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	// The agent this write hands the issue to gets the change as its own run,
 	// not also through its event wakeups.
-	writeCtx := withWakeupHandedTo(r.Context(), h.handedToAgent(r.Context(), prevIssue, params, handoff != nil))
+	writeCtx := withWakeupHandedTo(r.Context(), handedToAgent(prevIssue, params, handoff != nil))
 	var issue db.Issue
 	attachmentsChanged := false
 	if req.Description != nil || req.TitleBase != nil || req.DescriptionBase != nil || len(attachmentIDs) > 0 {
@@ -4355,15 +4318,17 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Reconcile the task queue. Whether this write starts an agent run — and
-	// for whom (agent assignee or squad leader) — is decided by the single
+	// for whom (the agent assignee) — is decided by the single
+
 	// WillEnqueueRun predicate, shared verbatim with the preview endpoint so
 	// the two never drift (MUL-3375).
 	//
 	// A reassignment intentionally does NOT cancel existing tasks on the issue
 	// (#4963 / MUL-4113). The previous "cancel every active task on the issue"
 	// was too coarse: it silently dropped unrelated in-flight work (a
-	// mention-triggered run for another agent, a squad task) with no requeue,
-	// and it self-cancelled a run that reassigned the issue from inside itself.
+	// mention-triggered run for another agent) with no requeue, and it
+	// self-cancelled a run that reassigned the issue from inside itself.
+
 	// Ownership handoff no longer implies interruption; the new assignee's run,
 	// if any, is enqueued by WillEnqueueRun below and runs alongside whatever
 	// was already in flight. No status change — not even → cancelled — cancels
@@ -4402,8 +4367,8 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 // validateAssigneePair verifies the (assignee_type, assignee_id) pair refers
-// to an existing entity in the workspace. For agent and squad assignees it
-// also rejects archived targets and runs the INVOKE gate — canInvokeAgent, not
+// to an existing entity in the workspace. For agent assignees it also rejects
+// archived targets and runs the INVOKE gate — canInvokeAgent, not
 // the softer canAccessPrivateAgent view gate: assigning an issue produces a
 // run, so it must clear the same predicate as chat / @-mention (MUL-3963).
 // That means owner-only for a private agent, with NO workspace-admin bypass
@@ -4412,7 +4377,6 @@ func (h *Handler) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 // An autopilot run needs no special case here: since MUL-6951 a scheduled run
 // carries its trigger owner's originator, so it is judged by exactly the same
 // predicate as that human acting directly.
-//
 // Returns (statusCode, errorMessage). statusCode == 0 means the pair is valid;
 // callers should treat any non-zero status as a rejection and surface it back
 // to the client.
@@ -4463,31 +4427,9 @@ func (h *Handler) validateAssigneePair(ctx context.Context, r *http.Request, wor
 			return http.StatusForbidden, "you do not have permission to assign work to this agent"
 		}
 		return 0, ""
-	case "squad":
-		squad, err := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{
-			ID:          assigneeID,
-			WorkspaceID: wsUUID,
-		})
-		if err != nil {
-			return http.StatusBadRequest, "assignee_id does not refer to a squad in this workspace"
-		}
-		if squad.ArchivedAt.Valid {
-			return http.StatusBadRequest, "cannot assign to an archived squad"
-		}
-		leader, err := h.Queries.GetAgent(ctx, squad.LeaderID)
-		if err != nil || leader.ArchivedAt.Valid {
-			return http.StatusBadRequest, "squad leader is archived; cannot assign to this squad"
-		}
-		actorType, actorID := h.resolveActor(r, requestUserID(r), workspaceID)
-		effectiveInvoker := h.invokeOriginatorFromRequest(r, actorType, actorID)
-		if !h.canInvokeAgent(ctx, leader, actorType, actorID, effectiveInvoker, workspaceID) {
-			// Same wording rule as the agent branch above; "this squad"
-			// avoids disclosing the leader agent's permission mode.
-			return http.StatusForbidden, "you do not have permission to assign work to this squad"
-		}
-		return 0, ""
+
 	default:
-		return http.StatusBadRequest, "assignee_type must be 'member', 'agent', or 'squad'"
+		return http.StatusBadRequest, "assignee_type must be 'member' or 'agent'"
 	}
 }
 
@@ -4495,7 +4437,6 @@ func (h *Handler) validateAssigneePair(ctx context.Context, r *http.Request, wor
 // to the issue's assigned agent. Fires for any status — comments are
 // conversational and can happen at any stage, including after completion
 // (e.g. follow-up questions on a done issue).
-//
 // Mirrors the private-agent gate that resolveMentionedAgentCommentTriggers applies on the
 // @mention path: once an owner/admin assigns a private agent to an issue, the
 // agent's UUID is "welded" onto the issue and remains visible to every member
@@ -4528,20 +4469,17 @@ func (h *Handler) assigneeFallbackAgent(ctx context.Context, issue db.Issue, act
 
 // isAgentRunningOnIssue reports whether the calling agent's current task
 // (identified by X-Task-ID) is running for the exact issue being promoted
-// and belongs to the target receiving agent (assignee or squad leader).
+// and belongs to the target receiving agent (the assignee).
 // That is the only true self-loop on backlog→active: the agent flipping
 // the same issue its own task is executing for would immediately re-enqueue
 // itself, complete the run, flip again, and so on.
-//
 // A coordinator whose run is bound to the issue but which promotes it for a
 // different receiving agent is not a loop: the run goes to another agent, and
 // suppressing it would leave the issue in an active status with no run.
-//
 // Same-agent cross-issue handoff (Agent A finishing a task on issue I1 then
 // promoting issue I2 — even when I2 is also assigned to A) is NOT a loop
 // and must fire; that is the documented serial sub-task chain. Member
 // actors never match.
-//
 // X-Task-ID is guaranteed to be present and consistent when actorType is
 // "agent": resolveActor demotes the actor to "member" otherwise (handler.go
 // resolveActor). We still recheck defensively — a future caller could pass
@@ -5111,7 +5049,7 @@ func (h *Handler) BatchUpdateIssues(w http.ResponseWriter, r *http.Request) {
 
 		writeCtx := r.Context()
 		if hasFieldUpdate {
-			writeCtx = withWakeupHandedTo(writeCtx, h.handedToAgent(r.Context(), prevIssue, params, handoff != nil))
+			writeCtx = withWakeupHandedTo(writeCtx, handedToAgent(prevIssue, params, handoff != nil))
 		}
 		var issue db.Issue
 		labelsChanged, propertiesChanged := false, false

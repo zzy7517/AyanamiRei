@@ -49,7 +49,7 @@ var issueViewSorts = []string{
 
 var issueViewPropertyFilterOps = []string{"contains", "gt", "gte", "lt", "lte", "before", "after"}
 
-var issueViewActorTypes = []string{"member", "agent", "squad"}
+var issueViewActorTypes = []string{"member", "agent"}
 
 var errIssueViewScopeUnlistable = errors.New("this view's scope cannot be listed")
 
@@ -303,7 +303,7 @@ func issueViewTableScope(view db.IssueView) (issueTableScope, error) {
 	case "members":
 		assigneeTypes = []string{"member"}
 	case "agents":
-		assigneeTypes = []string{"agent", "squad"}
+		assigneeTypes = []string{"agent"}
 	}
 	switch view.ScopeType {
 	case "workspace":

@@ -40,7 +40,7 @@ func TestAutopilotWritesIgnoreForgedAgentIdentity(t *testing.T) {
 
 	autopilotID := fx.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id": testWorkspaceID, "title": "forged actor regression",
-		"assignee_id": agentID, "assignee_type": "agent", "execution_mode": "run_only",
+		"assignee_id": agentID, "execution_mode": "run_only",
 		"status": "active", "created_by_type": "member", "created_by_id": testUserID,
 	})
 	fx.Cleanup(t, `DELETE FROM autopilot_rule_version WHERE autopilot_id = $1`, autopilotID)

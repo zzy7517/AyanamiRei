@@ -19,8 +19,6 @@ func newAutopilotCreateTestCmd() *cobra.Command {
 	cmd.Flags().String("title", "", "")
 	cmd.Flags().String("description", "", "")
 	cmd.Flags().String("agent", "", "")
-	cmd.Flags().String("squad", "", "")
-	cmd.Flags().String("squad-id", "", "")
 	cmd.Flags().String("mode", "", "")
 	cmd.Flags().String("project", "", "")
 	cmd.Flags().String("issue-title-template", "", "")
@@ -34,8 +32,6 @@ func newAutopilotUpdateTestCmd() *cobra.Command {
 	cmd.Flags().String("title", "", "")
 	cmd.Flags().String("description", "", "")
 	cmd.Flags().String("agent", "", "")
-	cmd.Flags().String("squad", "", "")
-	cmd.Flags().String("squad-id", "", "")
 	cmd.Flags().String("project", "", "")
 	cmd.Flags().String("status", "", "")
 	cmd.Flags().String("mode", "", "")
@@ -563,64 +559,6 @@ func TestResolveAgentOverlappingNames(t *testing.T) {
 	}
 }
 
-func TestResolveSquad(t *testing.T) {
-	squadsResp := []map[string]any{
-		{"id": "11111111-1111-1111-1111-111111111111", "name": "Platform Squad"},
-		{"id": "22222222-2222-2222-2222-222222222222", "name": "CLI Squad"},
-		{"id": "33333333-3333-3333-3333-333333333333", "name": "Archived Squad", "archived_at": "2026-01-01T00:00:00Z"},
-	}
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/squads" {
-			json.NewEncoder(w).Encode(squadsResp)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer srv.Close()
-
-	client := cli.NewAPIClient(srv.URL, "ws-1", "test-token")
-	ctx := context.Background()
-
-	t.Run("passes through a UUID without lookup", func(t *testing.T) {
-		id := "44444444-4444-4444-4444-444444444444"
-		got, err := resolveSquad(ctx, client, id)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if got != id {
-			t.Errorf("got %q, want %q", got, id)
-		}
-	})
-
-	t.Run("exact name match", func(t *testing.T) {
-		got, err := resolveSquad(ctx, client, "CLI Squad")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if got != "22222222-2222-2222-2222-222222222222" {
-			t.Errorf("got %q, want CLI Squad's UUID", got)
-		}
-	})
-
-	t.Run("short id match", func(t *testing.T) {
-		got, err := resolveSquad(ctx, client, "11111111")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if got != "11111111-1111-1111-1111-111111111111" {
-			t.Errorf("got %q, want Platform Squad's UUID", got)
-		}
-	})
-
-	t.Run("archived squad is ignored", func(t *testing.T) {
-		_, err := resolveSquad(ctx, client, "Archived Squad")
-		if err == nil {
-			t.Fatal("expected error for archived squad")
-		}
-	})
-}
-
 func TestRunAutopilotCreateSendsProjectID(t *testing.T) {
 	const (
 		agentID   = "11111111-1111-1111-1111-111111111111"
@@ -663,20 +601,23 @@ func TestRunAutopilotCreateSendsProjectID(t *testing.T) {
 	if got := body["project_id"]; got != projectID {
 		t.Fatalf("project_id = %#v, want %q", got, projectID)
 	}
-	if got := body["assignee_type"]; got != "agent" {
-		t.Fatalf("assignee_type = %#v, want agent", got)
+	if got := body["assignee_id"]; got != agentID {
+		t.Fatalf("assignee_id = %#v, want %q", got, agentID)
+	}
+	if _, ok := body["assignee_type"]; ok {
+		t.Fatalf("assignee_type sent: %#v", body)
 	}
 }
 
-func TestRunAutopilotCreateSendsSquadAssignee(t *testing.T) {
-	const squadID = "22222222-2222-2222-2222-222222222222"
+func TestRunAutopilotCreateResolvesAgentName(t *testing.T) {
+	const agentID = "22222222-2222-2222-2222-222222222222"
 
 	var body map[string]any
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/api/squads":
+		case "/api/agents":
 			json.NewEncoder(w).Encode([]map[string]any{
-				{"id": squadID, "name": "CLI Squad"},
+				{"id": agentID, "name": "CLI Agent"},
 			})
 		case "/api/autopilots":
 			if r.Method != http.MethodPost {
@@ -686,10 +627,9 @@ func TestRunAutopilotCreateSendsSquadAssignee(t *testing.T) {
 				t.Errorf("decode body: %v", err)
 			}
 			json.NewEncoder(w).Encode(map[string]any{
-				"id":            "autopilot-1",
-				"title":         "Squad planner",
-				"assignee_type": body["assignee_type"],
-				"assignee_id":   body["assignee_id"],
+				"id":          "autopilot-1",
+				"title":       "Agent planner",
+				"assignee_id": body["assignee_id"],
 			})
 		default:
 			http.NotFound(w, r)
@@ -702,18 +642,18 @@ func TestRunAutopilotCreateSendsSquadAssignee(t *testing.T) {
 	t.Setenv("MULTICA_TOKEN", "test-token")
 
 	cmd := newAutopilotCreateTestCmd()
-	_ = cmd.Flags().Set("title", "Squad planner")
-	_ = cmd.Flags().Set("squad", "CLI Squad")
+	_ = cmd.Flags().Set("title", "Agent planner")
+	_ = cmd.Flags().Set("agent", "CLI Agent")
 	_ = cmd.Flags().Set("mode", "create_issue")
 
 	if err := runAutopilotCreate(cmd, nil); err != nil {
 		t.Fatalf("runAutopilotCreate: %v", err)
 	}
-	if got := body["assignee_type"]; got != "squad" {
-		t.Fatalf("assignee_type = %#v, want squad", got)
+	if got := body["assignee_id"]; got != agentID {
+		t.Fatalf("assignee_id = %#v, want %q", got, agentID)
 	}
-	if got := body["assignee_id"]; got != squadID {
-		t.Fatalf("assignee_id = %#v, want %q", got, squadID)
+	if _, ok := body["assignee_type"]; ok {
+		t.Fatalf("assignee_type sent: %#v", body)
 	}
 }
 
@@ -823,7 +763,7 @@ func TestRunAutopilotUpdateSendsProjectIDChanges(t *testing.T) {
 	})
 }
 
-func TestRunAutopilotUpdateAgentSwitchesAssigneeType(t *testing.T) {
+func TestRunAutopilotUpdateSendsAgentAssignee(t *testing.T) {
 	const (
 		autopilotID = "33333333-3333-3333-3333-333333333333"
 		agentID     = "11111111-1111-1111-1111-111111111111"
@@ -841,14 +781,13 @@ func TestRunAutopilotUpdateAgentSwitchesAssigneeType(t *testing.T) {
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				t.Errorf("decode body: %v", err)
 			}
-			if body["assignee_type"] != "agent" {
-				http.Error(w, "squad not found", http.StatusBadRequest)
+			if body["assignee_id"] != agentID {
+				http.Error(w, "unknown agent", http.StatusBadRequest)
 				return
 			}
 			json.NewEncoder(w).Encode(map[string]any{
-				"id":            autopilotID,
-				"assignee_type": body["assignee_type"],
-				"assignee_id":   body["assignee_id"],
+				"id":          autopilotID,
+				"assignee_id": body["assignee_id"],
 			})
 		default:
 			http.NotFound(w, r)
@@ -868,72 +807,8 @@ func TestRunAutopilotUpdateAgentSwitchesAssigneeType(t *testing.T) {
 	if got := body["assignee_id"]; got != agentID {
 		t.Fatalf("assignee_id = %#v, want %q", got, agentID)
 	}
-	if got := body["assignee_type"]; got != "agent" {
-		t.Fatalf("assignee_type = %#v, want agent", got)
-	}
-}
-
-func TestRunAutopilotUpdateSendsSquadAssigneePair(t *testing.T) {
-	const (
-		autopilotID = "33333333-3333-3333-3333-333333333333"
-		squadID     = "22222222-2222-2222-2222-222222222222"
-	)
-
-	var body map[string]any
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/autopilots/"+autopilotID {
-			http.NotFound(w, r)
-			return
-		}
-		if r.Method != http.MethodPatch {
-			t.Errorf("method = %s, want PATCH", r.Method)
-		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			t.Errorf("decode body: %v", err)
-		}
-		json.NewEncoder(w).Encode(map[string]any{
-			"id":            autopilotID,
-			"title":         "Daily planner",
-			"assignee_type": body["assignee_type"],
-			"assignee_id":   body["assignee_id"],
-		})
-	}))
-	defer srv.Close()
-
-	t.Setenv("MULTICA_SERVER_URL", srv.URL)
-	t.Setenv("MULTICA_WORKSPACE_ID", "ws-1")
-	t.Setenv("MULTICA_TOKEN", "test-token")
-
-	cmd := newAutopilotUpdateTestCmd()
-	_ = cmd.Flags().Set("squad-id", squadID)
-	if err := runAutopilotUpdate(cmd, []string{autopilotID}); err != nil {
-		t.Fatalf("runAutopilotUpdate: %v", err)
-	}
-	if got := body["assignee_type"]; got != "squad" {
-		t.Fatalf("assignee_type = %#v, want squad", got)
-	}
-	if got := body["assignee_id"]; got != squadID {
-		t.Fatalf("assignee_id = %#v, want %q", got, squadID)
-	}
-}
-
-func TestRunAutopilotRejectsMultipleAssigneeFlags(t *testing.T) {
-	t.Setenv("MULTICA_SERVER_URL", "http://127.0.0.1")
-	t.Setenv("MULTICA_WORKSPACE_ID", "ws-1")
-	t.Setenv("MULTICA_TOKEN", "test-token")
-
-	cmd := newAutopilotCreateTestCmd()
-	_ = cmd.Flags().Set("title", "Daily planner")
-	_ = cmd.Flags().Set("agent", "11111111-1111-1111-1111-111111111111")
-	_ = cmd.Flags().Set("squad-id", "22222222-2222-2222-2222-222222222222")
-	_ = cmd.Flags().Set("mode", "create_issue")
-
-	err := runAutopilotCreate(cmd, nil)
-	if err == nil {
-		t.Fatal("expected mutually exclusive assignee flags error")
-	}
-	if !strings.Contains(err.Error(), "mutually exclusive") {
-		t.Fatalf("error = %v, want mutually exclusive", err)
+	if _, ok := body["assignee_type"]; ok {
+		t.Fatalf("assignee_type sent: %#v", body)
 	}
 }
 
@@ -1388,8 +1263,8 @@ func TestAutopilotTriggerRequestError_SurfacesRefusalToTheUser(t *testing.T) {
 	})
 }
 
-func TestRunAutopilotListTableShowsSquadAssignee(t *testing.T) {
-	const squadID = "22222222-2222-2222-2222-222222222222"
+func TestRunAutopilotListTableShowsAgentAssignee(t *testing.T) {
+	const agentID = "22222222-2222-2222-2222-222222222222"
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -1400,13 +1275,12 @@ func TestRunAutopilotListTableShowsSquadAssignee(t *testing.T) {
 					"title":          "Weekly sync check",
 					"status":         "active",
 					"execution_mode": "create_issue",
-					"assignee_type":  "squad",
-					"assignee_id":    squadID,
+					"assignee_id":    agentID,
 				}},
 				"total": 1,
 			})
-		case "/api/squads":
-			_ = json.NewEncoder(w).Encode([]map[string]any{{"id": squadID, "name": "Backend Squad"}})
+		case "/api/agents":
+			_ = json.NewEncoder(w).Encode([]map[string]any{{"id": agentID, "name": "Backend Agent"}})
 		default:
 			http.NotFound(w, r)
 		}
@@ -1421,11 +1295,11 @@ func TestRunAutopilotListTableShowsSquadAssignee(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runAutopilotList: %v", err)
 	}
-	if !strings.Contains(out, "squad:Backend Squad") {
-		t.Fatalf("table output missing squad assignee label:\n%s", out)
+	if !strings.Contains(out, "agent:Backend Agent") {
+		t.Fatalf("table output missing agent assignee label:\n%s", out)
 	}
-	if strings.Contains(out, squadID) {
-		t.Fatalf("table output shows raw squad UUID instead of its name:\n%s", out)
+	if strings.Contains(out, agentID) {
+		t.Fatalf("table output shows raw agent UUID instead of its name:\n%s", out)
 	}
 }
 
@@ -1439,7 +1313,7 @@ func TestRunAutopilotCreateRequiresAssignee(t *testing.T) {
 	_ = cmd.Flags().Set("mode", "create_issue")
 
 	err := runAutopilotCreate(cmd, nil)
-	if err == nil || !strings.Contains(err.Error(), "--agent, --squad, or --squad-id is required") {
+	if err == nil || !strings.Contains(err.Error(), "--agent is required") {
 		t.Fatalf("error = %v, want missing assignee error", err)
 	}
 }
@@ -1469,10 +1343,8 @@ func TestRunAutopilotUpdateWithoutAssigneeFlagsKeepsAssignee(t *testing.T) {
 	if err := runAutopilotUpdate(cmd, []string{autopilotID}); err != nil {
 		t.Fatalf("runAutopilotUpdate: %v", err)
 	}
-	for _, key := range []string{"assignee_type", "assignee_id"} {
-		if _, ok := body[key]; ok {
-			t.Fatalf("%s sent on a status-only update; it would retarget a squad autopilot: %#v", key, body)
-		}
+	if _, ok := body["assignee_id"]; ok {
+		t.Fatalf("assignee_id sent on a status-only update; it would retarget the autopilot: %#v", body)
 	}
 }
 
@@ -1480,17 +1352,14 @@ func TestFormatAutopilotAssignee(t *testing.T) {
 	lookup := actorDisplayLookup{state: &actorDisplayLookupState{
 		agentsLoaded: true,
 		agents:       map[string]string{"agent-1": "Lead"},
-		squadsLoaded: true,
-		squads:       map[string]string{"squad-1": "Backend Squad"},
 	}}
 	tests := []struct {
 		name string
 		in   map[string]any
 		want string
 	}{
-		{"squad", map[string]any{"assignee_type": "squad", "assignee_id": "squad-1"}, "squad:Backend Squad"},
-		{"agent", map[string]any{"assignee_type": "agent", "assignee_id": "agent-1"}, "agent:Lead"},
-		{"legacy row without type", map[string]any{"assignee_id": "agent-1"}, "agent:Lead"},
+		{"agent", map[string]any{"assignee_id": "agent-1"}, "agent:Lead"},
+		{"unknown agent falls back to its ID", map[string]any{"assignee_id": "agent-2"}, "agent:agent-2"},
 		{"no assignee", map[string]any{}, ""},
 	}
 	for _, tt := range tests {

@@ -12,7 +12,6 @@ var builtInStatusRules = []string{
 	"set `in_progress` FIRST",
 	"always lands here",
 	"→ `in_review`",
-	"a dispatch turn leaves the parent `in_progress`",
 	"5. Before exiting, confirm the status still matches where things actually stand.",
 	"The workflow rules above refer to exact built-in status keys",
 }
@@ -21,11 +20,9 @@ func TestBriefWithProjectWorkflowDropsBuiltInStatusRules(t *testing.T) {
 	t.Parallel()
 	catalog := []IssueStatusForEnv{{Key: "code_review", Name: "Code review", Category: "in_review"}}
 	for name, ctx := range map[string]TaskContextForEnv{
-		"agent":                {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true},
-		"squad leader":         {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, IsSquadLeader: true},
-		"custom catalog":       {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, IssueStatuses: catalog},
-		"comment-triggered":    {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, TriggerCommentID: "c-1"},
-		"leader with comments": {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, IsSquadLeader: true, TriggerCommentID: "c-1"},
+		"agent":             {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true},
+		"custom catalog":    {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, IssueStatuses: catalog},
+		"comment-triggered": {IssueID: "issue-1", AgentID: "a-1", AgentName: "Eve", HasProjectWorkflow: true, TriggerCommentID: "c-1"},
 	} {
 		out := buildMetaSkillContent("claude", ctx)
 		for _, rule := range builtInStatusRules {
@@ -66,18 +63,6 @@ func TestBriefWithProjectWorkflowDropsBuiltInStatusRules(t *testing.T) {
 		if got := strings.Count(out, "**Issue status"); got != 1 {
 			t.Errorf("%s: brief has %d issue-status sections, want 1", name, got)
 		}
-	}
-}
-
-func TestBriefWithProjectWorkflowKeepsSquadLeaderDispatchRule(t *testing.T) {
-	t.Parallel()
-	leader := buildMetaSkillContent("claude", TaskContextForEnv{IssueID: "issue-1", HasProjectWorkflow: true, IsSquadLeader: true})
-	if !strings.Contains(leader, "a dispatch turn leaves the parent at its current step, and you run Step done only on the later turn") {
-		t.Errorf("leader workflow brief must keep dispatch-is-not-delivery in workflow terms\n---\n%s", leader)
-	}
-	member := buildMetaSkillContent("claude", TaskContextForEnv{IssueID: "issue-1", HasProjectWorkflow: true})
-	if strings.Contains(member, "Squad leader:") {
-		t.Errorf("non-leader workflow brief must not carry the squad leader bullet")
 	}
 }
 

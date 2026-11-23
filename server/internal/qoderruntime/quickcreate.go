@@ -40,10 +40,7 @@ func prepareQuickCreate(t *claimedTask, r *run) *run {
 		ParentIssueID: t.ParentIssueID,
 		token:         t.AuthToken,
 	}
-	switch {
-	case t.SquadID != "":
-		qc.AssigneeType, qc.AssigneeID = "squad", t.SquadID
-	case t.Agent != nil && t.Agent.ID != "":
+	if t.Agent != nil && t.Agent.ID != "" {
 		qc.AssigneeType, qc.AssigneeID = "agent", t.Agent.ID
 	}
 	r.QuickCreate = qc

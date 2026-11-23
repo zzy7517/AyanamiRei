@@ -31,7 +31,6 @@ func TestMigration467BackfillsTriggerCreatorFromAutopilot(t *testing.T) {
 		return dbfx.Insert(t, "autopilot", testutil.Cols{
 			"workspace_id":    testWorkspaceID,
 			"title":           "Trigger creator backfill",
-			"assignee_type":   "agent",
 			"assignee_id":     agentID,
 			"status":          "active",
 			"execution_mode":  "run_only",

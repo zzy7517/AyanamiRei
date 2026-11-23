@@ -457,7 +457,7 @@ func (h *Handler) validateHandoffHandlers(ctx context.Context, r *http.Request, 
 // validateHandoffHandlers.
 func (h *Handler) validateHandoffHandler(ctx context.Context, r *http.Request, workspaceID string, s issueworkflow.Step) (int, string) {
 	switch s.Handler.Type {
-	case issueworkflow.HandlerAgent, issueworkflow.HandlerSquad, issueworkflow.HandlerMember:
+	case issueworkflow.HandlerAgent, issueworkflow.HandlerMember:
 		id, err := parseUUIDString(s.Handler.ID)
 		if err != nil {
 			return http.StatusBadRequest, "invalid handler id"
@@ -1349,7 +1349,7 @@ func (h *Handler) PreviewIssueWorkflowBrief(w http.ResponseWriter, r *http.Reque
 		},
 		HandlerName: func(s issueworkflow.Step) string {
 			switch s.Handler.Type {
-			case issueworkflow.HandlerAgent, issueworkflow.HandlerSquad, issueworkflow.HandlerMember:
+			case issueworkflow.HandlerAgent, issueworkflow.HandlerMember:
 				id, err := parseUUIDString(s.Handler.ID)
 				if err != nil {
 					return s.Handler.Type
@@ -1366,8 +1366,8 @@ func (h *Handler) PreviewIssueWorkflowBrief(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusOK, map[string]any{"brief": brief})
 }
 
-// WorkflowHandoffRun is an active run of the agent or squad a handoff takes
-// the issue from.
+// WorkflowHandoffRun is an active run of the agent a handoff takes the issue
+// from.
 type WorkflowHandoffRun struct {
 	TaskID    string  `json:"task_id"`
 	AgentID   string  `json:"agent_id"`

@@ -20,9 +20,9 @@ const maxPreviewTriggerIssues = 500
 
 // issueTriggerWriteProbe builds the probe the write paths feed to
 // WillEnqueueRun. The private-agent gate is already enforced at the HTTP
-// boundary (validateAssigneePair on assign) and inside enqueueSquadLeaderTask
-// (canEnqueueSquadLeader), so a write must NOT re-run or sink it — it passes
-// allow-all. The self-loop check needs the request's X-Task-ID header.
+// boundary (validateAssigneePair on assign), so a write must NOT re-run or
+// sink it — it passes allow-all. The self-loop check needs the request's
+// X-Task-ID header.
 func (h *Handler) issueTriggerWriteProbe(r *http.Request, actorType, actorID string, issue db.Issue) service.IssueTriggerProbe {
 	return service.IssueTriggerProbe{
 		CanAccessAgent: nil, // allow-all; gate lives at the write boundary
@@ -44,8 +44,8 @@ func (h *Handler) issueTriggerWriteProbe(r *http.Request, actorType, actorID str
 
 // issueTriggerPreviewProbe mirrors the real write-time gates for the read-only
 // preview: the private-agent gate (so preview never leaks a private agent's
-// readiness to a member who cannot see it — matching validateAssigneePair /
-// canEnqueueSquadLeader) and the same self-loop guard.
+// readiness to a member who cannot see it — matching validateAssigneePair)
+// and the same self-loop guard.
 func (h *Handler) issueTriggerPreviewProbe(r *http.Request, actorType, actorID, workspaceID string, issue db.Issue) service.IssueTriggerProbe {
 	originatorUserID := h.invokeOriginatorFromRequest(r, actorType, actorID)
 	return service.IssueTriggerProbe{
@@ -100,11 +100,11 @@ func logDeclinedIssueRun(ctx context.Context, issue db.Issue, trigger service.Is
 
 // IssueRunOutcome tells the caller of an issue write what happened to the run
 // it could have started (#10845). It has the shape of CommentTriggerOutcome:
-// target_id is the assignee the issue names (the squad id for a squad) and
-// reason_code a stable dispatch code. Like trigger_outcomes it goes to the
-// caller only, never into the issue:updated broadcast.
+// target_id is the assignee the issue names and reason_code a stable dispatch
+// code. Like trigger_outcomes it goes to the caller only, never into the
+// issue:updated broadcast.
 type IssueRunOutcome struct {
-	TargetType string             `json:"target_type"` // "agent" | "squad"
+	TargetType string             `json:"target_type"` // "agent"
 	TargetID   string             `json:"target_id"`
 	Status     DispatchStatus     `json:"status"` // queued | coalesced | deferred | blocked
 	ReasonCode DispatchReasonCode `json:"reason_code"`
@@ -113,12 +113,11 @@ type IssueRunOutcome struct {
 // resolveIssueRun starts the run an issue write decided on and reports the
 // result. willRun is the predicate's decision before suppress_run; a write
 // that could not have started a run (no reason either) reports nothing.
-//
 // The write probe admits every caller, so a promotion can start a private
 // agent the caller may not invoke. Its outcome would then expose that agent's
 // readiness, so the caller gets no outcome; the server log keeps the cause.
 func (h *Handler) resolveIssueRun(r *http.Request, issue db.Issue, trigger service.IssueRunTrigger, willRun, suppressRun bool, actorType, actorID, workspaceID, handoffNote string) *IssueRunOutcome {
-	if issue.AssigneeType.String != "agent" && issue.AssigneeType.String != "squad" {
+	if issue.AssigneeType.String != "agent" {
 		return nil
 	}
 	var status DispatchStatus
@@ -127,7 +126,7 @@ func (h *Handler) resolveIssueRun(r *http.Request, issue db.Issue, trigger servi
 	case willRun && suppressRun:
 		status, reason = DispatchDeferred, ReasonDeferred
 	case willRun:
-		status, reason = h.dispatchIssueRun(r.Context(), issue, trigger, actorType, actorID, handoffNote)
+		status, reason = h.dispatchIssueRun(r.Context(), issue, actorType, actorID, handoffNote)
 	case trigger.DeclineReason != "":
 		status, reason = declinedRunStatus(trigger.DeclineReason), trigger.DeclineReason
 	default:
@@ -157,19 +156,10 @@ func declinedRunStatus(reason DispatchReasonCode) DispatchStatus {
 	return DispatchBlocked
 }
 
-// callerCanInvokeIssueAssignee applies the preview probe's gate to the agent
-// that runs: the assignee, or a squad's leader. A target that no longer
-// resolves has no readiness to expose.
+// callerCanInvokeIssueAssignee applies the preview probe's gate to the assignee
+// agent. A target that no longer resolves has no readiness to expose.
 func (h *Handler) callerCanInvokeIssueAssignee(r *http.Request, issue db.Issue, actorType, actorID, workspaceID string) bool {
-	agentID := issue.AssigneeID
-	if issue.AssigneeType.String == "squad" {
-		squad, err := h.Queries.GetSquadInWorkspace(r.Context(), db.GetSquadInWorkspaceParams{ID: issue.AssigneeID, WorkspaceID: issue.WorkspaceID})
-		if err != nil {
-			return true
-		}
-		agentID = squad.LeaderID
-	}
-	agent, err := h.Queries.GetAgent(r.Context(), agentID)
+	agent, err := h.Queries.GetAgent(r.Context(), issue.AssigneeID)
 	if err != nil {
 		return true
 	}
@@ -179,23 +169,16 @@ func (h *Handler) callerCanInvokeIssueAssignee(r *http.Request, issue db.Issue, 
 // dispatchIssueRun executes the enqueue side effect for a decision produced by
 // WillEnqueueRun and reports what happened. handoffNote is a legacy API input
 // retained for installed clients and travels only with a run that actually
-// starts. The squad path still flows through enqueueSquadLeaderTask so the
-// leader access gate and pending dedup stay in one place.
-func (h *Handler) dispatchIssueRun(ctx context.Context, issue db.Issue, trigger service.IssueRunTrigger, actorType, actorID, handoffNote string) (DispatchStatus, DispatchReasonCode) {
-	switch trigger.AssigneeType {
-	case "agent":
-		// The member who performed this assign/promote is the accountable human
-		// for the run (MUL-4302 §4). An agent actor is not a human, so only a
-		// member actor is threaded; otherwise attribution falls back to the chain.
-		_, err := h.TaskService.EnqueueTaskForIssueWithHandoff(ctx, issue, handoffNote, memberActorUserID(actorType, actorID))
-		if err == nil {
-			return DispatchQueued, ReasonQueued
-		}
-		return issueEnqueueFailure(issue, issue.AssigneeID, err)
-	case "squad":
-		return h.enqueueSquadLeaderTask(ctx, issue, actorType, actorID, handoffNote, trigger.WorkflowHandoff)
+// starts.
+func (h *Handler) dispatchIssueRun(ctx context.Context, issue db.Issue, actorType, actorID, handoffNote string) (DispatchStatus, DispatchReasonCode) {
+	// The member who performed this assign/promote is the accountable human
+	// for the run (MUL-4302 §4). An agent actor is not a human, so only a
+	// member actor is threaded; otherwise attribution falls back to the chain.
+	_, err := h.TaskService.EnqueueTaskForIssueWithHandoff(ctx, issue, handoffNote, memberActorUserID(actorType, actorID))
+	if err == nil {
+		return DispatchQueued, ReasonQueued
 	}
-	return DispatchBlocked, ReasonTargetUnavailable
+	return issueEnqueueFailure(issue, issue.AssigneeID, err)
 }
 
 // issueEnqueueFailure types an enqueue error on the issue write path. A
@@ -205,11 +188,8 @@ func issueEnqueueFailure(issue db.Issue, agentID pgtype.UUID, err error) (Dispat
 	if errors.Is(err, service.ErrDuplicatePendingTask) {
 		return DispatchCoalesced, ReasonCoalesced
 	}
-	log := slog.Default()
-	if issue.AssigneeType.String == "squad" {
-		log = log.With("squad_id", uuidToString(issue.AssigneeID))
-	}
-	log.Warn("issue write: run enqueue failed",
+	slog.Default().Warn("issue write: run enqueue failed",
+
 		"issue_id", uuidToString(issue.ID),
 		"agent_id", uuidToString(agentID),
 		"error", err,
@@ -253,7 +233,7 @@ type IssueTriggerPreviewRequest struct {
 }
 
 // IssueTriggerPreviewItem is one issue that WILL start a run under the
-// prospective write. AgentID is the runnable agent (squad leader for squads).
+// prospective write. AgentID is the agent that will run.
 type IssueTriggerPreviewItem struct {
 	IssueID string `json:"issue_id"`
 	AgentID string `json:"agent_id"`

@@ -211,15 +211,14 @@ func TestSubscriberDescriptionMentionsSkipNonRecipients(t *testing.T) {
 	memberID := fixture.User(t, "Mentioned member", "subscriber-description-mentions@multica.ai")
 	fixture.Member(t, testWorkspaceID, memberID, "member")
 	agentID := fixture.Agent(t, "Mentioned agent", "")
-	squadID := fixture.Squad(t, "Mentioned squad", agentID)
 	queries := db.New(testPool)
 
 	for _, eventType := range []string{protocol.EventIssueCreated, protocol.EventIssueUpdated} {
 		t.Run(eventType, func(t *testing.T) {
-			for _, mentionType := range []string{"issue", "squad", "all"} {
+			for _, mentionType := range []string{"issue", "all"} {
 				t.Run(mentionType, func(t *testing.T) {
 					issueID := fixture.Issue(t, "Description with mixed mentions")
-					mentionID := map[string]string{"issue": issueID, "squad": squadID, "all": "all"}[mentionType]
+					mentionID := map[string]string{"issue": issueID, "all": "all"}[mentionType]
 					description := fmt.Sprintf(
 						"[Reference](mention://%s/%s) [@Member](mention://member/%s) [@Agent](mention://agent/%s)",
 						mentionType, mentionID, memberID, agentID,

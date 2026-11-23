@@ -354,6 +354,11 @@ func main() {
 		}
 	}
 
+	// The pre-shared token lets an operator's own clients skip signing in
+	// (see auth.SharedToken). Unset — the default — it stays disabled.
+	sharedToken := auth.SharedTokenFromEnv()
+	auth.SetSharedToken(sharedToken)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -702,6 +707,19 @@ func main() {
 		LLMMaxRetries:       llmMaxRetries,
 		LLMDisableThinking:  llmDisableThinking,
 	})
+	if sharedToken != nil {
+		// The token authenticates as one account. Open it if this is a fresh
+		// database, then bind the token to it; until then it is refused.
+		userID, created, err := h.EnsureSharedTokenUser(context.Background(), sharedToken.Email())
+		if err != nil {
+			slog.Error("refusing to start: cannot prepare the account for "+auth.SharedTokenEnv,
+				"email", sharedToken.Email(), "error", err)
+			os.Exit(1)
+		}
+		sharedToken.BindUser(userID)
+		slog.Info("shared auth token enabled",
+			"email", sharedToken.Email(), "user_id", userID, "account_created", created)
+	}
 	// member_delegation_day exists only for self-host telemetry; DO_NOT_TRACK
 	// stops writing it as well as sending the snapshot.
 	h.TaskService.RecordMemberActivity = telemetryConfig.Enabled

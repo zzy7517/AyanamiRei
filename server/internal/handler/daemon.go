@@ -24,6 +24,7 @@ import (
 	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/daemonws"
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/integrations/lark"
 	"github.com/multica-ai/multica/server/internal/integrations/slack"
 	"github.com/multica-ai/multica/server/internal/issuestatus"
@@ -114,7 +115,6 @@ func (h *Handler) daemonHiddenProjects(w http.ResponseWriter, r *http.Request, w
 // without this check could claim another member's tasks (receiving the
 // agent's custom_env, MCP config and a task token minted for the runtime
 // owner) or write results into them.
-//
 //   - Daemon token (mdt_): the token is bound to one daemon, so the runtime
 //     must carry that exact, non-empty daemon_id. A runtime with no daemon_id
 //     is never reachable through a daemon token — those tokens are also minted
@@ -176,7 +176,6 @@ func (h *Handler) verifyDaemonRuntimeAuthorized(r *http.Request, rt db.AgentRunt
 
 // requireDaemonRuntimeAccess looks up a runtime and verifies the caller may
 // act as its daemon: workspace access plus daemonRuntimeBindingAllowed.
-//
 // Only pgx.ErrNoRows is treated as a real "runtime gone" 404 — the daemon uses
 // that response to drop the stale runtime from its in-memory map and re-register,
 // so collapsing transient DB errors into the same 404 would force the daemon to
@@ -216,7 +215,6 @@ func (h *Handler) requireDaemonTaskAccess(w http.ResponseWriter, r *http.Request
 // ResolveTaskWorkspaceID lookup. The two helpers share their entire
 // implementation; the simpler one is preserved for ergonomic call sites
 // that genuinely don't need workspace_id.
-//
 // Authorization is runtime-level (MUL-8154): the task must be bound to a
 // runtime in the task's own workspace, and the caller must pass
 // daemonRuntimeBindingAllowed for that runtime. A task with no runtime
@@ -442,7 +440,6 @@ func normalizeProvider(s string) string {
 // doesn't leave a custom_name = NULL row that makes the machine title revert to
 // its hostname. Both the normal runtime path and the failed-profile path write
 // daemon_id-scoped rows that show up in the machine grouping, so both call this.
-//
 // Only fresh inserts with no name of their own and a daemon_id participate;
 // existing rows keep whatever they already have. A lookup/update error is
 // non-fatal — registration must still succeed — so the input row is returned
@@ -481,7 +478,6 @@ var errRuntimeProfileMachine = errors.New("runtime profile belongs to another ma
 // commits; DeleteRuntimeProfile takes a conflicting UPDATE lock before it
 // enumerates runtime rows. This closes the stale-read window where deletion
 // could miss an instance inserted by a concurrently registering daemon.
-//
 // It runs on the caller's registration transaction (MUL-8154), so the profile
 // lock is held until the whole registration commits.
 func (h *Handler) upsertRuntimeWithProfile(
@@ -1146,14 +1142,12 @@ func (h *Handler) DaemonRegister(w http.ResponseWriter, r *http.Request) {
 // `foo.local` coexisting), and we need to consolidate every one of them, not
 // just the first. Per match we reassign agents and tasks, record the legacy
 // id on the new row for audit, then delete the stale row.
-//
 // Scoping by (workspace_id, provider) is sufficient since provider is single-
 // runtime-per-daemon; `unique (workspace_id, daemon_id, provider)` prevents
 // any two *exact* matches but the `LOWER(...)` comparison crosses that bound
 // precisely when case-duplicate rows exist — which is the bug we're fixing.
 // We also dedupe across legacy ids so overlapping candidates (e.g. `foo` and
 // `foo.local` both resolving to the same stored row) don't double-process.
-//
 // Authorization (MUL-8154): legacy_daemon_ids are client-supplied, so they are
 // a lookup hint, never proof of ownership. callerOwnerID is the user the
 // registration was authenticated as; the merge only proceeds when it is set
@@ -1220,7 +1214,6 @@ var errRuntimeMergeUnauthorized = errors.New("runtime merge refused: caller does
 
 // mergeLegacyRuntime folds one legacy runtime row into the freshly registered one,
 // as a single transaction.
-//
 // Order is load-bearing. The fence comes first — workspace row, then both runtime
 // rows FOR UPDATE — and tasks move next, because that statement carries the same
 // fence predicate every task write uses and is the only step that can tell us the
@@ -1230,11 +1223,9 @@ var errRuntimeMergeUnauthorized = errors.New("runtime merge refused: caller does
 // us straight to DeleteAgentRuntime below — where agent_task_queue's
 // ON DELETE CASCADE would delete the history this merge is supposed to carry
 // forward (MUL-5999 review).
-//
 // One transaction, because the fence's workspace lock lives only as long as the
 // statement that took it. Run as four autocommit statements, the merge had two
 // ways to leave the tenant inconsistent and the registration reporting success:
-//
 //   - a transient failure on the agent reassignment left tasks pointing at the new
 //     runtime while their agents stayed on the old one, self-healing only on some
 //     later registration;
@@ -1475,7 +1466,6 @@ type DaemonHeartbeatRequest = protocol.DaemonHeartbeatRequestPayload
 // heartbeat hot path. Probes are read-only (ZCARD in Redis) so a timeout is
 // ack-safe: the worst case is "we didn't find out if anything was queued this
 // tick" and the next heartbeat (default 15s later) will try again.
-//
 // PopPending is deliberately NOT bounded this way — its Redis implementation
 // runs a Lua claim script whose ZREM + SET-running side effects cannot be
 // cleanly un-run from the client side if the context expires mid-script. We
@@ -1488,7 +1478,6 @@ var heartbeatHasPendingTimeout = 1 * time.Second
 // maxLocalSkillImportBatch is how many pending import requests the heartbeat
 // handler pops per cycle. Higher values let the daemon process more imports
 // in parallel but increase per-heartbeat latency.
-//
 // Timeout invariant: IMPORT_CONCURRENCY (views/.../runtime-local-skill-import-panel.tsx)
 // × heartbeat period (~15s) must stay within runtimeLocalSkillPendingTimeout
 // (runtime_local_skills.go), and IMPORT_POLL_TIMEOUT_MS (core/runtimes/local-skills.ts)
@@ -1499,7 +1488,6 @@ const maxLocalSkillImportBatch = 10
 // expiring. The daemon refreshes it every heartbeat (~15s), so this just
 // needs to be a few heartbeats long — the value (90s) tolerates ~6 missed
 // beats before Redis declares the runtime dead.
-//
 // It is intentionally shorter than the sweeper's stale threshold (150s in
 // cmd/server/runtime_sweeper.go). That ordering is safe and desirable:
 // Redis can declare a runtime dead before the DB stale window opens, and
@@ -1515,7 +1503,6 @@ const runtimeLivenessTTL = 90 * time.Second
 // so (a) the UI's "last seen" display stays bounded and (b) the sweeper's
 // DB-only fallback path (used when an IsAliveBatch call to Redis errors) does
 // not false-positive on alive-but-Redis-only runtimes.
-//
 // Load-bearing invariant: this must be strictly less than the sweeper's
 // stale threshold (150s in cmd/server/runtime_sweeper.go) MINUS one daemon
 // heartbeat cycle (~15s) MINUS the BatchedHeartbeatScheduler tick interval
@@ -1523,7 +1510,6 @@ const runtimeLivenessTTL = 90 * time.Second
 // flush + heartbeat + batchTick = 60 + 15 + 30 = 105s, leaving a 45s buffer
 // below the 150s stale window. If you tune any of these constants, recompute
 // the chain and keep at least a one-tick buffer.
-//
 // We intentionally keep the per-runtime flush throttle at 60s (rather than
 // pushing it higher) so a crashed runtime is detected within ~150s instead
 // of ~10 minutes. The bulk of the DB-pressure win comes from batched
@@ -1691,11 +1677,9 @@ func runtimeGoneHeartbeatAck(runtimeID string) *protocol.DaemonHeartbeatAckPaylo
 // the DB row write on most beats — the DB is only updated on the
 // offline→online transition or once per runtimeHeartbeatDBFlushInterval to
 // keep last_seen_at fresh enough for the UI and the DB-fallback sweeper.
-//
 // When LivenessStore is unavailable (no Redis configured) or any Touch call
 // errors, recordHeartbeat falls back to writing the DB on every beat — that
 // is the original behavior and keeps the sweeper's DB-only path correct.
-//
 // The actual DB write is delegated to h.HeartbeatScheduler so production can
 // coalesce many runtimes' bumps into one bulk UPDATE per tick. See
 // heartbeat_scheduler.go for the two implementations.
@@ -1823,6 +1807,10 @@ func (h *Handler) processHeartbeat(ctx context.Context, runtimeID string, req pr
 		RuntimeID:          runtimeID,
 		Status:             "ok",
 		ServerCapabilities: []string{protocol.DaemonCapabilityRPCV1},
+	}
+	if featureflags.TerminalV1Enabled(ctx, h.FeatureFlags) {
+		// Daemons open the terminal relay only once an ack lists this.
+		ack.ServerCapabilities = append(ack.ServerCapabilities, protocol.DaemonCapabilityTerminalV1)
 	}
 
 	probeUpdateCtx, cancelProbeUpdate := context.WithTimeout(ctx, heartbeatHasPendingTimeout)
@@ -2090,7 +2078,6 @@ func parseRuntimeConnectedAppsForClaim(raw []byte, taskID pgtype.UUID) []runtime
 // exposing that stale user's capabilities. When it applies, the task is
 // cancelled and its surviving comments are replayed through normal routing
 // (which recomputes originator + connected-app context).
-//
 // Returns handled=true when the task must NOT be dispatched — either a clean
 // repair (failure==nil) or a hard failure (failure!=nil, carrying the
 // status/message/outcome the per-runtime endpoint renders). handled=false means
@@ -2143,7 +2130,6 @@ const claimBatchMaxTasksCap = 32
 // locally. This collapses the per-runtime idle-poll fan-out (one HTTP request
 // plus one promote/reclaim/list cycle per runtime) into a single request backed
 // by = ANY merged queries.
-//
 // Each returned task goes through the same FinalizeTaskClaim as the per-runtime
 // endpoint, so the task-scoped token AND the comment-delivery receipt
 // (delivered_comment_ids) are persisted atomically; a finalization failure
@@ -2530,7 +2516,6 @@ func claimPollHintDelay(now, fireAt time.Time) time.Duration {
 // batch claim paths. It re-verifies the current agent/runtime authorization
 // INSIDE the FinalizeTaskClaim transaction, under a FOR NO KEY UPDATE row lock
 // on the runtime row, so the decision and the task-token mint commit atomically:
-//
 //   - runtime.owner_id is re-read authoritatively (no stale claim-time
 //     snapshot), and a concurrent re-registration that would change owner_id
 //     blocks until this gate commits — closing the TOCTOU window between the
@@ -2664,7 +2649,6 @@ type claimBuildFailure struct {
 
 // rejectClaimSourceLoad settles a claim whose SOURCE row — the issue, chat
 // session, autopilot_run or autopilot the task hangs off — could not be read.
-//
 // Every one of these branches used to swallow the error and fall through on
 // `err == nil`. That is a fail-open: taskToResponse has already seeded
 // resp.WorkspaceID with the RUNTIME's workspace, so a swallowed read ran on to
@@ -2672,9 +2656,7 @@ type claimBuildFailure struct {
 // against itself and passed. The agent was then dispatched with no issue, no
 // chat input, or no autopilot instructions at all — and, for chat, past the
 // empty-input guard that lives inside the success branch.
-//
 // The two failures settle differently:
-//
 //   - The read FAILED (transient: DB blip, timeout, reset). Preserve the
 //     just-dispatched task for redelivery. The batch endpoint requeues
 //     omitted claims within its response budget; the singular endpoint
@@ -2714,7 +2696,6 @@ func (h *Handler) rejectClaimSourceLoad(ctx context.Context, task *db.AgentTaskQ
 // rejectClaimSkillLoad preserves a claim whose agent skills could not be read.
 // Like other transient source failures, the batch endpoint requeues it within
 // its response budget; the singular endpoint retains stale-dispatch recovery.
-//
 // Dispatching with whatever loaded is not the safer half-measure it looks
 // like. LoadAgentSkills reads the whole skill set in two queries, so a failure
 // means every skill loses its supporting files or the agent loses every skill,
@@ -2741,7 +2722,6 @@ func (h *Handler) rejectClaimSkillLoad(task *db.AgentTaskQueue, err error) *clai
 // routed a foreign-workspace task here. Both cases hard-fail AND cancel the
 // just-dispatched task so the queue / agent status don't sit stuck until the
 // stale-task sweeper fires minutes later.
-//
 // Every branch calls this as soon as it knows its authoritative workspace and
 // BEFORE it hydrates project context, so "prove ownership, then load" is a
 // property of the structure rather than a check each branch remembers to
@@ -2895,7 +2875,6 @@ func rerunSourceMatchesTaskScope(task, source db.AgentTaskQueue) bool {
 // codex_semantic_inactivity), and still copies the parent's work_dir onto the
 // child: a poisoned conversation says nothing about the files it left behind,
 // the same contract the manual-retry branch applies (MUL-4869, MUL-7034).
-//
 // The workdir is offered only to a daemon whose `multica repo checkout` keeps
 // an existing checkout's work (DaemonCapabilityCheckoutKeepsWorkV1). The fresh
 // session has no memory of that work and will fetch its repositories again;
@@ -2971,12 +2950,6 @@ func (h *Handler) buildClaimedTaskResponse(r *http.Request, task *db.AgentTaskQu
 		resp.StartClaimSupported = true
 	}
 	var issueNumber, parentIssueNumber int32
-	// Claim-only capability: this server resolves the squad-leader role on the
-	// wire (is_leader_task / squad_id), so the daemon must not re-derive it
-	// from the briefing text. Set unconditionally — on every claim, leader or
-	// not — because its absence is what tells an upgraded daemon it is talking
-	// to a server too old to have answered the question (MUL-5811).
-	resp.LeaderRoleResolved = true
 	resp.DocsEnabled = h.docsV1Enabled(r.Context())
 	// Agent-trigger plugin hooks, as tools. A failure here degrades to no
 	// tools rather than failing the claim: a plugin that cannot be listed must
@@ -3289,107 +3262,10 @@ func (h *Handler) buildClaimedTaskResponse(r *http.Request, task *db.AgentTaskQu
 		// earlier text survives (MUL-8218).
 		var resumedRunStartedAt pgtype.Timestamptz
 
-		// Squad-leader briefing injection: keyed off the task being a
-		// leader-task (is_leader_task) carrying a squad_id — NOT off the
-		// issue being assigned to a squad. The task flag is stamped at
-		// enqueue time and is true for every ISSUE-BOUND path that routes
-		// work to a squad leader: direct assign-to-squad, comment
-		// @squad-mention (even when the issue itself is assigned to a
-		// plain agent — the MUL-3724 case), sub-issue done callback,
-		// autopilot squad-assignee, and retry-clone inheritance. The old
-		// issue.AssigneeType=="squad" gate missed the comment-mention
-		// path, so the leader booted with zero squad context and
-		// degraded into doing the work itself instead of orchestrating.
-		//
-		// NOTE: quick-create tasks do NOT reach this block — they have a
-		// NULL issue_id (so the enclosing `task.IssueID.Valid` is false)
-		// and do NOT carry is_leader_task / squad_id columns. They route
-		// their squad through the task CONTEXT JSON (QuickCreateContext.
-		// SquadID) and get their briefing from the separate quick-create
-		// branch further below (search `qc.SquadID`). Do not "unify" the
-		// two by deleting that branch: it also sets resp.SquadID /
-		// resp.SquadName so the new issue defaults to the squad assignee,
-		// and there is no issue row to hang this column-based path on.
-		//
-		// We resolve the squad directly from task.SquadID rather than
-		// reverse-looking-up "which squad is this agent the leader of",
-		// which is ambiguous when one agent leads multiple squads. The
-		// uuidToString(squad.LeaderID) == resp.Agent.ID re-check is kept
-		// as a defensive gate: if the squad's leader was swapped after the
-		// task was enqueued, we never feed a stale briefing to a
-		// non-leader. It also doubles as the dangling-squad_id guard: a
-		// squad hard-deleted after enqueue makes GetSquadInWorkspace
-		// return no row (err != nil) — we skip injection silently, which
-		// is exactly the same observable result as "condition not
-		// matched". Claim still succeeds; no stale briefing is emitted.
-		// (No FK on squad_id — see migration 127.) We append (not replace)
-		// so per-agent instructions stay authoritative; the squad briefing
-		// stacks on top as task-specific squad context.
 		// Project workflow (MUL-7420): best-effort, like the status catalog
 		// below — a failure degrades to the workspace-wide status rules.
-		// Resolved before the leader briefing, which words the owning
-		// leader's status moves by it (MUL-8145).
 		legacyRuntimeRules := !requestHasClientCapability(r, protocol.DaemonCapabilityWorkflowStatusRulesV1)
 		projectWorkflow := h.claimProjectWorkflow(r.Context(), issue, task, legacyRuntimeRules)
-		leaderWorkflow := leaderNoWorkflow
-		if projectWorkflow != nil {
-			leaderWorkflow = leaderWorkflowCurrentDaemon
-			if projectWorkflow.stepMoved {
-				leaderWorkflow = leaderWorkflowStepMoved
-			} else if legacyRuntimeRules {
-				leaderWorkflow = leaderWorkflowLegacyDaemon
-			}
-		}
-		if task.IsLeaderTask {
-			injected := false
-			if resp.Agent != nil && task.SquadID.Valid {
-				if squad, err := h.Queries.GetSquadInWorkspace(r.Context(), db.GetSquadInWorkspaceParams{
-					ID:          task.SquadID,
-					WorkspaceID: issue.WorkspaceID,
-				}); err == nil && uuidToString(squad.LeaderID) == resp.Agent.ID {
-					// Parent-status authority is deliberately NARROWER than
-					// briefing injection. Injection is keyed off is_leader_task
-					// (see above) and therefore also fires on the MUL-3724 path,
-					// where the issue belongs to a plain agent and this squad was
-					// only @mentioned for help. Granting status ownership there
-					// would let a guest squad push someone else's in-flight issue
-					// to in_review, so we gate it on the issue actually being
-					// assigned to this squad.
-					ownsIssueStatus := issue.AssigneeType.Valid &&
-						issue.AssigneeType.String == "squad" &&
-						uuidToString(issue.AssigneeID) == uuidToString(squad.ID)
-					briefing := buildSquadLeaderBriefing(r.Context(), h.Queries, squad, ownsIssueStatus, leaderWorkflow, requestHasClientCapability(r, protocol.DaemonCapabilityCLICommentSteerV1))
-					if strings.TrimSpace(resp.Agent.Instructions) == "" {
-						resp.Agent.Instructions = briefing
-					} else {
-						resp.Agent.Instructions = resp.Agent.Instructions + "\n\n" + briefing
-					}
-					injected = true
-					slog.Debug("injected squad leader briefing",
-						"squad_id", uuidToString(squad.ID),
-						"squad_name", squad.Name,
-						"leader_agent_id", resp.Agent.ID,
-						"owns_issue_status", ownsIssueStatus,
-					)
-				}
-			}
-			// Every skip above (NULL squad_id, squad hard-deleted, leader
-			// swapped after enqueue) leaves a task the daemon must NOT run
-			// as a leader: it has no roster to delegate to and no protocol
-			// to follow. The daemon derives its leader role from this flag
-			// (MUL-5811), so clearing it here is what keeps
-			// "is_leader_task on the wire ⇔ briefing injected" true, and the
-			// run degrades to an ordinary agent turn exactly as it did when
-			// the daemon inferred the role from the briefing text itself.
-			if !injected {
-				resp.IsLeaderTask = false
-				slog.Warn("squad leader briefing not injected; claim delivered as a non-leader task",
-					"task_id", uuidToString(task.ID),
-					"squad_id", uuidToString(task.SquadID),
-					"agent_id", uuidToString(task.AgentID),
-				)
-			}
-		}
 
 		projectCtx, projectErr := h.resolveClaimProjectContext(r.Context(), issue.ProjectID, issue.WorkspaceID)
 		if projectErr != nil {
@@ -4197,44 +4073,6 @@ func (h *Handler) buildClaimedTaskResponse(r *http.Request, task *db.AgentTaskQu
 					resp.ParentIssueID = qc.ParentIssueID
 				}
 			}
-
-			// Squad-leader briefing injection for quick-create tasks. When
-			// the user picked a squad in the modal, the task runs on the
-			// squad's leader agent (resolved by the handler). Surface the
-			// same Operating Protocol + Roster + user Instructions that
-			// issue-bound squad tasks see, so the leader can decide to
-			// delegate before opening the issue.
-			if resp.Agent != nil && qc.SquadID != "" {
-				wsUUID, wsErr := util.ParseUUID(qc.WorkspaceID)
-				squadUUID, sqErr := util.ParseUUID(qc.SquadID)
-				if wsErr == nil && sqErr == nil {
-					if squad, err := h.Queries.GetSquadInWorkspace(r.Context(), db.GetSquadInWorkspaceParams{
-						ID:          squadUUID,
-						WorkspaceID: wsUUID,
-					}); err == nil && uuidToString(squad.LeaderID) == resp.Agent.ID {
-						// Quick-create has no issue yet — there is no parent
-						// status to own on this turn. Once the leader opens the
-						// issue with the squad as assignee, the issue-bound
-						// claim path above grants ownership.
-						briefing := buildSquadLeaderBriefing(r.Context(), h.Queries, squad, false, leaderNoWorkflow, requestHasClientCapability(r, protocol.DaemonCapabilityCLICommentSteerV1))
-						if strings.TrimSpace(resp.Agent.Instructions) == "" {
-							resp.Agent.Instructions = briefing
-						} else {
-							resp.Agent.Instructions = resp.Agent.Instructions + "\n\n" + briefing
-						}
-						// Surface the squad identity to the daemon so the
-						// quick-create prompt defaults the new issue's
-						// assignee to the squad, not the leader agent.
-						resp.SquadID = uuidToString(squad.ID)
-						resp.SquadName = squad.Name
-						slog.Debug("injected squad leader briefing for quick-create",
-							"squad_id", uuidToString(squad.ID),
-							"squad_name", squad.Name,
-							"leader_agent_id", resp.Agent.ID,
-						)
-					}
-				}
-			}
 		}
 	}
 
@@ -4398,7 +4236,6 @@ func (h *Handler) buildClaimedTaskResponse(r *http.Request, task *db.AgentTaskQu
 
 // worktreeClaimBlockReason returns a user-facing reason when this runtime must
 // not run the task, or "" when it may proceed.
-//
 // The decision is made on the CAPABILITY the daemon advertised on this very
 // request, not on its version string. A daemon without the implementation does
 // not merely lose concurrency — it json-skips execution_mode and runs the task
@@ -4406,7 +4243,6 @@ func (h *Handler) buildClaimedTaskResponse(r *http.Request, task *db.AgentTaskQu
 // could not answer that reliably: the git-describe dev-build exemption that
 // keeps `make daemon` unblocked let a v0.4.23-era daemon straight through, and
 // two tasks silently ran in the user's own directory (MUL-5707).
-//
 // Only resources bound to the claiming runtime's own daemon are considered: a
 // project may carry one local_directory per machine, and another machine's
 // worktree resource says nothing about this one's ability to run the task.
@@ -4636,7 +4472,6 @@ type resolveSkillBundleRef struct {
 // ResolveTaskSkillBundles returns full skill content for refs from a slim
 // claim. The daemon calls this after claim and before execenv.Prepare so
 // runtimes still see complete local skill files at startup.
-//
 // If a requested hash no longer matches the agent's current skill bundle, the
 // endpoint returns the current bundle and hash. Stage 1 does not snapshot skill
 // content at claim time; the daemon validates the returned bundle before
@@ -5192,13 +5027,11 @@ func (h *Handler) emitIssueExecutedOnFirstCompletion(r *http.Request, task *db.A
 // reconcileCommentsOnCompletion replays qualifying comments absent from this
 // run's delivered_comment_ids receipt. Planned/coalesced IDs do not prove the
 // provider received them, particularly with older daemons or deleted comments.
-//
 // Anchor at task creation and exclude the delivered set. A dispatch timestamp
 // would miss a comment whose pre-claim merge lost a race to claiming the task.
 // Replay chronologically through normal enqueue so comments coalesce into one
 // follow-up. That follow-up's later creation time and own receipt bound repetition.
-//
-// Preserve member routing and accepted explicit agent routes, current invocation
+// Preserve member routing and explicit agent routes, current invocation
 // permissions, and self-trigger guards. Do not invent implicit agent conversation
 // routes or wake an unrelated agent from another agent's completion.
 func (h *Handler) reconcileCommentsOnCompletion(ctx context.Context, task *db.AgentTaskQueue) {
@@ -5241,10 +5074,10 @@ func (h *Handler) reconcileCommentsOnCompletion(ctx context.Context, task *db.Ag
 		return
 	}
 	agentID := uuidToString(task.AgentID)
-	// An agent comment bound to this run but never read took the place of
-	// the follow-up its trigger would have queued. It replays like an input
-	// this run had planned, which also covers an implicit route (a worker's
-	// reply reaching its leader) that a timestamp alone would not authorize.
+	// An agent comment that steered this run but was never read took the place
+	// of the follow-up its mention would have queued. It is replayed like any
+	// other mention, and once a follow-up covers it the failed steering receipt
+	// must go, or the UI would invite a member to resend it.
 	unreadSteers := make(map[string]bool)
 	if ids, err := h.Queries.ListUndeliveredTaskSupplementCommentIDs(ctx, task.ID); err == nil {
 		for _, id := range ids {
@@ -5312,11 +5145,10 @@ func (h *Handler) reconcileCommentsOnCompletion(ctx context.Context, task *db.Ag
 			OriginatorUserID:        originatorUserID,
 		})
 		// Agent replies discovered only by timestamp must not start a new
-		// conversation. Replay explicit mentions, or a worker reply that the
-		// creation path already accepted and recorded in this run's input plan.
-		// Recomputed routing still checks current permissions and the self guard.
+		// conversation. Replay explicit mentions only. Recomputed routing
+		// still checks current permissions and the self guard.
 		if actorType != "member" {
-			triggers = keepReplayableAgentTriggers(triggers, slices.Contains(plannedCommentIDs, c.ID) || unreadSteers[uuidToString(c.ID)])
+			triggers = keepReplayableAgentTriggers(triggers)
 		}
 		scoped := make([]commentAgentTrigger, 0, 1)
 		for _, trigger := range triggers {
@@ -5375,23 +5207,17 @@ func (h *Handler) reconcileCommentsOnCompletion(ctx context.Context, task *db.Ag
 	}
 }
 
-// keepReplayableAgentTriggers preserves explicit mentions (MUL-4304) and
-// accepted worker replies recorded in the completing run's plan. A timestamp
-// alone never authorizes replay of an implicit agent route. Member comments
-// retain their full routing and do not pass through this filter.
-func keepReplayableAgentTriggers(triggers []commentAgentTrigger, planned bool) []commentAgentTrigger {
+// keepReplayableAgentTriggers preserves explicit mentions (MUL-4304). A
+// timestamp alone never authorizes replay of an implicit agent route. Member
+// comments retain their full routing and do not pass through this filter.
+func keepReplayableAgentTriggers(triggers []commentAgentTrigger) []commentAgentTrigger {
 	if len(triggers) == 0 {
 		return triggers
 	}
 	filtered := make([]commentAgentTrigger, 0, len(triggers))
 	for _, trigger := range triggers {
-		switch trigger.Source {
-		case commentTriggerSourceMentionAgent, commentTriggerSourceMentionSquadLeader:
+		if trigger.Source == commentTriggerSourceMentionAgent {
 			filtered = append(filtered, trigger)
-		case commentTriggerSourceIssueAssignee, commentTriggerSourceThreadParent:
-			if planned && trigger.NonLeaderAgentReply {
-				filtered = append(filtered, trigger)
-			}
 		}
 	}
 	return filtered
@@ -6406,7 +6232,6 @@ func (h *Handler) CancelTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // familyActiveRunCap bounds a scope=family read.
-//
 // It is a response-size budget set to the shape of the normal case — a handful
 // of runs in flight at once (maintainer call, MUL-6846) — NOT a bound derived
 // from how much work can really be in flight. A family can legitimately exceed
@@ -6416,7 +6241,6 @@ func (h *Handler) CancelTask(w http.ResponseWriter, r *http.Request) {
 // returned set includes queued / dispatched / waiting_local_directory rows,
 // which no execution-slot limit bounds at all — a parent that fans out 200
 // children can have 200 of them enqueued.
-//
 // So truncation here is an ordinary outcome, not a pathological one, and that
 // is exactly why it must be reported. A cap that truncated silently would be
 // worse than no cap: "I saw no run on that sibling" and "the answer was cut
@@ -6436,7 +6260,6 @@ const HeaderActiveRunsTruncated = "X-Active-Runs-Truncated"
 // ActiveRunSummary is one in-flight run as the coordination read reports it:
 // which issue, which agent, what state, since when, and the task id to follow
 // up with `multica issue run-messages`.
-//
 // Deliberately NOT AgentTaskResponse. That type is the execution log's row —
 // result, work_dir, attribution, coalesced comment ids — and it costs roughly
 // 5x the bytes of this one. A caller asking "is anyone working next to me?"
@@ -6456,11 +6279,9 @@ type ActiveRunSummary struct {
 // ListTasksByIssue returns tasks for an issue — the execution history behind
 // the issue-detail sidebar, and the coordination reads behind
 // `multica issue runs --active` / `--siblings`.
-//
 // Two optional query params narrow or widen it; with neither, the response is
 // byte-identical to what it has always been (full history, newest first), which
 // is what the UI and the CLI's short-task-ID resolver both depend on:
-//
 //   - active=true — restrict to in-flight statuses, the same set the
 //     issue-detail "agent live" banner calls active.
 //   - scope=family — widen from this issue to its sub-issue family: the
@@ -6657,7 +6478,6 @@ func issueTimelineTaskResponse(task AgentTaskResponse) AgentTaskResponse {
 // hydrateTaskUsage attaches each run's own token usage to the execution-log
 // rows. One query for the whole issue, then a map join — not one query per
 // task, which would be an N+1 over a list the UI always renders in full.
-//
 // Usage is display metadata: a failure here must not take the execution log
 // down with it, so the error is swallowed and every row keeps its nil Usage,
 // which the UI already renders as "no usage recorded".
@@ -6907,7 +6727,6 @@ type batchIssueGCCheckItem struct {
 // issueGCWire encodes an issue's lifecycle for both GC check endpoints: the
 // four-value `category` a current daemon decides on, and the legacy
 // seven-value `status` enum installed daemons still match literally.
-//
 // `status` predates custom statuses — the daemon tests it against the 7
 // built-in keys and fails closed on anything else (isKnownIssueStatus in
 // daemon/gc.go) — so the stored key cannot be handed back raw. A nonterminal
@@ -6915,12 +6734,10 @@ type batchIssueGCCheckItem struct {
 // four-value category is not in that vocabulary either. GC consumes exactly one
 // lifecycle fact ("is this issue terminal?"), which is why projecting a custom
 // status onto a built-in key here grants it no built-in behavior anywhere else.
-//
 // A status with no lifecycle category — an unresolvable key after a failed
 // catalog read, or a status created since the resolver's snapshot — is returned
 // raw with no category, so every daemon fails closed and reclaims artifacts
 // only. (MUL-7364)
-//
 // Triage does not reach this: it is not a status, and a Triage entry carries an
 // ordinary non-terminal one, which already reclaims artifacts only.
 func issueGCWire(status, category string) (wireStatus, wireCategory string) {
@@ -7082,7 +6899,6 @@ func (h *Handler) GetIssueGCCheck(w http.ResponseWriter, r *http.Request) {
 // (DeleteChatSession in chat.go runs a real DELETE), which the daemon treats
 // as an immediate-clean signal — the user's explicit delete is the strongest
 // reclaim authorization we can get.
-//
 // Same anti-enumeration shape as GetIssueGCCheck: workspace mismatch returns
 // the same 404 so a scoped daemon token can't probe other workspaces.
 func (h *Handler) GetChatSessionGCCheck(w http.ResponseWriter, r *http.Request) {
@@ -7110,7 +6926,6 @@ func (h *Handler) GetChatSessionGCCheck(w http.ResponseWriter, r *http.Request) 
 // an autopilot run's workdir is never reused, so a terminal run is reclaimed on
 // sight while non-terminal status is a skip signal — completed_at is returned
 // for the API contract and diagnostics, not as a TTL anchor.
-//
 // Workspace ownership is resolved via the parent autopilot row.
 func (h *Handler) GetAutopilotRunGCCheck(w http.ResponseWriter, r *http.Request) {
 	runID := chi.URLParam(r, "runId")

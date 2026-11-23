@@ -97,7 +97,6 @@ func (f principalFixture) autopilotWithTrigger(t *testing.T, agentID, apCreatorI
 	autopilotID := f.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id":    f.WorkspaceID,
 		"title":           fmt.Sprintf("principal-ap-%d", n),
-		"assignee_type":   "agent",
 		"assignee_id":     agentID,
 		"status":          "active",
 		"execution_mode":  "run_only",

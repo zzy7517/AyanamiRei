@@ -1101,7 +1101,6 @@ func TestDeleteMember_PrunesAutopilotSubscribers(t *testing.T) {
 	autopilotID := dbfx.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id":    fx.WorkspaceID,
 		"title":           "Revocation autopilot subscriber",
-		"assignee_type":   "agent",
 		"assignee_id":     fx.AgentID,
 		"status":          "active",
 		"execution_mode":  "run_only",
@@ -1142,7 +1141,6 @@ VALUES ($1, 'member', $2), ($1, 'member', $3)
 	otherAutopilotID := dbfx.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id":    otherWorkspaceID,
 		"title":           "Other workspace autopilot subscriber",
-		"assignee_type":   "agent",
 		"assignee_id":     otherAgentID,
 		"status":          "active",
 		"execution_mode":  "run_only",

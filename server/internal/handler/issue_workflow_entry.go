@@ -183,26 +183,19 @@ func (h *Handler) agentRunOnIssue(r *http.Request, actorType string, issue db.Is
 }
 
 // handedToAgent names the agent a write hands the issue to: its new agent
-// assignee, the leader of its new squad assignee, or a workflow step's
-// handler even when that handler already owned the issue. Empty when the
-// write leaves the issue with whoever had it.
-func (h *Handler) handedToAgent(ctx context.Context, prev db.Issue, params db.UpdateIssueParams, handoff bool) string {
+// assignee, or a workflow step's handler even when that handler already
+// owned the issue. Empty when the write leaves the issue with whoever had it.
+func handedToAgent(prev db.Issue, params db.UpdateIssueParams, handoff bool) string {
 	if !params.AssigneeID.Valid {
 		return ""
 	}
 	if !handoff && params.AssigneeType == prev.AssigneeType && params.AssigneeID == prev.AssigneeID {
 		return ""
 	}
-	switch params.AssigneeType.String {
-	case "agent":
-		return uuidToString(params.AssigneeID)
-	case "squad":
-		squad, err := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{ID: params.AssigneeID, WorkspaceID: prev.WorkspaceID})
-		if err == nil && squad.LeaderID.Valid {
-			return uuidToString(squad.LeaderID)
-		}
+	if params.AssigneeType.String != "agent" {
+		return ""
 	}
-	return ""
+	return uuidToString(params.AssigneeID)
 }
 
 // advanceRunStep moves a run's workflow step along with a status change the
@@ -241,14 +234,14 @@ func (h *Handler) lastIssueStatusMover(ctx context.Context, issue db.Issue) stri
 	return ""
 }
 
-// workflowHandoffBrief renders the brief a handoff's agent or squad will
-// read, for the timeline and the handoff confirmation. Members run nothing,
-// so they get none. The run itself reads the brief its claim renders.
+// workflowHandoffBrief renders the brief a handoff's agent will read, for the
+// timeline and the handoff confirmation. Members run nothing, so they get
+// none. The run itself reads the brief its claim renders.
 func (h *Handler) workflowHandoffBrief(ctx context.Context, issue db.Issue, hand *workflowHandoff) string {
 	if hand == nil || !issue.AssigneeType.Valid {
 		return ""
 	}
-	if t := issue.AssigneeType.String; t != "agent" && t != "squad" {
+	if issue.AssigneeType.String != "agent" {
 		return ""
 	}
 	in := h.workflowBriefInput(ctx, issue, hand.def, hand.project)
@@ -277,7 +270,7 @@ func (h *Handler) workflowBriefInput(ctx context.Context, issue db.Issue, def is
 	}
 }
 
-// actorDisplayName names an agent, squad or member for a brief. It falls back
+// actorDisplayName names an agent or member for a brief. It falls back
 // to the actor type so a lookup failure never blocks a handoff.
 func (h *Handler) actorDisplayName(ctx context.Context, wsUUID pgtype.UUID, actorType string, id pgtype.UUID) string {
 	switch actorType {
@@ -285,10 +278,7 @@ func (h *Handler) actorDisplayName(ctx context.Context, wsUUID pgtype.UUID, acto
 		if agent, err := h.Queries.GetAgentInWorkspace(ctx, db.GetAgentInWorkspaceParams{ID: id, WorkspaceID: wsUUID}); err == nil {
 			return agent.Name
 		}
-	case "squad":
-		if squad, err := h.Queries.GetSquadInWorkspace(ctx, db.GetSquadInWorkspaceParams{ID: id, WorkspaceID: wsUUID}); err == nil {
-			return squad.Name
-		}
+
 	case "member":
 		if user, err := h.Queries.GetUser(ctx, id); err == nil {
 			return user.Name
@@ -298,10 +288,9 @@ func (h *Handler) actorDisplayName(ctx context.Context, wsUUID pgtype.UUID, acto
 }
 
 // stopPreviousAssigneeRuns cancels the active runs of whoever a handoff took
-// the issue from — an agent's runs, or every run made on a squad's behalf —
-// when the caller asked for it. A handoff back to the same handler keeps its
-// run, and the agent making the handoff keeps its own: that run is the one
-// making this write.
+// the issue from — the previous agent assignee's runs — when the caller asked
+// for it. A handoff back to the same handler keeps its run, and the agent
+// making the handoff keeps its own: that run is the one making this write.
 func (h *Handler) stopPreviousAssigneeRuns(ctx context.Context, prev, issue db.Issue, actorType, actorID string) {
 	if issue.AssigneeType == prev.AssigneeType && issue.AssigneeID == prev.AssigneeID {
 		return
@@ -327,18 +316,16 @@ func (h *Handler) stopPreviousAssigneeRuns(ctx context.Context, prev, issue db.I
 }
 
 // assigneeActiveRuns lists the unfinished runs of an issue's assignee on it,
-// including deferred work: the agent's own runs, or every run made on a
-// squad's behalf. Members run nothing.
+// including deferred work: the agent's own runs. Members run nothing.
 func (h *Handler) assigneeActiveRuns(ctx context.Context, issue db.Issue) []db.ListAssigneeRunsForHandoffRow {
 	if !issue.AssigneeID.Valid {
 		return nil
 	}
-	assigneeType := issue.AssigneeType.String
-	if assigneeType != "agent" && assigneeType != "squad" {
+	if issue.AssigneeType.String != "agent" {
 		return nil
 	}
 	tasks, err := h.Queries.ListAssigneeRunsForHandoff(ctx, db.ListAssigneeRunsForHandoffParams{
-		IssueID: issue.ID, AssigneeType: assigneeType, AssigneeID: issue.AssigneeID,
+		IssueID: issue.ID, AssigneeID: issue.AssigneeID,
 	})
 	if err != nil {
 		slog.Warn("workflow: list active tasks failed", "issue_id", uuidToString(issue.ID), "error", err)
@@ -352,7 +339,6 @@ func (h *Handler) assigneeActiveRuns(ctx context.Context, issue db.Issue) []db.L
 // no project, or Default with no handoffs. The issue's assignee gets the
 // step's instructions and commands; any other agent working on the issue
 // gets the observer brief, so it does not move a step it does not own.
-//
 // legacyRuntimeRules is true for a daemon that does not advertise
 // protocol.DaemonCapabilityWorkflowStatusRulesV1; see BriefInput.
 func (h *Handler) claimProjectWorkflow(ctx context.Context, issue db.Issue, task *db.AgentTaskQueue, legacyRuntimeRules bool) *TaskProjectWorkflowData {
@@ -377,23 +363,16 @@ func (h *Handler) claimProjectWorkflow(ctx context.Context, issue db.Issue, task
 			in.AssigneeName = h.actorDisplayName(ctx, issue.WorkspaceID, issue.AssigneeType.String, issue.AssigneeID)
 		}
 	}
-	return &TaskProjectWorkflowData{Brief: issueworkflow.Brief(in), stepMoved: stepMoved}
+	return &TaskProjectWorkflowData{Brief: issueworkflow.Brief(in)}
 }
 
 // taskRunsForAssignee reports whether a run works on the issue as its
-// assignee: the assigned agent's own run, or a run made for the assigned
-// squad.
+// assignee: the assigned agent's own run.
 func taskRunsForAssignee(issue db.Issue, task *db.AgentTaskQueue) bool {
 	if task == nil || !issue.AssigneeID.Valid {
 		return false
 	}
-	switch issue.AssigneeType.String {
-	case "agent":
-		return task.AgentID == issue.AssigneeID
-	case "squad":
-		return task.SquadID == issue.AssigneeID
-	}
-	return false
+	return issue.AssigneeType.String == "agent" && task.AgentID == issue.AssigneeID
 }
 
 // stepHandlerName describes who a step hands the issue to, for briefs.

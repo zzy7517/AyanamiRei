@@ -8,8 +8,6 @@ import (
 
 // quickActionTarget is the resolved execution target of an action: the agent
 // that will actually run, plus the display identity the client should show.
-// For a squad binding, Agent is the squad leader and Name is the SQUAD's name,
-// because the squad is what the user bound and what the mention will address.
 type quickActionTarget struct {
 	Agent     db.Agent
 	Name      string
@@ -17,8 +15,7 @@ type quickActionTarget struct {
 	// MentionType is the mention:// scheme the rendered comment must use so
 	// the existing trigger path routes it exactly as a hand-typed mention.
 	MentionType string
-	// MentionID is the id inside the mention link: the agent id, or the SQUAD
-	// id for a squad binding (the trigger path resolves the leader itself).
+	// MentionID is the id inside the mention link: the agent id.
 	MentionID string
 	Found     bool
 }

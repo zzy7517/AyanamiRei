@@ -129,7 +129,6 @@ func TestBriefHasNoParentNotificationGuidance(t *testing.T) {
 			"`@mention` the parent's assignee",
 			"`mention://agent/<id>`",
 			"`mention://member/<id>`",
-			"`mention://squad/<id>`",
 			// Intermediate "do NOT do it yourself" framing (PR #3055
 			// before Bohan's call) — also out per product direction.
 			"**Do NOT post your own parent-notification comment.**",
@@ -143,7 +142,6 @@ func TestBriefHasNoParentNotificationGuidance(t *testing.T) {
 			// come back either.
 			"| Parent assignee | Parent status |",
 			"The same agent as yourself",
-			"| Member or squad |",
 			"### A. Notify the parent",
 			"### B. Choose",
 			"When this issue has `parent_issue_id`:",
@@ -280,11 +278,6 @@ func TestStatusRuleIsFactJudgmentAtBothMoments(t *testing.T) {
 	}
 	if !strings.Contains(step5, "confirm the status still matches") {
 		t.Errorf("the exit-side status check must be anchored inside step 5\n---\n%s", step5)
-	}
-
-	// The squad-leader bullet must not leak into the ordinary path.
-	if strings.Contains(out, "dispatching members is not delivery") {
-		t.Errorf("ordinary-agent brief must not carry the squad-leader status bullet:\n%s", out)
 	}
 }
 
@@ -541,66 +534,25 @@ func TestIssueWorkflowHonorsAgentIdentity(t *testing.T) {
 	}
 }
 
-// A squad leader's dispatch turn must not read as completion: the end-of-turn
-// fact is in_progress, and in_review waits for the re-trigger that confirms
-// the overall goal is met. Without this bullet the general rule's "delivered →
-// in_review" reading would let a leader close out the parent on the very turn
-// it hands work to members.
-func TestSquadLeaderIssueWorkflowKeepsParentInProgress(t *testing.T) {
-	t.Parallel()
-	const issueID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-	out := buildMetaSkillContent("claude", TaskContextForEnv{
-		IssueID:       issueID,
-		IsSquadLeader: true,
-	})
-
-	for _, want := range []string{
-		"dispatching members is not delivery",
-		"a dispatch turn leaves the parent `in_progress`",
-		"where you confirm the overall goal is met",
-		// The shared no-write default still governs leader conversation turns.
-		"questions, discussion, and acknowledgements never touch status",
-	} {
-		if !strings.Contains(out, want) {
-			t.Errorf("squad-leader issue brief missing %q\n---\n%s", want, out)
-		}
-	}
-}
-
-// TestProtocolHeadingInInstructionsGetsNoLeaderBrief is the brief-side half of
-// the MUL-5811 negative regression. IsSquadLeader now comes from the claim's
-// is_leader_task / squad_id, so an ordinary agent that documents a
-// "## Squad Operating Protocol" section in its own instructions must get the
-// ordinary brief — its instructions rendered verbatim under Agent Identity,
-// and not one leader-only branch.
-func TestProtocolHeadingInInstructionsGetsNoLeaderBrief(t *testing.T) {
+// Agent instructions reach the brief verbatim: the brief renders what the
+// agent's own instructions say and never edits or filters them, and the
+// comment-triggered issue workflow keeps its unconditional reply obligation.
+func TestAgentInstructionsReachBriefVerbatim(t *testing.T) {
 	t.Parallel()
 
-	const instructions = "I write docs about squads.\n\n## Squad Operating Protocol\n\nHow leaders dispatch work..."
+	const instructions = "I write docs about issue workflows.\n\n## How I review changes\n\nRead the diff before the description."
 	out := buildMetaSkillContent("claude", TaskContextForEnv{
 		IssueID:           "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 		TriggerCommentID:  "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
 		AgentName:         "Docs writer",
 		AgentInstructions: instructions,
-		IsSquadLeader:     false,
 	})
 
 	if !strings.Contains(out, instructions) {
 		t.Fatalf("agent instructions must reach the brief verbatim\n---\n%s", out)
 	}
-	for _, banned := range []string{
-		"### Squad maintenance",
-		"multica squad member set-role",
-		"multica squad activity",
-		"unless your outcome is `no_action`",
-		"dispatching members is not delivery",
-	} {
-		if strings.Contains(out, banned) {
-			t.Fatalf("ordinary-agent brief leaked leader-only content %q\n---\n%s", banned, out)
-		}
-	}
 	if !strings.Contains(out, "**Post your final results as a comment — this step is mandatory**") {
-		t.Fatalf("ordinary-agent brief lost the unconditional reply obligation\n---\n%s", out)
+		t.Fatalf("comment-triggered issue brief lost the unconditional reply obligation\n---\n%s", out)
 	}
 }
 
@@ -2003,7 +1955,7 @@ func TestMultiThreadReplyInstructionsFanOut(t *testing.T) {
 		{ThreadID: "c1", ParentID: "c1"},
 		{ThreadID: "c2", ParentID: "c2"},
 		{ThreadID: "c3", ParentID: "c3"},
-	}, false)
+	})
 
 	for _, want := range []string{
 		"3 DISTINCT threads",
@@ -2064,21 +2016,19 @@ func TestMultiThreadReplyInstructionsOSInvariant(t *testing.T) {
 		{ThreadID: "c1", ParentID: "c1"},
 		{ThreadID: "c2", ParentID: "c2"},
 	}
-	for _, leader := range []bool{false, true} {
-		runtimeGOOS = "linux"
-		linux := BuildMultiThreadCommentReplyInstructions("55555555-6666-7777-8888-999999999999", targets, leader)
-		runtimeGOOS = "windows"
-		windows := BuildMultiThreadCommentReplyInstructions("55555555-6666-7777-8888-999999999999", targets, leader)
-		if linux != windows {
-			t.Errorf("fan-out block (leader=%v) must be OS-invariant\nlinux:\n%s\nwindows:\n%s", leader, linux, windows)
-		}
+	runtimeGOOS = "linux"
+	linux := BuildMultiThreadCommentReplyInstructions("55555555-6666-7777-8888-999999999999", targets)
+	runtimeGOOS = "windows"
+	windows := BuildMultiThreadCommentReplyInstructions("55555555-6666-7777-8888-999999999999", targets)
+	if linux != windows {
+		t.Errorf("fan-out block must be OS-invariant\nlinux:\n%s\nwindows:\n%s", linux, windows)
 	}
 }
 
 // Single-thread reply cookbook moved to the per-turn prompt (MUL-5377).
 func TestSingleThreadReplyInstructionsKeepSingleParent(t *testing.T) {
 	t.Parallel()
-	out := BuildCommentReplyInstructions("claude", "55555555-6666-7777-8888-999999999999", "c3", false)
+	out := BuildCommentReplyInstructions("claude", "55555555-6666-7777-8888-999999999999", "c3")
 
 	if strings.Contains(out, "DISTINCT threads") {
 		t.Errorf("single/same-thread instructions must not emit the multi-thread fan-out block, got:\n%s", out)
@@ -2580,9 +2530,8 @@ func TestBriefPointsAtThePlatformSkill(t *testing.T) {
 				t.Errorf("brief does not point at %q:\n%s", tc.want, out)
 			}
 			// Pinned as "the domains your task touches", never a count: a task
-			// that spans squads + issues + mentions needs all three, and
-			// wording that implies one would make the agent act on contracts
-			// it has not read.
+			// that spans several domains needs each of them, and wording that
+			// implies one would make the agent act on contracts it has not read.
 			if !strings.Contains(out, "for the domains your task touches") {
 				t.Errorf("pointer does not route by domain:\n%s", out)
 			}

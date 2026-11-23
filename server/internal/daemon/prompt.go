@@ -448,12 +448,9 @@ func buildQuickCreatePrompt(task Task) string {
 
 	// assignee
 	b.WriteString("- **assignee**:\n")
-	b.WriteString("    - When the user names someone (\"assign to X\" / \"@X\"), call `multica workspace member list --output json`, `multica agent list --output json`, and `multica squad list --output json` and find the matching entity by display name. Squads are first-class assignees too — a squad name (e.g. \"Super Human\") routes work to the squad leader, who then delegates. On a clean unambiguous match, prefer `--assignee-id <uuid>` using the `user_id` (member) or `id` (agent or squad) from that JSON — UUID matching is exact and robust to name collisions in workspaces with overlapping names. `--assignee <name>` (fuzzy) is acceptable as a fallback when names are unambiguous. On no match or ambiguous match, do NOT pass `--assignee`, `--assignee-id`, or `--assignee-picker` — instead append a final line to the description: `Unrecognized assignee: X`.\n")
-	b.WriteString("    - Treat bare @-routing as an assignee directive even when the user did not write the English word \"assign\". This includes Chinese imperatives like `让 @独立团 review 这个 PR`, `给 @X 处理`, or `交给 @X`; strip the leading `@`/`＠` before matching display names. Do not keep that routing wrapper or `@Name` in the description unless it is a true CC-style notification rather than ownership. If the matched entity is a squad, pass the squad's `id` as `--assignee-id`, not the leader agent's id.\n")
-	b.WriteString("    - When the user did NOT name an assignee, pass `--assignee-picker`. The CLI assigns the issue to the agent or squad selected in the quick-create modal using task context. Do not pass `--assignee` or `--assignee-id` for this default, and do not copy any picker UUID into the command. Never leave the issue unassigned in this case.\n\n")
-	if task.SquadID != "" {
-		b.WriteString("    - You are the leader agent running on behalf of the selected squad. For default assignment, use `--assignee-picker` to preserve squad ownership; do not substitute your own agent identity.\n\n")
-	}
+	b.WriteString("    - When the user names someone (\"assign to X\" / \"@X\"), call `multica workspace member list --output json` and `multica agent list --output json` and find the matching entity by display name. On a clean unambiguous match, prefer `--assignee-id <uuid>` using the `user_id` (member) or `id` (agent) from that JSON — UUID matching is exact and robust to name collisions in workspaces with overlapping names. `--assignee <name>` (fuzzy) is acceptable as a fallback when names are unambiguous. On no match or ambiguous match, do NOT pass `--assignee`, `--assignee-id`, or `--assignee-picker` — instead append a final line to the description: `Unrecognized assignee: X`.\n")
+	b.WriteString("    - Treat bare @-routing as an assignee directive even when the user did not write the English word \"assign\". This includes Chinese imperatives like `让 @独立团 review 这个 PR`, `给 @X 处理`, or `交给 @X`; strip the leading `@`/`＠` before matching display names. Do not keep that routing wrapper or `@Name` in the description unless it is a true CC-style notification rather than ownership.\n")
+	b.WriteString("    - When the user did NOT name an assignee, pass `--assignee-picker`. The CLI assigns the issue to the agent selected in the quick-create modal using task context. Do not pass `--assignee` or `--assignee-id` for this default, and do not copy any picker UUID into the command. Never leave the issue unassigned in this case.\n\n")
 
 	if task.QuickCreateDueDate != "" {
 		fmt.Fprintf(&b, "- **due-date**: required for this run. Pass `--due-date %s`; the quick-create selection is authoritative.\n\n", task.QuickCreateDueDate)
@@ -704,9 +701,9 @@ func buildCommentPromptWithOptions(task Task, provider string, opts promptOpts) 
 	// group upstream, so they keep the ordinary single-parent path below and can
 	// never be split into duplicate replies.
 	if targets := commentReplyThreads(task); len(targets) >= 2 {
-		b.WriteString(execenv.BuildMultiThreadCommentReplyInstructions(task.IssueID, targets, taskIsSquadLeader(task)))
+		b.WriteString(execenv.BuildMultiThreadCommentReplyInstructions(task.IssueID, targets))
 	} else {
-		b.WriteString(execenv.BuildCommentReplyInstructions(provider, task.IssueID, task.TriggerCommentID, taskIsSquadLeader(task)))
+		b.WriteString(execenv.BuildCommentReplyInstructions(provider, task.IssueID, task.TriggerCommentID))
 	}
 	return b.String()
 }
@@ -1024,43 +1021,6 @@ func buildAutopilotPrompt(task Task) string {
 	// emission point, and a second hand-maintained per-turn copy is exactly
 	// how the two surfaces drifted into conflict before (MUL-5696).
 	return b.String()
-}
-
-// squadBriefingMarker is the first heading of the squad-leader briefing the
-// server appends to Instructions. It is ONLY a legacy role signal — see
-// taskIsSquadLeader — never a role signal against a current server.
-const squadBriefingMarker = "## Squad Operating Protocol"
-
-// taskIsSquadLeader reports whether THIS TASK runs the agent as a squad
-// leader. Leadership is a PER-TASK role — the same agent can be leader one
-// turn and worker the next — and a current server says so explicitly on the
-// wire: `is_leader_task` for issue-bound leader runs, `squad_id` for
-// quick-create runs the squad picker routed to its leader. The claim handler
-// sets each field on exactly the responses it injected a briefing into, and
-// advertises that it did so with `leader_role_resolved`.
-//
-// The role used to be inferred by sniffing Instructions for the briefing's
-// first heading, which made detection depend on user-writable Markdown: any
-// ordinary agent whose own instructions happened to contain that heading was
-// promoted to leader and handed the leader rules (mandatory `multica squad
-// activity`, silent no_action exit).
-//
-// The capability gate is load-bearing, not ceremony. Servers without it split
-// into two groups, and neither can be read by fields alone. Before #4951 the
-// claim response carried no `is_leader_task` at all, so a real leader arrives
-// with the full briefing and both fields at zero — reading fields would
-// silently demote it to a worker. From #4951 until the capability landed the
-// flag IS sent, but nothing yet guaranteed it implies an injected briefing, so
-// a true flag can arrive with no roster and no protocol. Absent capability
-// therefore means "this server never authoritatively answered the question",
-// and the legacy text inference — exactly today's behavior against both
-// groups — is the only correct read. Drop this branch once a minimum server
-// version is enforced (MUL-5811).
-func taskIsSquadLeader(task Task) bool {
-	if !task.LeaderRoleResolved {
-		return task.Agent != nil && strings.Contains(task.Agent.Instructions, squadBriefingMarker)
-	}
-	return task.IsLeaderTask || task.SquadID != ""
 }
 
 // buildEditedTriggerNote explains an edited trigger comment to a resumed

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"testing"
 
@@ -273,38 +272,5 @@ func TestTaskRunsCanSupplementAnswersForTheAgentCaller(t *testing.T) {
 	dbfx.Exec(t, `UPDATE agent_task_queue SET originator_user_id = NULL, accountable_user_id = NULL, originator_source = NULL WHERE id = $1`, f.callerTask)
 	if got := runs(); got[f.taskID] {
 		t.Fatalf("can_supplement = %v for a chain that may not invoke the target", got)
-	}
-}
-
-// A worker's plain reply reaches its squad leader without a mention. When it
-// steered the leader's turn and was never read, completion still replays it.
-func TestAgentImplicitSteerReplaysWhenUnread(t *testing.T) {
-	f := newAgentSteerFixture(t)
-	squadID := dbfx.Squad(t, "Implicit steer squad", f.agentID)
-	dbfx.SquadMember(t, squadID, "agent", f.callerAgent)
-	dbfx.Exec(t, `UPDATE issue SET assignee_type = 'squad', assignee_id = $2 WHERE id = $1`, f.issueID, squadID)
-	dbfx.Exec(t, `UPDATE agent_task_queue SET squad_id = $2, is_leader_task = true WHERE id = $1`, f.taskID, squadID)
-	dbfx.Exec(t, `UPDATE agent_task_queue SET squad_id = $2, trigger_comment_id = $3 WHERE id = $1`, f.callerTask, squadID, f.triggerID)
-	created := postAgentComment(t, f.issueID, f.callerAgent, f.callerTask, map[string]any{
-		"content": "The premise is wrong; use the corrected result", "parent_id": f.triggerID, "steer": true,
-	})
-	if n := dbfx.Count(t, `SELECT count(*) FROM task_supplement WHERE task_id = $1 AND comment_id = $2`, f.taskID, created.ID); n != 1 {
-		t.Fatalf("setup: %d steering bindings; outcomes %+v", n, created.TriggerOutcomes)
-	}
-	completeTaskViaDaemon(t, f.taskID)
-	if n := dbfx.Count(t, `SELECT count(*) FROM agent_task_queue WHERE agent_id = $1 AND trigger_comment_id = $2`, f.agentID, created.ID); n != 1 {
-		t.Fatalf("unread implicit steer follow-ups = %d, want 1", n)
-	}
-}
-
-func TestSquadSteerRuleFollowsTheDaemonsCLI(t *testing.T) {
-	if testHandler == nil {
-		t.Skip("database not available")
-	}
-	squad := db.Squad{Name: "Steer rule"}
-	with := buildSquadLeaderBriefing(t.Context(), testHandler.Queries, squad, false, leaderNoWorkflow, true)
-	without := buildSquadLeaderBriefing(t.Context(), testHandler.Queries, squad, false, leaderNoWorkflow, false)
-	if !strings.Contains(with, "--steer-active") || strings.Contains(without, "--steer") {
-		t.Fatalf("steer rule: with=%v without=%v", strings.Contains(with, "--steer-active"), strings.Contains(without, "--steer"))
 	}
 }

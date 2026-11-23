@@ -17,6 +17,7 @@ import (
 
 	"github.com/multica-ai/multica/server/internal/cli"
 	"github.com/multica-ai/multica/server/internal/daemon/execenv"
+	dterminal "github.com/multica-ai/multica/server/internal/daemon/terminal"
 	"github.com/multica-ai/multica/server/pkg/agent"
 )
 
@@ -91,6 +92,10 @@ const (
 	DefaultAutoUpdateCheckInterval = 6 * time.Hour // how often the daemon polls GitHub for a newer CLI release
 )
 
+// DefaultTaskTreeRootName is the directory under the home directory that the
+// task trees live in when MULTICA_TASK_ROOT is not set.
+const DefaultTaskTreeRootName = "ayanami-tasks"
+
 // DefaultGCArtifactPatterns lists basename matches that the GC loop treats as
 // regenerable build artifacts. Kept conservative: only directories that are
 // always cheap to recreate (`pnpm install`, `next build`, `turbo build`). Things
@@ -112,6 +117,8 @@ type Config struct {
 	Profile                        string                // profile name (empty = default)
 	Agents                         map[string]AgentEntry // keyed by provider: claude, codebuddy, codex, copilot, opencode, codearts, deveco, openclaw, hermes, pi, cursor, kimi, reasonix, dsh, kiro, antigravity, qoder, qoderclicn, traecli, grok, qwen, qwenpaw, droid, amp, mcode, muse, devin, dim, zeroclaw, museapp (plus built-in runtime identities from agent.BuiltinRuntimes, e.g. omp)
 	WorkspacesRoot                 string                // base path for execution envs (default: ~/multica_workspaces)
+	TerminalRoot                   string                // absolute directory web terminals may open in; empty disables terminals on this daemon (MULTICA_TERMINAL_ROOT)
+	TaskRoot                       string                // where the task trees (git worktrees) task sessions run in live (default: ~/ayanami-tasks); the daemon owns it
 	HealthPort                     int                   // local HTTP port for health checks (default: 19514)
 	MaxConcurrentTasks             int                   // max tasks running in parallel (default: 20)
 	GCEnabled                      bool                  // enable periodic workspace garbage collection (default: true)
@@ -547,6 +554,22 @@ func LoadConfig(overrides Overrides) (Config, error) {
 		return Config{}, err
 	}
 
+	// Task trees: env > default (~/ayanami-tasks). A root inside a git
+	// checkout is refused when the worker starts, not here: LoadConfig does
+	// not run git.
+	taskRoot := strings.TrimSpace(os.Getenv("MULTICA_TASK_ROOT"))
+	if taskRoot == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return Config{}, fmt.Errorf("resolve home directory: %w (set MULTICA_TASK_ROOT to override)", err)
+		}
+		taskRoot = filepath.Join(home, DefaultTaskTreeRootName)
+	}
+	taskRoot, err = filepath.Abs(taskRoot)
+	if err != nil {
+		return Config{}, fmt.Errorf("resolve absolute task root: %w", err)
+	}
+
 	// Health port: override > default
 	healthPort := DefaultHealthPort
 	if overrides.HealthPort > 0 {
@@ -653,6 +676,8 @@ func LoadConfig(overrides Overrides) (Config, error) {
 		Profile:                         profile,
 		Agents:                          agents,
 		WorkspacesRoot:                  workspacesRoot,
+		TerminalRoot:                    strings.TrimSpace(os.Getenv(dterminal.RootEnv)),
+		TaskRoot:                        taskRoot,
 		GCEnabled:                       gcEnabled,
 		GCInterval:                      gcInterval,
 		GCTTL:                           gcTTL,

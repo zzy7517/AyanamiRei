@@ -541,8 +541,8 @@ func TestCheckOrigin(t *testing.T) {
 			if tc.fwdHost != "" {
 				r.Header.Set("X-Forwarded-Host", tc.fwdHost)
 			}
-			if got := checkOrigin(r); got != tc.want {
-				t.Fatalf("checkOrigin(host=%q, origin=%q, X-Forwarded-Host=%q, remoteAddr=%q) = %v, want %v", tc.host, tc.origin, tc.fwdHost, tc.remoteAddr, got, tc.want)
+			if got := CheckOrigin(r); got != tc.want {
+				t.Fatalf("CheckOrigin(host=%q, origin=%q, X-Forwarded-Host=%q, remoteAddr=%q) = %v, want %v", tc.host, tc.origin, tc.fwdHost, tc.remoteAddr, got, tc.want)
 			}
 		})
 	}

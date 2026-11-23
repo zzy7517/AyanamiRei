@@ -30,6 +30,9 @@ const (
 	DaemonAuthPathPAT         = "pat"
 	DaemonAuthPathCloudPAT    = "cloud_pat"
 	DaemonAuthPathJWT         = "jwt"
+	// DaemonAuthPathSharedToken is the pre-shared token (MULTICA_AUTH_TOKEN),
+	// which authenticates like the PAT path it sits next to.
+	DaemonAuthPathSharedToken = "shared_token"
 )
 
 // DaemonWorkspaceIDFromContext returns the workspace ID set by DaemonAuth middleware.
@@ -45,7 +48,8 @@ func DaemonIDFromContext(ctx context.Context) string {
 }
 
 // DaemonAuthPathFromContext returns which token kind authenticated this
-// request — "daemon_token", "pat", "cloud_pat", or "jwt" — for telemetry.
+// request — "daemon_token", "pat", "cloud_pat", "jwt" or "shared_token" — for
+// telemetry.
 // Empty when the request did not pass through DaemonAuth.
 func DaemonAuthPathFromContext(ctx context.Context) string {
 	p, _ := ctx.Value(ctxKeyDaemonAuthPath).(string)
@@ -153,6 +157,19 @@ func DaemonAuth(queries *db.Queries, patCache *auth.PATCache, daemonCache *auth.
 			if tokenString == authHeader {
 				slog.Debug("daemon_auth: invalid format", "path", r.URL.Path)
 				writeError(w, http.StatusUnauthorized, "invalid authorization format")
+				return
+			}
+
+			// Pre-shared token: accepted wherever the PAT fallback below is, and
+			// checked first because the operator chooses the string, so there is
+			// no prefix to branch on. See middleware.Auth for the same branch.
+			if userID, ok := auth.ResolveSharedToken(tokenString); ok {
+				if rejectTemporarilyDisabledUser(w, r, userID, "", DaemonAuthPathSharedToken) {
+					return
+				}
+				r.Header.Set("X-User-ID", userID)
+				ctx := context.WithValue(r.Context(), ctxKeyDaemonAuthPath, DaemonAuthPathSharedToken)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 

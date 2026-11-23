@@ -315,9 +315,7 @@ ws_labels AS MATERIALIZED (
 ws_skills AS MATERIALIZED (
     SELECT id FROM skill WHERE workspace_id = $1
 ),
-ws_squads AS MATERIALIZED (
-    SELECT id FROM squad WHERE workspace_id = $1
-),
+
 ws_sessions AS MATERIALIZED (
     SELECT id FROM chat_session WHERE workspace_id = $1
 ),
@@ -451,10 +449,7 @@ deleted_daemon_connections AS (
     DELETE FROM daemon_connection
     WHERE agent_id IN (SELECT id FROM ws_agents)
 ),
-deleted_squad_members AS (
-    DELETE FROM squad_member
-    WHERE squad_id IN (SELECT id FROM ws_squads)
-),
+
 deleted_project_resources AS (
     DELETE FROM project_resource WHERE workspace_id = $1
 ),
@@ -558,6 +553,9 @@ deleted_issue_environment_commands AS (
 ),
 deleted_issue_environment_configs AS (
     DELETE FROM issue_environment_config WHERE workspace_id = $1
+),
+deleted_issue_project_scopes AS (
+    DELETE FROM issue_project_scope WHERE workspace_id = $1
 ),
 deleted_workspace_app_settings AS (
     DELETE FROM workspace_app_setting WHERE workspace_id = $1
@@ -714,11 +712,8 @@ func (q *Queries) DeleteWorkspaceRuntimesAndProjects(ctx context.Context, worksp
 	return err
 }
 
-const deleteWorkspaceSquadsAndSkills = `-- name: DeleteWorkspaceSquadsAndSkills :exec
-WITH deleted_squads AS (
-    DELETE FROM squad WHERE squad.workspace_id = $1
-),
-deleted_skill_versions AS (
+const deleteWorkspaceSkills = `-- name: DeleteWorkspaceSkills :exec
+WITH deleted_skill_versions AS (
     -- Keyed by skill_id so the delete uses idx_skill_version_skill_version.
     DELETE FROM skill_version
     WHERE skill_version.skill_id IN (SELECT skill.id FROM skill WHERE skill.workspace_id = $1)
@@ -726,8 +721,8 @@ deleted_skill_versions AS (
 DELETE FROM skill WHERE skill.workspace_id = $1
 `
 
-func (q *Queries) DeleteWorkspaceSquadsAndSkills(ctx context.Context, workspaceID pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteWorkspaceSquadsAndSkills, workspaceID)
+func (q *Queries) DeleteWorkspaceSkills(ctx context.Context, workspaceID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteWorkspaceSkills, workspaceID)
 	return err
 }
 

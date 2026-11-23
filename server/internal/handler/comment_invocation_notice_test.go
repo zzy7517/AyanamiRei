@@ -21,17 +21,16 @@ func TestCommentInvocationDeniedNoticePersistsWithoutDisclosure(t *testing.T) {
 	}
 	privateID, _, readerID := privateAgentTestFixture(t)
 	allowedID := createHandlerTestAgent(t, "Allowed notice target", nil)
-	squadID := createCommentTriggerPreviewSquad(t, "Denied notice squad", privateID)
 	foreignWorkspace := dbfx.Workspace(t, "Other notice workspace", "notice-"+uuid.NewString())
 	foreignID := dbfx.Agent(t, "Other workspace secret", handlerTestRuntimeID(t), testutil.Cols{"workspace_id": foreignWorkspace})
 	missingID := uuid.NewString()
 	issueID := dbfx.Issue(t, "Persist denied mentions")
 	dbfx.Cleanup(t, `DELETE FROM comment WHERE issue_id = $1`, issueID)
 	dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE issue_id = $1`, issueID)
-	content := fmt.Sprintf("[@Private alias](mention://agent/%s) [@Missing alias](mention://agent/%s) [@Foreign alias](mention://agent/%s) [@Team alias](mention://squad/%s) [@Allowed alias](mention://agent/%s)", privateID, missingID, foreignID, squadID, allowedID)
+	content := fmt.Sprintf("[@Private alias](mention://agent/%s) [@Missing alias](mention://agent/%s) [@Foreign alias](mention://agent/%s) [@Allowed alias](mention://agent/%s)", privateID, missingID, foreignID, allowedID)
 	preview := previewCommentTriggersForTest(t, issueID, map[string]any{"content": content})
-	if len(preview.Blocked) != 4 {
-		t.Fatalf("blocked preview = %+v, want four targets", preview.Blocked)
+	if len(preview.Blocked) != 3 {
+		t.Fatalf("blocked preview = %+v, want three targets", preview.Blocked)
 	}
 	var count int
 	dbfx.QueryRow(t, `SELECT count(*) FROM comment WHERE issue_id = $1`, issueID).Scan(&count)
@@ -50,7 +49,7 @@ func TestCommentInvocationDeniedNoticePersistsWithoutDisclosure(t *testing.T) {
 	})
 	var posted CommentResponse
 	testutil.Call(t, h.CreateComment, withURLParam(newRequest(http.MethodPost, "/api/issues/"+issueID+"/comments", map[string]any{"content": content}), "id", issueID)).Want(http.StatusCreated).JSON(&posted)
-	if len(posted.TriggerOutcomes) != 5 || findCommentOutcome(t, posted.TriggerOutcomes, allowedID).Status != DispatchQueued {
+	if len(posted.TriggerOutcomes) != 4 || findCommentOutcome(t, posted.TriggerOutcomes, allowedID).Status != DispatchQueued {
 		t.Fatalf("partial submission outcomes = %+v", posted.TriggerOutcomes)
 	}
 	if len(notices) != 1 {
@@ -60,12 +59,12 @@ func TestCommentInvocationDeniedNoticePersistsWithoutDisclosure(t *testing.T) {
 	if notice.ParentID == nil || *notice.ParentID != posted.ID || notice.Type != "system" {
 		t.Fatalf("notice is not a system reply to the submitted comment: %+v", notice)
 	}
-	for _, alias := range []string{"Private alias", "Missing alias", "Foreign alias", "Team alias"} {
+	for _, alias := range []string{"Private alias", "Missing alias", "Foreign alias"} {
 		if !strings.Contains(notice.Content, alias) {
 			t.Errorf("notice omitted %q: %s", alias, notice.Content)
 		}
 	}
-	if strings.Count(notice.Content, "Target not found or permission not granted") != 4 {
+	if strings.Count(notice.Content, "Target not found or permission not granted") != 3 {
 		t.Errorf("denied targets do not share the generic reason: %s", notice.Content)
 	}
 	for _, secret := range []string{"private-access-test-agent", "Other workspace secret", "private-agent-owner@multica.test", "Allowed alias"} {
@@ -100,21 +99,26 @@ func TestCommentTargetUnavailableNoticeCoversUnresolvedIds(t *testing.T) {
 		t.Skip("database not available")
 	}
 	allowedID := createHandlerTestAgent(t, "Unresolved notice control", nil)
+	archivedID := createHandlerTestAgent(t, "Archived notice target", nil)
+	dbfx.Exec(t, `UPDATE agent SET archived_at = now() WHERE id = $1`, archivedID)
 	issueID := dbfx.Issue(t, "Unresolved mention notice")
 	dbfx.Cleanup(t, `DELETE FROM comment WHERE issue_id = $1`, issueID)
 	dbfx.Cleanup(t, `DELETE FROM agent_task_queue WHERE issue_id = $1`, issueID)
-	// A malformed id (7-char first group) fails util.ParseUUID and a missing
-	// squad id resolves to no squad — both block with target_unavailable, not
-	// invocation_not_allowed, yet the author still deserves a saved receipt.
-	content := fmt.Sprintf("[@Typo alias](mention://agent/e3e3e4c-79f7-4e77-8c0d-7d0a6d462005) [@Gone team](mention://squad/%s) [@Fine](mention://agent/%s) go", uuid.NewString(), allowedID)
+	// A malformed id (7-char first group) fails util.ParseUUID and an archived
+	// agent resolves to no runnable target — both block with target_unavailable,
+	// not invocation_not_allowed, yet the author still deserves a saved receipt.
+	content := fmt.Sprintf("[@Typo alias](mention://agent/e3e3e4c-79f7-4e77-8c0d-7d0a6d462005) [@Gone alias](mention://agent/%s) [@Fine](mention://agent/%s) go", archivedID, allowedID)
 	var posted CommentResponse
 	testutil.Call(t, testHandler.CreateComment, withURLParam(newRequest(http.MethodPost, "/api/issues/"+issueID+"/comments", map[string]any{"content": content}), "id", issueID)).Want(http.StatusCreated).JSON(&posted)
 	if findCommentOutcome(t, posted.TriggerOutcomes, "e3e3e4c-79f7-4e77-8c0d-7d0a6d462005").ReasonCode != ReasonTargetUnavailable {
 		t.Fatalf("malformed mention is not target_unavailable: %+v", posted.TriggerOutcomes)
 	}
+	if findCommentOutcome(t, posted.TriggerOutcomes, archivedID).ReasonCode != ReasonTargetUnavailable {
+		t.Fatalf("archived mention is not target_unavailable: %+v", posted.TriggerOutcomes)
+	}
 	var notice string
 	dbfx.QueryRow(t, `SELECT content FROM comment WHERE parent_id = $1 AND author_type = 'system'`, posted.ID).Scan(&notice)
-	for _, alias := range []string{"Typo alias", "Gone team"} {
+	for _, alias := range []string{"Typo alias", "Gone alias"} {
 		if !strings.Contains(notice, alias) {
 			t.Errorf("notice omitted unresolved target %q: %q", alias, notice)
 		}
@@ -132,14 +136,14 @@ func TestCommentInvocationDeniedNoticeForAgentEditsKeepsHistory(t *testing.T) {
 		t.Skip("database not available")
 	}
 	privateID, _, _ := privateAgentTestFixture(t)
-	leaderID := createHandlerTestAgent(t, "Denied handoff leader", nil)
+	authorID := createHandlerTestAgent(t, "Denied handoff author", nil)
 	issueID := dbfx.Issue(t, "Denied agent handoff", testutil.Cols{"status": "in_progress"})
 	dbfx.Cleanup(t, `DELETE FROM comment WHERE issue_id = $1`, issueID)
-	sourceTaskID := dbfx.Task(t, leaderID, testutil.Cols{"issue_id": issueID, "runtime_id": handlerTestRuntimeID(t), "status": "running", "originator_user_id": testUserID, "accountable_user_id": testUserID})
-	content := fmt.Sprintf("[@Worker alias](mention://agent/%s) take over", privateID)
+	sourceTaskID := dbfx.Task(t, authorID, testutil.Cols{"issue_id": issueID, "runtime_id": handlerTestRuntimeID(t), "status": "running", "originator_user_id": testUserID, "accountable_user_id": testUserID})
+	content := fmt.Sprintf("[@Target alias](mention://agent/%s) take over", privateID)
 	request := func(method, path string, body any) *http.Request {
 		req := newRequest(method, path, body)
-		req.Header.Set("X-Agent-ID", leaderID)
+		req.Header.Set("X-Agent-ID", authorID)
 		req.Header.Set("X-Task-ID", sourceTaskID)
 		return req
 	}

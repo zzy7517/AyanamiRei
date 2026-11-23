@@ -785,8 +785,7 @@ func seedRunOnlyAutopilot(t *testing.T, pool *pgxpool.Pool, workspaceID, agentID
 	t.Helper()
 	ctx := context.Background()
 	if err := pool.QueryRow(ctx, `
-		INSERT INTO autopilot (workspace_id, title, assignee_type, assignee_id, status, execution_mode, created_by_type, created_by_id)
-		VALUES ($1, 'run-only ap', 'agent', $2, 'active', 'run_only', 'member', $3) RETURNING id`,
+		INSERT INTO autopilot (workspace_id, title, assignee_id, status, execution_mode, created_by_type, created_by_id) VALUES ($1, 'run-only ap', $2, 'active', 'run_only', 'member', $3) RETURNING id`,
 		workspaceID, agentID, creatorID).Scan(&autopilotID); err != nil {
 		t.Fatalf("seed autopilot: %v", err)
 	}
@@ -931,8 +930,7 @@ func TestDispatchRunOnlyScheduleStaysWithTriggerCreator(t *testing.T) {
 
 	var autopilotID string
 	if err := pool.QueryRow(ctx, `
-		INSERT INTO autopilot (workspace_id, title, assignee_type, assignee_id, status, execution_mode, created_by_type, created_by_id)
-		VALUES ($1, 'dispatch-transfer-ap', 'agent', $2, 'active', 'run_only', 'member', $3) RETURNING id`,
+		INSERT INTO autopilot (workspace_id, title, assignee_id, status, execution_mode, created_by_type, created_by_id) VALUES ($1, 'dispatch-transfer-ap', $2, 'active', 'run_only', 'member', $3) RETURNING id`,
 		workspaceID, agentID, creatorA).Scan(&autopilotID); err != nil {
 		t.Fatalf("seed autopilot: %v", err)
 	}

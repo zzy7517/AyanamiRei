@@ -36,7 +36,7 @@ func TestAutopilotWebhookTokenIsNotBroadcastToTheWorkspace(t *testing.T) {
 	fx.QueryRow(t, `SELECT id FROM agent WHERE workspace_id = $1 LIMIT 1`, testWorkspaceID).Scan(&agentID)
 	autopilotID := fx.Insert(t, "autopilot", testutil.Cols{
 		"workspace_id": testWorkspaceID, "title": "webhook broadcast redaction",
-		"assignee_id": agentID, "assignee_type": "agent", "execution_mode": "run_only",
+		"assignee_id": agentID, "execution_mode": "run_only",
 		"status": "active", "created_by_type": "member", "created_by_id": testUserID,
 	})
 	triggerID := fx.Insert(t, "autopilot_trigger", testutil.Cols{

@@ -1478,10 +1478,9 @@ func TestParseActorRefUnit(t *testing.T) {
 	}{
 		{"no colon", uuid.NewString(), `"<kind>:<uuid>"`},
 		{"empty string", "", `"<kind>:<uuid>"`},
-		// "agent" and "squad" are assignee kinds deliberately left out of the
-		// V1 value range; both must read as unknown, not silently accepted.
+		// "agent" is an assignee kind deliberately left out of the V1 value
+		// range; it must read as unknown, not silently accepted.
 		{"agent kind", "agent:" + uuid.NewString(), "unknown actor kind"},
-		{"squad kind", "squad:" + uuid.NewString(), "unknown actor kind"},
 		{"user kind", "user:" + uuid.NewString(), "unknown actor kind"},
 		{"empty kind", ":" + uuid.NewString(), "unknown actor kind"},
 		{"kind is case-sensitive", "Member:" + uuid.NewString(), "unknown actor kind"},
@@ -1548,7 +1547,7 @@ func TestParseActorRefListUnit(t *testing.T) {
 	if _, err := parseActorRefList([]any{first, 42}); err == nil {
 		t.Fatalf("non-string element accepted")
 	}
-	if _, err := parseActorRefList([]any{first, "squad:" + uuid.NewString()}); err == nil {
+	if _, err := parseActorRefList([]any{first, "agent:" + uuid.NewString()}); err == nil {
 		t.Fatalf("unknown kind inside a list accepted")
 	}
 }
@@ -1578,7 +1577,6 @@ func TestValidatePropertyValueActorUnit(t *testing.T) {
 		`null`,
 		`"` + uuid.NewString() + `"`,
 		`"agent:` + uuid.NewString() + `"`,
-		`"squad:` + uuid.NewString() + `"`,
 	} {
 		if _, err := validatePropertyValue(actorDef, json.RawMessage(raw)); err == nil {
 			t.Fatalf("actor accepted %s", raw)
@@ -1701,10 +1699,9 @@ func TestIssueActorPropertyValues(t *testing.T) {
 		want  string
 	}{
 		{"unknown member", "member:" + uuid.NewString(), "does not refer to a member"},
-		// Agents and squads are assignable but not referenceable in V1: both
-		// must be refused at the kind check, before any workspace lookup.
+		// Agents are assignable but not referenceable in V1: the kind must be
+		// refused at the kind check, before any workspace lookup.
 		{"agent kind", "agent:" + uuid.NewString(), "unknown actor kind"},
-		{"squad kind", "squad:" + uuid.NewString(), "unknown actor kind"},
 		// writeJSON HTML-escapes the angle brackets, so match the prose part.
 		{"bare uuid", uuid.NewString(), "value must look like"},
 		{"array into actor", []string{memberRef}, "actor reference string"},

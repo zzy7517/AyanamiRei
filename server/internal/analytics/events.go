@@ -27,7 +27,6 @@ const (
 	EventCloudWaitlistJoined           = "cloud_waitlist_joined"
 	EventFeedbackSubmitted             = "feedback_submitted"
 	EventContactSalesSubmitted         = "contact_sales_submitted"
-	EventSquadCreated                  = "squad_created"
 	EventAutopilotCreated              = "autopilot_created"
 )
 
@@ -69,7 +68,6 @@ var metricsOnlyEvents = map[string]struct{}{
 	EventCloudWaitlistJoined:           {},
 	EventFeedbackSubmitted:             {},
 	EventContactSalesSubmitted:         {},
-	EventSquadCreated:                  {},
 	EventAutopilotCreated:              {},
 	// High-volume runtime / autopilot execution-lifecycle telemetry — always
 	// Prometheus-only (Grafana already carries the equivalent counters).
@@ -360,14 +358,10 @@ func ChatMessageSent(userID, workspaceID, chatSessionID, taskID, agentID, runtim
 }
 
 // AutopilotAssignee describes the autopilot's configured target. agent_id is
-// always the agent that will actually execute the work (the squad leader for
-// squad autopilots) so funnels grouping by agent stay consistent. assignee_*
-// fields record the original configuration so reports can tell a solo-agent
-// autopilot apart from a squad one without joining back to the autopilot row.
+// the agent that will execute the work, so funnels grouping by agent stay
+// consistent.
 type AutopilotAssignee struct {
-	AgentID      string // executing agent — leader for squad autopilots
-	AssigneeType string // "agent" or "squad"
-	SquadID      string // empty when AssigneeType != "squad"
+	AgentID string // executing agent
 }
 
 func AutopilotRunStarted(actorID, workspaceID, autopilotID, runID, cadence string, assignee AutopilotAssignee, triggerSource string) Event {
@@ -678,25 +672,6 @@ func ContactSalesSubmitted(inquiryID, companySize, countryRegion, useCase, formS
 	}
 }
 
-// SquadCreated fires when a workspace member or admin creates a new squad.
-// `memberCount` is the number of members the squad was seeded with at
-// creation time (frontend can pre-populate via the picker).
-func SquadCreated(actorID, workspaceID, squadID string, memberCount int) Event {
-	return Event{
-		Name:        EventSquadCreated,
-		DistinctID:  actorID,
-		WorkspaceID: workspaceID,
-		Properties: withCoreProperties(map[string]any{
-			"squad_id":     squadID,
-			"member_count": int64(memberCount),
-		}, CoreProperties{
-			UserID:      nonAgentUserID(actorID),
-			WorkspaceID: workspaceID,
-			Source:      SourceManual,
-		}),
-	}
-}
-
 // AutopilotCreated fires when a workspace member creates a new autopilot.
 // `cadence` matches the autopilot.cadence enum (hourly/daily/weekly/...
 // /webhook). triggerKind is the initial trigger type (schedule / webhook /
@@ -736,12 +711,7 @@ func autopilotRunEvent(name, actorID, workspaceID, autopilotID, runID, cadence s
 		Source:         SourceAutopilot,
 	})
 	props["autopilot_id"] = autopilotID
-	if assignee.AssigneeType != "" {
-		props["assignee_type"] = assignee.AssigneeType
-	}
-	if assignee.SquadID != "" {
-		props["squad_id"] = assignee.SquadID
-	}
+
 	return Event{
 		Name:        name,
 		DistinctID:  actorID,

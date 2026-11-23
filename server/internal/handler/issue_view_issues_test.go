@@ -65,7 +65,7 @@ func TestIssueViewTableQueryCarriesFiltersVariantAndOrdering(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertIssueViewJSON(t, "spec", spec, `{
-		"scope": {"kind": "workspace", "assignee_types": ["agent", "squad"]},
+		"scope": {"kind": "workspace", "assignee_types": ["agent"]},
 		"filters": {"statuses": ["todo"], "label_ids": ["l1"], "include_sub_issues": false},
 		"sort": {"field": "due_date", "direction": "desc"}
 	}`)

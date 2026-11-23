@@ -15,11 +15,7 @@ const MaxSnooze = 366 * 24 * time.Hour
 // the recipient.
 const (
 	MentionViaMember = "member"
-	// MentionViaSquad is no longer written: an @squad mention only triggers
-	// the squad leader and does not notify squad members. It is kept because
-	// existing inbox rows still carry this value.
-	MentionViaSquad = "squad"
-	MentionViaAll   = "all"
+	MentionViaAll    = "all"
 )
 
 // wakingTypes are the notifications that end a snooze early: each one asks
@@ -35,7 +31,7 @@ var wakingTypes = map[string]bool{
 
 // WakesSnooze reports whether a row of this type ends a snooze on its issue.
 // A mention wakes only when it names the recipient; one that reached them
-// through @all or a squad is counted like any other update.
+// through @all is counted like any other update.
 func WakesSnooze(notifType string, details []byte) bool {
 	if !wakingTypes[notifType] {
 		return false
@@ -49,7 +45,7 @@ func WakesSnooze(notifType string, details []byte) bool {
 	if err := json.Unmarshal(details, &d); err != nil {
 		return true
 	}
-	return d.MentionVia != MentionViaAll && d.MentionVia != MentionViaSquad
+	return d.MentionVia != MentionViaAll
 }
 
 // IsSnoozed reports whether the row is out of the inbox at now.

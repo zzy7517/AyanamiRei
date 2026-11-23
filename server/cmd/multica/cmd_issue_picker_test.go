@@ -20,7 +20,6 @@ func TestRunIssueCreatePickerAssignee(t *testing.T) {
 	const (
 		taskID     = "cccc1111-2222-3333-4444-555566667777"
 		agentID    = "282bdf4e-b502-4ca9-8fae-0c842f973e63"
-		squadID    = "aaaa1111-2222-3333-4444-555555555555"
 		explicitID = "bbbb1111-2222-3333-4444-666666666666"
 	)
 	for _, tc := range []struct {
@@ -30,11 +29,10 @@ func TestRunIssueCreatePickerAssignee(t *testing.T) {
 		serverStatus                       int
 	}{
 		{name: "agent picker", taskID: taskID, pickerType: "agent", pickerID: agentID, args: []string{"--assignee-picker"}, wantType: "agent", wantID: agentID},
-		{name: "squad picker", taskID: taskID, pickerType: "squad", pickerID: squadID, args: []string{"--assignee-picker"}, wantType: "squad", wantID: squadID},
 		{name: "unrecognized assignee omits ownership", taskID: taskID, pickerType: "agent", pickerID: agentID},
 		{name: "ordinary create ignores picker environment", pickerType: "agent", pickerID: agentID},
 		{name: "false picker does not assign", taskID: taskID, pickerType: "agent", pickerID: agentID, args: []string{"--assignee-picker=false"}},
-		{name: "explicit assignee keeps precedence", taskID: taskID, pickerType: "squad", pickerID: squadID, args: []string{"--assignee-id", explicitID}, wantType: "agent", wantID: explicitID},
+		{name: "explicit assignee keeps precedence", taskID: taskID, pickerType: "agent", pickerID: agentID, args: []string{"--assignee-id", explicitID}, wantType: "agent", wantID: explicitID},
 		{name: "explicit empty ID still fails", taskID: taskID, pickerType: "agent", pickerID: agentID, args: []string{"--assignee-id="}, wantErr: "canonical UUID"},
 		{name: "explicit invalid ID still fails", taskID: taskID, pickerType: "agent", pickerID: agentID, args: []string{"--assignee-id", "282df4e-b502-4ca9-8fae-0c842f973e63"}, wantErr: "canonical UUID"},
 		{name: "picker conflicts with name", args: []string{"--assignee-picker", "--assignee", "someone"}, wantErr: "mutually exclusive"},
@@ -70,7 +68,7 @@ func TestRunIssueCreatePickerAssignee(t *testing.T) {
 					json.NewEncoder(w).Encode(map[string]any{"id": "created-issue", "title": "Picker regression"})
 				case "/api/agents":
 					json.NewEncoder(w).Encode([]map[string]any{{"id": explicitID, "name": "explicit-agent"}})
-				case "/api/workspaces/ws-1/members", "/api/squads":
+				case "/api/workspaces/ws-1/members":
 					json.NewEncoder(w).Encode([]map[string]any{})
 				default:
 					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)

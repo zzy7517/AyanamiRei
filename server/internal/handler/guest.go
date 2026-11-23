@@ -37,7 +37,6 @@ const WorkspaceGuestsConfigKey = "workspace_guests"
 // guestsReleased reports whether this deployment offers adding guests. The
 // deployment mode comes from configuration, not from whether the Cloud plan
 // client came up:
-//
 //   - No Cloud URL (self-host): always. There are no Cloud plans.
 //   - A Cloud URL: guests are part of the commercial launch. They are offered
 //     once billing_workspace_subscriptions is on, and the workspace's plan
@@ -87,19 +86,19 @@ func (h *Handler) isGuest(r *http.Request, workspaceID, userID string) bool {
 }
 
 // guestMentionForbidden reports whether content carries a mention a guest may
-// not write: an agent or a squad, which would ask an agent to run, or @all,
+// not write: an agent, which would ask an agent to run, or @all,
 // which would notify the whole workspace. Creating and editing a comment
 // apply the same rule.
 func guestMentionForbidden(content string) bool {
 	for _, m := range util.ParseMentions(content) {
-		if m.Type == "agent" || m.Type == "squad" || m.IsMentionAll() {
+		if m.Type == "agent" || m.IsMentionAll() {
 			return true
 		}
 	}
 	return false
 }
 
-const guestMentionForbiddenMessage = "guests cannot mention agents, squads or everyone"
+const guestMentionForbiddenMessage = "guests cannot mention agents or everyone"
 
 // refuseGuestMention writes a 403 when a guest member writes a comment with a
 // mention guestMentionForbidden rejects.

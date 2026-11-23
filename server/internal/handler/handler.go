@@ -46,6 +46,7 @@ import (
 	"github.com/multica-ai/multica/server/internal/seatcapacity"
 	"github.com/multica-ai/multica/server/internal/service"
 	"github.com/multica-ai/multica/server/internal/storage"
+	"github.com/multica-ai/multica/server/internal/terminal"
 	"github.com/multica-ai/multica/server/internal/themestore"
 	"github.com/multica-ai/multica/server/internal/util"
 	"github.com/multica-ai/multica/server/internal/util/secretbox"
@@ -259,6 +260,9 @@ type Handler struct {
 	// Collab is the live co-editing service for docs. Nil turns live editing
 	// off: docs save through the REST autosave path.
 	Collab *collab.Client
+	// Terminal relays the web terminal between browsers and daemons. Nil
+	// disables it: its routes answer 500 terminal_misconfigured.
+	Terminal *terminal.Terminal
 	// ThemeStore serves the community theme registry. Nil only when
 	// MULTICA_THEME_REGISTRY_URL is invalid: its routes return 404 and
 	// /api/config omits it.

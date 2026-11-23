@@ -56,7 +56,6 @@ func restrictedTaskResponse(full AgentTaskResponse) AgentTaskResponse {
 		Attempt:       full.Attempt,
 		MaxAttempts:   full.MaxAttempts,
 		ParentTaskID:  full.ParentTaskID,
-		IsLeaderTask:  full.IsLeaderTask,
 		CreatedAt:     full.CreatedAt,
 		Kind:          full.Kind,
 		Usage:         full.Usage,

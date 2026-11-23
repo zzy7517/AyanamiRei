@@ -140,10 +140,9 @@ func TestUpdateAutopilot_UnboundAgentCannotResume(t *testing.T) {
 	var autopilotID string
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO autopilot (
-			workspace_id, title, assignee_type, assignee_id, status,
+			workspace_id, title, assignee_id, status,
 			execution_mode, created_by_type, created_by_id
-		)
-		VALUES ($1, 'cannot resume unbound', 'agent', $2, 'active',
+		) VALUES ($1, 'cannot resume unbound', $2, 'active',
 			'run_only', 'member', $3)
 		RETURNING id
 	`, testWorkspaceID, agentID, testUserID).Scan(&autopilotID); err != nil {

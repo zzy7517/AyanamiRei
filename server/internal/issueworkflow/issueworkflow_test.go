@@ -111,7 +111,6 @@ func TestValidateHandoff(t *testing.T) {
 	}{
 		"not a column":      {step: Step{StatusKey: "nope", Handler: Handler{Type: HandlerProjectLead}}, want: "not part"},
 		"needs an id":       {step: Step{StatusKey: "implement", Handler: Handler{Type: HandlerAgent}}, want: "choose a agent"},
-		"squad needs an id": {step: Step{StatusKey: "implement", Handler: Handler{Type: HandlerSquad}}, want: "choose a squad"},
 		"unknown handler":   {step: Step{StatusKey: "implement", Handler: Handler{Type: "robot"}}, want: "unknown handler"},
 		"backlog parks":     {step: Step{StatusKey: "backlog", Handler: Handler{Type: HandlerProjectLead}}, want: "cannot be handed off"},
 		"done finishes":     {step: Step{StatusKey: "done", Handler: Handler{Type: HandlerProjectLead}}, want: "cannot be handed off"},
@@ -128,9 +127,6 @@ func TestValidateHandoff(t *testing.T) {
 	}
 	if err := ValidateHandoff(NormalizeHandoff(Step{StatusKey: "todo", Handler: Handler{Type: HandlerProjectLead}}), def); err != nil {
 		t.Fatalf("todo may hand off: %v", err)
-	}
-	if err := ValidateHandoff(Step{StatusKey: "implement", Handler: Handler{Type: HandlerSquad, ID: testAgentID}}, def); err != nil {
-		t.Fatalf("squad may receive a handoff: %v", err)
 	}
 }
 

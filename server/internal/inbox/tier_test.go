@@ -54,6 +54,6 @@ func TestIssueOwner_IsSomeoneElses(t *testing.T) {
 		t.Error("an issue assigned to u2 is someone else's for u1")
 	}
 	if !(IssueOwner{assigned: true}).IsSomeoneElses("u1") {
-		t.Error("a squad's issue is someone else's")
+		t.Error("an issue assigned to an agent without an owner is someone else's")
 	}
 }

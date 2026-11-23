@@ -149,6 +149,7 @@ func TestRegisterListeners_PrivateProjectEventsReachOnlyItsAudience(t *testing.T
 	private := []events.Event{
 		{Type: protocol.EventIssueUpdated, Payload: map[string]any{"issue": map[string]any{"id": ppSecretIssue, "project_id": ppPrivate}}},
 		{Type: protocol.EventIssueUpdated, Payload: map[string]any{"issue_id": ppSecretIssue}},
+		{Type: protocol.EventIssueAgentReplied, Payload: map[string]any{"issue_id": ppSecretIssue, "agent_replied_at": "2026-01-02T03:04:05Z"}},
 		{Type: protocol.EventCommentCreated, Payload: map[string]any{"comment": map[string]any{"id": ppSecretComment, "issue_id": ppSecretIssue}}},
 		{Type: protocol.EventProjectUpdated, Payload: map[string]any{"project": map[string]any{"id": ppPrivate}}},
 		{Type: protocol.EventProjectMembersChanged, Payload: map[string]any{"project_id": ppPrivate}},
@@ -181,6 +182,7 @@ func TestRegisterListeners_PrivateProjectEventsReachOnlyItsAudience(t *testing.T
 	public := []events.Event{
 		{Type: protocol.EventIssueUpdated, Payload: map[string]any{"issue": map[string]any{"id": ppPublicIssue, "project_id": nil}}},
 		{Type: protocol.EventIssueUpdated, Payload: map[string]any{"issue_id": ppPublicIssue}},
+		{Type: protocol.EventIssueAgentReplied, Payload: map[string]any{"issue_id": ppPublicIssue, "agent_replied_at": nil}},
 		// A deleted issue cannot be resolved: keep fanout, never go silent.
 		{Type: protocol.EventIssueDeleted, Payload: map[string]any{"issue_id": "00000000-0000-0000-0000-00000000dead"}},
 		{Type: protocol.EventAgentStatus, Payload: map[string]any{"agent_id": "a"}},

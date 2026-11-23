@@ -89,8 +89,8 @@ var workflowHandoffSetCmd = &cobra.Command{
 	Long: `Set the handoff of one step. Only the flags you pass change; the rest of
 the step is kept.
 
---handler accepts none, project_lead, creator, or a member, agent, or squad
-name or UUID.`,
+--handler accepts none, project_lead, creator, or a member or agent name or
+UUID.`,
 	Args: exactArgs(2),
 	RunE: runWorkflowHandoffSet,
 }
@@ -151,7 +151,7 @@ func init() {
 
 	workflowDeleteCmd.Flags().String("output", "table", "Output format: table or json")
 
-	workflowHandoffSetCmd.Flags().String("handler", "", "none, project_lead, creator, or a member/agent/squad name or UUID")
+	workflowHandoffSetCmd.Flags().String("handler", "", "none, project_lead, creator, or a member/agent name or UUID")
 	workflowHandoffSetCmd.Flags().String("instructions", "", "Instructions the handler's run gets")
 	workflowHandoffSetCmd.Flags().String("instructions-file", "", "Read instructions from a file")
 	workflowHandoffSetCmd.Flags().String("next", "", "Status the handler moves the issue to when done (empty to clear)")
@@ -369,9 +369,9 @@ func resolveHandoffHandler(ctx context.Context, client *cli.APIClient, value str
 	var typ, id string
 	var err error
 	if uuidRegexp.MatchString(v) {
-		typ, id, err = resolveAssigneeByID(ctx, client, v, issueAssigneeKinds)
+		typ, id, err = resolveAssigneeByID(ctx, client, v, memberOrAgentKinds)
 	} else {
-		typ, id, err = resolveAssignee(ctx, client, v, issueAssigneeKinds)
+		typ, id, err = resolveAssignee(ctx, client, v, memberOrAgentKinds)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("resolve handler: %w", err)

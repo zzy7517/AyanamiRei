@@ -130,10 +130,9 @@ func validateCondition(ctx context.Context, tx pgx.Tx, issue db.Issue, raw json.
 				ok, err = exists("SELECT 1 FROM member WHERE workspace_id=$1 AND user_id=$2", ws, id)
 			case "agent":
 				ok, err = exists("SELECT 1 FROM agent WHERE workspace_id=$1 AND id=$2", ws, id)
-			case "squad":
-				ok, err = exists("SELECT 1 FROM squad WHERE workspace_id=$1 AND id=$2", ws, id)
+
 			default:
-				return nil, nil, badCondition("assignee_type must be member, agent or squad")
+				return nil, nil, badCondition("assignee_type must be member or agent")
 			}
 			if err != nil {
 				return nil, nil, err

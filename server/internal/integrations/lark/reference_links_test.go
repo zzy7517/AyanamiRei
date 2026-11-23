@@ -43,7 +43,7 @@ func referenceLinkFixture(t *testing.T) (*Patcher, *referenceLinkQueryFake) {
 }
 
 func TestLinkReplyReferencesEntities(t *testing.T) {
-	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents", "squad": "squads"} {
+	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents"} {
 		t.Run(kind, func(t *testing.T) {
 			p, q := referenceLinkFixture(t)
 			q.workspace.IssuePrefix = "" // UUID references do not need an issue prefix.
@@ -61,7 +61,7 @@ func TestLinkReplyReferencesEntities(t *testing.T) {
 }
 
 func TestLinkReplyReferencesMarkdownForms(t *testing.T) {
-	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents", "squad": "squads"} {
+	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents"} {
 		for _, tc := range []struct {
 			name, body, want string
 			protected        bool
@@ -109,7 +109,7 @@ func TestLinkReplyReferencesMarkdownForms(t *testing.T) {
 }
 
 func TestLinkReplyReferencesEncodedTargets(t *testing.T) {
-	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents", "squad": "squads"} {
+	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents"} {
 		t.Run(kind, func(t *testing.T) {
 			p, q := referenceLinkFixture(t)
 			id, resolved := referenceUUID, referenceUUID
@@ -133,7 +133,7 @@ func TestLinkReplyReferencesEncodedTargets(t *testing.T) {
 }
 
 func TestLinkReplyReferencesPreservesUnresolved(t *testing.T) {
-	for _, kind := range []string{"issue", "project", "member", "agent", "squad"} {
+	for _, kind := range []string{"issue", "project", "member", "agent"} {
 		for _, failure := range []string{"malformed UUID", "workspace error", "missing slug", "wrong workspace metadata"} {
 			t.Run(kind+"/"+failure, func(t *testing.T) {
 				p, q := referenceLinkFixture(t)
@@ -188,7 +188,7 @@ func TestPatcherLinksAllReferencesForFeishu(t *testing.T) {
 	id := referenceUUID
 	body := "[Issue](mention://issue/" + issueUUID + ")"
 	want := "[Issue](https://deployment.example/feedback/issues/" + issueUUID + ")"
-	for _, entry := range []struct{ kind, route string }{{"project", "projects"}, {"member", "members"}, {"agent", "agents"}, {"squad", "squads"}} {
+	for _, entry := range []struct{ kind, route string }{{"project", "projects"}, {"member", "members"}, {"agent", "agents"}} {
 		body += " [@Label](mention://" + entry.kind + "/" + id + ")"
 		want += " [@Label](https://deployment.example/feedback/" + entry.route + "/" + id + ")"
 	}
@@ -380,7 +380,7 @@ func TestPatcherLinksIssueReferencesForFeishu(t *testing.T) {
 
 func TestLinkReplyReferencesNonexistentTargets(t *testing.T) {
 	const id = "99999999-9999-4999-8999-999999999999"
-	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents", "squad": "squads"} {
+	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "member": "members", "agent": "agents"} {
 		t.Run(kind, func(t *testing.T) {
 			p, q := referenceLinkFixture(t)
 			body := "[Missing](mention://" + kind + "/" + id + ")"
@@ -414,7 +414,7 @@ func TestLinkReplyReferencesManyTargetsUseOneWorkspaceRead(t *testing.T) {
 			var body, want strings.Builder
 			for i := 1; i <= count; i++ {
 				id := fmt.Sprintf("%08x-9999-4999-8999-999999999999", i)
-				for _, entry := range []struct{ kind, route string }{{"issue", "issues"}, {"project", "projects"}, {"member", "members"}, {"agent", "agents"}, {"squad", "squads"}} {
+				for _, entry := range []struct{ kind, route string }{{"issue", "issues"}, {"project", "projects"}, {"member", "members"}, {"agent", "agents"}} {
 					fmt.Fprintf(&body, "[Label](mention://%s/%s) ", entry.kind, id)
 					fmt.Fprintf(&want, "[Label](https://deployment.example/feedback/%s/%s) ", entry.route, id)
 				}

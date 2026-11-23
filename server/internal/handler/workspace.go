@@ -33,13 +33,11 @@ var issuePrefixPattern = regexp.MustCompile(`^[A-Z0-9]{1,10}$`)
 // defaultIssuePrefixFromSlug derives a new workspace's default issue prefix
 // from its slug: alphanumerics only, first 4 chars, uppercased.
 // Examples: "acme" → "ACME", "front-end" → "FRON", "team-2" → "TEAM".
-//
 // The slug — not the name — is the derivation source on purpose (MUL-6050).
 // Name is the one field in the create flow that accepts non-ASCII, so deriving
 // an ASCII-only prefix from it forced every CJK/emoji-named workspace onto the
 // same "WS" fallback. Slug is validated as `^[a-z0-9]+(-[a-z0-9]+)*$` and
 // required, so it always yields a non-empty, workspace-specific prefix.
-//
 // Kept byte-for-byte in sync with the client-side preview in
 // packages/views/onboarding/steps/step-workspace.tsx — what the user sees on
 // the create screen has to be what the server would derive.
@@ -58,7 +56,6 @@ func defaultIssuePrefixFromSlug(slug string) string {
 
 // legacyIssuePrefixFromName is the pre-MUL-6050 derivation: first 3 ASCII
 // letters of the workspace name, uppercased, "WS" when the name has none.
-//
 // FROZEN — do not "fix" this to match defaultIssuePrefixFromSlug. Its only
 // caller is getIssuePrefix's fallback for workspaces whose stored prefix is
 // empty (rows predating the column). Issue identifiers are computed at read
@@ -366,48 +363,25 @@ func (h *Handler) CreateWorkspace(w http.ResponseWriter, r *http.Request) {
 		issuePrefix = defaultIssuePrefixFromSlug(req.Slug)
 	}
 
-	tx, err := h.TxStarter.Begin(r.Context())
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create workspace")
-		return
-	}
-	defer tx.Rollback(r.Context())
-
-	qtx := h.Queries.WithTx(tx)
-	ws, err := qtx.CreateWorkspace(r.Context(), db.CreateWorkspaceParams{
+	ws, err := h.createWorkspaceWithOwner(r.Context(), db.CreateWorkspaceParams{
 		Name:        req.Name,
 		Slug:        req.Slug,
 		Description: ptrToText(req.Description),
 		Context:     ptrToText(req.Context),
 		IssuePrefix: issuePrefix,
-	})
-	if err != nil {
-		if isUniqueViolation(err) {
-			writeError(w, http.StatusConflict, "workspace slug already exists")
-			return
-		}
-		slog.Warn("create workspace failed", append(logger.RequestAttrs(r), "error", err)...)
+	}, parseUUID(userID))
+	switch {
+	case err == nil:
+	case errors.Is(err, errInsertWorkspace) && isUniqueViolation(err):
+		writeError(w, http.StatusConflict, "workspace slug already exists")
+		return
+	case isWorkspaceWriteStep(err):
+		logMessage, response := workspaceWriteFailure(err)
+		slog.Warn(logMessage, append(logger.RequestAttrs(r), "error", err)...)
+		writeError(w, http.StatusInternalServerError, response)
+		return
+	default:
 		writeError(w, http.StatusInternalServerError, "failed to create workspace")
-		return
-	}
-
-	_, err = qtx.CreateMember(r.Context(), db.CreateMemberParams{
-		WorkspaceID: ws.ID,
-		UserID:      parseUUID(userID),
-		Role:        "owner",
-	})
-	if err != nil {
-		slog.Warn("add owner failed", append(logger.RequestAttrs(r), "error", err)...)
-		writeError(w, http.StatusInternalServerError, "failed to add owner")
-		return
-	}
-
-	// Seed the 7 built-in issue statuses inside the same transaction, so a
-	// workspace is never visible without its status catalog — an issue cannot
-	// be created before its status can be resolved. (MUL-6243)
-	if err := issuestatus.Ensure(r.Context(), qtx, ws.ID); err != nil {
-		slog.Warn("seed issue statuses failed", append(logger.RequestAttrs(r), "error", err)...)
-		writeError(w, http.StatusInternalServerError, "failed to seed issue statuses")
 		return
 	}
 
@@ -418,11 +392,6 @@ func (h *Handler) CreateWorkspace(w http.ResponseWriter, r *http.Request) {
 	// from "the user has finished setup"; the workspace-layer route
 	// gate (web layout / desktop App.tsx overlay) redirects un-onboarded
 	// users back to /onboarding instead.
-
-	if err := tx.Commit(r.Context()); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create workspace")
-		return
-	}
 
 	wsID := uuidToString(ws.ID)
 
@@ -435,6 +404,78 @@ func (h *Handler) CreateWorkspace(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("workspace created", append(logger.RequestAttrs(r), "workspace_id", wsID, "name", ws.Name, "slug", ws.Slug)...)
 	writeJSON(w, http.StatusCreated, h.workspaceToResponse(ws))
+}
+
+// The writes a new workspace needs once its transaction is open. Each wraps
+// the driver's error, so a caller can tell the steps apart.
+var (
+	errInsertWorkspace       = errors.New("insert workspace")
+	errInsertWorkspaceOwner  = errors.New("insert workspace owner")
+	errSeedWorkspaceStatuses = errors.New("seed workspace statuses")
+)
+
+// createWorkspaceWithOwner inserts a workspace, makes ownerID its owner and
+// seeds the 7 built-in issue statuses, all in one transaction, so a workspace
+// is never visible without its status catalog — an issue cannot be created
+// before its status can be resolved (MUL-6243). The create endpoint and
+// startup, opening the pre-shared token's account, both come through here.
+// It does not mark the owner onboarded; see CreateWorkspace. A unique
+// violation from the workspace insert means the slug is taken.
+func (h *Handler) createWorkspaceWithOwner(ctx context.Context, params db.CreateWorkspaceParams, ownerID pgtype.UUID) (db.Workspace, error) {
+	tx, err := h.TxStarter.Begin(ctx)
+	if err != nil {
+		return db.Workspace{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	ws, err := insertWorkspaceWithOwner(ctx, h.Queries.WithTx(tx), params, ownerID)
+	if err != nil {
+		return db.Workspace{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return db.Workspace{}, err
+	}
+	return ws, nil
+}
+
+// insertWorkspaceWithOwner is createWorkspaceWithOwner's body, for a caller
+// that holds the transaction because it writes more than a workspace. q must
+// be that transaction's Queries.
+func insertWorkspaceWithOwner(ctx context.Context, q *db.Queries, params db.CreateWorkspaceParams, ownerID pgtype.UUID) (db.Workspace, error) {
+	ws, err := q.CreateWorkspace(ctx, params)
+	if err != nil {
+		return db.Workspace{}, fmt.Errorf("%w: %w", errInsertWorkspace, err)
+	}
+	if _, err := q.CreateMember(ctx, db.CreateMemberParams{
+		WorkspaceID: ws.ID,
+		UserID:      ownerID,
+		Role:        "owner",
+	}); err != nil {
+		return db.Workspace{}, fmt.Errorf("%w: %w", errInsertWorkspaceOwner, err)
+	}
+	if err := issuestatus.Ensure(ctx, q, ws.ID); err != nil {
+		return db.Workspace{}, fmt.Errorf("%w: %w", errSeedWorkspaceStatuses, err)
+	}
+	return ws, nil
+}
+
+func isWorkspaceWriteStep(err error) bool {
+	return errors.Is(err, errInsertWorkspace) ||
+		errors.Is(err, errInsertWorkspaceOwner) ||
+		errors.Is(err, errSeedWorkspaceStatuses)
+}
+
+// workspaceWriteFailure reports a failed write step the way the create
+// endpoint always has: the log line, then the response text.
+func workspaceWriteFailure(err error) (logMessage, response string) {
+	switch {
+	case errors.Is(err, errInsertWorkspaceOwner):
+		return "add owner failed", "failed to add owner"
+	case errors.Is(err, errSeedWorkspaceStatuses):
+		return "seed issue statuses failed", "failed to seed issue statuses"
+	default:
+		return "create workspace failed", "failed to create workspace"
+	}
 }
 
 type UpdateWorkspaceRequest struct {
@@ -520,6 +561,10 @@ func (h *Handler) UpdateWorkspace(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Settings != nil {
 		if incoming, ok := req.Settings.(map[string]any); ok {
+			if err := checkTaskTreeRetention(incoming); err != nil {
+				writeError(w, http.StatusBadRequest, err.Error())
+				return
+			}
 			// Only an old client's flip of the retired PR switch needs the
 			// stored value; see reconcilePRMergeSettings.
 			var stored map[string]any
@@ -991,7 +1036,6 @@ func (h *Handler) LeaveWorkspace(w http.ResponseWriter, r *http.Request) {
 
 // workspaceDeleteLockTimeout bounds every lock wait inside the workspace
 // teardown transaction.
-//
 // The teardown waits on three kinds of lock: the workspace row (FOR UPDATE),
 // every chat_session row in the workspace (FOR UPDATE), and the global
 // advisory lock 4246 that serialises it against the task_usage_hourly rollup.
@@ -1000,13 +1044,11 @@ func (h *Handler) LeaveWorkspace(w http.ResponseWriter, r *http.Request) {
 // backfill commands (cmd/backfill_task_usage_hourly, cmd/backfill_codex_usage_cache)
 // hold it for an entire run, and before migration 272 a tick whose query was
 // cancelled leaked it for the remaining life of its pooled connection.
-//
 // Waiting on that lock without a cap is what the user sees as "delete does
 // nothing": the request never returns, and no layer above it times out — the
 // browser/Electron fetch in packages/core/api/client.ts has no deadline and
 // the delete dialog stays in its "Deleting…" state forever (MUL-5983). A
 // bounded wait turns the same contention into a retryable error.
-//
 // 10 s is far above the millisecond-scale waits an uncontended teardown sees,
 // and short enough to fail while the user is still watching the dialog.
 const workspaceDeleteLockTimeout = 10 * time.Second
@@ -1060,7 +1102,6 @@ func failWorkspaceDelete(w http.ResponseWriter, r *http.Request, workspaceID, st
 // DELETE. A whole workspace's task set is not bounded by anything — one busy
 // agent can own millions of historical rows — so it must never be materialized at
 // once (MUL-5999 review).
-//
 // This and workspaceDeleteOwnerPageSize are variables only so the paging tests
 // can cross a page boundary without seeding thousands of rows; nothing outside
 // tests assigns them.
@@ -1072,7 +1113,6 @@ var workspaceDeleteTaskPageSize int32 = 1000
 var workspaceDeleteOwnerPageSize int32 = 500
 
 // workspaceDeleteVerifyPasses caps how many times a single owner may be swept.
-//
 // Pass 1 removes what is there; pass 2 confirms the owner came back empty. This is
 // a cheap self-check, NOT the concurrency guarantee: a task inserted after the
 // final empty scan and before COMMIT would not be caught by any number of passes.
@@ -1085,9 +1125,7 @@ const workspaceDeleteVerifyPasses = 3
 
 // deleteWorkspaceTasks removes every agent_task_queue row a workspace owns,
 // together with the rows that hang off those tasks, in bounded keyset pages.
-//
 // Shape, and why:
-//
 //   - One owner key per query. agent_task_queue has no workspace_id and all three
 //     ownership paths must stay (nothing enforces that a task's agent, runtime and
 //     issue share a workspace), but combining them in one statement — as the
@@ -1223,7 +1261,6 @@ func deleteWorkspaceTasks(ctx context.Context, qtx *db.Queries, workspaceID pgty
 }
 
 // sweepTasksForOwner deletes one owner's tasks, then re-verifies that owner.
-//
 // Each pass walks the owner's tasks by keyset and deletes each page. A pass that
 // deletes nothing means the owner is clean. A later pass that still finds tasks
 // means something reached agent_task_queue without going through the fence, which
@@ -1270,7 +1307,6 @@ func sweepTasksForOwner(
 
 // lockWorkspaceTaskOwners locks every row through which a task can belong to this
 // workspace.
-//
 // Defence in depth on top of the real fence. The fence that closes the
 // insert-after-sweep window is migration 284's lock_task_owner_rows, a predicate
 // every ownership-writing statement calls in its own WHERE clause: it takes
@@ -1279,13 +1315,11 @@ func sweepTasksForOwner(
 // LockWorkspaceForDelete holds for this whole transaction. Called from the writing
 // statement, so it is in the writer's transaction by construction, and independent
 // of the legacy foreign keys.
-//
 // These owner-row locks add a second, narrower barrier — they also block
 // ownership-changing UPDATEs of tasks that already exist — and cost nothing to
 // hold, since teardown deletes these very rows a few steps later. They are taken
 // set-based and return no ids, so a workspace with a huge owner set costs no
 // memory here.
-//
 // The wait is bounded by SET LOCAL lock_timeout, and taking these locks can
 // deadlock against a concurrent task update that locks in the opposite order
 // (task row, then owner); both outcomes surface as a retryable 503.
@@ -1596,8 +1630,8 @@ func (h *Handler) DeleteWorkspace(w http.ResponseWriter, r *http.Request) {
 			run:  func() error { return qtx.DeleteWorkspaceConnections(ctx, requester.WorkspaceID) },
 		},
 		{
-			name: "delete squads and skills",
-			run:  func() error { return qtx.DeleteWorkspaceSquadsAndSkills(ctx, requester.WorkspaceID) },
+			name: "delete skills",
+			run:  func() error { return qtx.DeleteWorkspaceSkills(ctx, requester.WorkspaceID) },
 		},
 		{
 			name: "delete plugin data",

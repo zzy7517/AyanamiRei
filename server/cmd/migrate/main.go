@@ -140,6 +140,8 @@ var pgBigmOperatorClass = extensionOperatorClass{
 // they are still pending: a fresh self-hosted install, which is exactly where an
 // interrupted build would otherwise leave a permanently unusable index.
 var concurrentIndexCleanups = map[string]string{
+	"727_issue_project_scope_pair_idx":                          "uq_issue_project_scope_pair",
+	"728_issue_project_scope_project_idx":                       "idx_issue_project_scope_project",
 	"720_remote_app_oauth_client_idx":                           "uq_remote_app_oauth_client_app_redirect",
 	"721_remote_app_connection_owner_idx":                       "uq_remote_app_connection_owner",
 	"676_chat_wakeup_due_idx":                                   "idx_chat_wakeup_due",
@@ -454,6 +456,13 @@ var concurrentDownIndexCleanups = map[string]string{
 	"464_drop_issue_description_trgm_index":                 "idx_issue_description_trgm",
 	"473_drop_agent_task_queue_chat_with_session_index":     "idx_agent_task_queue_chat_with_session_created_at",
 	"709_drop_attachment_workspace_index":                   "idx_attachment_workspace",
+	"732_drop_squad_activity_index":                         "idx_activity_log_squad_no_action_task",
+	"733_drop_agent_task_queue_squad_index":                 "agent_task_queue_squad_id_idx",
+	"734_drop_autopilot_run_squad_index":                    "idx_autopilot_run_squad_id",
+	"735_drop_autopilot_assignee_type_index":                "idx_autopilot_assignee_type_id",
+	"736_drop_squad_workspace_index":                        "idx_squad_workspace",
+	"737_drop_squad_member_squad_index":                     "idx_squad_member_squad",
+	"738_drop_squad_member_entity_index":                    "idx_squad_member_entity",
 }
 
 var preMigrationHooks = func() map[string]preMigrationHook {

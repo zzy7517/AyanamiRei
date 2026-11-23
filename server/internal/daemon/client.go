@@ -214,7 +214,7 @@ func daemonCommonCapabilities() []string {
 		protocol.DaemonCapabilityCheckoutKeepsWorkV1,
 		protocol.DaemonCapabilityJoinedWakeupsV1,
 		protocol.DaemonCapabilityWorkflowStatusRulesV1,
-		protocol.DaemonCapabilityCLICommentSteerV1,
+		protocol.DaemonCapabilityTerminalV1,
 	}
 }
 
@@ -1121,6 +1121,21 @@ func (c *Client) getLegacyIssueGCChecks(ctx context.Context, issueIDs []string) 
 		}
 	}
 	return results
+}
+
+// ReportAgentReply tells the server that the agent working on issueID, in a
+// terminal on daemonID, has answered: a turn of its session has ended. A 404
+// is not an error: the issue is gone or the server has no such route, and
+// there is nothing left to tell either way.
+func (c *Client) ReportAgentReply(ctx context.Context, daemonID, issueID string) error {
+	err := c.postJSON(ctx, fmt.Sprintf("/api/daemon/issues/%s/agent-reply", issueID), map[string]any{
+		"daemon_id": daemonID,
+	}, nil)
+	var reqErr *requestError
+	if errors.As(err, &reqErr) && reqErr.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	return err
 }
 
 // GetIssueGCCheck returns the status and updated_at of an issue for GC decisions.

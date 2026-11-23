@@ -54,20 +54,20 @@ FOR UPDATE;
 
 -- name: CreateAutopilot :one
 INSERT INTO autopilot (
-    workspace_id, title, description, assignee_type, assignee_id,
+        workspace_id, title, description, assignee_id,
     status, execution_mode, issue_title_template, project_id,
     created_by_type, created_by_id
 ) VALUES (
-    $1, $2, sqlc.narg('description'), $3, $4,
-    $5, $6, sqlc.narg('issue_title_template'), sqlc.narg('project_id'),
-    $7, $8
+    $1, $2, sqlc.narg('description'), $3,
+    $4, $5, sqlc.narg('issue_title_template'), sqlc.narg('project_id'),
+    $6, $7
 ) RETURNING *;
 
 -- name: UpdateAutopilot :one
 UPDATE autopilot SET
     title = COALESCE(sqlc.narg('title'), title),
     description = COALESCE(sqlc.narg('description'), description),
-    assignee_type = COALESCE(sqlc.narg('assignee_type'), assignee_type),
+
     assignee_id = COALESCE(sqlc.narg('assignee_id')::uuid, assignee_id),
     status = COALESCE(sqlc.narg('status'), status),
     pause_reason = CASE
@@ -88,40 +88,16 @@ WHERE id = $1;
 
 -- name: PauseAutopilotsByUnboundAgents :many
 -- A runtime delete is a persistent admission failure, not a per-tick event.
--- Pause direct-agent automations and squad automations whose leader was
--- unbound, preserving the full configuration for an explicit resume after
+-- Pause the automations whose agent was unbound, preserving the full
+-- configuration for an explicit resume after
 -- rebind. Restrict to active so repeated teardown/retry is idempotent.
 UPDATE autopilot a
 SET status = 'paused',
     pause_reason = 'agent_runtime_required',
     updated_at = now()
 WHERE a.status = 'active'
-  AND (
-    (a.assignee_type = 'agent' AND a.assignee_id = ANY(@agent_ids::uuid[]))
-    OR (
-      a.assignee_type = 'squad'
-      AND EXISTS (
-        SELECT 1
-        FROM squad s
-        WHERE s.id = a.assignee_id
-          AND s.leader_id = ANY(@agent_ids::uuid[])
-      )
-    )
-  )
+    AND a.assignee_id = ANY(@agent_ids::uuid[])
 RETURNING a.*;
-
--- name: PauseAutopilotsByUnrunnableSquad :many
--- Rotating a squad to an already-unbound leader has the same persistent
--- admission failure as Runtime teardown. Pause only automations assigned to
--- this squad; direct automations targeting that Agent are unrelated.
-UPDATE autopilot
-SET status = 'paused',
-    pause_reason = 'agent_runtime_required',
-    updated_at = now()
-WHERE status = 'active'
-  AND assignee_type = 'squad'
-  AND assignee_id = @squad_id
-RETURNING *;
 
 -- name: PauseAutopilotsByArchivedProject :many
 -- An archived project accepts no new issues, so an automation filing into it
@@ -318,11 +294,7 @@ RETURNING *;
 -- =====================
 
 -- name: CreateAutopilotRun :one
--- squad_id is an attribution hook: set to the assignee squad when the
--- parent autopilot has assignee_type='squad', NULL otherwise. The executing
--- agent_id on agent_task_queue still records who actually ran the work
--- (the squad leader); squad_id lets reports group by squad without a join.
---
+
 -- planned_at carries the canonical UTC fire time for scheduled triggers
 -- (source='schedule'); it stays NULL for manual / webhook / api sources
 -- which have no canonical occurrence. Combined with the partial unique
@@ -334,11 +306,11 @@ RETURNING *;
 -- autopilot run quota; uq_autopilot_run_idempotency_key makes a retried
 -- request reuse its run.
 INSERT INTO autopilot_run (
-    autopilot_id, trigger_id, source, status, trigger_payload, squad_id, planned_at,
+        autopilot_id, trigger_id, source, status, trigger_payload, planned_at,
     webhook_delivery_id, quota_reservation_id, reason_code, idempotency_key, id
 ) VALUES (
     $1, sqlc.narg('trigger_id'), $2, $3, sqlc.narg('trigger_payload'),
-    sqlc.narg('squad_id'), sqlc.narg('planned_at'),
+    sqlc.narg('planned_at'),
     sqlc.narg('webhook_delivery_id'), sqlc.narg('quota_reservation_id'),
     sqlc.narg('reason_code'), sqlc.narg('idempotency_key'),
     COALESCE(sqlc.narg('id')::uuid, gen_random_uuid())

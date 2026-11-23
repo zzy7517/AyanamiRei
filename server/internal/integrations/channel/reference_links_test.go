@@ -149,7 +149,7 @@ func TestLinkReferences(t *testing.T) {
 }
 
 func TestReferenceWebLink(t *testing.T) {
-	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "agent": "agents", "member": "members", "squad": "squads"} {
+	for kind, route := range map[string]string{"issue": "issues", "project": "projects", "agent": "agents", "member": "members"} {
 		t.Run(kind, func(t *testing.T) {
 			if got := ReferenceWebLink("https://deployment.example/", "team", ""+kind, "id"); got != "https://deployment.example/team/"+route+"/id" {
 				t.Fatal(got)

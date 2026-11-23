@@ -33,8 +33,10 @@ func rejectTemporarilyDisabledUser(w http.ResponseWriter, r *http.Request, userI
 
 // Auth middleware validates JWT tokens or Personal Access Tokens.
 // Token sources (in priority order):
-//  1. Authorization: Bearer <token> header (PAT or JWT)
-//  2. multica_auth HttpOnly cookie (JWT) — requires valid CSRF token for state-changing requests
+//  1. The pre-shared token (MULTICA_AUTH_TOKEN), when one is configured; see
+//     auth.SharedToken. Accepted wherever a personal access token is.
+//  2. Authorization: Bearer <token> header (PAT or JWT)
+//  3. multica_auth HttpOnly cookie (JWT) — requires valid CSRF token for state-changing requests
 //
 // Sets X-User-ID and X-User-Email headers on the request for downstream handlers.
 //
@@ -94,6 +96,20 @@ func Auth(queries *db.Queries, patCache *auth.PATCache, cloudPAT *auth.CloudPATV
 			if fromCookie && !auth.ValidateCSRF(r) {
 				slog.Debug("auth: CSRF validation failed", "path", r.URL.Path)
 				http.Error(w, `{"error":"CSRF validation failed"}`, http.StatusForbidden)
+				return
+			}
+
+			// Pre-shared token: the operator's own credential, standing in
+			// for a personal access token. It is checked before the prefix
+			// branches because the operator chooses the string, so there is
+			// no prefix to branch on. Like a PAT it leaves X-Actor-Source
+			// unset and is marked for the handlers that tell a PAT apart.
+			if userID, ok := auth.ResolveSharedToken(tokenString); ok {
+				if rejectTemporarilyDisabledUser(w, r, userID, "", "shared_token") {
+					return
+				}
+				r.Header.Set("X-User-ID", userID)
+				next.ServeHTTP(w, r.WithContext(withPersonalAccessToken(r.Context())))
 				return
 			}
 

@@ -15,11 +15,11 @@ import (
 
 // Triage has no executor (MUL-7189 §2.3).
 //
-// Nothing may derive one from the issue — the assignee, its squad's leader, a
-// retry. A member naming an agent by hand is a conversation, not an executor,
-// and keeps working.
+// Nothing may derive one from the issue — the assignee, a retry. A member
+// naming an agent by hand is a conversation, not an executor, and keeps
+// working.
 //
-// Every entry point below runs TWICE against the same agent, squad and quick
+// Every entry point below runs TWICE against the same agents and quick
 // action: once on an ordinary `todo` issue, where all of them must start a run,
 // and once in Triage, where only the named ones may. The todo half is not
 // redundant — a private agent, an unbound runtime or a missing allow-list row
@@ -27,11 +27,10 @@ import (
 // pass on a fixture that could never have enqueued anything.
 
 type triageRunFixture struct {
-	agentID   string
-	squadID   string
-	leaderID  string
-	actionID  string
-	runtimeID string
+	agentID      string
+	otherAgentID string
+	actionID     string
+	runtimeID    string
 }
 
 // newTriageRunFixture builds targets a plain workspace member is allowed to
@@ -50,8 +49,7 @@ func newTriageRunFixture(t *testing.T) triageRunFixture {
 		return id
 	}
 	agentID := invocable("triage no-run agent")
-	leaderID := invocable("triage no-run leader")
-	squadID := dbfx.Squad(t, "triage no-run squad", leaderID)
+	otherAgentID := invocable("triage no-run other agent")
 
 	var actionID string
 	dbfx.QueryRow(t, `
@@ -63,7 +61,7 @@ func newTriageRunFixture(t *testing.T) triageRunFixture {
 	`, testWorkspaceID, agentID, testUserID).Scan(&actionID)
 	dbfx.Cleanup(t, `DELETE FROM quick_action WHERE id = $1`, actionID)
 
-	return triageRunFixture{agentID: agentID, squadID: squadID, leaderID: leaderID, actionID: actionID, runtimeID: runtimeID}
+	return triageRunFixture{agentID: agentID, otherAgentID: otherAgentID, actionID: actionID, runtimeID: runtimeID}
 }
 
 // issueFor creates an issue assigned to the fixture agent. triageState is the
@@ -123,9 +121,6 @@ func triageEntryPoints() []triageEntryPoint {
 		{"comment mentioning an agent", true, func(t *testing.T, f triageRunFixture, issueID string) *testutil.Response {
 			return comment(t, issueID, "[@Agent](mention://agent/"+f.agentID+") please take a look")
 		}},
-		{"comment mentioning a squad", true, func(t *testing.T, f triageRunFixture, issueID string) *testutil.Response {
-			return comment(t, issueID, "[@Squad](mention://squad/"+f.squadID+") please take a look")
-		}},
 		// A member replying to what the agent said is still that member naming
 		// it — the thread is the address.
 		{"reply to an agent's comment", true, func(t *testing.T, f triageRunFixture, issueID string) *testutil.Response {
@@ -159,7 +154,7 @@ func triageEntryPoints() []triageEntryPoint {
 		{"reassignment", false, func(t *testing.T, f triageRunFixture, issueID string) *testutil.Response {
 			return testutil.Call(t, testHandler.UpdateIssue, withURLParam(
 				newRequest(http.MethodPut, "/api/issues/"+issueID, map[string]any{
-					"assignee_type": "squad", "assignee_id": f.squadID,
+					"assignee_type": "agent", "assignee_id": f.otherAgentID,
 				}), "id", issueID))
 		}},
 	}
@@ -244,26 +239,26 @@ func TestTriageCommentMentionDispatchesNormally(t *testing.T) {
 	testutil.Call(t, testHandler.CreateComment, withURLParam(
 		newRequest(http.MethodPost, "/api/issues/"+issueID+"/comments", map[string]any{
 			"content": "[@Agent](mention://agent/" + f.agentID + ") and " +
-				"[@Squad](mention://squad/" + f.squadID + ") please look",
+				"[@Other](mention://agent/" + f.otherAgentID + ") please look",
 		}), "id", issueID)).Want(http.StatusCreated).JSON(&body)
 
 	if len(body.TriggerOutcomes) != 2 {
 		t.Fatalf("got %d trigger outcome(s), want one per named target: %+v", len(body.TriggerOutcomes), body.TriggerOutcomes)
 	}
-	want := map[string]string{"agent": f.agentID, "squad": f.squadID}
+	want := map[string]bool{f.agentID: true, f.otherAgentID: true}
 	for _, o := range body.TriggerOutcomes {
 		if o.Status != string(DispatchQueued) {
 			t.Errorf("%s outcome = (%s, %s), want queued", o.TargetType, o.Status, o.ReasonCode)
 		}
-		if want[o.TargetType] != o.TargetID {
-			t.Errorf("%s outcome names %q, want %q", o.TargetType, o.TargetID, want[o.TargetType])
+		if o.TargetType != "agent" || !want[o.TargetID] {
+			t.Errorf("outcome = (%s, %s), want a mentioned agent", o.TargetType, o.TargetID)
 		}
-		delete(want, o.TargetType)
+		delete(want, o.TargetID)
 	}
 	if len(want) != 0 {
 		t.Errorf("no outcome for %v", want)
 	}
-	// Both targets are the leader-vs-agent pair, so this is two distinct runs.
+	// Two named agents are two distinct runs.
 	if n := tasksOn(t, issueID); n != 2 {
 		t.Errorf("mentions started %d run(s), want 2", n)
 	}
@@ -281,7 +276,7 @@ func TestPreviewIssueTriggerReportsNoRunForTriage(t *testing.T) {
 	reassign := map[string]any{
 		"issue_ids":     []string{issueID},
 		"assignee_type": "agent",
-		"assignee_id":   f.leaderID,
+		"assignee_id":   f.otherAgentID,
 	}
 	if preview := previewIssueTrigger(t, reassign); preview.TotalCount != 0 {
 		t.Errorf("triage reassign previews %+v, want no run", preview)
@@ -295,7 +290,7 @@ func TestPreviewIssueTriggerReportsNoRunForTriage(t *testing.T) {
 	if accepted.TotalCount != 1 || len(accepted.Triggers) != 1 {
 		t.Fatalf("accepted issue previews %+v, want exactly one run", accepted)
 	}
-	if accepted.Triggers[0].Source != "assign" || accepted.Triggers[0].AgentID != f.leaderID {
+	if accepted.Triggers[0].Source != "assign" || accepted.Triggers[0].AgentID != f.otherAgentID {
 		t.Errorf("accepted preview = %+v, want the new assignee started by an assign", accepted.Triggers[0])
 	}
 }
@@ -316,8 +311,7 @@ func TestEnqueueRefusesADerivedRunInTriage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	agent, squad := parseUUID(f.agentID), parseUUID(f.squadID)
-	leader := parseUUID(f.leaderID)
+	agent, other := parseUUID(f.agentID), parseUUID(f.otherAgentID)
 
 	derived := map[string]func() error{
 		"assignee": func() error {
@@ -326,14 +320,6 @@ func TestEnqueueRefusesADerivedRunInTriage(t *testing.T) {
 		},
 		"mention funnel, derived": func() error {
 			_, err := testHandler.TaskService.EnqueueTaskForMention(ctx, issue, agent, pgtype.UUID{}, service.OriginDerived)
-			return err
-		},
-		"squad leader, derived": func() error {
-			_, err := testHandler.TaskService.EnqueueTaskForSquadLeader(ctx, issue, leader, squad, pgtype.UUID{}, service.OriginDerived)
-			return err
-		},
-		"squad leader on assign": func() error {
-			_, err := testHandler.TaskService.EnqueueTaskForSquadLeaderByActor(ctx, issue, leader, squad, pgtype.UUID{})
 			return err
 		},
 		"rerun with no source": func() error {
@@ -360,7 +346,7 @@ func TestEnqueueRefusesADerivedRunInTriage(t *testing.T) {
 			return err
 		},
 		"thread parent": func() error {
-			_, err := testHandler.TaskService.EnqueueTaskForThreadParent(ctx, issue, leader, pgtype.UUID{})
+			_, err := testHandler.TaskService.EnqueueTaskForThreadParent(ctx, issue, other, pgtype.UUID{})
 			return err
 		},
 	}

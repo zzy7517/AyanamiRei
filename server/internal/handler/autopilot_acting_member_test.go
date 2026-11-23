@@ -69,7 +69,6 @@ func newActingFixture(t *testing.T, label string) actingFixture {
 		"workspace_id":         testWorkspaceID,
 		"title":                title,
 		"assignee_id":          agentID,
-		"assignee_type":        "agent",
 		"execution_mode":       "create_issue",
 		"issue_title_template": title,
 		"status":               "active",

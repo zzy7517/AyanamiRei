@@ -1,0 +1,2 @@
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_autopilot_assignee_type_id
+    ON autopilot (assignee_type, assignee_id);

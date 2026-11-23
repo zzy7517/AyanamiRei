@@ -1466,28 +1466,6 @@ func TestInjectRuntimeConfigAvailableCommandsCoreOnly(t *testing.T) {
 		}
 	}
 
-	// Squad maintenance is squad-leader surface and is gated on that (MUL-5442):
-	// an agent leading no squad has no squad whose roles it could change.
-	if strings.Contains(s, "### Squad maintenance") {
-		t.Errorf("non-leader brief must not carry the squad maintenance block\n---\n%s", s)
-	}
-	leaderDir := t.TempDir()
-	if _, err := InjectRuntimeConfig(leaderDir, "codex", TaskContextForEnv{IssueID: "issue-1", IsSquadLeader: true}); err != nil {
-		t.Fatalf("InjectRuntimeConfig failed: %v", err)
-	}
-	leader, err := os.ReadFile(filepath.Join(leaderDir, "AGENTS.md"))
-	if err != nil {
-		t.Fatalf("failed to read leader AGENTS.md: %v", err)
-	}
-	for _, want := range []string{
-		"### Squad maintenance",
-		"multica squad member set-role <squad-id>",
-	} {
-		if !strings.Contains(string(leader), want) {
-			t.Errorf("squad-leader AGENTS.md missing %q\n---\n%s", want, leader)
-		}
-	}
-
 	for _, banned := range []string{
 		"--no-start",
 		"multica issue list [--status",
@@ -1496,7 +1474,6 @@ func TestInjectRuntimeConfigAvailableCommandsCoreOnly(t *testing.T) {
 		"multica label list",
 		"multica workspace member list",
 		"multica agent list",
-		"multica squad list",
 		"multica issue runs",
 		"multica issue run-messages",
 		"multica attachment download",
@@ -5467,15 +5444,13 @@ func TestInjectRuntimeConfigMentionLoopHardening(t *testing.T) {
 		s := readClaudeMD(t, commentTriggerCtx)
 		// MUL-5442 owner decision (2026-08-06): the generic no-reply rule is
 		// retired. It never carried the loop prevention — agent comments
-		// trigger nothing without an explicit @mention (the sole implicit
-		// wake is the squad-leader path), so the mention discipline pinned in
-		// the Mentions subtest above is the real defense. Ordinary agents are
-		// back on the unconditional one-comment-per-run contract; recorded
-		// silence via `no_action` remains squad-leader-only. Retired pins,
-		// replaced by the negative guards below so the apparatus cannot creep
-		// back: "Decide whether a reply is warranted", "produced actual
-		// work", "pure acknowledgment / thanks / sign-off", "do NOT reply",
-		// "Silence is a valid and preferred way".
+		// trigger nothing without an explicit @mention, so the mention
+		// discipline pinned in the Mentions subtest above is the real defense.
+		// Agents are on the unconditional one-comment-per-run contract.
+		// Retired pins, replaced by the negative guards below so the apparatus
+		// cannot creep back: "Decide whether a reply is warranted", "produced
+		// actual work", "pure acknowledgment / thanks / sign-off", "do NOT
+		// reply", "Silence is a valid and preferred way".
 		// MUL-6417 merged the reply-mode block into the shared steps: the
 		// unconditional one-comment contract now lives in step 4, and the
 		// mention-after-work bullet is gone with the block (the discipline
@@ -5495,94 +5470,16 @@ func TestInjectRuntimeConfigMentionLoopHardening(t *testing.T) {
 			"conditional on the reply rule",
 			// #6493 review: the ledger named five retired pins but only
 			// guarded two — the missing three let the old apparatus
-			// coexist with the new sentences. Ordinary-agent scope only:
-			// the leader's no_action bullet says "DO NOT post any
-			// comment", which none of these match.
+			// coexist with the new sentences.
 			"produced actual work",
 			"pure acknowledgment / thanks / sign-off",
 			"do NOT reply",
-			// Leader-leak guard: the carve-out imperative is
-			// leader-brief-only.
-			"Unless your outcome is",
 		} {
 			if strings.Contains(s, banned) {
 				t.Errorf("comment-triggered CLAUDE.md still carries retired no-reply text %q", banned)
 			}
 		}
 	})
-}
-
-// TestInjectRuntimeConfigSquadLeaderCommentTriggeredNoAction verifies that
-// when IsSquadLeader is true and the task is comment-triggered, the generated
-// CLAUDE.md explicitly forbids posting comments that merely announce no_action.
-// This is the fix for MUL-2168 — squad leaders were posting "Exiting silently"
-// comments because the comment-triggered path lacked the prohibition.
-func TestInjectRuntimeConfigSquadLeaderCommentTriggeredNoAction(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	ctx := TaskContextForEnv{
-		IssueID:          "issue-1",
-		TriggerCommentID: "comment-1",
-		IsSquadLeader:    true,
-	}
-	if _, err := InjectRuntimeConfig(dir, "claude", ctx); err != nil {
-		t.Fatalf("InjectRuntimeConfig failed: %v", err)
-	}
-	data, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
-	if err != nil {
-		t.Fatalf("read CLAUDE.md: %v", err)
-	}
-	s := string(data)
-
-	// Both delivery imperatives — workflow step 4 and ## Output — must carry
-	// the carve-out, so that no later bullet can contradict the no_action exit
-	// (MUL-5442 #6493 review). They carry the EXCEPTION, not the rule: the
-	// rule itself is stated once, by the Squad Operating Protocol the server
-	// appends to Instructions, and both sites point there (MUL-6984).
-	for _, want := range []string{
-		"unless your outcome is `no_action`",
-		"see the no_action rule in your Squad Operating Protocol",
-		"which your Squad Operating Protocol states in full",
-	} {
-		if !strings.Contains(s, want) {
-			t.Errorf("squad leader comment-triggered CLAUDE.md missing %q", want)
-		}
-	}
-	// The unconditional ordinary-agent imperative must not coexist with the
-	// carve-out variant.
-	if strings.Contains(s, "**Post your final results as a comment — this step is mandatory**") {
-		t.Errorf("squad leader CLAUDE.md still carries the unconditional delivery step")
-	}
-	// And neither site may restate the rule's mechanics — that is what drifted
-	// when four copies of it existed.
-	for _, banned := range []string{
-		"DO NOT post a comment announcing no_action",
-		"you MUST exit without posting any comment",
-	} {
-		if strings.Contains(s, banned) {
-			t.Errorf("squad leader CLAUDE.md restates the protocol-owned no_action rule: %q", banned)
-		}
-	}
-
-	// Non-squad-leader should NOT have the squad leader rule in comment-triggered path.
-	dir2 := t.TempDir()
-	ctx2 := TaskContextForEnv{
-		IssueID:          "issue-1",
-		TriggerCommentID: "comment-1",
-		IsSquadLeader:    false,
-	}
-	if _, err := InjectRuntimeConfig(dir2, "claude", ctx2); err != nil {
-		t.Fatalf("InjectRuntimeConfig failed: %v", err)
-	}
-	data2, err := os.ReadFile(filepath.Join(dir2, "CLAUDE.md"))
-	if err != nil {
-		t.Fatalf("read CLAUDE.md: %v", err)
-	}
-	s2 := string(data2)
-	if strings.Contains(s2, "unless your outcome is `no_action`") {
-		t.Errorf("non-squad-leader CLAUDE.md should NOT contain the leader no_action carve-out")
-	}
 }
 
 // TestBuildMetaSkillContentEmitsRequestingUser pins MUL-2406's brief
