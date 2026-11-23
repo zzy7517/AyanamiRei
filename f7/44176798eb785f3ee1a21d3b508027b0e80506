@@ -1,0 +1,294 @@
+packages/views/onboarding/steps/step-workspace.test.tsx
+  s_fc0852876b2926::t_e50d759d0fb0d3 110
+packages/views/locales/zh-Hant/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/views/locales/ja/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 237
+packages/core/paths/tab-subject.test.ts
+  s_fc0852876b2926::t_51df19ea5e7a9c 89
+  s_fc0852876b2926::t_0596dd8bec983e 33-35
+packages/views/search/matching.ts
+  s_fc0852876b2926::t_1f565014b152e1 10-12
+  s_fc0852876b2926::t_5d684448ca9e36 47,52,56-57
+packages/views/layout/tab-presentation.test.tsx
+  s_fc0852876b2926::t_26f1a77e458961 350
+  s_fc0852876b2926::t_47b5d267f43ecc 385,387
+  s_fc0852876b2926::t_d22bcf1246995f 167,169
+packages/views/locales/en/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 135,150,159
+packages/views/locales/es/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 243
+packages/views/locales/fr/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 135,150,159
+apps/docs/content/docs/tutorial.ko.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/views/locales/zh-Hant/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 132,147,156
+packages/views/search/pages/issue-pages.tsx
+  s_fc0852876b2926::t_233638db5140ed 232
+packages/views/search/use-actor-directory.ts
+  s_fc0852876b2926::t_e0227677748f1e 53
+  s_fc0852876b2926::t_efb1f93590d5eb 9-10,24-26
+packages/views/search/use-object-search.ts
+  s_fc0852876b2926::t_1c036b2ccccb2e 159
+  s_fc0852876b2926::t_a6e580bff6f1c8 95,97
+  s_fc0852876b2926::t_17918860575158 131,134
+packages/core/navigation/store.ts
+  s_fc0852876b2926::t_8eed5311fe7d7c 13
+packages/views/locales/en/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 243
+packages/views/issues/components/issue-detail.tsx
+  s_fc0852876b2926::t_fc80fe744cc9b6 3642-3645
+AGENTS.md
+  s_fc0852876b2926::t_80e636a9b1b0e5 65
+  s_fc0852876b2926::t_2fc0724bd65032 107
+packages/views/layout/tab-presentation.tsx
+  s_fc0852876b2926::t_95df2c1509dd11 52-55
+  s_fc0852876b2926::t_bd37e65c193f47 297,300-301
+  s_fc0852876b2926::t_927024b9b0366a 182-184
+  s_fc0852876b2926::t_1a20d790c60f6c 358,361
+apps/desktop/src/renderer/src/components/window-overlay.tsx
+  s_fc0852876b2926::t_7abd8489396686 11,15-16,22-23
+packages/views/locales/zh-Hans/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 132,147,156
+packages/core/auth/utils.ts
+  s_fc0852876b2926::t_2f808529eadbe3 4
+packages/views/locales/ko/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+apps/docs/content/docs/workspaces.ko.mdx
+  s_fc0852876b2926::t_56a3ad2a026ede 15,41,47
+packages/core/paths/paths.ts
+  s_fc0852876b2926::t_0840df15ea262f 7
+  s_fc0852876b2926::t_be06e17517e565 130
+packages/views/issues/components/issue-detail.test.tsx
+  s_fc0852876b2926::t_c47796dc1d1bfa 2502
+packages/core/paths/index.ts
+  s_fc0852876b2926::t_971df0001da1ae 27
+packages/core/auth/utils.test.ts
+  s_fc0852876b2926::t_977518bc3a7414 7
+packages/views/platform/drag-strip.tsx
+  s_fc0852876b2926::t_37ba228af2232d 9
+apps/web/app/(auth)/login/page.tsx
+  s_fc0852876b2926::t_bbeafd4bc704be 48
+  s_fc0852876b2926::t_2c2c1297590d5a 5
+  s_fc0852876b2926::t_e04b2e89866b48 110
+  s_fc0852876b2926::t_4b7e0f26cfbbfe 114
+  s_fc0852876b2926::t_dcd593dd1018eb 124
+packages/views/locales/ja/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/core/platform/storage-cleanup.test.ts
+  s_fc0852876b2926::t_e685a2fbdac00d 33-34
+  s_fc0852876b2926::t_8be81ec8c6b452 59-60
+packages/views/locales/ko/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 237
+apps/desktop/src/renderer/src/routes.tsx
+  s_fc0852876b2926::t_c05acb99c6dd56 96
+packages/core/types/events.ts
+  s_fc0852876b2926::t_ecf5d1b61729a8 7
+README.md
+  s_fc0852876b2926::t_acb78ad9c05850 112
+apps/docs/content/docs/developers/architecture.ja.mdx
+  s_fc0852876b2926::t_372aa077c46884 70
+packages/core/types/index.ts
+  s_fc0852876b2926::t_6de84885684140 124
+packages/views/locales/fr/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+packages/views/common/actor-avatar-profile-link.test.tsx
+  s_fc0852876b2926::t_105a99e0bcf56c 109,116
+  s_fc0852876b2926::t_5de45c84cb409b 124
+  s_fc0852876b2926::t_fabf362bc20397 69,84,115,134,151
+  s_fc0852876b2926::t_40dfd11f949b62 83,114,133,150
+  s_fc0852876b2926::t_b1c762e8ee4507 50-51
+apps/desktop/src/renderer/src/App.tsx
+  s_fc0852876b2926::t_18efb9534078f6 244,249-252,254,256-257,263-264,267
+packages/views/common/actor-avatar.tsx
+  s_fc0852876b2926::t_21e140711f918e 34
+  s_fc0852876b2926::t_7309bb7c0f1253 73-74
+  s_fc0852876b2926::t_fdd6d581f72bf8 276
+  s_fc0852876b2926::t_d15dbc2d0efea8 139-141,148,151-155
+apps/docs/content/docs/tutorial.ja.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/views/onboarding/steps/step-workspace.tsx
+  s_fc0852876b2926::t_c7502c427611b8 469
+packages/views/locales/fr/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/core/paths/spaces.test.ts
+  s_fc0852876b2926::t_c44a75a8622464 28
+apps/desktop/src/renderer/src/platform/session-teardown.ts
+  s_fc0852876b2926::t_961a47eeac5bdd 26
+packages/views/search/footer.tsx
+  s_fc0852876b2926::t_d324742cedb4d7 71
+README.ja.md
+  s_fc0852876b2926::t_acb78ad9c05850 112
+packages/views/layout/rail-workspaces.test.tsx
+  s_fc0852876b2926::t_32afdccadcfff1 62
+apps/docs/content/docs/tutorial.zh.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/core/billing/member-limit.ts
+  s_fc0852876b2926::t_a9856939ca9eec 2,8-9
+apps/desktop/src/renderer/src/stores/window-overlay-store.ts
+  s_fc0852876b2926::t_f3d0f422ff1104 9,12-13
+packages/views/locales/en/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+packages/views/locales/zh-Hans/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+packages/views/locales/zh-Hant/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+apps/docs/content/docs/workspaces.mdx
+  s_fc0852876b2926::t_0f4b24bb0f6898 41,47
+  s_fc0852876b2926::t_f38a52ecfab9af 15
+apps/desktop/src/renderer/src/platform/diagnostic-route-reporter.tsx
+  s_fc0852876b2926::t_8e202ee7e17b83 24
+packages/core/diagnostics/dev-recorder-realtime.test.tsx
+  s_fc0852876b2926::t_bb5a7caea9f4a0 105
+packages/views/locales/zh-Hans/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 237
+packages/views/locales/ru/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 141,156,165
+apps/docs/content/docs/tutorial.zh-Hant.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/views/locales/zh-Hant/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 237
+packages/views/locales/fr/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 243
+apps/desktop/src/renderer/src/stores/tab-store.test.ts
+  s_fc0852876b2926::t_2d441ffba4370f 118
+apps/docs/content/docs/developers/architecture.fr.mdx
+  s_fc0852876b2926::t_c568b5cfd49a88 70
+packages/views/settings/components/billing-tab.tsx
+  s_fc0852876b2926::t_38da6822814aed 668-671,681,684
+  s_fc0852876b2926::t_70dd71ee9d40f8 380
+  s_fc0852876b2926::t_861c3714ab289f 751,755
+  s_fc0852876b2926::t_67cc55170faea3 1666
+packages/views/locales/ru/billing.json
+  s_fc0852876b2926::t_fd05cb880f59e9 255
+packages/views/locales/en/onboarding.json
+  s_fc0852876b2926::t_414adfcd788e84 135,162-163
+packages/core/paths/workspace-slugs.test.ts
+  s_fc0852876b2926::t_fefc33a75b894b 13
+  s_fc0852876b2926::t_9b1097f8e2c494 18
+packages/views/settings/components/billing-tab.test.tsx
+  s_fc0852876b2926::t_aa595c01c7ee07 645
+packages/views/locales/es/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+packages/views/search/search-command.test.tsx
+  s_fc0852876b2926::t_80b89200f52e09 660
+  s_fc0852876b2926::t_f22d45fa074b18 1013,1015,1019,1022
+packages/core/realtime/use-realtime-sync-ws-instance.test.tsx
+  s_fc0852876b2926::t_fba1cef3604fae 153,157,162
+  s_fc0852876b2926::t_985bfa4649a477 179,195
+  s_fc0852876b2926::t_f1993a7aced7c7 27
+  s_fc0852876b2926::t_7417d9feecbe34 15
+apps/desktop/src/renderer/src/components/workspace-route-layout.tsx
+  s_fc0852876b2926::t_b3014e8b58b187 59
+apps/web/app/auth/callback/page.tsx
+  s_fc0852876b2926::t_bd92adec614aec 119-120,127
+apps/docs/content/docs/developers/architecture.zh-Hant.mdx
+  s_fc0852876b2926::t_372aa077c46884 70
+apps/docs/content/docs/developers/architecture.ko.mdx
+  s_fc0852876b2926::t_372aa077c46884 70
+apps/docs/content/docs/tutorial.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/views/locales/ja/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 132,147,156
+apps/docs/content/docs/tutorial.fr.mdx
+  s_fc0852876b2926::t_612086749ee553 23
+packages/core/billing/member-limit.test.ts
+  s_fc0852876b2926::t_af6a92b235c33e 5-6
+apps/docs/content/docs/developers/architecture.mdx
+  s_fc0852876b2926::t_acb78ad9c05850 70
+packages/views/locales/ru/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/core/paths/tab-presentation.test.ts
+  s_fc0852876b2926::t_fe478c73aff99c 60,62,65-66
+apps/web/app/auth/callback/page.test.tsx
+  s_fc0852876b2926::t_44b8a46b4d1d07 309,313,318
+  s_fc0852876b2926::t_f5d6158b2d3365 254-255,258,263
+apps/desktop/src/shared/main-renderer-messages.test.ts
+  s_fc0852876b2926::t_d9bbb7696be469 23
+  s_fc0852876b2926::t_f8755de9e69715 64,67,71-72
+packages/views/search/use-root-model.ts
+  s_fc0852876b2926::t_a244f696da97ac 188
+  s_fc0852876b2926::t_7397c4c90764dc 269,271
+packages/core/onboarding/types.ts
+  s_fc0852876b2926::t_91784354ba3250 17
+apps/docs/content/docs/developers/architecture.zh.mdx
+  s_fc0852876b2926::t_372aa077c46884 70
+apps/docs/content/docs/workspaces.zh.mdx
+  s_fc0852876b2926::t_56a3ad2a026ede 15,41,47
+packages/views/layout/rail-workspaces.tsx
+  s_fc0852876b2926::t_f71dcc696fff8b 125-127
+  s_fc0852876b2926::t_05c3f50b2ddcc4 5,16
+  s_fc0852876b2926::t_38fcebb8723dd2 177
+README.zh.md
+  s_fc0852876b2926::t_acb78ad9c05850 109
+packages/core/navigation/store.test.ts
+  s_fc0852876b2926::t_1be30d5691e884 8
+packages/core/paths/tab-subject.ts
+  s_fc0852876b2926::t_68015245b67632 27-28
+  s_fc0852876b2926::t_bc31250c92d576 146-147
+  s_fc0852876b2926::t_ca721a09043d63 89
+apps/web/app/(auth)/login/page.test.tsx
+  s_fc0852876b2926::t_f28974fcf9b271 212,219
+packages/views/settings/components/settings-page.test.tsx
+  s_fc0852876b2926::t_5ee59e2b4cd2ae 234,236,243-245
+packages/views/layout/use-dashboard-guard.ts
+  s_fc0852876b2926::t_15b7f45008b586 65
+apps/desktop/src/renderer/src/hooks/use-open-settings-shortcut.ts
+  s_fc0852876b2926::t_6506eb1a780290 15
+apps/desktop/src/renderer/src/platform/navigation.tsx
+  s_fc0852876b2926::t_6b8b140234d6d4 64-65
+apps/docs/content/docs/workspaces.ja.mdx
+  s_fc0852876b2926::t_56a3ad2a026ede 15,41,47
+packages/views/locales/ko/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+apps/docs/content/docs/workspaces.zh-Hant.mdx
+  s_fc0852876b2926::t_56a3ad2a026ede 15,41,47
+packages/core/paths/tab-presentation.ts
+  s_fc0852876b2926::t_8773d4d166e566 26,38-39
+  s_fc0852876b2926::t_8887234b12c6a6 175,177-178
+  s_fc0852876b2926::t_ad93a0e1466dfd 84-85
+packages/views/locales/ru/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+apps/desktop/src/renderer/src/stores/tab-store.ts
+  s_fc0852876b2926::t_d591e11d31029d 492
+  s_fc0852876b2926::t_e68a0c67981b0e 468-469
+packages/views/search/root-view.tsx
+  s_fc0852876b2926::t_9d5027fdd70eec 510
+  s_fc0852876b2926::t_97bd42df295c01 639
+  s_fc0852876b2926::t_efb63570e1f23b 162
+packages/views/locales/ja/workspace.json
+  s_fc0852876b2926::t_a6c885cef244fd 21,25
+packages/views/settings/components/workspace-tab.tsx
+  s_fc0852876b2926::t_3ed415f5902961 429
+  s_fc0852876b2926::t_da4b3f026a81fe 93-95,103-107
+  s_fc0852876b2926::t_479ca0f416a372 22
+packages/views/locales/es/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 53,153,162
+packages/views/locales/es/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/views/locales/zh-Hans/onboarding.json
+  s_fc0852876b2926::t_6ec1fe9a702977 135,162-163
+packages/views/locales/ko/search.json
+  s_fc0852876b2926::t_37e732b5826ce7 132,147,156
+apps/docs/content/docs/workspaces.fr.mdx
+  s_fc0852876b2926::t_56a3ad2a026ede 15,41,47
+packages/views/search/result-rows.tsx
+  s_fc0852876b2926::t_1ae3609c691a98 194,204,216,223-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "f744176798eb785f3ee1a21d3b508027b0e80506",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhongzhuan/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
