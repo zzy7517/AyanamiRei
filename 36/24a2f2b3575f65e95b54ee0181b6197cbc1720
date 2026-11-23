@@ -1,0 +1,138 @@
+server/pkg/db/generated/project_member.sql.go
+  s_fc0852876b2926::t_b27620206fad97 313-315
+server/internal/handler/activity.go
+  s_fc0852876b2926::t_a9507541b272d4 280-281
+server/migrations/742_drop_share_link_active_ws_uidx.down.sql
+  s_fc0852876b2926::t_17e499da599762 1-2
+server/internal/seatcapacity/worker.go
+  s_fc0852876b2926::t_6b4fc4add0367a 220,308-309,320
+server/internal/service/builtin_skills/multica-platform/references/issues.md
+  s_fc0852876b2926::t_7f31351744b558 442
+server/cmd/server/notification_membership_test.go
+  s_fc0852876b2926::t_490889da0f98f1 54
+server/migrations/743_drop_share_link_primary_key.up.sql
+  s_fc0852876b2926::t_155c900d073d82 1-3
+server/cmd/server/inbox_recipient_test.go
+  s_fc0852876b2926::t_afc3f035087b7d 44,61
+server/migrations/745_drop_reactions_and_share_links.down.sql
+  s_fc0852876b2926::t_cb7e5e5e5d2400 1-82
+server/pkg/db/generated/inbox_archive.sql.go
+  s_fc0852876b2926::t_b27620206fad97 19,214
+packages/core/inbox/group.ts
+  s_fc0852876b2926::t_b0a9a805526402 40
+  s_fc0852876b2926::t_b37f76444bc477 56
+server/internal/handler/file.go
+  s_fc0852876b2926::t_027b5ebec8ca86 675,1589
+server/internal/handler/comment_delete_test.go
+  s_fc0852876b2926::t_da171c51ba80a6 362-363,372-418
+server/internal/inbox/registry.go
+  s_fc0852876b2926::t_7af158b8c473f9 66-68
+server/migrations/744_drop_share_link_pkey_uidx.down.sql
+  s_fc0852876b2926::t_f2902f439e3b1e 1-2
+server/pkg/db/generated/seat_capacity.sql.go
+  s_fc0852876b2926::t_b27620206fad97 30,163,165,216,253,291,452,585,589-590,615
+server/migrations/743_drop_share_link_primary_key.down.sql
+  s_fc0852876b2926::t_b3ee0a8a7cf755 1-7
+server/migrations/740_drop_seat_capacity_share_join_index.up.sql
+  s_fc0852876b2926::t_e8f0b3aef54ed0 1-2
+server/internal/handler/issue_payload_shape_test.go
+  s_fc0852876b2926::t_c0d91ef2398309 161
+server/internal/handler/plugin_action_test.go
+  s_fc0852876b2926::t_c0d91ef2398309 229
+server/internal/handler/handler_test.go
+  s_fc0852876b2926::t_204f74ba9acbe9 12,269-299
+server/internal/handler/seat_capacity_test.go
+  s_fc0852876b2926::t_cdf5837507a60b 128,133-134,145,155-156,163
+server/cmd/multica/cmd_issue.go
+  s_fc0852876b2926::t_a219381420e9ed 556
+server/migrations/740_drop_seat_capacity_share_join_index.down.sql
+  s_fc0852876b2926::t_1c89a2fc4a5527 1-3
+server/migrations/745_drop_reactions_and_share_links.up.sql
+  s_fc0852876b2926::t_6d17c04aedb040 1-58
+server/migrations/741_drop_share_link_code_uidx.down.sql
+  s_fc0852876b2926::t_e3a5e5880a3440 1-2
+server/internal/handler/issue_revision_test.go
+  s_fc0852876b2926::t_759220812c5c22 303,846-847,852-853,867-868,881-882,891-892,897-898,905-906,909-910,915-916,922-923,928-929,932-933,936-937,943-944,949-950
+server/migrations/742_drop_share_link_active_ws_uidx.up.sql
+  s_fc0852876b2926::t_925d6e800ef6ac 1
+server/cmd/migrate/main.go
+  s_fc0852876b2926::t_19db008c5ff647 466-469
+server/pkg/db/queries/inbox_archive.sql
+  s_fc0852876b2926::t_b6820f2637b79b 17,132
+server/migrations/744_drop_share_link_pkey_uidx.up.sql
+  s_fc0852876b2926::t_7e928f0b2b4d86 1-5
+packages/core/inbox/queries.test.ts
+  s_fc0852876b2926::t_f0f6337b2fc44d 132,135
+server/cmd/migrate/migrate_drop_reactions_share_links_test.go
+  s_fc0852876b2926::t_17cb130a2d743e 11,28-65,72,74-75,81,121,124-126,129,131,136-137,157,177,180-186,188-191,196-198,203-205,207-208,210-211,214-215,221,230,236-238,241,249,252,257,259-260,262,269,273
+  s_fc0852876b2926::t_bcc7531d3c670d 1-10,12-27,66-71,73,76-80,82-120,122-123,127-128,130,132-135,138-156,158-175,178-179,187,192-195,199-202,206,209,212-213,216-220,222-229,231-235,239-240,242,245-248,250-251,253-256,258,261,263-268,270-272,274-278
+  s_fc0852876b2926::t_f4556d563c4c0d 243-244
+  s_fc0852876b2926::t_b46041055fc086 176
+server/cmd/multica/cmd_issue_wakeup.go
+  s_fc0852876b2926::t_a219381420e9ed 57
+server/internal/handler/member_limit_test.go
+  s_fc0852876b2926::t_204f74ba9acbe9 4,321-330
+  s_fc0852876b2926::t_3f4be39f6699f5 331
+server/internal/handler/member_limit.go
+  s_fc0852876b2926::t_7f31351744b558 22-24
+server/internal/handler/notification_preference_test.go
+  s_fc0852876b2926::t_e7388f74dc6444 292-293
+server/internal/handler/issue_wakeup_test.go
+  s_fc0852876b2926::t_8e39a5463d15ba 237
+server/internal/handler/private_project_test.go
+  s_fc0852876b2926::t_cbe6f1b2b62337 255
+server/internal/service/issue_wakeup.go
+  s_fc0852876b2926::t_7f31351744b558 141
+server/pkg/db/queries/project_member.sql
+  s_fc0852876b2926::t_4eb001b8c5f2b1 198-200
+server/pkg/db/generated/comment.sql.go
+  s_fc0852876b2926::t_b27620206fad97 2178-2179,2283-2284
+server/cmd/multica/cmd_issue_test.go
+  s_fc0852876b2926::t_a219381420e9ed 4414-4415,5219
+server/pkg/db/queries/seat_capacity.sql
+  s_fc0852876b2926::t_222b2d5f501bb0 4,8,58,124
+server/migrations/741_drop_share_link_code_uidx.up.sql
+  s_fc0852876b2926::t_c906a21ea0351f 1-4
+server/internal/service/issue_wakeup_join.go
+  s_fc0852876b2926::t_7f31351744b558 24-25
+server/internal/handler/comment.go
+  s_fc0852876b2926::t_67344c3d63e47c 45-46,111,551-553,575,1895,3325,3328,3445,3535-3536,3561-3562,3883,3890,3921
+server/internal/handler/comment_invocation_notice.go
+  s_fc0852876b2926::t_40d7c629e932c5 74
+server/internal/handler/inbox_archive_test.go
+  s_fc0852876b2926::t_b818962ea81597 118-121,132-137
+server/internal/handler/issue.go
+  s_fc0852876b2926::t_50efd8d59b9860 105-106
+server/internal/handler/plugin_action.go
+  s_fc0852876b2926::t_3bbcce1b15c695 755
+server/internal/handler/project_access.go
+  s_fc0852876b2926::t_211cd167ac9a7d 105
+server/internal/handler/quick_action.go
+  s_fc0852876b2926::t_320dc9a038c044 861
+server/internal/handler/task_supplement.go
+  s_fc0852876b2926::t_4fcb80a71d2101 394,426,624
+server/internal/middleware/guest.go
+  s_fc0852876b2926::t_d55f61dd7b79e3 49
+server/pkg/db/queries/comment.sql
+  s_fc0852876b2926::t_9fc25376959251 697-698,731-732
+server/pkg/eventcontract/events.go
+  s_fc0852876b2926::t_84a5a2674258b3 39
+server/pkg/protocol/events.go
+  s_fc0852876b2926::t_28d65bbfa5ef0e 18-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "3624a2f2b3575f65e95b54ee0181b6197cbc1720",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
