@@ -1,0 +1,2390 @@
+packages/views/locales/zh-Hans/terminal.json
+  s_fc0852876b2926::t_695e3d0598982f 1-6,9-25,28-30
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+packages/core/issues/agent-reply.ts
+  s_fc0852876b2926::t_4a635b68cc6bd2 4-5,27-28,44-45,48-49
+  s_fc0852876b2926::t_77590b46df1801 6
+  s_fc0852876b2926::t_f7320e4f04648a 1-3,7-26,29-43,46-47,50-100
+packages/views/issues/components/comment-trigger-chips.tsx
+  s_fc0852876b2926::t_2bbc996fdfb7e2 4,153,162
+  s_fc0852876b2926::t_1099387415d26d 48
+packages/views/settings/components/code-tab.tsx
+  s_fc0852876b2926::t_21c617424239c0 49
+  s_fc0852876b2926::t_714d93e68991de 268-274
+  s_fc0852876b2926::t_4b4162a2f58c7f 70-71
+  s_fc0852876b2926::t_844848061e6a05 26-27
+  s_fc0852876b2926::t_ca11c12c850227 275
+packages/views/locales/ja/autopilots.json
+  s_fc0852876b2926::t_e8df72cef35d98 326,388,488,490,492
+  s_fc0852876b2926::t_1a4e0ebda32a9a 600
+packages/core/terminal/client.test.ts
+  s_fc0852876b2926::t_704cb2b71cc551 143-162
+  s_fc0852876b2926::t_0423ec7d7882de 4
+  s_fc0852876b2926::t_99f2108746b6f5 213,361-382,674,698,703-711
+  s_fc0852876b2926::t_c54173a5d6f4a6 647
+  s_fc0852876b2926::t_b96154fd614748 385-405
+  s_fc0852876b2926::t_8f3ae0190b02cd 1-3,5-142,163-212,214-360,383-384,406-645,648-673,675-697,699-702,712-735
+  s_fc0852876b2926::t_4695c6e5e0764b 646
+apps/web/features/landing/site/demo/mobile-visuals.tsx
+  s_fc0852876b2926::t_0d39d42129f173 30
+apps/docs/content/docs/inbox.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_76e2fe2c281fa7 158
+  s_fc0852876b2926::t_abb8ea7daf1442 3,42,50,58,99,121,167-168
+packages/views/settings/components/billing-trial-section.tsx
+  s_fc0852876b2926::t_c3537eb7e127e7 3,5,11,19-20,56-68,70-72,74-89,91-93
+packages/core/api/client.test.ts
+  s_fc0852876b2926::t_9d7d80ea4a276b 843
+  s_fc0852876b2926::t_a41366b6093c3d 6
+packages/views/layout/feature-intro.test.tsx
+  s_fc0852876b2926::t_b0931356017497 84-86
+  s_fc0852876b2926::t_f0faeb127c7b77 39-43,45,53
+  s_fc0852876b2926::t_201a4c6b9e86fb 4,17-19,21-23,25
+packages/views/locales/ru/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 93,117,333
+apps/docs/content/docs/projects.ja.mdx
+  s_fc0852876b2926::t_69499f3d4e60b1 93
+apps/docs/content/docs/environment-variables.ja.mdx
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132,214
+packages/views/issues/actions/__tests__/issue-actions-menu.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 824,831
+  s_fc0852876b2926::t_168d8006967b05 56-58,332,337-338,647,651-652
+  s_fc0852876b2926::t_ef57a8072fad2b 339-347,655-661
+packages/views/issues/hooks/use-comment-trigger-preview.ts
+  s_fc0852876b2926::t_d18fac73b46beb 123
+  s_fc0852876b2926::t_bbc52b302253a8 104
+  s_fc0852876b2926::t_1099387415d26d 15
+packages/views/onboarding/onboarding-flow.tsx
+  s_fc0852876b2926::t_b24844ad59546e 104
+  s_fc0852876b2926::t_d73457f63e1e82 105-106
+packages/core/projects/project-scope.ts
+  s_fc0852876b2926::t_811557a4ccc454 1-6,8-92
+  s_fc0852876b2926::t_75fa649a972e7d 7
+apps/docs/content/docs/tutorial.zh-Hant.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+packages/views/modals/create-issue.tsx
+  s_fc0852876b2926::t_1c086fdbe7a5ad 936-937
+  s_fc0852876b2926::t_cfe258bba27df6 988-989
+  s_fc0852876b2926::t_94c7e746c70b72 958-964,973-975
+  s_fc0852876b2926::t_777bbf8c98aeac 95
+  s_fc0852876b2926::t_5786d1210f4d8b 67
+  s_fc0852876b2926::t_ec6d4fe38512a8 496
+  s_fc0852876b2926::t_647b5bf91d3e36 351-359,364
+  s_fc0852876b2926::t_ebdbd7c98de6c0 904
+  s_fc0852876b2926::t_5881876d0155c7 141,147,152,156-157,185
+  s_fc0852876b2926::t_a28d91aadc699a 1540-1552
+  s_fc0852876b2926::t_381c74d00fc009 3,6-8,20
+  s_fc0852876b2926::t_67d14a47b26bc8 626-638
+  s_fc0852876b2926::t_687c0a02e8a438 639-640,1553
+packages/views/locales/ko/projects.json
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_6afe002beaebc4 183-186
+packages/views/agents/create/use-create-agent-submit.ts
+  s_fc0852876b2926::t_f651afac048dc5 40
+  s_fc0852876b2926::t_5fb10fb499b897 98
+apps/mobile/components/nav/more-tab-dropdown.tsx
+  s_fc0852876b2926::t_647641ac63982c 6
+packages/views/issues/hooks/use-agent-reply-notification-text.ts
+  s_fc0852876b2926::t_a6b9b56bbf19bc 1-13
+apps/docs/content/docs/comments.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+packages/views/locales/ko/issues.json
+  s_fc0852876b2926::t_9d3324f2b07bda 1987-2009
+  s_fc0852876b2926::t_1e88066b608b5e 551
+  s_fc0852876b2926::t_e8df72cef35d98 685,1064,1621
+  s_fc0852876b2926::t_c23be02de1b5e0 596,753
+  s_fc0852876b2926::t_09664b1aee6de9 792
+  s_fc0852876b2926::t_1a4e0ebda32a9a 134,412,416,1121,1381
+packages/core/appearance/anchors.ts
+  s_fc0852876b2926::t_c284d71fff727e 22,52,55-56
+apps/docs/content/docs/environment-variables.fr.mdx
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132,214
+packages/views/agents/components/agent-live-peek-card.tsx
+  s_fc0852876b2926::t_99b01a4cbbdfeb 26-27
+packages/core/issues/project-scope.ts
+  s_fc0852876b2926::t_96250b774fc145 8,37-38,57-59
+  s_fc0852876b2926::t_08bea74a9e1522 20-25,30-33,48-54,63-66,69-70,72-105
+  s_fc0852876b2926::t_c9b967f1e24dc1 1-7,13-19,26-29,34-36,39-47,55-56,60-62,67-68,71,106-107
+  s_fc0852876b2926::t_a9030022bb7bfb 9-12
+packages/views/inbox/components/inbox-filter-menu.tsx
+  s_fc0852876b2926::t_3d17b9b5446b65 409
+  s_fc0852876b2926::t_ad9dbbbcd358d8 405
+packages/core/issue-views/mutations.ts
+  s_fc0852876b2926::t_e891a3639270b5 5,21
+apps/mobile/app/(app)/[workspace]/more/issues.tsx
+  s_fc0852876b2926::t_6bad07bc617105 94
+  s_fc0852876b2926::t_638f7e15b9b731 4,12,56,72,190
+packages/views/issues/components/table-view-editing.test.tsx
+  s_fc0852876b2926::t_340adb2efd72ca 438
+packages/views/locales/fr.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+apps/docs/content/docs/agents-create.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+packages/views/locales/ko/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 211-212
+apps/docs/content/docs/autopilots.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23
+packages/views/issues/components/batch-action-toolbar.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 150-151,160-161,167
+packages/views/members/member-detail-page.test.tsx
+  s_fc0852876b2926::t_9510f110943706 115
+  s_fc0852876b2926::t_44b1a2126212ff 3
+apps/mobile/components/chat/agent-picker-sheet.tsx
+  s_fc0852876b2926::t_fc687955686247 11-12
+packages/core/feature-flags/keys.ts
+  s_fc0852876b2926::t_149bbdbc6f3608 4,6
+  s_fc0852876b2926::t_34b89879980840 7-10
+  s_fc0852876b2926::t_05f85d9c19af0c 5
+packages/views/issues/components/table-inline-title.test.tsx
+  s_fc0852876b2926::t_09fb79c0519ad0 246-262
+  s_fc0852876b2926::t_5c6755ffaa3aa7 23-28
+  s_fc0852876b2926::t_12112dd369f758 263-264
+packages/views/locales/ja/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 90,114,300
+apps/mobile/data/schemas.test.ts
+  s_fc0852876b2926::t_39ea930a9bb158 72,74
+packages/views/issues/components/board-view.tsx
+  s_fc0852876b2926::t_13c7bad13924b2 247
+  s_fc0852876b2926::t_98aa65034a924b 357-359
+apps/docs/content/docs/issues.fr.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,156,160,178
+  s_fc0852876b2926::t_c4d63eb1d3fd18 20
+apps/mobile/components/project/project-row.tsx
+  s_fc0852876b2926::t_fc687955686247 2-3
+apps/docs/content/docs/members-roles.zh-Hant.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+apps/mobile/lib/mention-serialize.ts
+  s_fc0852876b2926::t_b27f0c11032f38 166
+  s_fc0852876b2926::t_ec280acc1a12f9 25,29
+apps/web/features/landing/site/sitemap.ts
+  s_fc0852876b2926::t_d104b596e232a8 175
+apps/docs/components/demos/mention-demo.tsx
+  s_fc0852876b2926::t_669abe1b7e983e 23,46,50,57,76,80,87,106,110,117,136,140,147,171,175,223
+packages/views/issues/hooks/use-mark-agent-reply-seen-while-viewing.test.tsx
+  s_fc0852876b2926::t_e735a8f50cfe24 1-109
+packages/views/settings/components/task-tree-retention-row.test.tsx
+  s_fc0852876b2926::t_dbd6b2b96b5965 1-124
+packages/views/locales/zh-Hans/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/core/projects/mutations.ts
+  s_fc0852876b2926::t_202f4f8f280f44 48
+packages/core/api/project-scope-schema.test.ts
+  s_fc0852876b2926::t_4b86d7fb8411b3 1,7-60
+  s_fc0852876b2926::t_0f7f4aeb5086bc 61-71
+  s_fc0852876b2926::t_baff7732618f65 2-6
+packages/views/layout/panels/work-panel.test.tsx
+  s_fc0852876b2926::t_5a29e508931775 307,313,317,325,328-329,333,338-339,349,353-354,356,358,373-374,382,387-388,396,401-402,407,421-422,430,436,444,468,471,475,512,520,568,571,577,592,613,627,640,654,668,718,729,732-733,735,816,818,823,834
+packages/views/onboarding/steps/step-welcome.tsx
+  s_fc0852876b2926::t_cfb0a3e33bb36f 262
+packages/views/locales/ko/settings.json
+  s_fc0852876b2926::t_1e88066b608b5e 127,839
+  s_fc0852876b2926::t_1a4e0ebda32a9a 430
+  s_fc0852876b2926::t_adffc79c45df29 1695-1701
+e2e/perf/agent-recent-work.spec.ts
+  s_fc0852876b2926::t_f6d4db6f3e3fa5 71
+packages/core/terminal/protocol.ts
+  s_fc0852876b2926::t_dbcd76ea12c2dd 154-160,164-165
+  s_fc0852876b2926::t_eaf2493cd5830a 1-30,33-41,44-153,161-163,166-207
+  s_fc0852876b2926::t_e8845cd2028ea0 31-32,42-43
+packages/views/settings/components/members-tab.test.tsx
+  s_fc0852876b2926::t_e1a70eb047c076 466
+  s_fc0852876b2926::t_2f9903cac3e9ef 203,205,209
+apps/mobile/data/realtime/use-issues-realtime.ts
+  s_fc0852876b2926::t_fc687955686247 3-4,16,21
+packages/views/settings/components/settings-page.tsx
+  s_fc0852876b2926::t_b3c9845cb0ae7b 152
+apps/mobile/lib/markdown/preprocess.ts
+  s_fc0852876b2926::t_ac4705033f14f4 15-16,26,244
+  s_fc0852876b2926::t_a156c3e10fd380 4-5,14,50,52,89,208-209,214,217-234,243,245
+packages/views/issues/components/agent-reply-marker.test.tsx
+  s_fc0852876b2926::t_de7194e3022977 1-21
+packages/views/issues/hooks/use-quick-action-menu.test.ts
+  s_fc0852876b2926::t_3613ffa1d97e9f 4,124,128,133,157,161,165
+  s_fc0852876b2926::t_9dc552feb3b4bf 170-174
+apps/docs/content/docs/environment-variables.zh-Hant.mdx
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132,210
+packages/views/locales/es/autopilots.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 603
+  s_fc0852876b2926::t_e8df72cef35d98 327,373,489,491,493
+apps/docs/content/docs/mentioning-agents.zh-Hant.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+packages/views/autopilots/components/autopilot-dialog.tsx
+  s_fc0852876b2926::t_c5480fd08ac4d0 42
+  s_fc0852876b2926::t_bf78983f7fca74 770
+  s_fc0852876b2926::t_d33dd78d7fda75 232
+packages/views/locales/zh-Hant/layout.json
+  s_fc0852876b2926::t_c23be02de1b5e0 185,197
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+apps/docs/content/docs/autopilots.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23
+packages/core/billing/paid-features.test.tsx
+  s_fc0852876b2926::t_f72c2c484f7212 168
+  s_fc0852876b2926::t_1d09fa489053a3 187-188,191
+  s_24c6e81b839946::t_e88d09394d3b38 48,50,59,63,67,79,90,100,108,132,139
+packages/views/common/avatar-upload-control.tsx
+  s_fc0852876b2926::t_da4802c4070855 36
+  s_fc0852876b2926::t_1d32586a54e057 50-52
+  s_fc0852876b2926::t_20b5502cde1509 4
+packages/core/workspace/index.ts
+  s_fc0852876b2926::t_972d7406cdd4e0 4
+packages/core/issues/ws-updaters.test.ts
+  s_fc0852876b2926::t_b89d8ae4c73269 644-645,961,1028
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 652-653,656,662,674-677,682,686-688
+apps/docs/content/docs/index.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+apps/docs/content/docs/members-roles.ja.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+apps/mobile/components/issue/mention-suggestion-bar.tsx
+  s_fc0852876b2926::t_fc687955686247 37,114
+  s_fc0852876b2926::t_647641ac63982c 14
+  s_1ec9c2ffcc469d::t_4ba03ab6e4dd9e 66,113,117-118,133,135,142-144,174
+  s_fc0852876b2926::t_61edd5be2f5f9a 8,10,22,81-82,154,193-199,302,305,311
+apps/docs/components/demos/desktop-tabs-demo.tsx
+  s_fc0852876b2926::t_6867b47b5686ce 4,17,49,81,113,145
+packages/core/issues/stores/view-store.ts
+  s_fc0852876b2926::t_dd967cb6fa19a8 7,142-148,150,159,322,415
+  s_fc0852876b2926::t_b89d8ae4c73269 879-880
+packages/views/locales/en/issues.json
+  s_fc0852876b2926::t_09664b1aee6de9 823
+  s_fc0852876b2926::t_9d3324f2b07bda 2078-2100
+  s_fc0852876b2926::t_1e88066b608b5e 561
+  s_fc0852876b2926::t_1a4e0ebda32a9a 137,420,424,1178,1442
+  s_fc0852876b2926::t_c23be02de1b5e0 608,780
+  s_fc0852876b2926::t_e8df72cef35d98 706,1121,1693
+packages/views/issues/components/issue-environments-section.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 180
+packages/views/workflows/workflows-tab.tsx
+  s_fc0852876b2926::t_4f4fdfcbc073ac 393
+packages/views/editor/schema/mention.ts
+  s_fc0852876b2926::t_91506383d81ef1 48,62,73,75,105,113
+apps/docs/components/demos/inbox-demo.tsx
+  s_fc0852876b2926::t_036b7a089a2ae4 24,72,77,125,143,148,196,210,215,263,277,282,336,353,358,406,423,428,482,502-505,509-513,517,696
+packages/views/workflows/handoff-form.test.tsx
+  s_fc0852876b2926::t_420e1a5fc9e8c0 7
+  s_fc0852876b2926::t_c9d649b084f78f 200,203,208,212
+  s_fc0852876b2926::t_0772d94b47b669 36-39,41,53,67,71-72,80,83,86-87,90-91,93
+packages/views/issues/components/system-wakeup-row.tsx
+  s_fc0852876b2926::t_98aa65034a924b 57,62
+packages/views/layout/route-icon-components.tsx
+  s_fc0852876b2926::t_ed2c94daa367ea 51
+  s_fc0852876b2926::t_c3df8382473213 16
+packages/views/locales/es/issues.json
+  s_fc0852876b2926::t_9d3324f2b07bda 2078-2100
+  s_fc0852876b2926::t_1e88066b608b5e 530
+  s_fc0852876b2926::t_09664b1aee6de9 815-816
+  s_fc0852876b2926::t_1a4e0ebda32a9a 128,410,414,1092,1356
+  s_fc0852876b2926::t_c23be02de1b5e0 591,763
+  s_fc0852876b2926::t_e8df72cef35d98 689,1035,1686
+apps/mobile/lib/inbox-display.test.ts
+  s_fc0852876b2926::t_87a1917f844b38 177
+  s_fc0852876b2926::t_85d3ca8a087745 178-179,181-182
+packages/core/agents/queries.ts
+  s_fc0852876b2926::t_dd35713a352f63 42-43
+  s_fc0852876b2926::t_08012bb526a366 3,21,58,67-68
+packages/views/editor/extensions/table-view.test.tsx
+  s_fc0852876b2926::t_7d3a5c3d757df1 138-139
+apps/docs/content/docs/environment-variables.zh.mdx
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132,214
+packages/core/types/index.ts
+  s_fc0852876b2926::t_bf19946a59bfe1 227-231,234
+  s_fc0852876b2926::t_02f3b00290a5c7 1
+  s_fc0852876b2926::t_2e0bf8007fcdc5 124
+  s_fc0852876b2926::t_698d717c6e2197 232-233
+packages/views/members/member-detail-page.tsx
+  s_fc0852876b2926::t_35e53c7afb3a35 38-40,112,114,145,153,162,168,180
+  s_fc0852876b2926::t_5669097d9a082b 5
+packages/views/locales/fr/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+apps/docs/content/docs/developers/conventions.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 211,217
+  s_fc0852876b2926::t_652c7a1276ce05 135
+packages/core/issues/stores/issue-sidebar-sections-store.ts
+  s_fc0852876b2926::t_c8086f3d941e6b 7-11,14
+packages/views/issues/components/reply-input.tsx
+  s_fc0852876b2926::t_2bbc996fdfb7e2 141,293
+apps/docs/content/docs/mentioning-agents.ja.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+packages/views/locales/ko/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/core/issues/cache-coordinator.ts
+  s_fc0852876b2926::t_912102d6ccc9e8 689-691
+  s_fc0852876b2926::t_9d7d80ea4a276b 12,79,84
+  s_fc0852876b2926::t_099c74d0868355 242,245,334,337,367,389,391
+packages/views/locales/ja/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/views/issues/components/thread-minimap.tsx
+  s_fc0852876b2926::t_7634dea303ffc4 383
+packages/views/settings/components/billing-tab.test.tsx
+  s_fc0852876b2926::t_71b653bfa30b6a 2581
+apps/mobile/locales/zh-Hans/chat.json
+  s_fc0852876b2926::t_b27f0c11032f38 13
+apps/web/features/landing/site/mobile-page.tsx
+  s_fc0852876b2926::t_2361cceb96f34e 134
+  s_fc0852876b2926::t_0d39d42129f173 85
+.github/ISSUE_TEMPLATE/bug_report.yml
+  s_fc0852876b2926::t_f6d4db6f3e3fa5 64-65
+packages/views/locales/ko/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+apps/docs/content/docs/daemon-runtimes.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 252,366
+apps/docs/content/docs/tasks.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+packages/views/locales/es/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 189,203
+apps/mobile/data/use-actor-name.ts
+  s_fc0852876b2926::t_d0e17a6a6ef0b5 7-8,20,28-29,33,40
+apps/docs/content/docs/comments.ja.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+apps/docs/content/docs/comments.fr.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+packages/views/layout/space-panel.test.tsx
+  s_fc0852876b2926::t_6c313cc6075282 13
+packages/views/issues/actions/issue-actions-menu-items.tsx
+  s_fc0852876b2926::t_65d16b7a6c4db4 301
+packages/views/common/actor-issues-panel.test.tsx
+  s_fc0852876b2926::t_3d17b9b5446b65 62
+packages/core/collections/view-store.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 12
+apps/mobile/components/chat/chat-composer.tsx
+  s_fc0852876b2926::t_ec280acc1a12f9 16-19
+packages/views/issues/components/issues-page.test.tsx
+  s_fc0852876b2926::t_5a29e508931775 352
+  s_fc0852876b2926::t_9e6a22a25a959e 245,247,250-252,254,553-554,737,740,801-803,823,828
+  s_fc0852876b2926::t_398086c35d0801 817,826
+packages/views/issues/surface/use-issue-surface-controller.ts
+  s_fc0852876b2926::t_98db3d9caa8787 266,535,624
+  s_fc0852876b2926::t_3d17b9b5446b65 605-608
+  s_fc0852876b2926::t_061fe9d6707e64 62,365
+packages/core/issues/stores/filter-tree.ts
+  s_fc0852876b2926::t_486f023ba60e69 5-6,20-22,144,146,274-280,294-295,299,301,356-369,451,460,464
+packages/core/api/archived-inbox.test.ts
+  s_fc0852876b2926::t_b09c9e98997a29 53,55
+apps/docs/content/docs/agents-create.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+packages/views/locales/ja/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 211-212
+apps/docs/content/docs/triggering-agents.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+apps/docs/content/docs/developers/architecture.ja.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_013c3f5b421273 126
+packages/views/locales/ja.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+packages/views/locales/es/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/views/locales/zh-Hant/autopilots.json
+  s_fc0852876b2926::t_e8df72cef35d98 326,372,488,490,492
+  s_fc0852876b2926::t_1a4e0ebda32a9a 600
+apps/docs/components/demos/chat-demo.tsx
+  s_fc0852876b2926::t_820f01da16aa13 23,33-35,43,47,69,79-81,88,92,116,126-128,135,139,164,174-176,183,187,213,223-225,233,237
+apps/mobile/data/realtime/issue-ws-updaters.ts
+  s_fc0852876b2926::t_0ea5d00be7a94b 6-7
+  s_fc0852876b2926::t_fc687955686247 365,367,375-376,387
+  s_fc0852876b2926::t_647641ac63982c 5
+packages/core/realtime/provider.tsx
+  s_fc0852876b2926::t_e22221348f55d0 104
+packages/views/layout/space-panel.tsx
+  s_fc0852876b2926::t_bdf02cbe3bdcfd 5,17
+packages/core/projects/index.ts
+  s_fc0852876b2926::t_d79f21a37f23b0 1-9
+packages/views/terminal/index.ts
+  s_fc0852876b2926::t_78c0ea79628f16 1-2
+apps/web/features/landing/i18n/ja.ts
+  s_fc0852876b2926::t_9a00c34425a976 110,206,275,292,299,348,398,592,1139,1207,2200,2238,2283,2293,2325,2401,2619,2633,2636,2696,2747,2871,2926,2946,2972,2977,2994,3014,3020,3027,3036,3043,3046
+  s_fc0852876b2926::t_d7f43e4fe7b20d 157,1383
+apps/docs/content/docs/mentioning-agents.zh.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+packages/core/issues/surface/membership.ts
+  s_fc0852876b2926::t_ecc303c6478657 8-10,50-51
+  s_fc0852876b2926::t_3b26510b992db2 61
+  s_fc0852876b2926::t_9d7d80ea4a276b 2,54,78
+packages/views/issues/components/board-card.tsx
+  s_fc0852876b2926::t_575d52e7d6ada4 217
+  s_fc0852876b2926::t_53852701ab7898 37
+packages/views/terminal/terminal-page.tsx
+  s_fc0852876b2926::t_e6922c5e67c529 1-3,6-7,14-24,27-30,32-38,40-43,49-53,58-60,67-74,81-84,113-118,120-122,124-181,183-196,198-207,209-211,213-216,222-225,230-233,240-242,244-261,268-272
+  s_fc0852876b2926::t_78c0ea79628f16 182
+  s_fc0852876b2926::t_625b1409065e32 4-5,8-13,31,44-48,54-57,75-80,85-89,101-112,119,123,197,208,212,217-221,234,262-267
+  s_fc0852876b2926::t_736410bd64d20b 39
+  s_fc0852876b2926::t_0f6beb5dbb90af 235-239
+  s_fc0852876b2926::t_6741a847108793 90-100
+  s_fc0852876b2926::t_5927b6bed3ce25 226-229,243
+  s_fc0852876b2926::t_bdf762743e603b 61-66
+  s_fc0852876b2926::t_df1d4331db9a8e 25-26
+packages/core/issues/mutations.test.tsx
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 1682,1685
+  s_fc0852876b2926::t_b89d8ae4c73269 156-157
+apps/docs/content/docs/developers/conventions.zh-Hant.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 133
+  s_fc0852876b2926::t_6b713353e6e3a7 209,215
+packages/views/locales/ja/issues.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 134,412,416,1121,1381
+  s_fc0852876b2926::t_e8df72cef35d98 685,1064,1621
+  s_fc0852876b2926::t_09664b1aee6de9 792
+  s_fc0852876b2926::t_c23be02de1b5e0 596,753
+  s_fc0852876b2926::t_9d3324f2b07bda 1987-2009
+  s_fc0852876b2926::t_1e88066b608b5e 551
+packages/core/inbox/ws-updaters.test.ts
+  s_fc0852876b2926::t_ec5b6d95194767 31
+packages/core/workspace/hooks.test.tsx
+  s_fc0852876b2926::t_dd35713a352f63 101
+apps/desktop/src/renderer/src/platform/daemon-reauth.test.ts
+  s_fc0852876b2926::t_3c8b32730c2c26 3,6,15-16,44-45,60-69
+  s_fc0852876b2926::t_80175154bb89cd 70-71
+apps/docs/content/docs/daemon-runtimes.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 252
+packages/core/api/agent-reply-client.test.ts
+  s_fc0852876b2926::t_05e31889cdaaeb 27,29
+  s_fc0852876b2926::t_9ee8d011f1fc66 1-12,14-26,28,30,32-34
+  s_fc0852876b2926::t_95427e22424a13 31
+  s_fc0852876b2926::t_6c2912f07aae08 13
+packages/core/issues/stores/assignee-picks-store.test.ts
+  s_fc0852876b2926::t_8c05284ca828bc 77
+  s_fc0852876b2926::t_73919a340e512d 23-24,28-29,35,47-49,51-53,68-76,82-84,87-89,102-104,109-110
+  s_fc0852876b2926::t_6f3f3ce6909c08 78-81
+packages/core/types/property.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 46-47
+packages/views/issues/surface/use-issue-surface-data.ts
+  s_fc0852876b2926::t_061fe9d6707e64 174-175
+apps/mobile/app/(app)/[workspace]/more/pins.tsx
+  s_fc0852876b2926::t_fc687955686247 16
+packages/views/layout/panels/work-tree.tsx
+  s_fc0852876b2926::t_c38c89890c86b7 73
+packages/core/types/comment.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 49,84,92,104
+  s_fc0852876b2926::t_da6d8c474d7fc8 8-9
+apps/mobile/app/(app)/[workspace]/(tabs)/_layout.tsx
+  s_fc0852876b2926::t_6b668988472fc7 12
+packages/views/editor/extensions/mention-suggestion.tsx
+  s_fc0852876b2926::t_ce1413da75eeaf 63,887
+  s_fc0852876b2926::t_f0f5d8618267e7 81,128,150,158,519,716,721,868,884-885,920
+  s_fc0852876b2926::t_29007b602eb938 415
+packages/core/paths/paths.ts
+  s_fc0852876b2926::t_24e4b2fdb6ae09 106-110
+  s_fc0852876b2926::t_149bbdbc6f3608 101-105
+packages/views/locales/ja/terminal.json
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+  s_fc0852876b2926::t_695e3d0598982f 1-6,9-25,28-30
+packages/views/locales/en/inbox.json
+  s_fc0852876b2926::t_1e88066b608b5e 110,137,179,202
+  s_fc0852876b2926::t_08d643b89c70be 27
+packages/views/issues/components/comment-trigger-chips.test.tsx
+  s_fc0852876b2926::t_1099387415d26d 194,196
+packages/core/types/notification-preference.ts
+  s_fc0852876b2926::t_c597b50630da4a 37-38
+  s_fc0852876b2926::t_3ec3ac4a6698bb 6
+apps/docs/content/docs/project-resources.mdx
+  s_fc0852876b2926::t_513dcfce588e20 68,73,78
+  s_fc0852876b2926::t_bfb81273fab44c 79
+packages/views/locales/zh-Hans/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/core/issue-views/queries.ts
+  s_fc0852876b2926::t_e891a3639270b5 3,7,20,25,27,30,32-33
+apps/docs/content/docs/concepts.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_e9269ecb1671c4 18
+packages/views/locales/ja/inbox.json
+  s_fc0852876b2926::t_1e88066b608b5e 108,134,176,198
+  s_fc0852876b2926::t_08d643b89c70be 25
+packages/views/issues/components/issues-header.tsx
+  s_fc0852876b2926::t_5ad7f1b9c538c2 1832
+  s_fc0852876b2926::t_dd97a5c158d776 79,107,159,350,355-374,380-382,384-387,389,407,410-413,416,419,421,427,439,468,485,1349,1380,1391-1392
+apps/mobile/locales/en/inbox.json
+  s_fc0852876b2926::t_39ea930a9bb158 89
+apps/docs/content/docs/issue-wakeups.ja.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_9d07af0ad345fd 126
+apps/web/app/layout.tsx
+  s_fc0852876b2926::t_748f277f83a904 33
+packages/views/terminal/terminal.tsx
+  s_fc0852876b2926::t_35c5187c1c44bc 98,103-104,126,229,236-238
+  s_fc0852876b2926::t_37117b84e14889 97,105-111
+  s_fc0852876b2926::t_bdd02ff2b0c869 1-96,99-102,112-125,127-228,230-235,239-243
+apps/docs/content/docs/tasks.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+packages/views/projects/components/project-scope-editor.test.tsx
+  s_fc0852876b2926::t_c215e0b07e27f9 176-178
+  s_fc0852876b2926::t_883c376bbfff6b 41,101-102,115,118,120,123,128-129
+  s_fc0852876b2926::t_9474643d7ae8cf 1-40,42-100,103-114,116-117,119,121-122,124-127,130-175,179-180
+packages/views/onboarding/source-backfill-modal.test.tsx
+  s_fc0852876b2926::t_41a0735ea333aa 206,217
+packages/views/editor/schema/formats.test.ts
+  s_fc0852876b2926::t_7d3a5c3d757df1 30,82
+packages/views/locales/ru/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/core/issues/comment-trigger-outcomes.ts
+  s_fc0852876b2926::t_8ba0be487ba08f 9
+  s_fc0852876b2926::t_1ab0f99cd626b1 79
+apps/mobile/locales/en/issues.json
+  s_fc0852876b2926::t_40bb70bcc7b4c0 113
+  s_fc0852876b2926::t_b27f0c11032f38 171
+  s_fc0852876b2926::t_0a2f27825e0b2c 4,114,167
+  s_1ec9c2ffcc469d::t_4ba03ab6e4dd9e 196
+packages/views/locales/fr/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/views/runtimes/components/delete-runtime-dialog.tsx
+  s_fc0852876b2926::t_fab2437459a8b3 323
+packages/core/types/quick-action.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 25,45,53
+packages/views/locales/es/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/core/diagnostics/diagnostic-context.ts
+  s_fc0852876b2926::t_149bbdbc6f3608 86
+packages/views/issues/surface/issue-surface.tsx
+  s_fc0852876b2926::t_5f844bca7abc1b 343
+  s_fc0852876b2926::t_99ec9f6949fed9 375,388,417
+  s_fc0852876b2926::t_0f6b858b293f59 280
+  s_fc0852876b2926::t_8be5c8479ea887 399
+  s_fc0852876b2926::t_aaf8d079ebcba7 105,109-111,125-127,131
+apps/docs/components/demos/issue-draft-demo.tsx
+  s_fc0852876b2926::t_b4749cdfc9e3bb 27,39-40,68,85-86,112,129-130,156,173-174,200,217-218,246,345-365,509
+packages/views/layout/panels/team-panel.tsx
+  s_fc0852876b2926::t_9f3d1297016446 401
+  s_fc0852876b2926::t_c46bf7a75c2e3b 32
+  s_fc0852876b2926::t_9c07be70d2cec0 5-16,29-30,259,456-464
+packages/core/types/property.test.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 91
+apps/docs/content/docs/inbox.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,42,50,58,99,121,158,167-168
+apps/docs/content/docs/autopilots.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23,39
+packages/views/issues/components/agent-reply-marker.tsx
+  s_fc0852876b2926::t_684accf18b0628 1-2,5-16,18-19,21-24,26-28
+  s_fc0852876b2926::t_196750a1126308 3
+  s_fc0852876b2926::t_0f3be565ae4c27 25
+packages/views/layout/route-data-prefetch.tsx
+  s_fc0852876b2926::t_be374609f1b790 153,160,168,182
+  s_fc0852876b2926::t_84fba87be9ab4c 109,111
+packages/core/api/client.ts
+  s_fc0852876b2926::t_2c1329ea6046fe 4159
+  s_fc0852876b2926::t_f926a1a1ab95f5 2006
+  s_fc0852876b2926::t_7aafa5f4c2d260 508
+  s_fc0852876b2926::t_8d1b29ad1ea15a 2007-2013,2017-2029
+  s_fc0852876b2926::t_e3b549f2a4b413 507
+  s_fc0852876b2926::t_20498dca2a18f3 506,509
+  s_fc0852876b2926::t_9d7d80ea4a276b 3434,3437,3444
+  s_fc0852876b2926::t_b63b29b3b8c394 2053-2061
+  s_fc0852876b2926::t_001cac16085bd6 256,258
+  s_fc0852876b2926::t_d17489fb3502b5 2048,2050
+  s_fc0852876b2926::t_5f59233e38655e 257
+  s_fc0852876b2926::t_f9d7aef2a9f557 4190
+  s_fc0852876b2926::t_232deca09f798f 38-42
+  s_fc0852876b2926::t_1fc3c3ab5258c6 1102,2030-2047,2049,2051-2052,2062
+  s_fc0852876b2926::t_6a2be49c91a1a4 2014-2016
+  s_fc0852876b2926::t_57173725e65558 1090-1100
+  s_fc0852876b2926::t_ce2b6dd07291af 1101,2063
+packages/views/issues/components/annotation-reply-interactions.test.tsx
+  s_fc0852876b2926::t_1099387415d26d 22
+e2e/workspace-pinning.spec.ts
+  s_fc0852876b2926::t_0cd952328613aa 22
+apps/docs/content/docs/index.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+packages/core/types/billing.ts
+  s_fc0852876b2926::t_55a14d85a05b1e 561
+packages/views/locales/ja/settings.json
+  s_fc0852876b2926::t_adffc79c45df29 1695-1701
+  s_fc0852876b2926::t_1a4e0ebda32a9a 430
+  s_fc0852876b2926::t_1e88066b608b5e 127,839
+apps/mobile/data/stores/issues-view-store.ts
+  s_fc0852876b2926::t_6b668988472fc7 4-5,29
+packages/views/editor/content-editor.tsx
+  s_fc0852876b2926::t_91506383d81ef1 26-27
+apps/web/features/landing/i18n/en.ts
+  s_fc0852876b2926::t_d7f43e4fe7b20d 396,1622,3228,4128,4220
+  s_fc0852876b2926::t_9a00c34425a976 349,445,514,531,538,587,637,831,1378,1446,2440,2478,2523,2533,2565,2641,2859,2873,2876,2936,2987,3136,3186,3235,3308,3384,3394,3408,3412,3415,3417
+apps/docs/content/docs/agents-create.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+packages/views/projects/components/project-scope-editor.tsx
+  s_fc0852876b2926::t_c4365079d129e4 50-52,178-180,182,184-187,192-193,195-198,203-204,206-209,214
+  s_fc0852876b2926::t_c0db03c6912cc4 1-22,24-49,53-177,181,183,188-191,194,199-202,205,210-213,215-248
+  s_fc0852876b2926::t_4322753ab0c57c 23
+apps/docs/content/docs/inbox.mdx
+  s_fc0852876b2926::t_76e2fe2c281fa7 158
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_ae7ed74cf83d6a 3,42,50,58,99,121,167-168
+packages/views/locales/zh-Hant/inbox.json
+  s_fc0852876b2926::t_1e88066b608b5e 108,134,176,198
+  s_fc0852876b2926::t_08d643b89c70be 25
+apps/docs/content/docs/index.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+apps/docs/content/docs/cli.mdx
+  s_fc0852876b2926::t_218d3341e73253 427,534,546
+  s_fc0852876b2926::t_6b713353e6e3a7 439,507,527,559
+apps/mobile/data/realtime/use-projects-realtime.ts
+  s_fc0852876b2926::t_fc687955686247 3
+apps/docs/content/docs/cli.zh-Hant.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 501
+  s_fc0852876b2926::t_218d3341e73253 409,508,520
+  s_fc0852876b2926::t_652c7a1276ce05 421,533
+  s_fc0852876b2926::t_de945dd30d0d6b 481
+packages/views/modals/create-issue.test.tsx
+  s_fc0852876b2926::t_665f3da46e6422 2596-2599,2604-2605
+  s_fc0852876b2926::t_28ffa656547901 2475-2479,2481-2482,2484-2595,2600-2603,2606-2607
+  s_fc0852876b2926::t_5df79606b57cc9 11,21,25
+  s_fc0852876b2926::t_5a29e508931775 1329-1330
+  s_fc0852876b2926::t_28ae31622df9d1 152,154,160,167
+  s_fc0852876b2926::t_53161acb89ad81 272-273
+  s_fc0852876b2926::t_093122297046e1 366,371-373
+  s_fc0852876b2926::t_163b7bf0e2eb5c 14,2480,2483
+  s_fc0852876b2926::t_c9bbd4e1f44453 73
+  s_fc0852876b2926::t_a96f6d50b4c1b3 933,946,960,1011,1137,1690-1695,1712,1714
+  s_fc0852876b2926::t_18903f80416791 503,940,954,1013,1154,1172,1191,1413-1414,2608
+packages/core/types/project-scope.ts
+  s_fc0852876b2926::t_c45d9af06458e1 33-35,38-39
+  s_fc0852876b2926::t_ce601d3e85a859 23
+  s_fc0852876b2926::t_95d49a0cf24f9c 31-32
+  s_fc0852876b2926::t_1104889c3c50d9 1-3,5,7-13,18-22,24,27-28
+apps/docs/content/docs/agents-create.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+apps/mobile/locales/en/chat.json
+  s_fc0852876b2926::t_b27f0c11032f38 13
+packages/views/agents/create/manual-create-agent-page.tsx
+  s_fc0852876b2926::t_aa8afe2e3c537c 60-61
+  s_fc0852876b2926::t_98c0e068c46832 137
+  s_fc0852876b2926::t_7617d2912e371a 189
+  s_fc0852876b2926::t_f4e3e4d8807949 26
+packages/views/editor/extensions/mention-extension.test.ts
+  s_fc0852876b2926::t_7d3a5c3d757df1 28,31,115,123,142
+  s_fc0852876b2926::t_9c32ba15a4b175 56
+apps/mobile/app/(app)/[workspace]/inbox/[id].tsx
+  s_fc0852876b2926::t_85d3ca8a087745 20,120
+packages/core/paths/paths.test.ts
+  s_fc0852876b2926::t_a1f96b193e2cb5 65-74
+  s_fc0852876b2926::t_4690f03ef91dcb 75-77
+apps/desktop/src/renderer/src/App.tsx
+  s_fc0852876b2926::t_5ae0d64ce7a6de 109-110,551
+  s_fc0852876b2926::t_c5e1375cba08fb 114,130-135
+  s_fc0852876b2926::t_200be958baa882 127-129,136,144,205,220,379-388,485-487,490-492,538
+  s_fc0852876b2926::t_1d8e41a0a111e8 139-140,553
+  s_fc0852876b2926::t_347cd525d7f469 30-34,488-489
+apps/docs/content/docs/project-resources.zh-Hant.mdx
+  s_fc0852876b2926::t_513dcfce588e20 68,73,78
+  s_fc0852876b2926::t_a85adbcbce6fce 79
+packages/core/issues/stores/draft-store.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 68-69,74,97,237,257,329,408,417,468,474,563-625,754-755,775
+  s_fc0852876b2926::t_51935e0d319075 50
+packages/core/terminal/client.hook.test.tsx
+  s_fc0852876b2926::t_295cd10c293695 32-34
+  s_fc0852876b2926::t_036179ff4772a1 125-152
+  s_fc0852876b2926::t_b1613343320eb3 1-31,35-124,193-207
+  s_fc0852876b2926::t_22bba3b6588014 153-192
+apps/mobile/components/composer/message-composer.tsx
+  s_fc0852876b2926::t_b27f0c11032f38 585
+  s_fc0852876b2926::t_ec280acc1a12f9 41,162
+packages/views/locales/fr/inbox.json
+  s_fc0852876b2926::t_1e88066b608b5e 110,137,179,202
+  s_fc0852876b2926::t_08d643b89c70be 27
+apps/docs/content/docs/agents.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 43
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+apps/docs/content/docs/concepts.zh-Hant.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_1a593f6ce544ab 18
+apps/docs/content/docs/comments.ko.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+apps/desktop/src/renderer/src/routes.tsx
+  s_fc0852876b2926::t_6fce2024791a4b 172-175
+  s_fc0852876b2926::t_1d34edd50be3f8 32,176
+packages/views/workflows/workflow-editor-page.tsx
+  s_fc0852876b2926::t_4ac658e3ff661e 768
+packages/core/issues/stores/issues-scope-store.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 13,17
+apps/docs/content/docs/assigning-issues.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_129389be1111a2 79,94
+packages/views/locales/ko/autopilots.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 600
+  s_fc0852876b2926::t_e8df72cef35d98 326,388,488,490,492
+packages/views/modals/quick-create-issue.test.tsx
+  s_fc0852876b2926::t_97d3ceeb880ce7 86,93
+  s_fc0852876b2926::t_cda7dceda6ddee 619-622,634,640,653
+  s_fc0852876b2926::t_20b28c795dd8f5 28
+  s_fc0852876b2926::t_9d2199005e99a2 545
+  s_fc0852876b2926::t_7a2acfb45829ea 969-970
+  s_fc0852876b2926::t_861f435ca9edf8 165
+  s_fc0852876b2926::t_020ccd9ddd4410 566
+  s_fc0852876b2926::t_268a398ea6fe23 892-897,904-906,918,923
+  s_fc0852876b2926::t_6f5b53ca535a7c 131-141
+  s_fc0852876b2926::t_44665b6e8a819b 520,529
+  s_fc0852876b2926::t_dd21e52e8cd167 686
+  s_fc0852876b2926::t_6431d1ddd92d0e 108-109
+apps/docs/content/docs/project-resources.ja.mdx
+  s_fc0852876b2926::t_513dcfce588e20 69,74,79
+  s_fc0852876b2926::t_5142892994536a 80
+packages/views/terminal/terminal-theme.ts
+  s_fc0852876b2926::t_aa994f533c6012 175-180,188-195,198,203,206-211,243-292
+  s_fc0852876b2926::t_5bfca177088cd8 199-202
+  s_fc0852876b2926::t_dce3e947a281bd 49-53,126-129
+  s_fc0852876b2926::t_35c5187c1c44bc 204-205
+  s_fc0852876b2926::t_043250f0be487c 1-48,57-124,130-143,145-150,153-158,160-174,181-187,212-242,293
+  s_fc0852876b2926::t_f953058e27c297 196-197
+  s_fc0852876b2926::t_ea7fef9e5755d3 54-56,125,144,151-152,159
+apps/docs/content/docs/autopilots.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23
+packages/views/locales/en/settings.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 436
+  s_fc0852876b2926::t_adffc79c45df29 1711-1717
+  s_fc0852876b2926::t_1e88066b608b5e 128,849
+apps/docs/content/docs/issues.zh.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,158,162,180
+  s_fc0852876b2926::t_6505dfa9fc46d9 20
+packages/views/issues/utils/filter.ts
+  s_fc0852876b2926::t_e671a58cd90ef8 410-411
+  s_fc0852876b2926::t_4a94ec191c821e 4,24,75
+packages/views/editor/extensions/index.ts
+  s_fc0852876b2926::t_12613a8ce7fce8 229
+packages/core/platform/storage-cleanup.test.ts
+  s_fc0852876b2926::t_8c05284ca828bc 35,61
+packages/core/issues/stores/sidebar-tree-store.ts
+  s_fc0852876b2926::t_dd967cb6fa19a8 10
+packages/core/issue-views/use-active-view.test.tsx
+  s_fc0852876b2926::t_8c05284ca828bc 41
+packages/views/projects/components/project-lead-picker.tsx
+  s_fc0852876b2926::t_0db27417a5e777 39-40
+packages/views/auth/login-page.tsx
+  s_fc0852876b2926::t_dc4cd3f7ce2f7e 108
+  s_fc0852876b2926::t_1dfd15754b1515 63-66
+  s_fc0852876b2926::t_af7100342cdfbb 431
+packages/views/issues/components/comment-input.tsx
+  s_fc0852876b2926::t_5284bd9a50ab12 353-354,360
+  s_fc0852876b2926::t_2bbc996fdfb7e2 248,255
+  s_fc0852876b2926::t_bfd34c4629b0d8 312
+  s_fc0852876b2926::t_2cd47e1417f6f3 61
+apps/docs/content/docs/tasks.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+packages/views/issues/components/issue-sidebar-settings.tsx
+  s_fc0852876b2926::t_c58ce40b17ecd1 54
+packages/views/locales/ja/layout.json
+  s_fc0852876b2926::t_c23be02de1b5e0 185,197
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+packages/core/platform/system-notification.ts
+  s_fc0852876b2926::t_bcca08cd521558 54-59
+packages/views/locales/zh-Hant/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/core/issues/comment-deletion.ts
+  s_fc0852876b2926::t_f454dfac382e90 16
+  s_fc0852876b2926::t_7c96ce4ae3ba63 5
+packages/views/locales/zh-Hant/issues.json
+  s_fc0852876b2926::t_c23be02de1b5e0 596,753
+  s_fc0852876b2926::t_1a4e0ebda32a9a 134,412,416,1121,1381
+  s_fc0852876b2926::t_e8df72cef35d98 685,1064,1621
+  s_fc0852876b2926::t_09664b1aee6de9 792
+  s_fc0852876b2926::t_1e88066b608b5e 551
+  s_fc0852876b2926::t_9d3324f2b07bda 1987-2009
+packages/views/billing/trial-notices.tsx
+  s_fc0852876b2926::t_730e9d91b50952 224
+  s_fc0852876b2926::t_cf6d6a8c6b2c9d 6
+  s_fc0852876b2926::t_977577bcc7ad5e 244
+apps/docs/content/docs/projects.zh-Hant.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 93
+packages/views/locales/zh-Hans/settings.json
+  s_fc0852876b2926::t_adffc79c45df29 1695-1701
+  s_fc0852876b2926::t_1a4e0ebda32a9a 430
+  s_fc0852876b2926::t_1e88066b608b5e 127,839
+packages/views/locales/zh-Hans.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+apps/docs/content/docs/developers/architecture.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_640c0f1d853f3d 126
+packages/views/locales/ko/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 90,114,300
+apps/mobile/locales/zh-Hans/issues.json
+  s_fc0852876b2926::t_0a2f27825e0b2c 4,112,165
+  s_fc0852876b2926::t_b27f0c11032f38 169
+  s_1ec9c2ffcc469d::t_4ba03ab6e4dd9e 194
+  s_fc0852876b2926::t_5247e48def3280 111
+packages/views/issues/components/pickers/assignee-picker.tsx
+  s_fc0852876b2926::t_48e63afb6cddfc 234,250
+  s_fc0852876b2926::t_65d16b7a6c4db4 5,12,71,232,251-255,259-260,264,285,298-299,332,342
+  s_fc0852876b2926::t_acbebe6ae19d93 239
+  s_fc0852876b2926::t_6f2e7616f249e4 237-238
+packages/views/modals/quick-create-issue.tsx
+  s_fc0852876b2926::t_7b7923cab229b5 578
+  s_fc0852876b2926::t_8ebc00c15f73d7 35,38
+  s_fc0852876b2926::t_9b99a205d9214c 90
+  s_fc0852876b2926::t_b80a80694b344f 186-189,191,197-199,202-204,209,213,215,219-222
+  s_fc0852876b2926::t_d27a8d0a9b21f6 442
+  s_fc0852876b2926::t_6258dc522119cd 192-193
+  s_fc0852876b2926::t_d3492fd1eaf396 154,170-171
+  s_fc0852876b2926::t_11511a589d53bb 963,1004,1007-1008,1011,1019,1028-1042
+  s_fc0852876b2926::t_c7da5b084c8bb0 433
+  s_fc0852876b2926::t_d5126540534a6f 423
+  s_fc0852876b2926::t_1722eccec07686 684,692
+packages/core/paths/route-icons.ts
+  s_fc0852876b2926::t_149bbdbc6f3608 37,60-61,76-77,105
+packages/views/terminal/terminal.test.tsx
+  s_fc0852876b2926::t_6ce8d3c582972d 3,317,344,350,358,381
+  s_fc0852876b2926::t_3bcfbb3e3e1131 16-19,22-27,31
+  s_fc0852876b2926::t_1efb436824a111 45-47,70,76,293,301,311
+  s_fc0852876b2926::t_22f6fff65faa94 1-2,4-15,20-21,28-30,32-44,48-69,71-75,77-143,148-292,294-300,302-310,312-316,318-329,331-333,335-338,340-343,345-349,351-357,359-380,382-443
+  s_fc0852876b2926::t_7f4f9a3a88c754 330,334,339
+  s_fc0852876b2926::t_3a54e808c85ccf 144-147
+packages/views/locales/ko/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 185,197
+apps/docs/content/docs/agents-create.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+packages/views/editor/extensions/mention-suggestion.doc-load.test.tsx
+  s_fc0852876b2926::t_6ab1c3bd3d67be 66
+  s_fc0852876b2926::t_adb006c9a773df 12,65,67-68,97
+packages/views/issue-views/view-header.test.tsx
+  s_fc0852876b2926::t_53c6a05c230979 89,93,120,129,148,160,170,179,188
+  s_fc0852876b2926::t_0626286d6e5de7 119
+  s_fc0852876b2926::t_5ad910128e6d64 108-109,112,114
+packages/views/settings/components/code-tab.test.tsx
+  s_fc0852876b2926::t_e6d81d1022fbe2 7,113,344-354
+  s_fc0852876b2926::t_2be938713fc993 355-356
+packages/views/search/use-object-search.ts
+  s_fc0852876b2926::t_fe937bd7be8936 143
+  s_fc0852876b2926::t_84d850adccae59 25
+packages/views/layout/global-shortcuts.chat.test.tsx
+  s_fc0852876b2926::t_aaacb3c1880c5c 3,86-97,256-298
+  s_fc0852876b2926::t_2e85c11259c1d1 299
+packages/views/locales/zh-Hant/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 211-212
+packages/views/layout/dashboard-guard.tsx
+  s_fc0852876b2926::t_62272a5b6dc951 26,28
+packages/views/locales/ko/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 103
+packages/views/layout/issue-page-refresh.test.tsx
+  s_fc0852876b2926::t_dfed03514df661 40-41,43,47
+packages/views/locales/ru/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/views/issues/components/list-row.tsx
+  s_fc0852876b2926::t_9e0de1bd5ce02a 157
+  s_fc0852876b2926::t_3dd25124289708 27
+packages/views/layout/global-shortcuts.history.test.tsx
+  s_fc0852876b2926::t_6c313cc6075282 15
+packages/core/realtime/agent-reply-notification.test.tsx
+  s_fc0852876b2926::t_3e64ec4235df4b 125
+  s_fc0852876b2926::t_112ca78eeb4252 1-119,122-123,126-209
+  s_fc0852876b2926::t_39c6db66497b01 120-121,124
+packages/views/autopilots/components/autopilot-list-toolbar.tsx
+  s_fc0852876b2926::t_674f1a5d5e1c0e 21
+apps/mobile/components/issue/attribute-row.tsx
+  s_fc0852876b2926::t_39ea930a9bb158 83,113-119,190,219-224
+apps/docs/components/demos/create-agent-demo.tsx
+  s_fc0852876b2926::t_b4749cdfc9e3bb 4
+  s_fc0852876b2926::t_669abe1b7e983e 41,113,185,257,329
+packages/core/issues/stores/draft-store.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 139-153,181,194,209-212,387,390-391
+  s_fc0852876b2926::t_c284d71fff727e 23,66,96
+apps/mobile/data/schemas.ts
+  s_fc0852876b2926::t_39ea930a9bb158 622
+packages/views/locales/ja/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/views/issues/components/issue-trees-section.test.tsx
+  s_fc0852876b2926::t_df955aed3c8d80 286
+  s_fc0852876b2926::t_69159551e73e80 322-325
+  s_fc0852876b2926::t_18c8c6c25f6e96 3
+  s_fc0852876b2926::t_59062c80ca2853 391
+  s_fc0852876b2926::t_45065fb9487ba0 283-285
+  s_fc0852876b2926::t_ee3d51c9bbbf29 333
+  s_fc0852876b2926::t_92cd321d4da15b 310-317
+  s_fc0852876b2926::t_517dfb6095efd8 1-2,4-116,120-146,151-178,180-194,198-210,212-218,220-232,234-244,246-259,261-273,275-281,287-300,302-309,318-321,326-327,329-332,334-341,343-356,358-390,392-410,412-453
+  s_fc0852876b2926::t_129c949ac0649e 411
+  s_fc0852876b2926::t_c7f98af87ecce8 282
+  s_fc0852876b2926::t_163b7bf0e2eb5c 117-119,147-150,179,195-197,211,219,233,245,260,274,301,328,342,357
+apps/docs/content/docs/issue-wakeups.ko.mdx
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+  s_fc0852876b2926::t_c82a66a9934d96 126
+apps/docs/content/docs/members-roles.ko.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+packages/views/common/actor-avatar.tsx
+  s_fc0852876b2926::t_5b7b08021f76f9 141,147
+  s_fc0852876b2926::t_639408ea2e29d1 33
+apps/docs/content/docs/cli.ko.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 428,536
+  s_fc0852876b2926::t_6b713353e6e3a7 508
+  s_fc0852876b2926::t_218d3341e73253 416,523
+  s_fc0852876b2926::t_b65ed8db1d3486 488
+apps/web/config/google-analytics.ts
+  s_fc0852876b2926::t_a457240cde8587 71-72
+packages/views/issues/surface/use-issue-surface-controller.test.tsx
+  s_fc0852876b2926::t_e90e96abdf3023 2117
+  s_fc0852876b2926::t_c45800bc9d522d 1040,1075,1626,2025
+  s_fc0852876b2926::t_f8da8846e0a3b3 304,321,529,535,538,1088,1107
+apps/docs/content/docs/issue-wakeups.zh.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_32bc95df09a62f 126
+packages/views/issues/utils/filter.test.ts
+  s_fc0852876b2926::t_36af7bd64acb06 938
+  s_fc0852876b2926::t_e671a58cd90ef8 854-859,861-862,865-866,869,874
+  s_fc0852876b2926::t_9f22f92d6a09bd 881-882,927,956,973
+  s_fc0852876b2926::t_796ff16bb9b234 58,61,85,126,669,777,779,822,831,850-851
+packages/core/workspace/task-tree-retention.test.ts
+  s_fc0852876b2926::t_a84ffab2be89d9 1-48
+apps/docs/content/docs/triggering-agents.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+apps/mobile/lib/markdown/markdown.tsx
+  s_fc0852876b2926::t_a156c3e10fd380 25,33-35,144
+packages/views/inbox/components/inbox-empty-state.tsx
+  s_fc0852876b2926::t_17d020f3de583a 329-340
+  s_fc0852876b2926::t_1521f9c908e4ef 104
+  s_fc0852876b2926::t_2038c2ea145213 366-373
+packages/core/markdown/index.ts
+  s_fc0852876b2926::t_8b5ce51f662483 2
+apps/docs/content/docs/agents-create.fr.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 29
+apps/mobile/components/inbox/detail-label.tsx
+  s_fc0852876b2926::t_fc687955686247 137
+packages/views/agents/create/create-agent-ui.test.ts
+  s_fc0852876b2926::t_a833190fddecaf 24
+apps/docs/content/docs/project-resources.fr.mdx
+  s_fc0852876b2926::t_513dcfce588e20 68,73,78
+  s_fc0852876b2926::t_c528e3d0a31058 79
+apps/mobile/components/ui/actor-avatar.tsx
+  s_fc0852876b2926::t_53a046b0810665 118,136,145,156
+  s_fc0852876b2926::t_8cbac0e2de7a5a 32,34
+packages/views/locales/es.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+packages/views/agents/create/choose-runtime-page.tsx
+  s_fc0852876b2926::t_4b27537a4a9a21 27
+  s_fc0852876b2926::t_8cc50de06da8ef 176-178,189
+packages/views/locales/es/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/views/inbox/components/use-move-on-after-auto-archive.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 146-147
+packages/core/api/terminal-ticket.test.ts
+  s_fc0852876b2926::t_40f6f22ae2a6a5 1-62
+packages/views/layout/route-icon-components.test.tsx
+  s_fc0852876b2926::t_0c8b98fe889319 12
+apps/desktop/src/renderer/src/platform/session-storage.test.ts
+  s_fc0852876b2926::t_5ae0d64ce7a6de 1-53
+SELF_HOSTING_ADVANCED.md
+  s_fc0852876b2926::t_07b9ba70f0a06b 114-122,160
+packages/views/issues/components/swimlane-view.test.tsx
+  s_fc0852876b2926::t_096f02d4ef738a 276-277,567-568,1278-1279
+  s_fc0852876b2926::t_ce6516ed1c5c90 1332,1343-1344
+packages/views/issues/components/issue-detail-route.tsx
+  s_fc0852876b2926::t_d1880020cfa463 92
+  s_fc0852876b2926::t_be902b3c293c61 3
+  s_fc0852876b2926::t_88ed9c29842338 97-99
+  s_fc0852876b2926::t_90192f1f3263cf 26-27
+  s_fc0852876b2926::t_2fe9b50496207d 155
+  s_fc0852876b2926::t_885bf88770c890 5
+apps/docs/content/docs/triggering-agents.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+packages/views/issues/surface/issue-surface.test.tsx
+  s_fc0852876b2926::t_f8775fafd74c3c 954
+packages/core/issues/sub-issue-create.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 8,17-19,23
+apps/docs/content/docs/environment-variables.ko.mdx
+  s_fc0852876b2926::t_fa55ee311b179a 214
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132
+packages/views/issues/components/comment-card-actions-menu.test.tsx
+  s_fc0852876b2926::t_9b01ebadf93ebf 8-11
+  s_fc0852876b2926::t_a5d57c9d0f7045 163
+packages/core/quick-actions/body.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 12,14
+packages/core/types/api.ts
+  s_fc0852876b2926::t_e2aa165e57026b 1,210-211,216,218,262-263,268-273,292,294,342-343,345,380,382,391
+  s_fc0852876b2926::t_579a2fef4f86c5 176
+packages/views/locales/es/members.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 21
+packages/views/locales/zh-Hans/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/views/locales/es/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 91,115,311
+apps/desktop/src/renderer/src/platform/session-storage.ts
+  s_fc0852876b2926::t_206a0457d70a03 1-39
+e2e/perf/floating-chat-lifetime.spec.ts
+  s_fc0852876b2926::t_748f277f83a904 102
+packages/core/issues/ws-updaters.ts
+  s_fc0852876b2926::t_f2d140156f3d40 200-202
+  s_fc0852876b2926::t_d219f19b4f9b0e 42
+  s_fc0852876b2926::t_b89d8ae4c73269 549,641
+packages/views/issues/components/pickers/actor-property-picker.tsx
+  s_fc0852876b2926::t_674cb89dc4022b 46-49
+packages/core/types/issue.ts
+  s_fc0852876b2926::t_c5cc845f9651a0 261-266
+  s_fc0852876b2926::t_02f3b00290a5c7 35-36,38-40,218
+  s_fc0852876b2926::t_40d9e6dae4dad0 41-42
+  s_fc0852876b2926::t_d9ce6e7ede3e30 255-260
+packages/views/agents/create/ai-builder-session-page.tsx
+  s_fc0852876b2926::t_98001064c92900 44-45,51,55
+packages/views/locales/zh-Hant/projects.json
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_7fb5ea9dbb7b88 183-186
+apps/docs/content/docs/quick-actions.fr.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+apps/mobile/docs/markdown-rendering-adr.md
+  s_fc0852876b2926::t_ac4705033f14f4 58
+  s_fc0852876b2926::t_0fd2c5e415a09b 57
+packages/core/issues/stores/view-store-negation.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 55,57-58,73,78
+apps/mobile/data/api.ts
+  s_fc0852876b2926::t_39ea930a9bb158 572
+packages/core/issue-views/definition.test.ts
+  s_fc0852876b2926::t_8c05284ca828bc 50,58
+packages/core/realtime/use-realtime-sync-ws-instance.test.tsx
+  s_fc0852876b2926::t_8e51d4d5140136 1028
+  s_fc0852876b2926::t_90ba0afbf7a215 153,157,162
+packages/core/appearance/theme-variables.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 288
+packages/core/issues/index.ts
+  s_fc0852876b2926::t_955db531ee95fd 25
+  s_fc0852876b2926::t_5f840b087730b3 26
+packages/views/layout/panels/sidebar-settings.test.tsx
+  s_fc0852876b2926::t_7e8af43c98a023 2
+packages/core/issues/surface/scope.ts
+  s_fc0852876b2926::t_3b26510b992db2 1,3-5,10-11,23,30,46-48
+packages/views/locales/en.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+packages/views/search/commands/context-commands.tsx
+  s_fc0852876b2926::t_f763dadc6ce6f1 108
+  s_fc0852876b2926::t_2ebd9398813343 31
+  s_fc0852876b2926::t_f4649c292f00af 73-79
+  s_fc0852876b2926::t_a965d18a3f911d 72
+apps/docs/content/docs/inbox.ko.mdx
+  s_fc0852876b2926::t_171cdd087713cf 58
+  s_fc0852876b2926::t_76e2fe2c281fa7 158
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_0f1fccb3cd2d6c 3,42,50,99,121,167-168
+packages/views/issues/components/table-view.tsx
+  s_fc0852876b2926::t_aedd8b906d88cc 785
+  s_fc0852876b2926::t_711c9fe57e30fb 166
+  s_fc0852876b2926::t_13c7bad13924b2 99,2409-2410
+apps/docs/content/docs/developers/conventions.ja.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 205,211
+  s_fc0852876b2926::t_652c7a1276ce05 135
+apps/docs/content/docs/triggering-agents.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+apps/mobile/data/mutations/issues.ts
+  s_fc0852876b2926::t_fc687955686247 525,672-675,678
+packages/ee/project-folders/data.ts
+  s_fc0852876b2926::t_fb9f0dc20eded7 20
+packages/ui/markdown/Markdown.test.tsx
+  s_fc0852876b2926::t_89527e87bacef9 1-19,31
+  s_fc0852876b2926::t_ac4705033f14f4 20-30
+packages/views/autopilots/components/autopilot-dialog.validation.test.tsx
+  s_fc0852876b2926::t_db8af5617c67fb 118-119
+  s_fc0852876b2926::t_a5940501b2a53a 155
+  s_fc0852876b2926::t_4f428eec040cdc 117,120
+  s_fc0852876b2926::t_26d97a5f3b032a 171,177
+packages/views/locales/zh-Hant/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 90,114,300
+packages/views/rich-content/member-mention-fallback.test.tsx
+  s_fc0852876b2926::t_ac4705033f14f4 76-86
+  s_fc0852876b2926::t_3979dd52061ee2 1-75,87
+packages/views/layout/use-dashboard-guard.ts
+  s_fc0852876b2926::t_2ef99997114254 78
+apps/docs/content/docs/comments.zh.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+packages/core/issues/mutations.ts
+  s_fc0852876b2926::t_bff7efc6a9f950 46
+  s_fc0852876b2926::t_7d40141e9317be 57
+apps/mobile/locales/zh-Hant/inbox.json
+  s_fc0852876b2926::t_39ea930a9bb158 89
+apps/docs/content/docs/projects.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 93
+apps/docs/content/docs/cli.ja.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 428,536
+  s_fc0852876b2926::t_6b713353e6e3a7 508
+  s_fc0852876b2926::t_218d3341e73253 416,523
+  s_fc0852876b2926::t_366c273e1fddec 488
+apps/mobile/data/realtime/use-issue-realtime.test.ts
+  s_fc0852876b2926::t_9776f837f677a7 116
+packages/views/locales/fr/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 189,203
+packages/views/quick-actions/components/quick-action-dialog.tsx
+  s_fc0852876b2926::t_36775b83c7f75b 42
+apps/docs/content/docs/mentioning-agents.fr.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+packages/views/search/use-actor-directory.ts
+  s_fc0852876b2926::t_be6a1566ef1946 13,28-30
+  s_fc0852876b2926::t_63608f0062bb34 58
+packages/core/api/schemas.test.ts
+  s_fc0852876b2926::t_fcfc46b946e9b5 241-242,247,249
+  s_fc0852876b2926::t_b40caf155d3e66 243-246,248
+  s_fc0852876b2926::t_118aa0e3efad18 5
+  s_fc0852876b2926::t_bac21a8f1b788e 250-265
+  s_fc0852876b2926::t_66125cefe08310 1775,1780,1802,1807
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 2061,2067
+packages/core/issue-views/baseline.ts
+  s_fc0852876b2926::t_be6dc3f7707f61 3,85-95,111
+packages/views/locales/en/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 212-213
+packages/views/locales/ru/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 208-209
+packages/views/search/search-command.test.tsx
+  s_fc0852876b2926::t_1d34edd50be3f8 18,376
+  s_24c6e81b839946::t_9705ffacb4eeac 445-446
+apps/desktop/src/renderer/src/platform/issue-view-tabs.test.tsx
+  s_fc0852876b2926::t_62b5e051670a03 132,134,137,142,146
+packages/core/permissions/index.ts
+  s_fc0852876b2926::t_8e7181b5a45adf 21
+packages/views/layout/bottom-bar.tsx
+  s_fc0852876b2926::t_fe51cbb3876e6c 75-76,78
+apps/mobile/data/stores/mention-draft-store.ts
+  s_fc0852876b2926::t_ec280acc1a12f9 21,25
+apps/mobile/lib/member-role.test.ts
+  s_fc0852876b2926::t_39ea930a9bb158 4,20,23,28
+packages/core/realtime/use-realtime-sync.ts
+  s_fc0852876b2926::t_c11d0acdd4b3d6 2135
+  s_fc0852876b2926::t_ef446b540c6db6 1217
+  s_fc0852876b2926::t_a3e5503a0a51ff 897
+  s_fc0852876b2926::t_dcf3afe31d9433 1443
+  s_fc0852876b2926::t_534ca6301eff10 1350-1359
+  s_fc0852876b2926::t_9c4b1c9bce0662 79
+  s_fc0852876b2926::t_077b505ca9232f 26
+  s_fc0852876b2926::t_7381c9bba89a9b 689-728,1360
+  s_fc0852876b2926::t_6fbefd182383f4 114
+  s_fc0852876b2926::t_d3c01d4c4e341a 1428
+  s_fc0852876b2926::t_e8032bed547ad4 25
+  s_fc0852876b2926::t_445675da8905ff 1361
+e2e/perf/typing-under-live-runs.spec.ts
+  s_fc0852876b2926::t_8d70a214c2dfdc 71
+  s_acfdc68cf04713::t_78176feac89437 91
+packages/views/locales/zh-Hant/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/views/modals/create-issue-batch-continuation.test.tsx
+  s_fc0852876b2926::t_cada6b20959231 413
+  s_fc0852876b2926::t_f4d0047fce6d03 445
+apps/docs/content/docs/tutorial.ja.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+apps/mobile/app/(app)/[workspace]/issue/[id]/picker/assignee.tsx
+  s_fc0852876b2926::t_0a2f27825e0b2c 22
+packages/views/projects/components/project-detail.tsx
+  s_fc0852876b2926::t_dd7a85e18e38c9 261,263
+packages/views/locales/es/terminal.json
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+  s_fc0852876b2926::t_695e3d0598982f 2-6,9-15,18-25,28
+apps/desktop/src/renderer/src/App.pre-shared-token.test.tsx
+  s_fc0852876b2926::t_5ae0d64ce7a6de 5,248-250
+  s_fc0852876b2926::t_cfbb87cd3d9357 2
+  s_fc0852876b2926::t_e0ad5a7fe42c43 1,3-4,6-247,251-300
+apps/mobile/components/issue/pickers/mention-picker-body.tsx
+  s_fc0852876b2926::t_8a4d3ca6f540ff 186
+  s_fc0852876b2926::t_39ea930a9bb158 68
+  s_fc0852876b2926::t_a610d391356e80 10-11,24,54-57,124-126,128-129,132,144,148,196,225
+apps/docs/content/docs/developers/architecture.ko.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_8ed179bf8cc06d 126
+packages/views/settings/components/members-tab.tsx
+  s_fc0852876b2926::t_d7747bf14781c5 1145
+  s_fc0852876b2926::t_887fbbe43034a1 976
+  s_fc0852876b2926::t_46b8418172b65e 1169,1173-1175
+  s_fc0852876b2926::t_f7988199c74d76 354
+  s_fc0852876b2926::t_787dd78471b3e1 762
+  s_fc0852876b2926::t_0960c1382fe3c7 615,626
+  s_fc0852876b2926::t_4a45f49ec37c18 198
+  s_fc0852876b2926::t_0a69e15b483463 882,886,892
+  s_fc0852876b2926::t_ecade5cb765002 79
+  s_fc0852876b2926::t_d6be7359d9eba4 1230
+  s_fc0852876b2926::t_ba53df8eac5cb8 988
+  s_fc0852876b2926::t_b2705789674711 590,597
+  s_fc0852876b2926::t_70afb9221bb4a1 97
+  s_fc0852876b2926::t_2da7197155d0d3 464-466,470,472,487,489,497-499,503
+  s_fc0852876b2926::t_65c349e70506a0 1022
+  s_fc0852876b2926::t_735cfe19179ddf 1249
+  s_fc0852876b2926::t_4783aebf418b00 1023-1024,1076,1113,1125,1139
+  s_fc0852876b2926::t_bc4ec228536019 261
+  s_fc0852876b2926::t_6352dad03d7041 118,120
+apps/docs/content/docs/agents.fr.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+  s_fc0852876b2926::t_9b37efea436c4f 43
+apps/docs/content/docs/tutorial.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+apps/docs/content/docs/tasks.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+packages/views/chat/components/chat-wakeups.tsx
+  s_fc0852876b2926::t_85d3ca8a087745 103
+packages/views/issues/components/issue-detail-route.test.tsx
+  s_fc0852876b2926::t_48fc12b592a359 8
+  s_fc0852876b2926::t_b6596161ab72b0 250,254,256-259,261-263,265,267
+  s_fc0852876b2926::t_c489c03dea344b 251-253,255,260,264,266
+  s_fc0852876b2926::t_6bbda89713f35c 268
+packages/views/issues/components/batch-action-toolbar.confirm.test.tsx
+  s_fc0852876b2926::t_aab6640cd456e9 7
+  s_fc0852876b2926::t_9dc552feb3b4bf 170
+apps/web/features/landing/i18n/zh.ts
+  s_fc0852876b2926::t_d7f43e4fe7b20d 380,1604,3208,4107
+  s_fc0852876b2926::t_9a00c34425a976 333,429,498,515,522,571,621,815,1362,1430,2420,2458,2503,2513,2545,2621,2839,2853,2856,2916,2967,3116,3166,3215,3288,3363,3373,3387,3391,3394,3396
+apps/docs/content/docs/agents.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 43
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+apps/docs/content/docs/assigning-issues.zh-Hant.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_693fbc0381abd4 79,94
+packages/views/locales/ru/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 115
+packages/views/locales/es/projects.json
+  s_fc0852876b2926::t_b421def28d6a44 183-186
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+packages/views/issues/components/retry-run-button.tsx
+  s_fc0852876b2926::t_674cb89dc4022b 33
+apps/mobile/data/realtime/use-my-list-realtime.ts
+  s_fc0852876b2926::t_6b668988472fc7 1-60
+packages/views/locales/ja/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/views/locales/fr/settings.json
+  s_fc0852876b2926::t_adffc79c45df29 1711-1717
+  s_fc0852876b2926::t_1a4e0ebda32a9a 436
+  s_fc0852876b2926::t_1e88066b608b5e 128,849
+packages/views/editor/utils/preprocess.ts
+  s_fc0852876b2926::t_ac4705033f14f4 6,17
+apps/desktop/src/renderer/src/platform/daemon-reauth.ts
+  s_fc0852876b2926::t_3c8b32730c2c26 2,27-29
+packages/core/issues/ownership.test.ts
+  s_fc0852876b2926::t_290309a033ad0f 10,14,20
+apps/docs/content/docs/tasks.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+packages/views/locales/ru.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+apps/mobile/app/(app)/[workspace]/_layout.tsx
+  s_fc0852876b2926::t_647641ac63982c 296
+  s_fc0852876b2926::t_6b668988472fc7 10,79
+packages/views/issues/components/pickers/assignee-picker.keyboard.test.tsx
+  s_fc0852876b2926::t_ed0bdf1a860477 8,18-19,24,74-75
+packages/core/issues/agent-reply.test.tsx
+  s_fc0852876b2926::t_98c1a7765e10fb 97
+  s_fc0852876b2926::t_f53e46716994f0 98-100
+  s_fc0852876b2926::t_17decd5b6862b7 28
+  s_fc0852876b2926::t_71acebc5444aa4 1-27,29-96,101-139
+packages/views/locales/fr/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/core/issues/stores/assignee-picks-store.ts
+  s_fc0852876b2926::t_290309a033ad0f 26-31,58-68
+packages/views/locales/fr/projects.json
+  s_fc0852876b2926::t_31feacf9a024d7 183-186
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+apps/docs/content/docs/tutorial.fr.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+apps/docs/content/docs/mentioning-agents.ko.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+packages/core/issues/sidebar-list.ts
+  s_fc0852876b2926::t_be6dc3f7707f61 158,198,240
+apps/docs/content/docs/index.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+apps/docs/content/docs/tutorial.zh.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+packages/views/locales/ru/terminal.json
+  s_fc0852876b2926::t_695e3d0598982f 2-6,9-15,18-25,28
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+packages/core/issues/queries.ts
+  s_fc0852876b2926::t_b89d8ae4c73269 100
+  s_fc0852876b2926::t_9d7d80ea4a276b 103,106,228,240,293
+packages/views/issues/hooks/use-quick-action-menu.ts
+  s_fc0852876b2926::t_b5b6a8e6029f31 10
+  s_fc0852876b2926::t_3613ffa1d97e9f 15-16,64,66,86,106,110-111,245
+  s_fc0852876b2926::t_d18fac73b46beb 103
+  s_fc0852876b2926::t_e42aca81785b64 170,173
+packages/views/locales/zh-Hans/projects.json
+  s_fc0852876b2926::t_9ee9c672ad5d33 183-186
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+.github/ISSUE_TEMPLATE/feature_request.yml
+  s_fc0852876b2926::t_f6d4db6f3e3fa5 47-48
+packages/views/locales/ru/autopilots.json
+  s_fc0852876b2926::t_e8df72cef35d98 329,375,491,493,495
+  s_fc0852876b2926::t_1a4e0ebda32a9a 609
+packages/views/issues/components/comment-composers.test.tsx
+  s_fc0852876b2926::t_cab79cf20d394e 531,537,542-543
+apps/docs/content/docs/daemon-runtimes.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 253,367
+apps/docs/content/docs/issues.ja.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,156,160,178
+  s_fc0852876b2926::t_7e89a8f9aebbff 20
+packages/core/paths/spaces.ts
+  s_fc0852876b2926::t_149bbdbc6f3608 41
+packages/views/search/pages/issue-pages.tsx
+  s_fc0852876b2926::t_c6fde78753e94a 186,192-193,204
+packages/core/issues/surface/query-plan.ts
+  s_fc0852876b2926::t_3b26510b992db2 53-59
+  s_fc0852876b2926::t_9d7d80ea4a276b 2,24
+packages/views/issues/components/swimlane-view.tsx
+  s_fc0852876b2926::t_13c7bad13924b2 443-444
+  s_fc0852876b2926::t_98aa65034a924b 513-515
+packages/core/inbox/filters.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 114
+  s_fc0852876b2926::t_b9efdc7db0c8b3 534-536
+apps/docs/content/docs/members-roles.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+apps/docs/content/docs/quick-actions.zh-Hant.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+apps/mobile/components/issue/composer-attachment-row.tsx
+  s_fc0852876b2926::t_ec280acc1a12f9 6-8,40,44,137-139
+packages/core/api/project-scope-client.test.ts
+  s_fc0852876b2926::t_5f55a7cf38d4f8 4-5,22-23,26-29,33,35-39,53-59,62,64-68
+  s_fc0852876b2926::t_0f7f4aeb5086bc 72-98,105-108,110-120
+  s_fc0852876b2926::t_26010bc2f435c8 1-3,6-21,24-25,30-32,34,40-52,60-61,63,69-71
+  s_fc0852876b2926::t_2263865148ae8b 99-104,109
+packages/views/locales/zh-Hant/terminal.json
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+  s_fc0852876b2926::t_695e3d0598982f 1-6,9-25,28-30
+packages/views/locales/ko/terminal.json
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+  s_fc0852876b2926::t_695e3d0598982f 2-6,9-15,18-25,28
+apps/mobile/lib/member-role.ts
+  s_fc0852876b2926::t_39ea930a9bb158 3
+packages/views/locales/fr/issues.json
+  s_fc0852876b2926::t_1e88066b608b5e 561
+  s_fc0852876b2926::t_1a4e0ebda32a9a 137,420,424,1178,1442
+  s_fc0852876b2926::t_9d3324f2b07bda 2078-2100
+  s_fc0852876b2926::t_09664b1aee6de9 823
+  s_fc0852876b2926::t_c23be02de1b5e0 608,780
+  s_fc0852876b2926::t_e8df72cef35d98 706,1121,1693
+apps/docs/content/docs/tasks.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 28
+apps/mobile/app/(app)/[workspace]/issue/[id].tsx
+  s_fc0852876b2926::t_39ea930a9bb158 123,126,177,191
+packages/core/types/activity.ts
+  s_fc0852876b2926::t_278b6fbfe4eb42 24
+packages/core/feature-flags/index.ts
+  s_fc0852876b2926::t_3bf636ab6b484f 26
+  s_fc0852876b2926::t_149bbdbc6f3608 27
+packages/views/locales/en/onboarding.json
+  s_fc0852876b2926::t_1e88066b608b5e 41
+packages/core/agents/use-workspace-presence-prefetch.ts
+  s_fc0852876b2926::t_dd35713a352f63 4,13,15
+apps/docs/components/demos/assign-demo.tsx
+  s_fc0852876b2926::t_c4be04f2e42076 278,322,335,353
+  s_fc0852876b2926::t_b7eaaa8736f40e 29,49,63,83,97,118,133,153,168,190,200,216,223,225,277,294-313
+apps/docs/content/docs/index.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+packages/views/layout/route-data-prefetch.test.tsx
+  s_fc0852876b2926::t_8154dd28f0be3c 29,34
+apps/docs/content/docs/agents.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 43
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+apps/mobile/lib/inbox-display.ts
+  s_fc0852876b2926::t_87a1917f844b38 93
+packages/views/search/root-view.tsx
+  s_fc0852876b2926::t_c6fde78753e94a 461
+  s_fc0852876b2926::t_a6f58a32e53381 590
+  s_fc0852876b2926::t_bf7a4b2a8048e7 425
+  s_fc0852876b2926::t_00151340505563 387
+packages/views/projects/components/project-resources-local-directory.test.tsx
+  s_fc0852876b2926::t_3040505df488b8 293-294,299
+  s_fc0852876b2926::t_3c09bc90be2226 260-292,295-298,300-365
+apps/mobile/data/realtime/use-issue-realtime.ts
+  s_fc0852876b2926::t_fc687955686247 51,55,110,116
+packages/views/onboarding/templates/install-runtime-issue.ts
+  s_fc0852876b2926::t_cfb0a3e33bb36f 38,80,124,166
+apps/docs/content/docs/mentioning-agents.mdx
+  s_fc0852876b2926::t_4a1bf4a5564f98 46
+  s_fc0852876b2926::t_674cb89dc4022b 19,26,29,44
+  s_fc0852876b2926::t_dafc9df5c5c6d3 80
+e2e/perf/image-heavy-thread.spec.ts
+  s_fc0852876b2926::t_27887cec94255f 60
+  s_acfdc68cf04713::t_8d736a1b33374a 77
+apps/desktop/src/renderer/src/pages/issue-detail-page.tsx
+  s_fc0852876b2926::t_fa4f0a249d1b8e 2-7,13-15,21-28
+apps/docs/content/docs/developers/architecture.zh-Hant.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_e16948f0d3b46c 126
+apps/desktop/src/renderer/src/App.auth-recovery.test.tsx
+  s_fc0852876b2926::t_347cd525d7f469 29-36
+packages/views/workflows/step-handler.ts
+  s_fc0852876b2926::t_7acdb73247b02e 12,15
+  s_fc0852876b2926::t_f54ddc4f3436aa 23-25
+packages/views/locales/es/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 187-188
+packages/views/issue-views/view-header.tsx
+  s_fc0852876b2926::t_0cd35f3029d561 495
+  s_fc0852876b2926::t_755ad4bff64e43 95,101,161-162,197-199,219,222,226-228,232-233,251,361,408
+packages/views/issues/hooks/use-issue-timeline.test.tsx
+  s_fc0852876b2926::t_db27ec3ec4e81e 129
+apps/mobile/locales/zh-Hant/chat.json
+  s_fc0852876b2926::t_b27f0c11032f38 13
+apps/docs/content/docs/comments.zh-Hant.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 3,47,111
+apps/docs/content/docs/issues.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,158,162,180
+  s_fc0852876b2926::t_41d03bbe7fd1df 20
+packages/views/locales/ru/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 165,177
+packages/core/issues/stores/index.ts
+  s_fc0852876b2926::t_dd967cb6fa19a8 61
+packages/views/issues/components/filter-field-options.tsx
+  s_fc0852876b2926::t_dd97a5c158d776 35,77,150-163,189,191,231-236,239,251,275-276,279
+  s_fc0852876b2926::t_a13f5071e709cf 26,104,146,230,243
+packages/core/types/issue-wakeup.ts
+  s_fc0852876b2926::t_6f91bf876e1132 1-2,54,126-128
+packages/views/locales/zh-Hans/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 185,197
+apps/docs/content/docs/assigning-issues.fr.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_2425c4f44b24b8 79,94
+packages/views/modals/run-confirm.tsx
+  s_fc0852876b2926::t_e9e5b6420621a6 137-138
+  s_fc0852876b2926::t_68f75fa5790dcd 60
+packages/views/search/commands/global-commands.tsx
+  s_fc0852876b2926::t_4a30298cc4d30c 20
+  s_fc0852876b2926::t_28fda20cf91e07 53-60
+  s_fc0852876b2926::t_66acac2705cdcb 52
+packages/views/inbox/components/inbox-filter-menu.test.tsx
+  s_fc0852876b2926::t_3971dad5c13ce8 199
+  s_fc0852876b2926::t_1cea28cfded803 69,178,186,194-195,207
+packages/views/locales/ru/projects.json
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+  s_fc0852876b2926::t_ac0e15a61b972f 183-186
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+packages/views/locales/es/inbox.json
+  s_fc0852876b2926::t_08d643b89c70be 27
+  s_fc0852876b2926::t_1e88066b608b5e 110,137,179,202
+packages/ui/markdown/StreamingMarkdown.test.tsx
+  s_fc0852876b2926::t_4d8219c4527f1a 1-20,33
+  s_fc0852876b2926::t_ac4705033f14f4 21-32
+apps/desktop/src/renderer/src/platform/issue-window-navigation.test.tsx
+  s_fc0852876b2926::t_76ce9ecf36d0a0 177
+packages/core/projects/draft-store.ts
+  s_fc0852876b2926::t_46ad02e20790ce 1
+packages/views/agents/components/agent-work-dialog.tsx
+  s_fc0852876b2926::t_3d17b9b5446b65 34
+packages/core/types/issue-workflow.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 24,137
+apps/desktop/src/shared/runtime-config.ts
+  s_fc0852876b2926::t_83e9bb8cb59a29 81-83,91
+  s_fc0852876b2926::t_eb7134ef7e484f 6-11
+apps/docs/content/docs/quick-actions.ja.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+packages/views/layout/panels/sidebar-tree.tsx
+  s_fc0852876b2926::t_4f46b5fa955467 634
+  s_fc0852876b2926::t_084b5e476def90 5
+  s_fc0852876b2926::t_edb5264877d49b 25
+packages/views/editor/content-editor-quick-actions.test.tsx
+  s_fc0852876b2926::t_1997b7635d5947 289
+  s_fc0852876b2926::t_58f39f5b963389 238
+  s_fc0852876b2926::t_fc8f7b864c4ef0 207
+  s_fc0852876b2926::t_b0f99ddee94f41 276
+  s_fc0852876b2926::t_69117da5fb6b16 10
+  s_fc0852876b2926::t_967a4526670a58 33
+packages/core/paths/tab-subject.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 18,29
+packages/views/locales/ko.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+apps/docs/content/docs/agents.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 43
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+packages/views/issues/components/filter-chips-bar.test.ts
+  s_fc0852876b2926::t_5f9f006050dfc6 75,80,84-85,90
+packages/core/shortcuts/raw-keyboard-target.test.ts
+  s_fc0852876b2926::t_ef94780eebcf71 1-54
+packages/core/inbox/filter-store.test.ts
+  s_fc0852876b2926::t_b09c9e98997a29 37,160,295,297,300,302-303,311,331,351,355,411,413,460,464
+packages/views/layout/workspace-presence-prefetch.tsx
+  s_fc0852876b2926::t_92af75a55f4533 5
+  s_fc0852876b2926::t_f66a810a4d1ace 13-15
+packages/views/locales/zh-Hans/autopilots.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 600
+  s_fc0852876b2926::t_e8df72cef35d98 326,388,488,490,492
+packages/views/agents/create/builder-workspace-runtime-binding.test.tsx
+  s_fc0852876b2926::t_f81a97940c310f 79
+packages/views/layout/app-shell-context.test.tsx
+  s_fc0852876b2926::t_5a29e508931775 74
+  s_fc0852876b2926::t_fe74e28598047f 75
+apps/mobile/lib/use-clear-filters-on-workspace-change.ts
+  s_fc0852876b2926::t_6b668988472fc7 9
+packages/core/shortcuts/index.ts
+  s_fc0852876b2926::t_6fae45f61e237a 9,13
+packages/views/locales/zh-Hant/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 103
+packages/views/issues/hooks/use-mark-agent-reply-seen-while-viewing.ts
+  s_fc0852876b2926::t_221b070fdba8eb 1-35
+packages/core/workspace/hooks.ts
+  s_fc0852876b2926::t_dd35713a352f63 5,19,114-115,135,156
+apps/docs/content/docs/quick-actions.ko.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+packages/views/inbox/components/inbox-detail-label.tsx
+  s_fc0852876b2926::t_b24844ad59546e 104,112
+packages/views/locales/zh-Hans/issues.json
+  s_fc0852876b2926::t_1e88066b608b5e 551
+  s_fc0852876b2926::t_1a4e0ebda32a9a 134,412,416,1121,1381
+  s_fc0852876b2926::t_09664b1aee6de9 792
+  s_fc0852876b2926::t_9d3324f2b07bda 1987-2009
+  s_fc0852876b2926::t_e8df72cef35d98 685,1064,1621
+  s_fc0852876b2926::t_c23be02de1b5e0 596,753
+apps/docs/content/docs/developers/architecture.fr.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_2a3eceeb8ccfe4 126
+packages/views/locales/fr/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 107
+apps/mobile/app/(app)/[workspace]/issues-filter.tsx
+  s_fc0852876b2926::t_6b668988472fc7 3-4,36-37,43-47
+packages/views/locales/en/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/core/api/schemas.ts
+  s_fc0852876b2926::t_3168c49d0f6505 4928-4944,4948,4950-4957
+  s_fc0852876b2926::t_54fe142aff97b0 4958-4963
+  s_fc0852876b2926::t_346fd49bddb618 1750
+  s_fc0852876b2926::t_e891a3639270b5 889,899,901
+  s_fc0852876b2926::t_7dd9811989581e 4945-4947
+  s_fc0852876b2926::t_7a68a6fb6140f8 1754-1757
+  s_fc0852876b2926::t_251739df4dd072 4964-4970
+  s_fc0852876b2926::t_8f8f4029f98241 120
+  s_fc0852876b2926::t_974c7e842e3e7b 1103-1104
+  s_fc0852876b2926::t_b0867e32108791 705,780,788,1537
+  s_fc0852876b2926::t_9a33283ee3eab8 1751-1753
+  s_fc0852876b2926::t_1b53184499cc8c 4949
+  s_fc0852876b2926::t_f1efcfb5187f2e 1716-1719,1923,3237,4599,4648-4649
+packages/core/inbox/pagination.test.tsx
+  s_fc0852876b2926::t_ec5b6d95194767 20
+apps/docs/content/docs/quick-actions.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+apps/mobile/locales/zh-Hans/editor.json
+  s_fc0852876b2926::t_c4862efd2d6af0 3
+packages/views/issues/components/wakeup-draft.ts
+  s_fc0852876b2926::t_98aa65034a924b 76
+  s_fc0852876b2926::t_629710a06e7c65 3
+apps/mobile/data/realtime/use-project-realtime.ts
+  s_fc0852876b2926::t_fc687955686247 17-20
+apps/docs/content/docs/agents.ko.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 46
+  s_fc0852876b2926::t_9b37efea436c4f 43
+packages/views/chat/floating-chat.tsx
+  s_fc0852876b2926::t_725e35ca65572a 4,26
+apps/docs/content/docs/issues.ko.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,156,160,178
+  s_fc0852876b2926::t_0b966ce2ebf30e 20
+packages/core/types/events.ts
+  s_fc0852876b2926::t_126deff741b95a 88
+  s_fc0852876b2926::t_c65f59e854204d 65
+  s_fc0852876b2926::t_b6f634eb307f11 468
+  s_fc0852876b2926::t_c5878c101e174a 264-271
+  s_fc0852876b2926::t_8196310b27aaf9 684
+packages/core/shortcuts/definitions.ts
+  s_fc0852876b2926::t_6fae45f61e237a 391-400
+  s_fc0852876b2926::t_075652f69f7c5d 390,401-402
+apps/desktop/src/shared/runtime-config.test.ts
+  s_fc0852876b2926::t_d360bba1867d7d 61-101
+packages/views/issue-views/all-views-page.tsx
+  s_fc0852876b2926::t_c6fde78753e94a 117
+packages/views/locales/en/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 91,115,311
+packages/views/locales/zh-Hans/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 211-212
+packages/views/common/actor-issues-panel.tsx
+  s_fc0852876b2926::t_3d17b9b5446b65 114,121-124
+apps/docs/content/docs/projects.zh.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 93
+packages/core/issues/cache-coordinator.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 25-26,29,31-32,142-143,199,208,524-527,529,535,539-543,545,551,570,572-574,576,582,584-587,589-595,598-601,604,606-608,612-613,626,638,642,649-650,652,657,665,676,680,685,689,696,745
+packages/views/issues/components/issue-load-failure.test.tsx
+  s_fc0852876b2926::t_1099387415d26d 60
+  s_fc0852876b2926::t_b2e22ab501b943 172
+packages/views/layout/global-shortcuts.tsx
+  s_fc0852876b2926::t_59ae95ca8b6dda 8,88-90
+  s_fc0852876b2926::t_8749ad93a43d40 17
+  s_fc0852876b2926::t_e1c5c7ff1dd4a5 148
+packages/views/auth/login-page.test.tsx
+  s_fc0852876b2926::t_db4425ec32af4b 137-145
+apps/mobile/lib/comment-mention-candidates.ts
+  s_fc0852876b2926::t_6be5cf2282ea53 2-3,6,14,19
+apps/docs/content/docs/developers/conventions.fr.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 205,211
+  s_fc0852876b2926::t_652c7a1276ce05 135
+packages/views/layout/panels/section-settings.test.tsx
+  s_fc0852876b2926::t_1cea28cfded803 71,77-78
+packages/core/terminal/protocol.test.ts
+  s_fc0852876b2926::t_85394e0b3d9fb8 1-29,36-80,83-100,106-164,166-242,244-245,247-248
+  s_fc0852876b2926::t_78c2984ba5e84e 81-82
+  s_fc0852876b2926::t_4494f529606c66 30-35
+  s_fc0852876b2926::t_1aaa7cb286d125 243,246
+  s_fc0852876b2926::t_1a45e60a0c9777 101-105
+  s_fc0852876b2926::t_18d9a04d2854ec 165
+packages/views/issues/actions/issue-inbox-actions.tsx
+  s_fc0852876b2926::t_6e54cb7657e597 219
+packages/views/locales/fr/autopilots.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 603
+  s_fc0852876b2926::t_e8df72cef35d98 327,389,489,491,493
+packages/views/issues/utils/strip-mention-markdown.test.ts
+  s_fc0852876b2926::t_afb6ea1e2f1749 27
+docs/theming.md
+  s_fc0852876b2926::t_cf5354fc8214c5 264,286,288-289,806
+packages/core/onboarding/needs-backfill.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 17-18
+apps/docs/content/docs/daemon-runtimes.ja.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 252
+packages/core/api/issue-wakeup.test.ts
+  s_fc0852876b2926::t_8c05284ca828bc 194,196,198,200,202-203,205
+packages/views/issues/hooks/use-comment-trigger-preview.test.ts
+  s_fc0852876b2926::t_4feb23520c8e40 279
+packages/views/issues/components/batch-action-toolbar.tsx
+  s_fc0852876b2926::t_aab6640cd456e9 223,232
+apps/docs/content/docs/concepts.zh.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_3a3b02837316ea 18
+packages/ui/markdown/Markdown.tsx
+  s_fc0852876b2926::t_82d14302e2f78a 165-166,170-171
+  s_fc0852876b2926::t_9d71fb77efd7d1 168-169
+  s_fc0852876b2926::t_ac4705033f14f4 20-31,422-424
+packages/views/editor/extensions/mention-view.tsx
+  s_fc0852876b2926::t_ce1413da75eeaf 6
+packages/views/issues/components/board-workflow-context.tsx
+  s_fc0852876b2926::t_674cb89dc4022b 29
+packages/views/layout/app-rail.tsx
+  s_fc0852876b2926::t_ee18387d4a329f 107
+  s_fc0852876b2926::t_b76d2feb931552 77,87
+  s_fc0852876b2926::t_0e29d580a77f88 364
+  s_fc0852876b2926::t_9f58c36f9c5f8a 443,446-469
+packages/core/issues/batch.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 44,48,96-97,104
+packages/core/platform/pre-shared-token.test.tsx
+  s_fc0852876b2926::t_76c33bb086e9cd 156,160,171
+  s_fc0852876b2926::t_12b1756b4e6aa8 1-83,86-155,157-159,161-170,172-263
+  s_fc0852876b2926::t_b2b5ac184bdf36 84-85
+packages/views/locales/zh-Hans/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 103
+packages/views/projects/components/local-directory-label.test.ts
+  s_fc0852876b2926::t_488234a9f8a973 4-7
+  s_fc0852876b2926::t_cc937a1a3d1b62 58-72
+  s_fc0852876b2926::t_e8391670e84639 73
+apps/mobile/app/(app)/[workspace]/mention-picker.tsx
+  s_fc0852876b2926::t_ec280acc1a12f9 7-9,30
+apps/docs/content/docs/concepts.fr.mdx
+  s_fc0852876b2926::t_74dbe25f248758 18
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+packages/views/locales/en/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 107
+packages/views/search/result-rows.tsx
+  s_fc0852876b2926::t_e3ec7f7ccaa408 205
+packages/views/locales/ru/settings.json
+  s_fc0852876b2926::t_1e88066b608b5e 130,869
+  s_fc0852876b2926::t_1a4e0ebda32a9a 448
+  s_fc0852876b2926::t_adffc79c45df29 1743-1749
+apps/docs/content/docs/developers/conventions.ko.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 205,211
+  s_fc0852876b2926::t_652c7a1276ce05 135
+packages/views/search/use-root-model.ts
+  s_fc0852876b2926::t_149bbdbc6f3608 6,49,192,199-201,206
+  s_fc0852876b2926::t_b62d3db97a7139 25
+apps/mobile/lib/markdown/preprocess.test.ts
+  s_fc0852876b2926::t_a156c3e10fd380 9-18,29-30
+  s_fc0852876b2926::t_ac4705033f14f4 19-28
+packages/core/billing/member-limit.ts
+  s_fc0852876b2926::t_d9d921e7a1cc06 12
+  s_fc0852876b2926::t_6c5465afaca649 11
+packages/core/onboarding/queries.ts
+  s_fc0852876b2926::t_1ab0f99cd626b1 6-7,27
+apps/docs/content/docs/issue-wakeups.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_22a347669e0709 126
+packages/core/markdown/mention-shortcodes.ts
+  s_fc0852876b2926::t_e0b9dc4a1a72e3 2-4,6-7,11-14
+packages/views/inbox/components/inbox-page-query.test.tsx
+  s_fc0852876b2926::t_1cea28cfded803 298,302,313,315,325,336
+packages/core/platform/pre-shared-token.ts
+  s_fc0852876b2926::t_9ae885343e8b62 1-66
+packages/views/inbox/components/inbox-page.tsx
+  s_fc0852876b2926::t_de8ceeaef50eec 1038
+  s_fc0852876b2926::t_3878890aa65cef 1131
+packages/views/layout/object-page.tsx
+  s_fc0852876b2926::t_d7e9e2153c3289 43
+apps/desktop/src/renderer/src/stores/tab-store.ts
+  s_fc0852876b2926::t_62b5e051670a03 338-339,343-344
+apps/docs/content/docs/assigning-issues.ko.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_d0e05f1b87d15c 79,94
+packages/views/locales/fr/terminal.json
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+  s_fc0852876b2926::t_695e3d0598982f 2-6,9-15,18-25,28
+packages/views/projects/components/project-resources-section.tsx
+  s_fc0852876b2926::t_cf8c040f753c36 759-766
+  s_fc0852876b2926::t_c10e29e22640d4 3
+  s_fc0852876b2926::t_00a5749542806a 71-78
+  s_fc0852876b2926::t_ad46e1c2836660 42-43
+  s_fc0852876b2926::t_54b221bf09081c 720-725
+  s_fc0852876b2926::t_ebb9c5e8414a3c 1129-1304
+  s_fc0852876b2926::t_1dfa01d41ce796 784-791
+  s_fc0852876b2926::t_7e998f6d1d41b8 767
+  s_fc0852876b2926::t_5aab438c6e294d 1305
+packages/core/terminal/index.ts
+  s_fc0852876b2926::t_fd3867c7009ab3 1,3-33
+  s_fc0852876b2926::t_ea4ca133e2cd07 2
+packages/views/search/issue-target.ts
+  s_fc0852876b2926::t_c6fde78753e94a 88
+  s_fc0852876b2926::t_2f6018c00b7b2b 93
+packages/views/issues/hooks/use-issue-timeline.ts
+  s_fc0852876b2926::t_8d504d296bb7cc 3-4,6
+  s_fc0852876b2926::t_4b1ae14c5e6f21 346
+packages/views/locales/ru/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+apps/mobile/components/project/project-properties-section.tsx
+  s_fc0852876b2926::t_fc687955686247 10
+apps/desktop/src/renderer/src/pages/login.test.tsx
+  s_fc0852876b2926::t_b616f09384d921 1
+  s_fc0852876b2926::t_bc11e692f87587 2-33,35-47,49-76
+  s_fc0852876b2926::t_bd5a8d265bfcfd 34,48
+apps/web/proxy.test.ts
+  s_fc0852876b2926::t_4a7bb5079421a3 98
+  s_fc0852876b2926::t_ec90d4f082cab1 112
+  s_fc0852876b2926::t_82d5a3a8a118cb 81-82
+apps/desktop/src/renderer/src/pages/login.tsx
+  s_fc0852876b2926::t_ab3665e905e50a 3,16-22,24,43-45
+packages/views/runtimes/components/qoder-detail-page.tsx
+  s_fc0852876b2926::t_17bcbbbcc10a46 47
+packages/views/issues/components/wakeup-create.tsx
+  s_fc0852876b2926::t_d41eff6ef57213 27,987
+  s_fc0852876b2926::t_98aa65034a924b 969,998
+apps/docs/content/docs/autopilots.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23
+packages/core/issues/surface/scope.test.ts
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 19-21,43,47,49-50,65-76,88-89
+apps/docs/content/docs/issue-wakeups.zh-Hant.mdx
+  s_fc0852876b2926::t_32bc95df09a62f 126
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+packages/views/modals/create-project.tsx
+  s_fc0852876b2926::t_6ce68eed4106f9 427
+  s_fc0852876b2926::t_92845dfbe3d845 37
+apps/docs/content/docs/concepts.ja.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+  s_fc0852876b2926::t_d3778cfa60beba 18
+apps/docs/content/docs/issue-wakeups.fr.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 125
+  s_fc0852876b2926::t_76e2fe2c281fa7 61
+  s_fc0852876b2926::t_ea94ff84a287c4 126
+apps/docs/content/docs/projects.fr.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 93
+packages/views/locales/fr/modals.json
+  s_fc0852876b2926::t_e8df72cef35d98 212-213
+apps/mobile/components/issue/issues-loading.tsx
+  s_fc0852876b2926::t_fc687955686247 2-3
+packages/core/issues/surface/membership.test.ts
+  s_fc0852876b2926::t_80f9b591e2d329 20-21,32,42-43,47,51-54,57-59,62-65,70,77,91,114-116,120-121,134
+packages/views/settings/components/use-settings-search-index.ts
+  s_fc0852876b2926::t_2e4d7eb1098298 4-5
+  s_fc0852876b2926::t_92e555cdfb6014 38
+  s_fc0852876b2926::t_5c91f50abfdc08 375-385
+  s_fc0852876b2926::t_e6d81d1022fbe2 414
+packages/views/agents/create/create-agent-footer.tsx
+  s_fc0852876b2926::t_b29f783cc89dd2 106
+packages/views/locales/ko/inbox.json
+  s_fc0852876b2926::t_08d643b89c70be 25
+  s_fc0852876b2926::t_1e88066b608b5e 108,134,176,198
+packages/views/terminal/terminal-page.test.tsx
+  s_fc0852876b2926::t_703b85744996b3 192-194
+  s_fc0852876b2926::t_9a5d76b7544650 94-99
+  s_fc0852876b2926::t_445a6825cd6dd5 244
+  s_fc0852876b2926::t_f5eb77b5e8a5c8 340-341,343-344,347
+  s_fc0852876b2926::t_3578d60c61b8ac 304
+  s_fc0852876b2926::t_e514b9f270f7e6 1-14,32,35-36,46-93,100-121,130-132,146-154,161,163-191,195-198,200-204,206,208,211-243,245-249,253-275,277-288,291-296,298-302,305-314,405
+  s_fc0852876b2926::t_fa915225b9fabf 129,315-320,328-339,342,345-346,348-404
+  s_fc0852876b2926::t_a64bb62671faea 15-29
+  s_fc0852876b2926::t_78338a02461316 125-128,252,297
+  s_fc0852876b2926::t_fca610acc4b0ac 250-251,289-290
+  s_fc0852876b2926::t_0bad22d76ad773 321-327
+  s_fc0852876b2926::t_5edd178db7691f 199
+  s_fc0852876b2926::t_c1040df09451f8 303
+  s_fc0852876b2926::t_82ce0314ef0c0a 205,207,209-210
+  s_fc0852876b2926::t_ca17eae3d2e5c3 30-31,33-34,37-45,133-144,155-160,162,276
+  s_fc0852876b2926::t_85284b86939ca2 122-124,145
+packages/views/locales/zh-Hant/auth.json
+  s_fc0852876b2926::t_15694cc7b50746 71-72
+packages/views/workflows/handoff-form.tsx
+  s_fc0852876b2926::t_4776eb3b027c81 455
+  s_fc0852876b2926::t_a8c58b08b1b0b2 138
+  s_fc0852876b2926::t_9ab8b8362fe1f2 397
+  s_fc0852876b2926::t_39f9127497ea11 11
+  s_fc0852876b2926::t_a0ce5118f2e4b1 488
+  s_fc0852876b2926::t_8ed8b2a3c9f2ba 42,49,54
+  s_fc0852876b2926::t_8dc0061565c7d3 432
+apps/mobile/components/issue/issue-header-card.tsx
+  s_fc0852876b2926::t_39ea930a9bb158 8,31-32
+apps/mobile/locales/zh-Hans/inbox.json
+  s_fc0852876b2926::t_39ea930a9bb158 89
+packages/views/locales/es/settings.json
+  s_fc0852876b2926::t_adffc79c45df29 1727-1733
+  s_fc0852876b2926::t_1a4e0ebda32a9a 436
+  s_fc0852876b2926::t_1e88066b608b5e 134,849
+packages/views/layout/panels/sidebar-tree.test.tsx
+  s_fc0852876b2926::t_cb61ee4435d4bb 128,131-136
+  s_fc0852876b2926::t_806d9bc59dce4d 90,97-98,102-104
+  s_fc0852876b2926::t_a453d6e24540cb 3
+apps/mobile/data/queries/issue-keys.ts
+  s_fc0852876b2926::t_6b668988472fc7 12-13,19-20
+apps/docs/content/docs/autopilots.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 23
+apps/docs/content/docs/daemon-runtimes.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 253,365
+packages/views/editor/extensions/mention-recency.ts
+  s_fc0852876b2926::t_ce1413da75eeaf 1-2,66-67,87-89
+packages/views/i18n/resources-types.ts
+  s_fc0852876b2926::t_28caaeb02a407b 29,70
+packages/views/issue-views/all-views-page.test.tsx
+  s_fc0852876b2926::t_d6e1c67b134720 106
+packages/views/layout/panels/views-section.unread.test.tsx
+  s_fc0852876b2926::t_5a29e508931775 228
+apps/docs/content/docs/triggering-agents.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+packages/core/realtime/use-realtime-sync.test.ts
+  s_fc0852876b2926::t_b09c9e98997a29 773,776-777,814-815,992
+apps/mobile/components/editor/markdown-toolbar.tsx
+  s_fc0852876b2926::t_c4862efd2d6af0 59
+README.ja.md
+  s_fc0852876b2926::t_0bc653ec918108 211
+  s_fc0852876b2926::t_79547194b1672c 113
+packages/views/issues/components/issue-detail.test.tsx
+  s_fc0852876b2926::t_096f02d4ef738a 674-675
+  s_fc0852876b2926::t_5d660ab7e0f89e 988
+packages/core/issue-views/view-target.ts
+  s_fc0852876b2926::t_e891a3639270b5 27-29,31
+packages/views/layout/panels/inbox-section.test.tsx
+  s_fc0852876b2926::t_1cea28cfded803 290
+apps/mobile/app/(app)/[workspace]/new-issue-picker/assignee.tsx
+  s_fc0852876b2926::t_0a2f27825e0b2c 17
+packages/views/locales/fr/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 91,115,311
+packages/views/locales/ru/inbox.json
+  s_fc0852876b2926::t_08d643b89c70be 31
+  s_fc0852876b2926::t_1e88066b608b5e 114,143,185,210
+packages/views/issues/hooks/use-agent-reply-notification-text.test.tsx
+  s_fc0852876b2926::t_c5e3ddcbca6ab1 1-23
+apps/docs/content/docs/tutorial.ko.mdx
+  s_fc0852876b2926::t_9631137450b1e2 3,11,310,318,359,363,371
+packages/core/issues/stores/issues-scope-store.ts
+  s_fc0852876b2926::t_dd967cb6fa19a8 8,41,52
+apps/docs/content/docs/members-roles.zh.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+packages/views/package.json
+  s_fc0852876b2926::t_78c0ea79628f16 90-91
+  s_fc0852876b2926::t_200bcf8e70ca32 128-129
+packages/views/locales/ja/projects.json
+  s_fc0852876b2926::t_7eb2861b0c67fc 183-186
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_3a8e0d9ff2b24d 107-116,122
+apps/mobile/locales/zh-Hant/issues.json
+  s_fc0852876b2926::t_6b06c4c6a842bb 111
+  s_1ec9c2ffcc469d::t_4ba03ab6e4dd9e 194
+  s_fc0852876b2926::t_0a2f27825e0b2c 4,112,165
+  s_fc0852876b2926::t_b27f0c11032f38 169
+packages/views/locales/es/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 107
+packages/core/workspace/task-tree-retention.ts
+  s_fc0852876b2926::t_19c17b6c374d44 1-42
+packages/views/issues/actions/__tests__/issue-inbox-actions.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 84,118-119
+  s_fc0852876b2926::t_6c313cc6075282 30
+packages/core/platform/system-notification.test.ts
+  s_fc0852876b2926::t_b09c9e98997a29 47,133
+apps/docs/content/docs/projects.ko.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 93
+packages/core/issue-views/builtin-issue-views.ts
+  s_fc0852876b2926::t_e891a3639270b5 13-14
+apps/docs/components/demos/quick-action-demo.tsx
+  s_fc0852876b2926::t_820f01da16aa13 25,64,99,142,179,310
+apps/docs/content/docs/daemon-runtimes.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 252
+packages/core/package.json
+  s_fc0852876b2926::t_6717a60b283fb9 179
+  s_fc0852876b2926::t_18a18445ab9c2f 180-181
+  s_fc0852876b2926::t_2eccdd5724db95 58
+packages/views/locales/en/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+packages/views/locales/zh-Hant/settings.json
+  s_fc0852876b2926::t_1a4e0ebda32a9a 430
+  s_fc0852876b2926::t_1e88066b608b5e 127,839
+  s_fc0852876b2926::t_adffc79c45df29 1695-1701
+packages/views/issues/components/issues-page.tsx
+  s_fc0852876b2926::t_23b71344eb69c0 39,45
+SELF_HOSTING.md
+  s_fc0852876b2926::t_79547194b1672c 396
+packages/views/terminal/terminal-theme.test.ts
+  s_fc0852876b2926::t_2c81e858f7d13e 1-62,75-169,172-210,214-218,221-222,225,235-305,312-315
+  s_fc0852876b2926::t_ea7fef9e5755d3 170-171,211,223,228-229
+  s_fc0852876b2926::t_997c5ebc657fca 306-311
+  s_fc0852876b2926::t_59aa8eaae45f78 219,233
+  s_fc0852876b2926::t_5d10754b4cec22 63-74
+  s_fc0852876b2926::t_35c5187c1c44bc 220,234
+  s_fc0852876b2926::t_2eff2fc1d01904 212-213
+  s_fc0852876b2926::t_dce3e947a281bd 224,227,230-232
+  s_fc0852876b2926::t_09a9bc12d9d263 226
+packages/views/locales/ko/docs.json
+  s_fc0852876b2926::t_1e88066b608b5e 83-84
+apps/mobile/components/inbox/inbox-row.tsx
+  s_fc0852876b2926::t_d636bf1efb1e0f 76
+packages/core/issues/sidebar-list.test.ts
+  s_fc0852876b2926::t_8c05284ca828bc 138,168,175-177,182-185
+  s_fc0852876b2926::t_cdd2b9d4a52a6d 48,66,73,129,207,214-218
+  s_fc0852876b2926::t_94619316dcce84 186-187
+packages/views/inbox/components/unsubscribe-archive-button.tsx
+  s_fc0852876b2926::t_b389fd3ba3e900 35
+  s_fc0852876b2926::t_116fda459c778c 36-37
+apps/mobile/components/ui/app-header-actions.tsx
+  s_fc0852876b2926::t_647641ac63982c 2-3,8
+  s_fc0852876b2926::t_39ea930a9bb158 34-39
+packages/views/locales/ja/editor.json
+  s_fc0852876b2926::t_1e88066b608b5e 103
+apps/mobile/data/queries/my-list.ts
+  s_fc0852876b2926::t_6b668988472fc7 2-3,5-7,11,15,18
+apps/docs/components/demos/concept-map-demo.tsx
+  s_fc0852876b2926::t_0cd952328613aa 122,141,203,222,285,304,365,384,446,465
+  s_fc0852876b2926::t_b4749cdfc9e3bb 72
+  s_fc0852876b2926::t_4b060d55091b03 87,168,250,330,411
+packages/views/issues/components/index.ts
+  s_fc0852876b2926::t_15ec42f5feb00a 7
+packages/core/issues/project-scope.test.tsx
+  s_fc0852876b2926::t_292460db2b3095 2-7,10,12,15,17-19,31-33,35,38-42,44-47,49-55,58,63,65,67,70-73,75,80-81,84,121,133-135,137,139,143-144,146-149,167-172,176-177,179-185,189-191,197,225,253,264-265
+  s_fc0852876b2926::t_458e5114f2106c 9,11,14,16,20-30,34,36-37,43,85-88,95-100,104-107,109-110,112,114,116-118,120,122-127,131-132,145,151-166,178,195-196,198-208,211-212,219,222,224,226-228,231-233,235-239,241-246,252,255,260-262
+  s_fc0852876b2926::t_fb2774020230cf 209-210,213-218,220-221,223,229,234,240,251,254,256-258,263
+  s_fc0852876b2926::t_8ad5bdc16c297e 91-94,111,113,119,128-130
+  s_fc0852876b2926::t_595deb449c21fe 101-102
+  s_fc0852876b2926::t_b8b5cbbed0870c 89-90,103,108,115
+  s_fc0852876b2926::t_8e000b3ab0e3b0 8,13,48,56-57,59-62,64,66,68-69,74,76-79,82-83,136,138,140-142,150,173-175,186-188,192-194
+  s_fc0852876b2926::t_02c88fda19e9df 230,247-250,259
+  s_fc0852876b2926::t_eefb3473cba835 1
+packages/views/issues/components/pickers/assignee-picker.recent.test.tsx
+  s_fc0852876b2926::t_096f02d4ef738a 14,18-20,22,104,108,110-112,117-118,124,126,129,132-133,137,140-141,144-145,151-152,157,159,175,181,185,193-194,196,198,204,231,233,239,241
+apps/docs/content/docs/assigning-issues.ja.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_b0d0ddba26e1af 79,94
+packages/views/editor/extensions/mention-suggestion.test.tsx
+  s_fc0852876b2926::t_66e1b2562ed9b7 962,966
+  s_fc0852876b2926::t_1def86e26fee7c 236,258,886,895,918,978,982-983,992,995,997-1000,1009
+  s_fc0852876b2926::t_ce44142161f0a2 973-974
+  s_fc0852876b2926::t_b29f448f1e110f 1
+packages/views/locales/zh-Hans/inbox.json
+  s_fc0852876b2926::t_1e88066b608b5e 108,134,176,198
+  s_fc0852876b2926::t_08d643b89c70be 25
+packages/views/locales/zh-Hant.ts
+  s_fc0852876b2926::t_695e3d0598982f 26,53
+apps/docs/content/docs/members-roles.fr.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 3,9,27,32
+apps/mobile/lib/comment-mention-candidates.test.ts
+  s_fc0852876b2926::t_6bf1fb35550ea3 3,6-9,12-13,15,18-19
+  s_fc0852876b2926::t_c0de1b4d4e5a23 21
+packages/views/inbox/components/unsubscribe-archive-button.test.tsx
+  s_fc0852876b2926::t_9dc552feb3b4bf 17,74-75
+packages/core/types/inbox.ts
+  s_fc0852876b2926::t_fb18cedf9795bf 17-18
+  s_fc0852876b2926::t_647641ac63982c 38
+  s_fc0852876b2926::t_6e7a2a8ab15bf9 23
+apps/docs/content/docs/developers/architecture.zh.mdx
+  s_fc0852876b2926::t_652c7a1276ce05 96
+  s_fc0852876b2926::t_d2e0f6de5429b4 126
+packages/core/projects/project-scope.test.ts
+  s_fc0852876b2926::t_19bb1d24b6529a 1-110
+apps/docs/content/docs/developers/conventions.zh.mdx
+  s_fc0852876b2926::t_6b713353e6e3a7 209,215
+  s_fc0852876b2926::t_652c7a1276ce05 133
+packages/views/autopilots/components/pickers/agent-picker.tsx
+  s_fc0852876b2926::t_6aabddc3544792 48,55-56,73,75-76
+  s_fc0852876b2926::t_1aafbd09cc8f47 8
+  s_fc0852876b2926::t_ab1f6bf569ac9c 106,109-129
+packages/views/locales/en/projects.json
+  s_fc0852876b2926::t_9d3324f2b07bda 117-121
+  s_fc0852876b2926::t_3e9325318a2ae7 107-116,122
+  s_fc0852876b2926::t_2151234a0f0fab 183-186
+README.md
+  s_fc0852876b2926::t_79547194b1672c 113
+  s_fc0852876b2926::t_218da61dd58a02 211
+apps/docs/content/docs/issues.zh-Hant.mdx
+  s_fc0852876b2926::t_218d3341e73253 36,41,44,48,50,156,160,178
+  s_fc0852876b2926::t_31db49665c1196 20
+packages/views/layout/tab-presentation.tsx
+  s_fc0852876b2926::t_4fdbc4ee0d51c2 55
+  s_fc0852876b2926::t_aba1e962079a4e 310-312
+  s_fc0852876b2926::t_ca59afcc857d94 189
+packages/views/issues/components/quick-actions-section.tsx
+  s_fc0852876b2926::t_674cb89dc4022b 235,313
+packages/views/issues/components/advanced-filter-panel.tsx
+  s_fc0852876b2926::t_b8a1ef57d68f89 431
+apps/mobile/locales/en/editor.json
+  s_fc0852876b2926::t_c4862efd2d6af0 3
+packages/views/projects/components/local-directory-label.ts
+  s_fc0852876b2926::t_845fe831ed8813 29-38
+packages/views/issues/components/issues-cold-load-loop.test.tsx
+  s_fc0852876b2926::t_1099387415d26d 7
+  s_fc0852876b2926::t_9dc552feb3b4bf 290
+packages/views/locales/en/layout.json
+  s_fc0852876b2926::t_695e3d0598982f 14-15
+  s_fc0852876b2926::t_c23be02de1b5e0 189,203
+CLI_AND_DAEMON.md
+  s_fc0852876b2926::t_3b9ac54af81c38 1121
+packages/core/terminal/client.ts
+  s_fc0852876b2926::t_11284783a5f89a 411-413
+  s_fc0852876b2926::t_960ce6970a9bf4 143-145,205-206,245,252,257,260-261,269-270,462,465
+  s_fc0852876b2926::t_b154d9a027bf18 73
+  s_fc0852876b2926::t_d6ac877a87621d 509-528,531,536-537,544-547,551-553,555,565-567,569
+  s_fc0852876b2926::t_f928856edd415b 304-313
+  s_fc0852876b2926::t_b94816666e6b3e 568
+  s_fc0852876b2926::t_99f2108746b6f5 84-87
+  s_fc0852876b2926::t_1e3ea97227c1b6 554
+  s_fc0852876b2926::t_602ad5b7cd3c34 414,418-426
+  s_fc0852876b2926::t_4f6ed217db1fee 13
+  s_fc0852876b2926::t_06db3bd346b44c 557-559,561-564
+  s_fc0852876b2926::t_5fddbe89de0be9 210
+  s_fc0852876b2926::t_7e394234c30d28 27
+  s_fc0852876b2926::t_bdd6fffe7219c9 529-530
+  s_fc0852876b2926::t_7da5f9a2fd0352 1-12,14-26,28-72,74-83,88-142,146-176,178-179,188-204,207-209,211-227,231-244,246-251,253-256,258-259,262-268,271-303,314-410,415-417,427-431,438-461,463-464,466-508,532-535,538-543,548-550,556,560,570-571
+  s_fc0852876b2926::t_40d5994559a720 177,180-187
+  s_fc0852876b2926::t_a8ee4cf30cd7b8 228-230,432-437
+apps/docs/content/docs/inbox.zh.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_76e2fe2c281fa7 158
+  s_fc0852876b2926::t_3d15c0a318edde 3,42,50,58,99,121,167-168
+apps/docs/content/docs/cli.zh.mdx
+  s_fc0852876b2926::t_4fea03e2a4b86c 430,542
+  s_fc0852876b2926::t_218d3341e73253 418,517,529
+  s_fc0852876b2926::t_6b713353e6e3a7 510
+  s_fc0852876b2926::t_1eb2451adbc3d1 490
+apps/web/app/manifest.ts
+  s_fc0852876b2926::t_0d39d42129f173 51-52,54
+apps/mobile/lib/strip-markdown.ts
+  s_fc0852876b2926::t_b27f0c11032f38 8
+packages/views/locales/zh-Hans/billing.json
+  s_fc0852876b2926::t_c23be02de1b5e0 90,114,300
+packages/views/issues/components/issue-detail.tsx
+  s_fc0852876b2926::t_e87422bbaa3ae6 4123
+  s_fc0852876b2926::t_8949ea94ec2454 4278
+  s_fc0852876b2926::t_2416608be99764 4261,4264
+  s_fc0852876b2926::t_01cf72a7951a57 3381
+  s_fc0852876b2926::t_fe8d9fc7898808 4204
+  s_fc0852876b2926::t_ca5eae6af554bc 3678-3680
+  s_fc0852876b2926::t_81c4c3fd027f63 2775
+  s_fc0852876b2926::t_ce7828792f1d3c 1511
+  s_fc0852876b2926::t_479e0d0d0c0ae1 3742
+  s_fc0852876b2926::t_ca11dbc519e71a 1848
+  s_fc0852876b2926::t_6a897cee7a2c72 4192-4195
+  s_fc0852876b2926::t_c21cf9a7c13a67 192
+  s_fc0852876b2926::t_93dd4b7fd96289 3382
+  s_fc0852876b2926::t_84321c4e292351 47
+  s_fc0852876b2926::t_84905f22f7cdcf 4246-4247
+  s_fc0852876b2926::t_004864a89da1e1 1920,1924
+  s_fc0852876b2926::t_e94b761162728c 3811
+  s_fc0852876b2926::t_147c4c402af6bb 3703
+  s_fc0852876b2926::t_a0662b276a0359 3989
+  s_fc0852876b2926::t_937a3096d0067a 1991
+  s_fc0852876b2926::t_4e039d53eb0bee 3867-3869
+  s_fc0852876b2926::t_393f0469eabb3b 3888
+  s_fc0852876b2926::t_f10cbdbbb02569 1927
+  s_fc0852876b2926::t_1d20afcb8a3c73 1305-1310
+  s_fc0852876b2926::t_1f5998aa2f0443 3958
+apps/mobile/components/issue/issue-row.tsx
+  s_fc0852876b2926::t_fc687955686247 3
+  s_fc0852876b2926::t_702893c0e55649 26-28
+packages/views/issues/components/comment-card.tsx
+  s_fc0852876b2926::t_63b8c446e9434d 7
+  s_fc0852876b2926::t_bf03896649ca27 4
+  s_fc0852876b2926::t_a2b44bc60e0ef2 1252
+apps/docs/components/demos/trigger-chooser-demo.tsx
+  s_fc0852876b2926::t_b4749cdfc9e3bb 30,101,173,244,316
+apps/desktop/src/renderer/src/pages/issue-detail-page.test.tsx
+  s_fc0852876b2926::t_e43e7013714ff7 25,40,49
+  s_fc0852876b2926::t_12fd87013acff9 2-3,5-17,19-24,26-39,41-48,50-55
+  s_fc0852876b2926::t_c9d55678c5efa7 4
+  s_fc0852876b2926::t_ad337c5d8a5b7e 18
+  s_fc0852876b2926::t_7f57f0a492f50f 1
+apps/mobile/data/realtime/issue-ws-updaters.test.ts
+  s_fc0852876b2926::t_9776f837f677a7 45-46
+packages/views/layout/page-header.tsx
+  s_fc0852876b2926::t_a80aea153c334a 42
+packages/views/issues/actions/run-confirm-gate.ts
+  s_fc0852876b2926::t_aab6640cd456e9 16,23,61,81,99
+packages/views/autopilots/components/autopilot-templates.ts
+  s_fc0852876b2926::t_cfb0a3e33bb36f 44,53
+scripts/theme-preview/fixture.html
+  s_fc0852876b2926::t_b4749cdfc9e3bb 79
+packages/views/issues/components/board-card-assignee-picker.test.tsx
+  s_fc0852876b2926::t_096f02d4ef738a 147-157,159-164
+  s_fc0852876b2926::t_85f898cf911c38 146,168,183,199,230,234
+apps/docs/content/docs/quick-actions.zh.mdx
+  s_fc0852876b2926::t_dafc9df5c5c6d3 30
+  s_fc0852876b2926::t_674cb89dc4022b 23,52,62
+packages/views/agents/create/builder-workspace.test.tsx
+  s_fc0852876b2926::t_2637a791cc87a5 100
+apps/docs/content/docs/assigning-issues.zh.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 24,63
+  s_fc0852876b2926::t_ff561f5337a3d3 79,94
+packages/core/platform/index.ts
+  s_fc0852876b2926::t_133253ee04197a 5-9
+apps/mobile/locales/zh-Hant/editor.json
+  s_fc0852876b2926::t_c4862efd2d6af0 3
+apps/docs/content/docs/triggering-agents.ko.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 14
+packages/views/locales/en/autopilots.json
+  s_fc0852876b2926::t_e8df72cef35d98 327,389,489,491,493
+  s_fc0852876b2926::t_1a4e0ebda32a9a 603
+packages/views/issues/components/wakeup-draft.test.ts
+  s_fc0852876b2926::t_f8775fafd74c3c 81-82
+apps/desktop/src/renderer/src/stores/tab-store.test.ts
+  s_fc0852876b2926::t_748f277f83a904 1745,1747
+packages/core/issues/ownership.ts
+  s_fc0852876b2926::t_290309a033ad0f 4-6,13-14
+README.zh.md
+  s_fc0852876b2926::t_218da61dd58a02 202
+  s_fc0852876b2926::t_79547194b1672c 110
+apps/docs/content/docs/index.zh-Hant.mdx
+  s_fc0852876b2926::t_9b37efea436c4f 9
+apps/mobile/data/mutations/issues.test.ts
+  s_fc0852876b2926::t_9776f837f677a7 124,247,255,270,276,289
+packages/views/locales/en/terminal.json
+  s_fc0852876b2926::t_695e3d0598982f 2-6,9-15,18-25,28
+  s_fc0852876b2926::t_9d3324f2b07bda 7-8,26-27
+packages/views/agents/create/create-route-params.ts
+  s_fc0852876b2926::t_7af2e3597f0e10 1-19
+apps/docs/content/docs/project-resources.ko.mdx
+  s_fc0852876b2926::t_513dcfce588e20 68,73,78
+  s_fc0852876b2926::t_a6eb3000802685 79
+packages/core/types/autopilot.ts
+  s_fc0852876b2926::t_579a2fef4f86c5 5-6
+apps/docs/content/docs/inbox.zh-Hant.mdx
+  s_fc0852876b2926::t_76e2fe2c281fa7 158
+  s_fc0852876b2926::t_9b37efea436c4f 133
+  s_fc0852876b2926::t_6808fbce273c52 3,42,50,58,99,121,167-168
+apps/docs/content/docs/environment-variables.mdx
+  s_fc0852876b2926::t_ea7ff1ec2e559f 124-132,214
+packages/views/issues/components/issue-trees-section.tsx
+  s_fc0852876b2926::t_efbc3a02a9d4ba 220-221
+  s_fc0852876b2926::t_49101ae6a0afbf 7,21-22,25-26,52-53,56-58,60,68,74-76,94-100,102,106-118,124,130,138-141,149-150,169,174-175,181,190,192,203,209-210,214,218,222-223,262,265,271,273,279-280,283-284,286,288,290-321,326,336,341,348,352,362-366,376-379,381-383,387-392
+  s_fc0852876b2926::t_1c82d0fc8027e8 1-3,6,8-20,23-24,27-45,47-50,55,59,61-67,69-73,79-84,86-93,101,103-105,119-120,122,125,129,132-137,142-143,146-148,151-162,166-168,170,172-173,176,178-180,182,184-189,191,193-202,204-208,211-213,215-217,219,224,228-261,263-264,266-268,270,272,274,277-278,281-282,285,287,322,327,329-335,337-339,342,346-347,349,351,353,355-361,367,370-375,380,384-386,393-397
+  s_fc0852876b2926::t_b2941900496671 145
+  s_fc0852876b2926::t_862067f7f77157 5
+  s_fc0852876b2926::t_ce0d015e673bde 46
+  s_fc0852876b2926::t_b9de36c36a4259 77-78
+  s_fc0852876b2926::t_7400e319169439 85
+  s_fc0852876b2926::t_9097ae5c689c5e 121
+  s_fc0852876b2926::t_e6829c60d759d7 123
+  s_fc0852876b2926::t_00deb22fda5b66 126-128
+  s_fc0852876b2926::t_69e151b6a16b6c 131
+  s_fc0852876b2926::t_b54aa6cdd0e6d4 144
+  s_fc0852876b2926::t_49b0ea0b7b0d82 163-165
+  s_fc0852876b2926::t_7bf84e9ada761f 171
+  s_fc0852876b2926::t_8a92581dad7e7a 177
+  s_fc0852876b2926::t_3fa09557af1260 183
+  s_fc0852876b2926::t_b901700106988b 225-227
+  s_fc0852876b2926::t_79081e6874be0c 269
+  s_fc0852876b2926::t_205911de905b8f 275-276
+  s_fc0852876b2926::t_dd1ab7a24fdb60 289
+  s_fc0852876b2926::t_72eb0ef1551019 323-325
+  s_fc0852876b2926::t_18a3888de6b802 328
+  s_fc0852876b2926::t_034487dbe152dd 340
+  s_fc0852876b2926::t_30ba25c3ab3887 343-345
+  s_fc0852876b2926::t_fcf81065c01110 350
+  s_fc0852876b2926::t_30072fb6b9429e 354
+packages/views/projects/components/project-detail.test.tsx
+  s_fc0852876b2926::t_0a1e2e8031eb77 315-316
+apps/docs/content/docs/project-resources.zh.mdx
+  s_fc0852876b2926::t_513dcfce588e20 68,73,78
+  s_fc0852876b2926::t_c1f6dc9069b15b 79
+apps/mobile/components/issue/pickers/assignee-picker-body.tsx
+  s_fc0852876b2926::t_1038f5ed21c99a 127
+  s_fc0852876b2926::t_db53b59b801fef 2-4,20,44,48,73-78,84,89,105,130,135
+  s_fc0852876b2926::t_aa95ce228769f8 109
+packages/core/issues/comment-trigger-outcomes.test.ts
+  s_fc0852876b2926::t_d2c5815866f51a 59,62-64,66-69
+  s_fc0852876b2926::t_6bd21a087f55ec 65
+  s_1594a45a6a53bf::t_e003bab31beaa6 16,21,35,39,46
+packages/core/issues/stores/issue-sidebar-sections-persistence.test.ts
+  s_fc0852876b2926::t_906a0a708ae64e 42-43
+  s_fc0852876b2926::t_bc4f2db2efb885 76-87
+  s_fc0852876b2926::t_5053e065638069 15-16
+  s_fc0852876b2926::t_4c52df8164833c 88
+packages/views/locales/ru/issues.json
+  s_fc0852876b2926::t_e8df72cef35d98 745,1234,1834
+  s_fc0852876b2926::t_09664b1aee6de9 878
+  s_fc0852876b2926::t_c23be02de1b5e0 631,833
+  s_fc0852876b2926::t_1e88066b608b5e 575
+  s_fc0852876b2926::t_9d3324f2b07bda 2266-2288
+  s_fc0852876b2926::t_1a4e0ebda32a9a 137,435,439,1291,1561
+apps/docs/content/docs/cli.fr.mdx
+  s_fc0852876b2926::t_218d3341e73253 416,531
+  s_fc0852876b2926::t_652c7a1276ce05 428,544
+  s_fc0852876b2926::t_6b713353e6e3a7 516
+  s_fc0852876b2926::t_9c848a2fc99d59 496
+packages/views/settings/components/task-tree-retention-row.tsx
+  s_fc0852876b2926::t_7e43fc21550adc 1-88
+packages/views/rich-content/rich-content.tsx
+  s_fc0852876b2926::t_ef181fe49cd7b5 243-249,262,265
+apps/docs/content/docs/concepts.ko.mdx
+  s_fc0852876b2926::t_674cb89dc4022b 62
+  s_fc0852876b2926::t_dafc9df5c5c6d3 50
+  s_fc0852876b2926::t_d7490f3efee902 18
+packages/core/types/workspace.ts
+  s_fc0852876b2926::t_1828a6c533d82e 1
+packages/core/issues/stores/quick-create-store.ts
+  s_fc0852876b2926::t_c284d71fff727e 9-10,30-31,39-40,60
+packages/views/agents/create/agent-created-page.tsx
+  s_fc0852876b2926::t_cd150896f66500 4
+apps/web/features/landing/i18n/ko.ts
+  s_fc0852876b2926::t_9a00c34425a976 109,205,274,291,298,347,397,591,1138,1206,2195,2233,2278,2288,2320,2396,2614,2628,2631,2691,2742,2891,2913,2946,2966,2992,2997,3014,3034,3040,3047,3056,3063,3066
+  s_fc0852876b2926::t_d7f43e4fe7b20d 156,1380
+packages/views/billing/trial-notices.test.tsx
+  s_fc0852876b2926::t_725f5754cb3712 22-26
+  s_fc0852876b2926::t_095d9bd785b48d 102-103
+  s_fc0852876b2926::t_10b07b938afa5c 57-59
+  s_fc0852876b2926::t_dcbd34fde32fa4 242,246-247,252,256,260-272,274
+packages/views/issues/components/sub-issues-agent-working-chip.tsx
+  s_fc0852876b2926::t_98aa65034a924b 47
+packages/views/projects/components/index.ts
+  s_fc0852876b2926::t_2510904d96cf5c 4
+.env.example
+  s_fc0852876b2926::t_92776519e09e76 800-813
+apps/docs/content/docs/auth-setup.fr.mdx
+  s_fc0852876b2926::t_1b1d2b350685a1 189-199
+apps/docs/content/docs/auth-setup.ja.mdx
+  s_fc0852876b2926::t_2fc09b5d797b3b 189-199
+apps/docs/content/docs/auth-setup.ko.mdx
+  s_fc0852876b2926::t_6653554d9bb208 189-199
+apps/docs/content/docs/auth-setup.mdx
+  s_fc0852876b2926::t_299329ee08bc86 189-199
+apps/docs/content/docs/auth-setup.zh-Hant.mdx
+  s_fc0852876b2926::t_58c705f583d4bb 189-199
+apps/docs/content/docs/auth-setup.zh.mdx
+  s_fc0852876b2926::t_dc94420e57241a 189-199
+apps/docs/content/docs/auth-tokens.fr.mdx
+  s_fc0852876b2926::t_ea8734d5e4295f 97-98
+apps/docs/content/docs/auth-tokens.ja.mdx
+  s_fc0852876b2926::t_2dc10ad59dbf31 97-98
+apps/docs/content/docs/auth-tokens.ko.mdx
+  s_fc0852876b2926::t_ddc83f72a12f3d 97-98
+apps/docs/content/docs/auth-tokens.mdx
+  s_fc0852876b2926::t_2cfa37f2edf21b 97-98
+apps/docs/content/docs/auth-tokens.zh-Hant.mdx
+  s_fc0852876b2926::t_6dbda160020bd1 97-98
+apps/docs/content/docs/auth-tokens.zh.mdx
+  s_fc0852876b2926::t_e89bdf1e149e00 97-98
+apps/docs/content/docs/chat.fr.mdx
+  s_fc0852876b2926::t_0de68c9758d226 107
+apps/docs/content/docs/chat.ja.mdx
+  s_fc0852876b2926::t_f0084a38415a6c 107
+apps/docs/content/docs/chat.ko.mdx
+  s_fc0852876b2926::t_16b7a6bd72b986 107
+apps/docs/content/docs/chat.mdx
+  s_fc0852876b2926::t_e04a77401cabf7 107
+apps/docs/content/docs/chat.zh-Hant.mdx
+  s_fc0852876b2926::t_f831a29f813e76 107
+apps/docs/content/docs/chat.zh.mdx
+  s_fc0852876b2926::t_299c299e22d632 107
+apps/docs/content/docs/desktop-app.fr.mdx
+  s_fc0852876b2926::t_cefe3a751f19ce 183-196
+apps/docs/content/docs/desktop-app.ja.mdx
+  s_fc0852876b2926::t_653bb001fab558 183-196
+apps/docs/content/docs/desktop-app.ko.mdx
+  s_fc0852876b2926::t_662408a39d04c4 183-196
+apps/docs/content/docs/desktop-app.mdx
+  s_fc0852876b2926::t_9aaabf8da2140f 183-196
+apps/docs/content/docs/desktop-app.zh-Hant.mdx
+  s_fc0852876b2926::t_bb02646f50b833 183-196
+apps/docs/content/docs/desktop-app.zh.mdx
+  s_fc0852876b2926::t_6181bae23f6d9e 183-196
+apps/docs/content/docs/shortcuts.fr.mdx
+  s_fc0852876b2926::t_7c04c60df05b38 49
+apps/docs/content/docs/shortcuts.ja.mdx
+  s_fc0852876b2926::t_659c1f6227a886 49
+apps/docs/content/docs/shortcuts.ko.mdx
+  s_fc0852876b2926::t_0090732ef5e17b 49
+apps/docs/content/docs/shortcuts.mdx
+  s_fc0852876b2926::t_5047620c9f95fd 49
+apps/docs/content/docs/shortcuts.zh-Hant.mdx
+  s_fc0852876b2926::t_469344c7ced650 49
+apps/docs/content/docs/shortcuts.zh.mdx
+  s_fc0852876b2926::t_ab1326b6d333f0 49
+docker-compose.selfhost.yml
+  s_fc0852876b2926::t_dcbfef58d0a670 126-127
+e2e/perf/chat-session-lists.spec.ts
+  s_fc0852876b2926::t_13b9eed4ec7d8a 60
+packages/core/api/schema.test.ts
+  s_fc0852876b2926::t_3b2399e91b364b 703
+packages/core/billing/trial-hook.test.tsx
+  s_fc0852876b2926::t_042b468a6fc4e0 34,43,49,84,90,97
+packages/core/billing/trial-recovery.test.tsx
+  s_fc0852876b2926::t_249a4fc7323611 40,48,54,115,123,129,152,158,165,204,209,215,241,250,273,278,284,314,323,351,356,373
+packages/core/issues/queries.test.ts
+  s_fc0852876b2926::t_33fdb97e2752ab 516,523
+packages/core/issues/sidebar-project-prefs.test.tsx
+  s_fc0852876b2926::t_4f2473ea3a0c2e 120-121,128,131,135-136
+packages/core/issues/stores/quick-create-store.test.ts
+  s_fc0852876b2926::t_7a54d88630f75b 5,14,23-24,26-27,29-30
+packages/core/workspace/queries.ts
+  s_fc0852876b2926::t_569640cd089054 3
+packages/ui/components/common/actor-avatar.tsx
+  s_fc0852876b2926::t_fd97346c1a4405 4,47,55
+packages/views/inbox/components/inbox-page.test.tsx
+  s_fc0852876b2926::t_124e3fb9e76bd4 383,596,599,604-605,611,615
+packages/views/issues/components/filter-chips-bar.tsx
+  s_fc0852876b2926::t_220102456dcc4f 27,287-288
+packages/views/issues/components/pickers/assignee-picker.hidden.test.tsx
+  s_fc0852876b2926::t_dc977745e266f6 2,24,71
+packages/views/issues/components/sub-issues-agent-working-chip.test.tsx
+  s_fc0852876b2926::t_92334740a5f1ad 105-107
+packages/views/onboarding/onboarding-flow-skip.test.tsx
+  s_fc0852876b2926::t_e68b9587e4140b 149
+packages/views/settings/components/notifications-tab.tsx
+  s_fc0852876b2926::t_804fd5a4108b1b 55
+pnpm-lock.yaml
+  s_fc0852876b2926::t_1fa8969ce08e0e 447,465,514,816,819,822,883,1035,1336-1341,6159-6164,17275-17278,19869,19897,19933,19941,19948,19966,19997,20031,22303,22312,24434,24438-24439
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "0474183fd97c720e40a061396ef5c0b4be479839",
+  "prompts": {},
+  "sessions": {
+    "s_1594a45a6a53bf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a49cc144892962c8e",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_1ec9c2ffcc469d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b1b87ef4-7d6c-4860-9461-fe9f8f8be2fd",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_24c6e81b839946": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-abc005f6478887712",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_acfdc68cf04713": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ad2f24676d117ae4c",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
