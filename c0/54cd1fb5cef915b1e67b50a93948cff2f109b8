@@ -1,0 +1,24 @@
+AGENTS.md
+  s_fc0852876b2926::t_20f1ae4706f317 46
+  s_fc0852876b2926::t_80aae2041babce 150
+CONTRIBUTING.md
+  s_fc0852876b2926::t_14891e3086d49e 3-4
+turbo.json
+  s_fc0852876b2926::t_00ce51cb62fade 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "c054cd1fb5cef915b1e67b50a93948cff2f109b8",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhongzhuan/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
