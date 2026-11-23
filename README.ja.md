@@ -13,7 +13,6 @@ Multica はソース公開型のワークスペースです。チームメイト
 仕事を割り当てられます。エージェントはタスクを引き受け、進捗を報告し、詰まっている点を共有し、
 終わったらレビューに回します。セルフホストでき、使い慣れたエージェント CLI でそのまま動き、ロックインもありません。
 
-[![CI](https://github.com/multica-ai/multica/actions/workflows/ci.yml/badge.svg)](https://github.com/multica-ai/multica/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/multica-ai/multica?style=flat)](https://github.com/multica-ai/multica/releases)
 [![GitHub stars](https://img.shields.io/github/stars/multica-ai/multica?style=flat)](https://github.com/multica-ai/multica/stargazers)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/W8gYBn226t)

@@ -43,7 +43,7 @@ Run these from the repository root:
 | Scope | Checks |
 | --- | --- |
 | Frontend excluding mobile | `pnpm typecheck`, `pnpm lint`, `pnpm test` |
-| `.github/` or `scripts/` | `pnpm test:scripts` (every `scripts/**/*.test.mjs`, including CI path selection and gates), plus `bash scripts/<name>.test.sh` for a shell script you changed |
+| `scripts/` | `pnpm test:scripts` (every `scripts/**/*.test.mjs`), plus `bash scripts/<name>.test.sh` for a shell script you changed |
 | Go backend | `make test` |
 | End-to-end | `pnpm exec playwright test` |
 | Combined web/backend verification | `make check` |
@@ -147,4 +147,4 @@ Workspace-scoped queries filter by `workspace_id`; membership gates access and `
 - Use names, types, and tests to express behavior. Code comments are English and kept for non-obvious rationale and constraints; remove superseded plans and incident narratives when updating code. Preserve tool directives and mixed-version contracts.
 - When a change alters user-visible behavior, a setting, a default, a shortcut, or an entry point, `rg` `apps/docs/content/docs` for the feature's name and the terms of the old behavior; a newly added label is not in the docs yet. In the same PR, update every affected page and its locale siblings (`inbox.mdx`, `inbox.zh.mdx`, ...). Text the change makes wrong is always fixed here; if the docs only lack the new behavior, you may link a docs follow-up issue from the PR description instead. Exception: do not document features gated behind a default-off flag in `server/internal/featureflags/keys.go` (permanently enabled compat keys do not count) in `apps/docs/content/docs/` or root `README*.md`; note why docs were skipped in the PR description instead. When a PR flips a flag to default-on or removes it for general availability, add the docs across all locales in the same PR (content removed earlier can be recovered from the diff of PR #11111).
 - New global pre-workspace routes use a single word or `/{noun}/{verb}`, not hyphenated root names. Update `server/internal/handler/reserved_slugs.json`, run `pnpm generate:reserved-slugs`, and commit `packages/core/paths/reserved-slugs.ts` when changing reserved slugs.
-- Use atomic conventional commits and the repository PR template. Follow the [pull request requirements](CONTRIBUTING.md#pull-request-requirements): Problem, Goal, Proposal (high-level design understandable without much background), Alternatives (optional), and Screenshots. Attach screenshots or a screen recording for UI or interaction changes (missing both means rejection by default). For releases, follow [.github/RELEASING.md](.github/RELEASING.md); default to a patch bump unless specified otherwise.
+- Use atomic conventional commits. Problem, Goal, Proposal, Alternatives (optional), and Screenshots for UI or interaction changes.
