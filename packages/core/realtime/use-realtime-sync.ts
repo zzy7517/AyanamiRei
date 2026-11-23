@@ -73,7 +73,6 @@ import {
   notificationPreferenceKeys,
 } from "../notification-preferences/queries";
 import { workspaceKeys, workspaceListOptions } from "../workspace/queries";
-import { memberLimitKeys } from "../billing/member-limit";
 import { isWorkspaceDeletePending } from "../workspace/pending-delete";
 import {
   hasNativeNotificationBridge,
@@ -101,7 +100,6 @@ import { resolvePostAuthDestination, useHasOnboarded } from "../paths";
 import type {
   IssueTableFacetsRequest,
   IssueTableQuerySpec,
-  MemberAddedPayload,
   WorkspaceDeletedPayload,
   WorkspaceUpdatedPayload,
   MemberRemovedPayload,
@@ -148,7 +146,6 @@ import type {
   ChatMessagesPage,
   ChatSession,
   ChatSessionCreatedPayload,
-  InvitationCreatedPayload,
 } from "../types";
 
 const chatWsLogger = createLogger("chat.ws");
@@ -744,7 +741,6 @@ function invalidateWorkspaceScopedQueries(qc: QueryClient): void {
     qc.invalidateQueries({ queryKey: workspaceKeys.agents(wsId) });
     qc.invalidateQueries({ queryKey: workspaceKeys.members(wsId) });
     qc.invalidateQueries({ queryKey: workspaceKeys.skills(wsId) });
-    qc.invalidateQueries({ queryKey: workspaceKeys.invitations(wsId) });
     qc.invalidateQueries({ queryKey: projectKeys.all(wsId) });
     qc.invalidateQueries({ queryKey: runtimeKeys.all(wsId) });
     qc.invalidateQueries({ queryKey: autopilotKeys.all(wsId) });
@@ -767,9 +763,6 @@ function invalidateWorkspaceScopedQueries(qc: QueryClient): void {
   // Cross-workspace, so outside the wsId guard: a reconnect may have missed
   // inbox events from any workspace, so re-pull the switcher-dot summary.
   void onInboxSummaryInvalidate(qc);
-  // Account invitations can change while only the socket is disconnected,
-  // with no browser focus or online event to trigger the fallback refetch.
-  qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
   // Per-issue caches are keyed without wsId, so the issueKeys.all(wsId)
   // prefix above does not reach them. They rely entirely on WS events for
   // freshness (staleTime: Infinity), so events missed while disconnected
@@ -1630,68 +1623,6 @@ export function useRealtimeSync(
       }
     });
 
-    const unsubMemberAdded = ws.on("member:added", (p) => {
-      const { member, workspace_name } = p as MemberAddedPayload;
-      const myUserId = authStore.getState().user?.id;
-      if (member.user_id === myUserId) {
-        qc.invalidateQueries({ queryKey: workspaceKeys.list() });
-        qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
-        onToast?.(
-          `You joined ${workspace_name ?? "a workspace"}`,
-          "info",
-        );
-      }
-    });
-
-    // invitation:created — notify the invitee of a new pending invitation
-    const unsubInvitationCreated = ws.on("invitation:created", (p) => {
-      const { workspace_name } = p as InvitationCreatedPayload;
-      qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
-      onToast?.(
-        `You were invited to ${workspace_name ?? "a workspace"}`,
-        "info",
-      );
-    });
-
-    // invitation:accepted / declined / revoked — refresh invitation lists.
-    // The workspace broadcast reaches every online member, so the admin lists
-    // refresh unconditionally. The account-level pending list is gated on the
-    // acting user: only the invitee who concluded the invite (possibly from
-    // another surface or device) needs an immediate refresh even while its
-    // cached list is fresh. Without the gate every accept/decline fanout
-    // refetches the list once per online member. The actor arrives in the frame
-    // envelope (the handler's second argument), not the event payload.
-    const unsubInvitationAccepted = ws.on(
-      "invitation:accepted",
-      (_payload, actorId) => {
-        const currentWsId = getCurrentWsId();
-        if (currentWsId) {
-          qc.invalidateQueries({ queryKey: workspaceKeys.invitations(currentWsId) });
-          qc.invalidateQueries({ queryKey: workspaceKeys.members(currentWsId) });
-        }
-        if (actorId === authStore.getState().user?.id) {
-          qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
-        }
-      },
-    );
-    const unsubInvitationDeclined = ws.on(
-      "invitation:declined",
-      (_payload, actorId) => {
-        const currentWsId = getCurrentWsId();
-        if (currentWsId) {
-          qc.invalidateQueries({ queryKey: workspaceKeys.invitations(currentWsId) });
-          // A declined invitation frees its member slot.
-          qc.invalidateQueries({ queryKey: memberLimitKeys.all(currentWsId) });
-        }
-        if (actorId === authStore.getState().user?.id) {
-          qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
-        }
-      },
-    );
-    const unsubInvitationRevoked = ws.on("invitation:revoked", () => {
-      qc.invalidateQueries({ queryKey: workspaceKeys.myInvitations() });
-    });
-
     // --- Chat / task events (global, survives ChatWindow unmount) ---
     //
     // Single source of truth: the Query cache. No Zustand writes here — the
@@ -2150,11 +2081,6 @@ export function useRealtimeSync(
       unsubWsUpdated();
       unsubWsDeleted();
       unsubMemberRemoved();
-      unsubMemberAdded();
-      unsubInvitationCreated();
-      unsubInvitationAccepted();
-      unsubInvitationDeclined();
-      unsubInvitationRevoked();
       unsubTaskMessage();
       unsubChatMessage();
       unsubChatDone();

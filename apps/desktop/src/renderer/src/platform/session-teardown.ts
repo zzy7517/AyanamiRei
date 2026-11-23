@@ -23,7 +23,7 @@ export interface SessionTeardown {
   reportAuthSession: (userId: string | null) => void;
   /** Desktop tab layout, which can name workspaces and issues. */
   resetTabs: () => void;
-  /** Any pre-workspace overlay left open (invite, onboarding, …). */
+  /** Any pre-workspace overlay left open (onboarding, …). */
   closeOverlay: () => void;
   /** Credential the local daemon authenticates with. */
   clearDaemonToken: () => Promise<unknown>;

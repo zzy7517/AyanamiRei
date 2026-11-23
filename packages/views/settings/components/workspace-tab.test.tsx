@@ -56,7 +56,6 @@ vi.mock("@multica/core/issues/queries", () => ({
 }));
 
 vi.mock("@multica/core/workspace/mutations", () => ({
-  useLeaveWorkspace: () => ({ mutateAsync: vi.fn() }),
   useDeleteWorkspace: () => ({ mutateAsync: vi.fn() }),
 }));
 

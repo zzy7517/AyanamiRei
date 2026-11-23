@@ -240,16 +240,7 @@
     },
     "confirm": {
       "title": "¿Continuar a Stripe Checkout?",
-      "description": "Plan: {{plan}}. Intervalo de facturación: {{interval}}. Miembros humanos actuales: {{count}}. Stripe volverá a contar los puestos y mostrará el importe final antes del pago.",
-      "held_invite": "Incluye un puesto de pago más para la invitación a {{email}}. Cuando se complete el pago, envíala desde Facturación."
-    },
-    "held_invite": {
-      "title": "El espacio de trabajo ya está en {{plan}}",
-      "description": "Guardaste una invitación para {{email}} como {{role}} hasta mejorar el plan. ¿La envías ahora?",
-      "role_admin": "administrador",
-      "role_member": "miembro",
-      "send": "Enviar invitación",
-      "discard": "Descartar"
+      "description": "Plan: {{plan}}. Intervalo de facturación: {{interval}}. Miembros humanos actuales: {{count}}. Stripe volverá a contar los puestos y mostrará el importe final antes del pago."
     }
   },
   "return_page": {

@@ -8,7 +8,6 @@
     "pages": "Pages",
     "views": "Vues",
     "commands": "Commandes",
-    "members": "Membres",
     "agents": "Agents",
     "projects": "Projets",
     "issues": "Tâches",
@@ -133,7 +132,7 @@
     "no_results": "Aucun résultat.",
     "no_labels": "Aucun libellé",
     "type_to_find_issue": "Tapez pour trouver une tâche",
-    "type_to_find_people": "Tapez pour trouver des membres et des agents"
+    "type_to_find_agents": "Tapez pour trouver un agent"
   },
   "delegate": {
     "row": "Confier à un agent : « {{prompt}} »",
@@ -148,8 +147,7 @@
     "issue": "Tâche",
     "project": "Projet",
     "agent": "Agent",
-    "autopilot": "Automatisation",
-    "member": "Membre"
+    "autopilot": "Automatisation"
   },
   "footer": {
     "navigate": "Naviguer",
@@ -158,7 +156,7 @@
     "back": "Retour",
     "prefix_commands": "Commandes",
     "prefix_issues": "Tâches",
-    "prefix_people": "Membres et agents"
+    "prefix_agents": "Agents"
   },
   "trigger": {
     "label": "Rechercher..."

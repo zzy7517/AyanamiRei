@@ -2499,8 +2499,7 @@ describe("IssueDetail (shared)", () => {
       fireEvent.click(screen.getByText("Details"));
       const creatorRow = screen.getByText("Created by").parentElement!;
       expect(creatorRow).toHaveTextContent("Claude Agent");
-      expect(within(creatorRow).getByRole("link", { name: "On behalf of Test User" }))
-        .toHaveAttribute("href", "/test/members/user-1");
+      expect(within(creatorRow).getByText("On behalf of Test User").tagName).toBe("SPAN");
       expect(screen.queryByText("Requested by")).not.toBeInTheDocument();
     });
 

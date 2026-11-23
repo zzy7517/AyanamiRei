@@ -7,9 +7,7 @@ import ruIssues from "./ru/issues.json";
 import ruAgents from "./ru/agents.json";
 import ruEditor from "./ru/editor.json";
 import ruOnboarding from "./ru/onboarding.json";
-import ruInvite from "./ru/invite.json";
 import ruLabels from "./ru/labels.json";
-import ruMembers from "./ru/members.json";
 import ruSearch from "./ru/search.json";
 import ruInbox from "./ru/inbox.json";
 import ruWorkspace from "./ru/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: ruAgents,
   editor: ruEditor,
   onboarding: ruOnboarding,
-  invite: ruInvite,
   labels: ruLabels,
-  members: ruMembers,
   search: ruSearch,
   inbox: ruInbox,
   workspace: ruWorkspace,

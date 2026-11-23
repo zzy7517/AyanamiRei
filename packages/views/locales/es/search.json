@@ -6,7 +6,6 @@
     "pages": "Páginas",
     "views": "Vistas",
     "commands": "Comandos",
-    "members": "Miembros",
     "projects": "Proyectos",
     "issues": "Tareas",
     "cancelled": "Cancelado",
@@ -51,7 +50,7 @@
     "no_results": "No se encontraron resultados.",
     "no_labels": "Sin etiquetas",
     "type_to_find_issue": "Escribe para buscar una tarea",
-    "type_to_find_people": "Escribe para buscar personas y agentes"
+    "type_to_find_agents": "Escribe para buscar un agente"
   },
   "trigger": {
     "label": "Buscar..."
@@ -151,8 +150,7 @@
     "issue": "Tarea",
     "project": "Proyecto",
     "agent": "Agente",
-    "autopilot": "Automatización",
-    "member": "Miembro"
+    "autopilot": "Automatización"
   },
   "footer": {
     "navigate": "Navegar",
@@ -161,7 +159,7 @@
     "back": "Atrás",
     "prefix_commands": "Comandos",
     "prefix_issues": "Tareas",
-    "prefix_people": "Personas y agentes"
+    "prefix_agents": "Agentes"
   },
   "untitled_doc": "Sin título"
 }

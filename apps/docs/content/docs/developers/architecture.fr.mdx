@@ -67,7 +67,7 @@ Les données serveur et l'état client sont gérés séparément :
 - L'espace de travail courant est déterminé par la route et n'est reflété dans la couche plateforme que là où les requêtes, les espaces de noms persistés ou la reconnexion l'exigent.
 - React Context ne transporte que la plomberie de la plateforme, comme l'ID de l'espace de travail et l'adaptateur de navigation.
 
-Les événements WebSocket doivent mettre à jour ou invalider le cache TanStack Query. Ne copiez pas les objets serveur dans Zustand. Les mutations qui entraînent une navigation, comme la création, la suppression ou le départ d'un espace de travail, doivent attendre la confirmation du serveur avant d'effacer l'état local.
+Les événements WebSocket doivent mettre à jour ou invalider le cache TanStack Query. Ne copiez pas les objets serveur dans Zustand. Les mutations qui entraînent une navigation, comme la création ou la suppression d'un espace de travail, doivent attendre la confirmation du serveur avant d'effacer l'état local.
 
 Les réponses de l'API sont analysées avec des schémas zod à la frontière `packages/core/api/`. Un client Desktop installé peut se connecter à un backend plus récent : le JSON reçu du réseau ne doit donc pas être directement converti en type TypeScript par une simple assertion.
 

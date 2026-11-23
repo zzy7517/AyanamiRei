@@ -8,7 +8,6 @@ type Ws = { id: string; name: string; slug: string; avatar_url: string | null; p
 
 const state = vi.hoisted(() => ({
   workspaces: [] as Ws[],
-  invitations: [] as { id: string; workspace_id: string; workspace_name?: string; inviter_name?: string }[],
   summary: [] as { workspace_id: string; count: number }[],
   setPinned: vi.fn(),
   workspaceCreationDisabled: false,
@@ -59,14 +58,13 @@ vi.mock("@multica/core/inbox/queries", () => ({
     new Set(entries.filter((s) => s.count > 0).map((s) => s.workspace_id)),
 }));
 vi.mock("@multica/core/workspace/queries", () => ({
-  myInvitationListOptions: () => ({ queryKey: ["invitations"] }),
   workspaceListOptions: () => ({ queryKey: ["workspaces"] }),
+  memberListOptions: () => ({ queryKey: ["workspaces", "ws-1", "members"] }),
 }));
 vi.mock("@tanstack/react-query", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-query")>()),
   useQuery: ({ queryKey }: { queryKey: readonly unknown[] }) => {
     if (queryKey[0] === "workspaces") return { data: state.workspaces };
-    if (queryKey[0] === "invitations") return { data: state.invitations };
     if (queryKey[0] === "inbox") return { data: state.summary };
     return { data: undefined };
   },
@@ -85,7 +83,6 @@ const openMenu = async () => {
 
 beforeEach(() => {
   state.workspaces = [ws(1), ws(2)];
-  state.invitations = [];
   state.summary = [];
   state.setPinned.mockClear();
   state.workspaceCreationDisabled = false;
@@ -158,26 +155,6 @@ describe("RailWorkspaces", () => {
     ];
     renderWithI18n(<RailWorkspaces />);
     expect(triggerHasDot()).toBe(false);
-  });
-
-  it("links pending invitations to the invitations page and dots the switcher", async () => {
-    state.invitations = [
-      { id: "inv-1", workspace_id: "ws-8", workspace_name: "Copilot Hub" },
-      { id: "inv-2", workspace_id: "ws-9", workspace_name: "Lumen Labs" },
-    ];
-    renderWithI18n(<RailWorkspaces />);
-    expect(triggerHasDot()).toBe(true);
-    const menu = await openMenu();
-    const entry = within(menu).getByRole("menuitem", { name: /Pending invitations/ });
-    expect(entry).toHaveAttribute("href", "/invitations");
-    expect(entry).toHaveTextContent("2");
-    expect(within(menu).queryByText("Copilot Hub")).toBeNull();
-  });
-
-  it("offers no invitations entry when none are pending", async () => {
-    renderWithI18n(<RailWorkspaces />);
-    const menu = await openMenu();
-    expect(within(menu).queryByRole("menuitem", { name: /Pending invitations/ })).toBeNull();
   });
 
   it("offers workspace creation unless the instance disables it", async () => {

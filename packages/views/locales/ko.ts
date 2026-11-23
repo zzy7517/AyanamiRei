@@ -7,9 +7,7 @@ import koIssues from "./ko/issues.json";
 import koAgents from "./ko/agents.json";
 import koEditor from "./ko/editor.json";
 import koOnboarding from "./ko/onboarding.json";
-import koInvite from "./ko/invite.json";
 import koLabels from "./ko/labels.json";
-import koMembers from "./ko/members.json";
 import koSearch from "./ko/search.json";
 import koInbox from "./ko/inbox.json";
 import koWorkspace from "./ko/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: koAgents,
   editor: koEditor,
   onboarding: koOnboarding,
-  invite: koInvite,
   labels: koLabels,
-  members: koMembers,
   search: koSearch,
   inbox: koInbox,
   workspace: koWorkspace,

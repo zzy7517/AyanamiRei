@@ -391,14 +391,6 @@ describe("existing reserved workspace navigation", () => {
       );
     },
   );
-
-  it("does not send a known invite workspace entity route to the invite overlay", () => {
-    withWorkspaces(["invite"]);
-    const adapter = renderProvider();
-    act(() => adapter().push("/invite/issues/MUL-123"));
-    expect(overlay.open).not.toHaveBeenCalled();
-    expect(getActiveTab(useTabStore.getState())?.url).toBe("/invite/issues/MUL-123");
-  });
 });
 
 describe("workspaces shown in another window", () => {

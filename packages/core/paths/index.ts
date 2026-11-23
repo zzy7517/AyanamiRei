@@ -24,7 +24,7 @@ export {
   parseTabSubject,
   tabSubjectKey,
 } from "./tab-subject";
-export type { TabSubject, TabActorType } from "./tab-subject";
+export type { TabSubject } from "./tab-subject";
 export {
   resolveTabPresentation,
   DEFAULT_TAB_VISUAL,

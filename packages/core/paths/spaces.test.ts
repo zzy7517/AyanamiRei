@@ -20,13 +20,12 @@ describe("spaceForPath", () => {
     [ws.issueDetail("MUL-1" as IssueRouteRef), "work"],
     [ws.projectDetail("p-1"), "work"],
     [ws.agentDetail("a-1"), "team"],
-    [ws.memberDetail("m-1"), "team"],
     [ws.runtimeDetail("r-1"), "team"],
     [ws.skills(), "team"],
     [ws.usage(), "team"],
     [ws.chatSession("c-1"), "chat"],
     [ws.autopilotDetail("ap-1"), "autopilots"],
-    [`${ws.settings()}?tab=members`, "settings"],
+    [`${ws.settings()}?tab=billing`, "settings"],
   ])("maps %s to %s", (path, space) => {
     expect(spaceForPath(path)).toBe(space);
   });

@@ -6,11 +6,8 @@ import { isAgentRuntimeBound, useWorkspacePresenceMap, type AgentAvailability } 
 import { useWorkspaceId } from "@multica/core/hooks";
 import { canAssignAgentToIssue, useCurrentMember } from "@multica/core/permissions";
 import { runtimeDisplayLabel, runtimeListOptions } from "@multica/core/runtimes";
-import {
-  agentListOptions,
-  memberListOptions,
-} from "@multica/core/workspace/queries";
-import type { Agent, MemberWithUser } from "@multica/core/types";
+import { agentListOptions } from "@multica/core/workspace/queries";
+import type { Agent } from "@multica/core/types";
 
 export interface AgentEntry {
   agent: Agent;
@@ -22,18 +19,16 @@ export interface AgentEntry {
 }
 
 const EMPTY_AGENTS: Agent[] = [];
-const EMPTY_MEMBERS: MemberWithUser[] = [];
 
 /**
- * Agents and members as the palette shows them: archived ones out, each agent
- * annotated with whether the viewer can assign it and where it runs. One pass
- * shared by search, the assignee submenu and delegation.
+ * Agents as the palette shows them: archived ones out, each agent annotated
+ * with whether the viewer can assign it and where it runs. One pass shared by
+ * search, the assignee submenu and delegation.
  */
 export function useActorDirectory(enabled: boolean) {
   const wsId = useWorkspaceId();
   const { userId, role } = useCurrentMember(wsId);
   const { data: agentsData = EMPTY_AGENTS } = useQuery({ ...agentListOptions(wsId), enabled });
-  const { data: members = EMPTY_MEMBERS } = useQuery({ ...memberListOptions(wsId), enabled });
   const { data: runtimes } = useQuery({ ...runtimeListOptions(wsId), enabled });
   const { byAgent } = useWorkspacePresenceMap(enabled ? wsId : undefined);
 
@@ -55,5 +50,5 @@ export function useActorDirectory(enabled: boolean) {
       });
   }, [agentsData, byAgent, role, runtimes, userId]);
 
-  return useMemo(() => ({ agents, members }), [agents, members]);
+  return useMemo(() => ({ agents }), [agents]);
 }

@@ -466,7 +466,7 @@ export function StepWorkspace({
  * DISABLE_WORKSPACE_CREATION=true (#3433) AND the user has no existing
  * workspace yet. The headline / lede above this block already carry the
  * messaging; this component only provides the logout escape so a user who
- * landed here without an invitation is not trapped.
+ * landed here is not trapped.
  */
 function CreationDisabledNotice({ onLogout }: { onLogout: () => void }) {
   const { t } = useT("onboarding");

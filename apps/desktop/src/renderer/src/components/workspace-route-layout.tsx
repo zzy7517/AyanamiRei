@@ -56,7 +56,7 @@ export function WorkspaceRouteLayout() {
   const [instanceId] = useState(() => Symbol("workspace-route-layout"));
   const user = useAuthStore((s) => s.user);
   const isAuthLoading = useAuthStore((s) => s.isLoading);
-  // While a WindowOverlay is open (onboarding, accept-invite, new-workspace),
+  // While a WindowOverlay is open (onboarding, new-workspace),
   // the underlying tab is still mounted in the React tree — so this layout
   // and its SourceBackfillModal would render UNDER the overlay.
   // Because the modal uses a Portal that targets document.body, it ends up

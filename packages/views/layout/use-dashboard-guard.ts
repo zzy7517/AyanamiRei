@@ -29,11 +29,6 @@ import { useNavigation } from "../navigation";
  * itself marks the user onboarded before navigating into a workspace, so
  * entering the dashboard no longer depends on a follow-up Helper modal.
  *
- * (Older comment claimed this state was physically impossible because
- * CreateWorkspace and AcceptInvitation atomically marked onboarded.
- * CreateWorkspace no longer marks; AcceptInvitation still does — invitees
- * skip the modal entirely.)
- *
  * We read the workspace list query state directly (rather than relying on
  * useCurrentWorkspace's null return) so we can distinguish "list loading"
  * from "slug not found". Otherwise users could see a transient redirect
@@ -67,7 +62,7 @@ export function useDashboardGuard() {
 
   // Drop recent-issues buckets for workspaces the user no longer belongs to.
   // Runs once the workspace list resolves, and again whenever membership
-  // changes (workspace deleted, user kicked, user left).
+  // changes (workspace deleted, user kicked out).
   useEffect(() => {
     if (!workspaceListReady) return;
     const activeWsIds = workspaces.map((w) => w.id);

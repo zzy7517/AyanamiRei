@@ -62,7 +62,7 @@ Docs-only changes can use link/reference checks and `git diff --check`; state th
 - Zustand selectors return stable references; use shallow comparison for allocated objects/arrays.
 - WebSocket events patch or invalidate Query caches, not server payloads in Zustand. Clearing client-owned pointers is allowed with one responder and a self-initiated guard when this client can cause the event.
 - Optimistic field patches require a predictable result, rare failure, trivial rollback, and staying on the current screen. Snapshot before patching, roll back on failure, and invalidate uncertain projections on settle.
-- Create/delete/leave and confirmation flows await the server before navigation or cleanup; do not optimistically delete entities. Exceptions: workspace leave (known debt under Desktop Rules) and mobile inbox mark-read (mobile instructions).
+- Create/delete and confirmation flows await the server before navigation or cleanup; do not optimistically delete entities. Exception: mobile inbox mark-read (mobile instructions).
 - When the caller can unmount before the request settles (moving to the next item, closing a dialog or menu), attach toasts and follow-up work to the request promise (`mutateAsync().then(onSuccess, onError)`) or to `useMutation`'s own callbacks, not to per-call `mutate(vars, { onSuccess, onError })` callbacks, which React Query skips once the caller unmounts. Test these flows with the real mutation hook and a mocked API, unmounting the caller before the request settles (`packages/views/inbox/components/use-inbox-snooze.test.tsx`, `packages/views/issues/actions/__tests__/issue-inbox-actions.test.tsx`).
 - Message sends use visible pending state and retry on failure.
 
@@ -104,10 +104,9 @@ Workspace-scoped queries filter by `workspace_id`; membership gates access and `
 
 ## Desktop Rules
 
-- Workspace session routes are tab destinations. Pre-workspace one-shot flows (create workspace, accept invite) use `WindowOverlay` in `apps/desktop/src/renderer/src/stores/window-overlay-store.ts`, not new routes. Stale workspace tabs heal by dropping stale tab groups.
+- Workspace session routes are tab destinations. Pre-workspace one-shot flows (create workspace, onboarding) use `WindowOverlay` in `apps/desktop/src/renderer/src/stores/window-overlay-store.ts`, not new routes. Stale workspace tabs heal by dropping stale tab groups.
 - Workspace route layouts own `setCurrentWorkspace(slug, uuid)` from `@multica/core/platform`; leaving workspace context calls `setCurrentWorkspace(null, null)`.
 - Cross-workspace navigation uses the adapter's `switchWorkspace(slug, targetPath)` flow; do not bypass it with direct router navigation.
-- Workspace leave clears/navigates first to avoid the `member:removed` race; this is known debt in `packages/views/settings/components/workspace-tab.tsx`, not a pattern for new flows.
 - Full-window views outside the dashboard shell mount `<DragStrip />` from `@multica/views/platform` as the first flex child. Interactive controls in the top 48px need `WebkitAppRegion: "no-drag"`.
 
 ## UI Copy

@@ -51,22 +51,6 @@ function tryRouteToOverlay(path: string): boolean {
     overlay.open({ type: "onboarding" });
     return true;
   }
-  if (path === "/invitations") {
-    overlay.open({ type: "invitations" });
-    return true;
-  }
-  if (path.startsWith("/invite/") && !workspaceSlugForPath(path)) {
-    let id = "";
-    try {
-      id = decodeURIComponent(path.slice("/invite/".length));
-    } catch {
-      return true;
-    }
-    if (id) {
-      overlay.open({ type: "invitations", invitationId: id });
-      return true;
-    }
-  }
   // Any other navigation cancels a live overlay.
   if (overlay.overlay) overlay.close();
   return false;
@@ -77,8 +61,8 @@ function tryRouteToOverlay(path: string): boolean {
  * was delegated to the tab store (caller should NOT proceed).
  *
  * This is the entry point that makes shared code platform-agnostic:
- * sidebar dropdown, cmd+k "switch workspace", post-delete redirects,
- * invite-accept flow — they all call `useNavigation().push(path)` with a
+ * sidebar dropdown, cmd+k "switch workspace", post-delete redirects — they
+ * all call `useNavigation().push(path)` with a
  * full workspace URL, and on desktop we translate "target slug differs
  * from active" into "switch the tab-group that's visible in the TabBar".
  *

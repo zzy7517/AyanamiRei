@@ -7,9 +7,7 @@ import zhHansIssues from "./zh-Hans/issues.json";
 import zhHansAgents from "./zh-Hans/agents.json";
 import zhHansEditor from "./zh-Hans/editor.json";
 import zhHansOnboarding from "./zh-Hans/onboarding.json";
-import zhHansInvite from "./zh-Hans/invite.json";
 import zhHansLabels from "./zh-Hans/labels.json";
-import zhHansMembers from "./zh-Hans/members.json";
 import zhHansSearch from "./zh-Hans/search.json";
 import zhHansInbox from "./zh-Hans/inbox.json";
 import zhHansWorkspace from "./zh-Hans/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: zhHansAgents,
   editor: zhHansEditor,
   onboarding: zhHansOnboarding,
-  invite: zhHansInvite,
   labels: zhHansLabels,
-  members: zhHansMembers,
   search: zhHansSearch,
   inbox: zhHansInbox,
   workspace: zhHansWorkspace,

@@ -117,7 +117,6 @@ for (const scenario of [
         await workspaceGate;
         return json(200, []);
       }
-      if (url.pathname === "/api/invitations") return json(200, []);
       if (url.pathname === "/api/client-usage") return route.fulfill({ status: 204 });
       if (url.pathname.startsWith("/api/") || url.pathname === "/auth/google") {
         unexpectedApiRequests.push(`${request.method()} ${url.pathname}`);

@@ -30,10 +30,9 @@ describe("parseTabSubject", () => {
       "/acme/attachments/att1/preview?name=my%20photo.png",
       { kind: "attachment", id: "att1", filename: "my photo.png" },
     ],
-    // Actors
-    ["/acme/agents/ag1", { kind: "actor", actorType: "agent", id: "ag1" }],
-    ["/acme/members/m1", { kind: "actor", actorType: "member", id: "m1" }],
-    // Flow — /new must win over the actor detail pattern
+    // Agent detail
+    ["/acme/agents/ag1", { kind: "agent", id: "ag1" }],
+    // Flow — /new must win over the agent detail pattern
     ["/acme/agents/new", { kind: "flow", flow: "create-agent" }],
     // Runtime machine vs nested runtime
     ["/acme/runtimes/machine-1", { kind: "machine", machineId: "machine-1" }],
@@ -52,8 +51,6 @@ describe("parseTabSubject", () => {
     ["/acme/chat", { kind: "chat", sessionId: null }],
     ["/acme/chat?session=sess-1", { kind: "chat", sessionId: "sess-1" }],
     ["/acme/chat?agent=ag-1", { kind: "chat", sessionId: null }],
-    // Members list route does not exist
-    ["/acme/members", { kind: "unknown" }],
     // Unknown / too short
     ["/acme/nope", { kind: "unknown" }],
     ["/acme", { kind: "unknown" }],
@@ -89,9 +86,7 @@ describe("tabSubjectKey", () => {
     expect(tabSubjectKey({ kind: "issue", id: "x" })).toBe("issue:x");
     expect(tabSubjectKey({ kind: "chat", sessionId: null })).toBe("chat:");
     expect(tabSubjectKey({ kind: "chat", sessionId: "s1" })).toBe("chat:s1");
-    expect(
-      tabSubjectKey({ kind: "actor", actorType: "member", id: "m1" }),
-    ).toBe("actor:member:m1");
+    expect(tabSubjectKey({ kind: "agent", id: "ag1" })).toBe("agent:ag1");
   });
 
   it("distinguishes archived inbox and the attachment filename", () => {

@@ -109,7 +109,7 @@ issue — so nobody reconstructs context, and nothing ships without a human sayi
 - **[Self-host everything](SELF_HOSTING.md) →** Docker Compose or Helm, on your own infrastructure.
 - **[Your Git host](https://multica.ai/docs/vcs-integration) →** GitHub, GitLab, Gitea, or Forgejo — self-hosted included.
 - **[Workspaces](https://multica.ai/docs/workspaces) →** Separate agents, issues, and settings per team.
-- **[Roles](https://multica.ai/docs/members-roles) and [access scopes](https://multica.ai/docs/agents#permissions-and-access) →** Manage workspace roles and choose who can run each agent.
+- **[Access scopes](https://multica.ai/docs/agents#permissions-and-access) →** Choose who can run each agent.
 - **[Security model](https://multica.ai/docs/security-model) →** What an agent can reach, and what it can't.
 - **Web, [desktop](https://multica.ai/docs/desktop-app), and [mobile](https://multica.ai/docs/mobile-app) →** The same workspace on macOS, Windows, Linux, iPhone, and iPad — the iOS app builds from source today, not yet on the App Store.
 - **[CLI and API](https://multica.ai/docs/cli) →** Every surface is scriptable. Agents drive Multica through the same CLI you do.

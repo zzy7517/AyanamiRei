@@ -23,7 +23,7 @@ import {
   type NavLabelKey,
   type RouteIconName,
 } from "./route-icons";
-import type { TabActorType, TabSubject } from "./tab-subject";
+import type { TabSubject } from "./tab-subject";
 
 /** The leading visual a tab should render. */
 export type TabVisual =
@@ -35,8 +35,8 @@ export type TabVisual =
   | { kind: "issue-status"; status: IssueStatus | null; category?: IssueStatusCategory; color?: string | null; icon?: string | null }
   /** A project's own icon. `null` falls back to the default project glyph. */
   | { kind: "project-icon"; icon: string | null }
-  /** An actor's avatar, resolved by the view layer from `actorType`+`id`. */
-  | { kind: "actor"; actorType: TabActorType; id: string };
+  /** An agent's avatar, resolved by the view layer from `id`. */
+  | { kind: "agent"; id: string };
 
 /** Localization keys under the `layout.tab` namespace for tab type labels. */
 export type TabLabelKey =
@@ -44,7 +44,6 @@ export type TabLabelKey =
   | "project"
   | "autopilot"
   | "agent"
-  | "member"
   | "doc"
   | "docFolder"
   | "skill"
@@ -82,8 +81,8 @@ export interface TabEntityData {
   issue?: Pick<Issue, "identifier" | "title" | "status" | "status_category">;
   project?: { icon: string | null; title: string };
   autopilot?: { title: string };
-  /** Resolved display name for an actor subject. */
-  actorName?: string;
+  /** Resolved display name for an agent subject. */
+  agentName?: string;
   skill?: { name: string };
   doc?: {title: string};
   docFolder?: {title: string};
@@ -103,11 +102,6 @@ function textOr(text: string | undefined | null, tabKey: TabLabelKey): TabTitleS
   const trimmed = text?.trim();
   return trimmed ? { kind: "text", text: trimmed } : { kind: "tab", tabKey };
 }
-
-const ACTOR_LABEL: Record<TabActorType, TabLabelKey> = {
-  agent: "agent",
-  member: "member",
-};
 
 // Extension → file-type icon. The preview URL only carries the filename, so the
 // extension is the available signal; anything unrecognized uses the generic
@@ -178,10 +172,10 @@ export function resolveTabPresentation(
         visual: { kind: "icon", icon: "Zap" },
         title: textOr(data.autopilot?.title, "autopilot"),
       };
-    case "actor":
+    case "agent":
       return {
-        visual: { kind: "actor", actorType: subject.actorType, id: subject.id },
-        title: textOr(data.actorName, ACTOR_LABEL[subject.actorType]),
+        visual: { kind: "agent", id: subject.id },
+        title: textOr(data.agentName, "agent"),
       };
     case "doc":
       return { visual: { kind: "icon", icon: "FileText" }, title: textOr(data.doc?.title, "doc") };

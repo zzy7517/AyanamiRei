@@ -71,8 +71,6 @@ import { Checkbox } from "@multica/ui/components/ui/checkbox";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@multica/ui/components/ui/command";
 import { AvatarGroup, AvatarGroupCount } from "@multica/ui/components/ui/avatar";
 import { ActorAvatar } from "../../common/actor-avatar";
-import { MemberProfileCard } from "../../members/member-profile-card";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@multica/ui/components/ui/hover-card";
 import { ActionShortcutKeycaps } from "../../common/shortcut-keycaps";
 import { UnsubscribeArchiveButton } from "../../inbox/components/unsubscribe-archive-button";
 import { InboxArchiveButton, InboxOpenBar } from "../../inbox/components/inbox-bar";
@@ -3641,19 +3639,10 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
               <ActorAvatar actorType={issue.creator_type} actorId={issue.creator_id} size="sm" enableHoverCard />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="cursor-pointer truncate">{getActorName(issue.creator_type, issue.creator_id)}</span>
-                {requesterName && issue.requester_id && (
-                  <HoverCard>
-                    <HoverCardTrigger
-                      render={<AppLink href={paths.memberDetail(issue.requester_id)} />}
-                      className="block truncate text-caption text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      title={t(($) => $.execution_log.attribution.on_behalf_of, { name: requesterName })}
-                    >
-                      {t(($) => $.execution_log.attribution.on_behalf_of, { name: requesterName })}
-                    </HoverCardTrigger>
-                    <HoverCardContent align="start" className="w-72">
-                      <MemberProfileCard userId={issue.requester_id} />
-                    </HoverCardContent>
-                  </HoverCard>
+                {requesterName && (
+                  <span className="block truncate text-caption text-muted-foreground">
+                    {t(($) => $.execution_log.attribution.on_behalf_of, { name: requesterName })}
+                  </span>
                 )}
               </div>
             </div>

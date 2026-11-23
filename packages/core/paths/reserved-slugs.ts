@@ -25,8 +25,6 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "auth",
   "oauth",
   "callback",
-  "invite",
-  "invitations",
   "verify",
   "reset",
   "password",
@@ -282,7 +280,6 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "billing",
   "notifications",
   "search",
-  "members",
 
   // Workspace route segments
   // Reserving each segment name prevents `/{slug}/{view}` from being visually

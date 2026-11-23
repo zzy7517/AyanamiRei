@@ -8,7 +8,6 @@
     "pages": "Страницы",
     "views": "Представления",
     "commands": "Команды",
-    "members": "Участники",
     "agents": "Агенты",
     "projects": "Проекты",
     "issues": "Задачи",
@@ -139,7 +138,7 @@
     "no_results": "Ничего не найдено.",
     "no_labels": "Нет меток",
     "type_to_find_issue": "Введите текст для поиска задачи",
-    "type_to_find_people": "Введите текст для поиска участников и агентов"
+    "type_to_find_agents": "Введите текст для поиска агента"
   },
   "delegate": {
     "row": "Передать агенту: «{{prompt}}»",
@@ -154,8 +153,7 @@
     "issue": "Задача",
     "project": "Проект",
     "agent": "Агент",
-    "autopilot": "Автопилот",
-    "member": "Участник"
+    "autopilot": "Автопилот"
   },
   "footer": {
     "navigate": "Навигация",
@@ -164,7 +162,7 @@
     "back": "Назад",
     "prefix_commands": "Команды",
     "prefix_issues": "Задачи",
-    "prefix_people": "Участники и агенты"
+    "prefix_agents": "Агенты"
   },
   "trigger": {
     "label": "Поиск..."

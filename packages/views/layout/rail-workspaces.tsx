@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AppWindow, Check, Link2, Mail, Pin, PinOff, Plus, Settings, UserPlus } from "@multica/ui/icons";
+import { AppWindow, Check, Link2, Pin, PinOff, Plus, Settings } from "@multica/ui/icons";
 import { toast } from "sonner";
 import { copyText } from "@multica/ui/lib/clipboard";
 import type { api } from "@multica/core/api";
@@ -13,11 +13,9 @@ import {
   unreadWorkspaceIds,
 } from "@multica/core/inbox/queries";
 import { paths, useCurrentWorkspace } from "@multica/core/paths";
-import type { Invitation, Workspace } from "@multica/core/types";
-import { useAuthStore } from "@multica/core/auth";
+import type { Workspace } from "@multica/core/types";
 import {
   memberListOptions,
-  myInvitationListOptions,
   workspaceListOptions,
 } from "@multica/core/workspace/queries";
 import { useSetWorkspacePinned } from "@multica/core/workspace/mutations";
@@ -40,7 +38,6 @@ import { WorkspaceAvatar } from "../workspace/workspace-avatar";
 
 // Stable empty defaults: an inline `= []` is a new array every render.
 const EMPTY_WORKSPACES: Workspace[] = [];
-const EMPTY_INVITATIONS: Invitation[] = [];
 const EMPTY_INBOX_SUMMARY: Awaited<ReturnType<typeof api.getInboxUnreadSummary>> = [];
 const EMPTY_SLUGS: ReadonlySet<string> = new Set();
 
@@ -125,10 +122,9 @@ function OtherWindowMarker() {
 /**
  * The workspace switcher at the top of the rail: one tile for the current
  * workspace, whatever the workspace count, so the spaces below never move.
- * Its menu lists every workspace, an entry to the invitations page while
- * any are pending, and workspace creation. The tile carries a dot while another workspace has unread inbox
- * items or an invitation waits; the current workspace's unread shows on the
- * Inbox space instead.
+ * Its menu lists every workspace and workspace creation. The tile carries a dot
+ * while another workspace has unread inbox items; the current workspace's
+ * unread shows on the Inbox space instead.
  */
 export function RailWorkspaces() {
   const { t } = useT("layout");
@@ -136,7 +132,6 @@ export function RailWorkspaces() {
   const wsId = workspace?.id;
   const workspaceCreationDisabled = useConfigStore((s) => s.workspaceCreationDisabled);
   const { data: workspaces = EMPTY_WORKSPACES } = useQuery(workspaceListOptions());
-  const { data: invitations = EMPTY_INVITATIONS } = useQuery(myInvitationListOptions());
   // One cross-workspace cache entry; gated on an active workspace since the
   // endpoint resolves through the workspace-member middleware.
   const { data: unreadSummary = EMPTY_INBOX_SUMMARY } = useQuery({
@@ -179,7 +174,7 @@ export function RailWorkspaces() {
               radius="lg"
               className="h-[34px] w-[34px] border-surface-border bg-surface-raised text-body text-foreground shadow-[var(--surface-shadow)]"
             />
-            {(otherUnread || invitations.length > 0) && (
+            {otherUnread && (
               <UnreadDot className="absolute -top-0.5 -right-0.5 ring-2 ring-app-shell" />
             )}
           </DropdownMenuTrigger>
@@ -231,23 +226,6 @@ export function RailWorkspaces() {
               );
             })}
           </DropdownMenuGroup>
-          {invitations.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem render={<AppLink href={paths.invitations()} />}>
-                  <Mail />
-                  <span className="min-w-0 flex-1 truncate">
-                    {t(($) => $.sidebar.pending_invitations_label)}
-                  </span>
-                  <span className="text-caption text-muted-foreground tabular-nums">
-                    {invitations.length}
-                  </span>
-                  <UnreadDot />
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
-          )}
           {!workspaceCreationDisabled && (
             <>
               <DropdownMenuSeparator />
@@ -274,10 +252,7 @@ function WorkspaceTileMenu({
 }) {
   const { t } = useT("layout");
   const { push, getShareableUrl } = useNavigation();
-  const userId = useAuthStore((s) => s.user?.id);
   const { data: members = [] } = useQuery(memberListOptions(workspace.id));
-  const role = members.find((member) => member.user_id === userId)?.role;
-  const isAdmin = role === "owner" || role === "admin";
   const setPinned = useSetWorkspacePinned();
   const settings = paths.workspace(workspace.slug).settings();
   const pinned = !!workspace.pinned_at;
@@ -315,12 +290,6 @@ function WorkspaceTileMenu({
           <Settings />
           {t(($) => $.rail.workspace_settings)}
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem onClick={() => push(`${settings}?tab=members&invite=1`)}>
-            <UserPlus />
-            {t(($) => $.panels.team.invite_member)}
-          </DropdownMenuItem>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

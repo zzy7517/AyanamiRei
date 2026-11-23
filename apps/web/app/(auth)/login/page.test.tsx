@@ -23,7 +23,6 @@ function createWrapper() {
 const {
   mockIssueCliToken,
   mockListWorkspaces,
-  mockListMyInvitations,
   mockPush,
   mockReplace,
   searchParamsState,
@@ -31,7 +30,6 @@ const {
 } = vi.hoisted(() => ({
   mockIssueCliToken: vi.fn(),
   mockListWorkspaces: vi.fn(),
-  mockListMyInvitations: vi.fn(),
   mockPush: vi.fn(),
   mockReplace: vi.fn(),
   searchParamsState: { params: new URLSearchParams() },
@@ -79,7 +77,6 @@ vi.mock("@/features/auth/auth-cookie", () => ({
 vi.mock("@multica/core/api", () => ({
   api: {
     listWorkspaces: mockListWorkspaces,
-    listMyInvitations: mockListMyInvitations,
     verifyCode: vi.fn(),
     setToken: vi.fn(),
     getMe: vi.fn(),
@@ -96,7 +93,6 @@ describe("LoginPage", () => {
     authStateRef.state.user = null;
     authStateRef.state.isLoading = false;
     mockListWorkspaces.mockResolvedValue([]);
-    mockListMyInvitations.mockResolvedValue([]);
   });
 
   it.each([null, { id: "u1", email: "test@multica.ai" }])(
@@ -213,14 +209,14 @@ describe("LoginPage", () => {
 
     it("still honors ?next= for a visitor who arrived authenticated", async () => {
       searchParamsState.params = new URLSearchParams({
-        next: "/invite/abc",
+        next: "/acme/settings",
       });
       authStateRef.state.user = onboardedUser;
 
       render(<LoginPage />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/invite/abc");
+        expect(mockReplace).toHaveBeenCalledWith("/acme/settings");
       });
       expect(mockListWorkspaces).not.toHaveBeenCalled();
     });

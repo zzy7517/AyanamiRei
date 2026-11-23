@@ -331,16 +331,6 @@ function handleDeepLink(url: string): void {
       return;
     }
 
-    // multica://invite/<invitationId>
-    // Dispatched from the web invite page when the user chooses "Open in
-    // desktop app". The renderer opens the invite overlay — no tab, no
-    // route persistence, so deep-linking the same invite twice stays safe.
-    if (parsed.hostname === "invite") {
-      const id = parsed.pathname.replace(/^\//, "");
-      if (id) dispatchToMainRenderer("invite:open", decodeURIComponent(id));
-      return;
-    }
-
     if (parsed.hostname === "open" && parsed.pathname === "/issue") {
       // Keep the source instance in the payload. The authenticated renderer
       // validates it against runtime config before opening a workspace tab.

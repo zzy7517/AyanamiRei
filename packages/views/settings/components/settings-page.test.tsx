@@ -50,7 +50,6 @@ vi.mock("./channels-tab", async () => {
 vi.mock("./preferences-tab", stub("PreferencesTab"));
 vi.mock("./tokens-tab", stub("TokensTab"));
 vi.mock("./workspace-tab", stub("WorkspaceTab"));
-vi.mock("./members-tab", stub("MembersTab"));
 vi.mock("./code-tab", stub("CodeTab"));
 vi.mock("./notifications-tab", stub("NotificationsTab"));
 vi.mock("./labels-tab", stub("LabelsTab"));
@@ -191,7 +190,6 @@ describe("SettingsPage header", () => {
     { search: "", label: "Profile" },
     { search: "tab=preferences", label: "Preferences" },
     { search: "tab=shortcuts", label: "Shortcuts" },
-    { search: "tab=members", label: "Members" },
     { search: "tab=channels", label: "Messaging" },
     { search: "tab=mcp", label: "MCP servers" },
   ])("names the $label section in the page header", ({ search, label }) => {
@@ -233,18 +231,18 @@ describe("SettingsPage scroll restoration", () => {
   // on another when the content remounts.
   it("gives each page its own saved offset", () => {
     const get = vi.fn((key: string) =>
-      key === "settings:members:" ? { top: 360, height: 1400 } : undefined,
+      key === "settings:workspace:" ? { top: 360, height: 1400 } : undefined,
     );
-    navigationState.search = "tab=members";
+    navigationState.search = "tab=workspace";
     const { rerender } = renderWithI18n(
       <ScrollRestorationProvider adapter={{ get }}>
         <SettingsPage />
       </ScrollRestorationProvider>,
     );
 
-    const members = screen.getByText("MembersTab").closest<HTMLElement>("[data-tab-scroll-root]")!;
-    expect(members.getAttribute("data-tab-scroll-root")).toBe("settings:members:");
-    expect(members.scrollTop).toBe(360);
+    const workspace = screen.getByText("WorkspaceTab").closest<HTMLElement>("[data-tab-scroll-root]")!;
+    expect(workspace.getAttribute("data-tab-scroll-root")).toBe("settings:workspace:");
+    expect(workspace.scrollTop).toBe(360);
 
     navigationState.search = "tab=labels";
     rerender(
@@ -351,8 +349,6 @@ describe("SettingsPage information architecture", () => {
     expect(within(personal).getByRole("link", { name: "Preferences" })).toBeInTheDocument();
     expect(within(personal).getByRole("link", { name: "API tokens" })).toBeInTheDocument();
 
-    const workspace = within(nav()).getByRole("region", { name: "Workspace" });
-    expect(within(workspace).getByRole("link", { name: "Members" })).toBeInTheDocument();
     const issues = within(nav()).getByRole("region", { name: "Issues & workflow" });
     expect(within(issues).getByRole("link", { name: "Workflows" })).toBeInTheDocument();
     const connections = within(nav()).getByRole("region", { name: "Connections & extensions" });

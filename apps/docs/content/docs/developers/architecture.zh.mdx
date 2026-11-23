@@ -67,7 +67,7 @@ Mobile 不复用这些 React 页面。它可以导入 `@multica/core` 的类型�
 - 当前工作区由路由决定，只在平台层为请求、持久化命名空间和重连做必要镜像；
 - React Context 只传递工作区 ID、导航适配器等平台 plumbing。
 
-WebSocket 事件应更新或失效 TanStack Query cache，不能把服务端对象复制进 Zustand。创建、删除或离开工作区这类会导航的 mutation，需要等待服务端确认后再清理本地状态。
+WebSocket 事件应更新或失效 TanStack Query cache，不能把服务端对象复制进 Zustand。创建或删除工作区这类会导航的 mutation，需要等待服务端确认后再清理本地状态。
 
 API 返回值在 `packages/core/api/` 边界通过 zod schema 解析。已安装的 Desktop 可能连接更新的 backend，因此不能直接把网络 JSON 强制转换成 TypeScript 类型。
 

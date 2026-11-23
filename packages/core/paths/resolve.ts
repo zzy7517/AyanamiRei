@@ -21,11 +21,6 @@ import { paths } from "./paths";
  * creation but before CompleteOnboarding). OnboardingFlow's Step 2
  * already recognizes existing workspaces and offers "Continue with
  * {name}", so the recovery is seamless.
- *
- * Callers that need invitation-aware routing (callback / login) handle
- * the "un-onboarded with pending invites" branch themselves before calling
- * this resolver — this resolver only deals with the post-invite-check
- * destination.
  */
 export function resolvePostAuthDestination(
   workspaces: Workspace[],

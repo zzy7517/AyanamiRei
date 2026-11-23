@@ -8,7 +8,6 @@
     "pages": "页面",
     "views": "视图",
     "commands": "命令",
-    "members": "成员",
     "agents": "智能体",
     "projects": "项目",
     "issues": "任务",
@@ -130,7 +129,7 @@
     "no_results": "未找到结果。",
     "no_labels": "没有标签",
     "type_to_find_issue": "输入关键词查找任务",
-    "type_to_find_people": "输入关键词查找成员和智能体"
+    "type_to_find_agents": "输入关键词查找智能体"
   },
   "delegate": {
     "row": "交给智能体：\"{{prompt}}\"",
@@ -145,8 +144,7 @@
     "issue": "任务",
     "project": "项目",
     "agent": "智能体",
-    "autopilot": "自动化",
-    "member": "成员"
+    "autopilot": "自动化"
   },
   "footer": {
     "navigate": "选择",
@@ -155,7 +153,7 @@
     "back": "返回",
     "prefix_commands": "命令",
     "prefix_issues": "任务",
-    "prefix_people": "成员与智能体"
+    "prefix_agents": "智能体"
   },
   "trigger": {
     "label": "搜索..."

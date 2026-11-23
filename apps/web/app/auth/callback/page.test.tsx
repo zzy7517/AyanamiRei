@@ -12,7 +12,6 @@ const {
   mockSearchParams,
   mockLoginWithGoogle,
   mockListWorkspaces,
-  mockListMyInvitations,
   mockSetQueryData,
   mockQueryClient,
 } = vi.hoisted(() => {
@@ -24,7 +23,6 @@ const {
     mockSearchParams: new URLSearchParams(),
     mockLoginWithGoogle: vi.fn(),
     mockListWorkspaces: vi.fn(),
-    mockListMyInvitations: vi.fn(),
     mockSetQueryData,
     mockQueryClient: { setQueryData: mockSetQueryData },
   };
@@ -89,7 +87,6 @@ vi.mock("@multica/core/auth", async () => {
 vi.mock("@multica/core/workspace/queries", () => ({
   workspaceKeys: {
     list: () => ["workspaces"],
-    myInvitations: () => ["invitations", "mine"],
   },
 }));
 
@@ -101,7 +98,6 @@ vi.mock("@multica/core/api", async () => {
     ...actual,
     api: {
       listWorkspaces: mockListWorkspaces,
-      listMyInvitations: mockListMyInvitations,
       googleLogin: vi.fn(),
     },
   };
@@ -137,7 +133,6 @@ describe("CallbackPage", () => {
     mockSearchParams.set("code", "test-code");
     mockLoginWithGoogle.mockResolvedValue(makeUser());
     mockListWorkspaces.mockResolvedValue([]);
-    mockListMyInvitations.mockResolvedValue([]);
   });
 
   it("renders callback errors in the selected locale", async () => {
@@ -256,40 +251,20 @@ describe("CallbackPage", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("unonboarded user honors a safe next= (e.g. /invite/{id}) so invitees aren't trapped", async () => {
-    mockSearchParams.set("state", "next:/invite/abc123");
+  it("unonboarded user honors a safe next= target instead of /onboarding", async () => {
+    mockSearchParams.set("state", "next:/acme/settings");
     renderCallback();
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/invite/abc123");
+      expect(mockPush).toHaveBeenCalledWith("/acme/settings");
     });
     expect(mockPush).not.toHaveBeenCalledWith(paths.onboarding());
-    // nextUrl is a fast path — listMyInvitations should not be queried.
-    expect(mockListMyInvitations).not.toHaveBeenCalled();
   });
 
-  it("unonboarded user with no next= and no pending invitations lands on /onboarding", async () => {
+  it("unonboarded user with no next= lands on /onboarding", async () => {
     renderCallback();
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(paths.onboarding());
     });
-    expect(mockListMyInvitations).toHaveBeenCalled();
-  });
-
-  it("unonboarded user with pending invitations lands on /invitations", async () => {
-    mockListMyInvitations.mockResolvedValue([
-      {
-        id: "inv-1",
-        workspace_id: "ws-1",
-        workspace_name: "Acme",
-        role: "member",
-        status: "pending",
-      },
-    ]);
-    renderCallback();
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(paths.invitations());
-    });
-    expect(mockPush).not.toHaveBeenCalledWith(paths.onboarding());
   });
 
   it("onboarded user with workspace lands in that workspace", async () => {
@@ -315,9 +290,6 @@ describe("CallbackPage", () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith(paths.workspace("acme").issues());
     });
-    // Already-onboarded users skip the listMyInvitations check; new invites
-    // surface in the sidebar instead of the wall.
-    expect(mockListMyInvitations).not.toHaveBeenCalled();
   });
 
   it("onboarded user ignores unsafe next= targets and lands on the default destination", async () => {
@@ -334,24 +306,16 @@ describe("CallbackPage", () => {
     expect(mockPush).not.toHaveBeenCalledWith("https://evil.example");
   });
 
-  it("onboarded user honors a safe next= target (e.g. /invite/{id})", async () => {
+  it("onboarded user honors a safe next= target", async () => {
     mockLoginWithGoogle.mockResolvedValue(
       makeUser({ onboarded_at: "2026-01-01T00:00:00Z" }),
     );
-    mockSearchParams.set("state", "next:/invite/abc123");
+    mockSearchParams.set("state", "next:/acme/settings");
 
     renderCallback();
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/invite/abc123");
-    });
-  });
-
-  it("falls through to /onboarding when listMyInvitations errors", async () => {
-    mockListMyInvitations.mockRejectedValue(new Error("network"));
-    renderCallback();
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(paths.onboarding());
+      expect(mockPush).toHaveBeenCalledWith("/acme/settings");
     });
   });
 

@@ -205,9 +205,6 @@ const desktopAPI = {
   /** Listen for auth token delivered via deep link */
   onAuthToken: (callback: (token: string) => void) =>
     subscribeToMainRendererChannel("auth:token", callback),
-  /** Listen for invitation IDs delivered via deep link */
-  onInviteOpen: (callback: (invitationId: string) => void) =>
-    subscribeToMainRendererChannel("invite:open", callback),
   onIssueOpen: (callback: (url: string) => void) =>
     subscribeToMainRendererChannel("issue:open", callback),
   /** Open a URL in the default browser */

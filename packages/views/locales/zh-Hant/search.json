@@ -8,7 +8,6 @@
     "pages": "頁面",
     "views": "檢視",
     "commands": "命令",
-    "members": "成員",
     "agents": "AI 代理",
     "projects": "專案",
     "issues": "任務",
@@ -130,7 +129,7 @@
     "no_results": "未找到結果。",
     "no_labels": "沒有標籤",
     "type_to_find_issue": "輸入關鍵詞查找任務",
-    "type_to_find_people": "輸入關鍵詞查找成員和 AI 代理"
+    "type_to_find_agents": "輸入關鍵詞查找 AI 代理"
   },
   "delegate": {
     "row": "交給 AI 代理：「{{prompt}}」",
@@ -145,8 +144,7 @@
     "issue": "任務",
     "project": "專案",
     "agent": "AI 代理",
-    "autopilot": "自動化",
-    "member": "成員"
+    "autopilot": "自動化"
   },
   "footer": {
     "navigate": "選擇",
@@ -155,7 +153,7 @@
     "back": "返回",
     "prefix_commands": "命令",
     "prefix_issues": "任務",
-    "prefix_people": "人和 AI 代理"
+    "prefix_agents": "AI 代理"
   },
   "trigger": {
     "label": "搜尋..."

@@ -7,9 +7,9 @@ import { matchesPinyin } from "../editor/extensions/pinyin-match";
 // (via "notifications") and "i" surfaced nearly every page. The visible label
 // still matches anywhere, because there the user can see what they hit.
 //
-// Pinyin is included for the same reason member search has it: under a Chinese
-// UI the localized label is the only thing the user can aim at, so typing
-// "renwu" has to reach "任务".
+// Pinyin is included for the same reason: under a Chinese UI the localized
+// label is the only thing the user can aim at, so typing "renwu" has to reach
+// "任务".
 export function matchesRow(label: string, keywords: readonly string[], query: string) {
   return scoreRow(label, keywords, query) > 0;
 }
@@ -44,18 +44,17 @@ export function stripEllipsis(label: string) {
   return label.replace(/\s*(\.\.\.|…)$/, "");
 }
 
-export type SearchScope = "all" | "commands" | "issues" | "people";
+export type SearchScope = "all" | "commands" | "issues" | "agents";
 
 const SCOPE_PREFIXES: Record<string, SearchScope> = {
   ">": "commands",
   "#": "issues",
-  "@": "people",
+  "@": "agents",
 };
 
 /**
- * `>` limits the palette to commands, `#` to issues, `@` to people and
- * agents. The prefix only counts as the first character; the rest is the
- * query.
+ * `>` limits the palette to commands, `#` to issues, `@` to agents. The prefix
+ * only counts as the first character; the rest is the query.
  */
 export function parseScope(raw: string): { scope: SearchScope; text: string } {
   const scope = SCOPE_PREFIXES[raw.charAt(0)];

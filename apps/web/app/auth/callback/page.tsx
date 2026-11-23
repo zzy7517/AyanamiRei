@@ -116,38 +116,15 @@ function CallbackContent() {
           qc.setQueryData(workspaceKeys.list(), wsList);
           const onboarded = loggedInUser.onboarded_at != null;
 
-          // 1. nextUrl wins: a `next=/invite/<id>` always survives the OAuth
-          //    round-trip — the user clicked a specific link and we should
+          // 1. nextUrl wins: a `next=` target always survives the OAuth
+          //    round-trip — the user came for a specific page and we should
           //    honor exactly that destination.
           if (nextUrl) {
             router.push(nextUrl);
             return;
           }
 
-          // 2. Un-onboarded users may have pending invitations on their
-          //    email even when no `next=` was carried (came from a fresh
-          //    login on multica.ai instead of clicking the email link,
-          //    or `state` was lost across the round-trip). Look them up by
-          //    email and route to the batch /invitations page if any.
-          //    Already-onboarded users skip this lookup — their new invites
-          //    surface in the sidebar dropdown, not as a forced wall.
-          if (!onboarded) {
-            try {
-              const invites = await api.listMyInvitations();
-              if (invites.length > 0) {
-                qc.setQueryData(workspaceKeys.myInvitations(), invites);
-                router.push(paths.invitations());
-                return;
-              }
-            } catch {
-              // Network blip on the invite lookup is non-fatal — fall through
-              // to the normal post-auth destination so the user isn't stuck
-              // on a blank callback screen. Worst case they land on
-              // /onboarding and the sidebar will surface invites later.
-            }
-          }
-
-          // 3. Default: hand off to the resolver (onboarding for first-timers,
+          // 2. Default: hand off to the resolver (onboarding for first-timers,
           //    first workspace for returning users, /workspaces/new for
           //    onboarded users with zero workspaces). Source-attribution
           //    backfill for onboarded users with no recorded source is

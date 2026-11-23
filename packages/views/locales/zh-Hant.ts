@@ -7,9 +7,7 @@ import zhHantIssues from "./zh-Hant/issues.json";
 import zhHantAgents from "./zh-Hant/agents.json";
 import zhHantEditor from "./zh-Hant/editor.json";
 import zhHantOnboarding from "./zh-Hant/onboarding.json";
-import zhHantInvite from "./zh-Hant/invite.json";
 import zhHantLabels from "./zh-Hant/labels.json";
-import zhHantMembers from "./zh-Hant/members.json";
 import zhHantSearch from "./zh-Hant/search.json";
 import zhHantInbox from "./zh-Hant/inbox.json";
 import zhHantWorkspace from "./zh-Hant/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: zhHantAgents,
   editor: zhHantEditor,
   onboarding: zhHantOnboarding,
-  invite: zhHantInvite,
   labels: zhHantLabels,
-  members: zhHantMembers,
   search: zhHantSearch,
   inbox: zhHantInbox,
   workspace: zhHantWorkspace,

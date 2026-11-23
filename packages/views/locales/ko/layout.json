@@ -19,7 +19,6 @@
     "project": "프로젝트",
     "autopilot": "오토파일럿",
     "agent": "에이전트",
-    "member": "멤버",
     "skill": "스킬",
     "machine": "머신",
     "runtime": "런타임",
@@ -83,7 +82,6 @@
     "unpin_tooltip": "고정 해제",
     "workspaces_label": "워크스페이스",
     "create_workspace": "워크스페이스 만들기",
-    "pending_invitations_label": "대기 중인 초대",
     "log_out": "로그아웃",
     "new_issue": "새 태스크",
     "pinned_label": "고정됨",
@@ -194,11 +192,8 @@
       "running_tasks_other": "진행 중인 실행 {{count}}개",
       "all_agents": "전체 에이전트",
       "my_agents": "내 에이전트",
-      "members_heading": "멤버",
-      "members_other": "멤버 {{count}}명",
       "resources": "리소스",
       "runtimes_online_other": "{{count}}대 온라인",
-      "invite_member": "멤버 초대",
       "open_issue": "{{identifier}} 열기"
     },
     "autopilots": {

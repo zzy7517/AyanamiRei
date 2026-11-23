@@ -67,7 +67,7 @@ Mobile은 이 React 페이지를 재사용하지 않습니다. `@multica/core`�
 - 현재 워크스페이스는 route가 결정하며 요청, 영속화 namespace, 재연결에 필요한 범위만 플랫폼 계층에 반영합니다.
 - React Context는 워크스페이스 ID와 navigation adapter 같은 플랫폼 plumbing만 전달합니다.
 
-WebSocket 이벤트는 TanStack Query cache를 업데이트하거나 무효화해야 합니다. 서버 객체를 Zustand에 복사하면 안 됩니다. 워크스페이스 생성, 삭제, 나가기처럼 화면 이동을 동반하는 mutation은 서버 확인을 기다린 뒤 로컬 상태를 정리해야 합니다.
+WebSocket 이벤트는 TanStack Query cache를 업데이트하거나 무효화해야 합니다. 서버 객체를 Zustand에 복사하면 안 됩니다. 워크스페이스 생성이나 삭제처럼 화면 이동을 동반하는 mutation은 서버 확인을 기다린 뒤 로컬 상태를 정리해야 합니다.
 
 API 응답은 `packages/core/api/` 경계에서 zod schema로 parsing합니다. 설치된 Desktop이 더 새로운 backend에 연결될 수 있으므로 network JSON을 TypeScript 유형으로 바로 강제 변환하면 안 됩니다.
 

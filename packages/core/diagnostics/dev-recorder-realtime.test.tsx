@@ -102,7 +102,7 @@ describe("dev recorder: realtime events", () => {
 
     emit({ type: "chat:session_updated", payload: { chat_session_id: "s1", title: "new" } });
     emit({ type: "comment:created", payload: { comment: { id: "c1", issue_id: "issue-1" } } });
-    emit({ type: "member:updated", payload: { member: { user_id: "u2" } } });
+    emit({ type: "member:removed", payload: { member_id: "m2", user_id: "u2", workspace_id: "ws-1" } });
     vi.advanceTimersByTime(100);
 
     const [renamed, commented, member] = getDevRecording().events;

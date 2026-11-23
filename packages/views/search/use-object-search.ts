@@ -16,7 +16,6 @@ import type {
   Autopilot,
   ChatSession,
   DocSummary,
-  MemberWithUser,
   SkillSummary,
   Workspace,
 } from "@multica/core/types";
@@ -36,7 +35,6 @@ export type PaletteView =
 
 export interface ObjectHits {
   agents: Scored<AgentEntry>[];
-  members: Scored<MemberWithUser>[];
   views: Scored<PaletteView>[];
   autopilots: Scored<Autopilot>[];
   chats: Scored<ChatSession>[];
@@ -68,7 +66,6 @@ const EMPTY_WORKSPACES: Workspace[] = [];
 // Hidden aliases for the Workspaces group, prefix-matched like page keywords:
 // typing "workspace" lists every workspace the user can switch to.
 const WORKSPACE_KEYWORDS = ["switch", "workspace"];
-const ALL_MEMBERS_WORDS = ["members", "people", "users", "team"];
 // Typing "views" lists every view under the Views page row.
 const ALL_VIEWS_WORDS = ["views", "视图"];
 
@@ -78,15 +75,6 @@ function rank<T>(items: readonly T[], score: (item: T) => number, limit: number)
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
-}
-
-function memberScore(member: MemberWithUser, query: string): number {
-  const byName = scoreText(member.name, query);
-  if (byName > 0) return byName;
-  if (member.email.toLowerCase().includes(query)) return 40;
-  if (query.length >= 3 && member.role.startsWith(query)) return 25;
-  if (query.length >= 3 && ALL_MEMBERS_WORDS.some((word) => word.startsWith(query))) return 20;
-  return 0;
 }
 
 function viewScore(view: PaletteView, query: string): number {
@@ -104,9 +92,9 @@ function viewScore(view: PaletteView, query: string): number {
 export function useObjectSearch(
   query: string,
   open: boolean,
-): ObjectHits & { directory: ReturnType<typeof useActorDirectory>; docFolders: ReadonlyMap<string, string> } {
+): ObjectHits & { docFolders: ReadonlyMap<string, string> } {
   const wsId = useWorkspaceId();
-  const directory = useActorDirectory(open);
+  const { agents: directory } = useActorDirectory(open);
   const typing = open && query.length > 0;
   const builtinLabel = useBuiltinViewLabel();
   const { data: savedViews = EMPTY_VIEWS } = useQuery({ ...issueViewEverywhereOptions(wsId), enabled: typing && !!wsId });
@@ -140,11 +128,10 @@ export function useObjectSearch(
 
   const hits = useMemo<ObjectHits>(() => {
     if (!query) {
-      return { agents: [], members: [], views: [], autopilots: [], chats: [], skills: [], docs: [], workspaces: [] };
+      return { agents: [], views: [], autopilots: [], chats: [], skills: [], docs: [], workspaces: [] };
     }
     return {
-      agents: rank(directory.agents, (e) => scoreText(e.agent.name, query), 8),
-      members: rank(directory.members, (m) => memberScore(m, query), 10),
+      agents: rank(directory, (e) => scoreText(e.agent.name, query), 8),
       views: rank(views, (v) => viewScore(v, query), 8),
       autopilots: rank(
         autopilots.filter((a) => a.status !== "archived"),
@@ -169,5 +156,5 @@ export function useObjectSearch(
     };
   }, [autopilots, chats, directory, docs, query, skills, views, workspaces, wsId]);
 
-  return { ...hits, directory, docFolders };
+  return { ...hits, docFolders };
 }

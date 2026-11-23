@@ -20,7 +20,6 @@ import { autopilotDetailOptions } from "@multica/core/autopilots/queries";
 import {
   skillDetailOptions,
   agentListOptions,
-  memberListOptions,
 } from "@multica/core/workspace/queries";
 import { runtimeListOptions } from "@multica/core/runtimes/queries";
 import { runtimeDisplayLabel } from "@multica/core/runtimes";
@@ -50,10 +49,10 @@ import { ROUTE_ICON_COMPONENTS } from "./route-icon-components";
  * without mounting their pages. Other resources observe the pages' caches and
  * keep their type fallback until those pages load.
  *
- * The one exception is an actor tab's avatar: `ResourceLeadingVisual` renders
- * `ActorAvatar`, which loads the (workspace-global, sidebar-warmed) member /
- * agent directories itself. That is intentional — it resolves the
- * avatar and, in turn, the name this hook reads from the same lists.
+ * The one exception is an agent tab's avatar: `ResourceLeadingVisual` renders
+ * `ActorAvatar`, which loads the (workspace-global, sidebar-warmed) agent
+ * directory itself. That is intentional — it resolves the avatar and, in
+ * turn, the name this hook reads from the same list.
  */
 
 // Placeholder id for a detail query that this tab doesn't need — its key is
@@ -67,7 +66,6 @@ const PENDING_RESOURCE_KEYS: ReadonlySet<TabLabelKey> = new Set<TabLabelKey>([
   "project",
   "autopilot",
   "agent",
-  "member",
   "skill",
   "doc",
   "docFolder",
@@ -150,7 +148,6 @@ function useTabEntityData(subject: TabSubject, wsId: string, fetch: boolean): Re
   }).data;
 
   const agents = useQuery({ ...agentListOptions(wsId), enabled: false }).data;
-  const members = useQuery({ ...memberListOptions(wsId), enabled: false }).data;
   const runtimes = useQuery({ ...runtimeListOptions(wsId), enabled: false }).data;
   const sessions = useQuery({ ...chatSessionsOptions(wsId), enabled: false }).data;
 
@@ -182,12 +179,9 @@ function useTabEntityData(subject: TabSubject, wsId: string, fetch: boolean): Re
     case "skill":
       if (skill) data.skill = { name: skill.name };
       break;
-    case "actor": {
-      const name =
-        subject.actorType === "agent"
-          ? agents?.find((a) => a.id === subject.id)?.name
-          : members?.find((m) => m.user_id === subject.id)?.name;
-      if (name) data.actorName = name;
+    case "agent": {
+      const name = agents?.find((a) => a.id === subject.id)?.name;
+      if (name) data.agentName = name;
       break;
     }
     case "machine": {
@@ -300,17 +294,11 @@ export function useTabPresentation(
     (subject.kind === "chat" && !!subject.sessionId && !data.chatSessionTitle);
   const title = useTabTitle(titleSpec, fallbackTitle, selectionPending);
 
-  // The actor avatar resolves through workspace directory queries and throws
+  // The agent avatar resolves through workspace directory queries and throws
   // if rendered before the workspace exists. Until it does, show a type icon.
   const safeVisual: TabVisual =
-    visual.kind === "actor" && !wsId
-      ? {
-          kind: "icon",
-          icon:
-            visual.actorType === "member"
-              ? "CircleUser"
-              : "Bot",
-        }
+    visual.kind === "agent" && !wsId
+      ? { kind: "icon", icon: "Bot" }
       : visual;
 
   return {
@@ -367,10 +355,10 @@ export function ResourceLeadingVisual({
     case "project-icon":
       inner = <ProjectIcon project={{ icon: visual.icon }} size="sm" />;
       break;
-    case "actor":
+    case "agent":
       inner = (
         <ActorAvatar
-          actorType={visual.actorType}
+          actorType="agent"
           actorId={visual.id}
           size="xs"
           profileLink={false}

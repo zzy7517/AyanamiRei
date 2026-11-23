@@ -14,7 +14,6 @@ import { useAgentPresenceDetail } from "@multica/core/agents";
 import { useCurrentWorkspace, useWorkspacePaths } from "@multica/core/paths";
 import { AgentProfileCard } from "../agents/components/agent-profile-card";
 import { AgentLivePeekCard } from "../agents/components/agent-live-peek-card";
-import { MemberProfileCard } from "../members/member-profile-card";
 import { availabilityConfig } from "../agents/presence";
 import { useT } from "../i18n";
 import {
@@ -32,7 +31,7 @@ import {
  * - `"live"` — live activity peek (workload, current issue, last activity).
  *   Used where the user already knows the identity and wants the live state.
  *
- * Has no effect for non-agent actors (members always render the member card).
+ * Has no effect for non-agent actors: only agents render a hover card.
  */
 export type AgentHoverCardVariant = "profile" | "live";
 
@@ -71,8 +70,8 @@ interface ActorAvatarProps {
    */
   hoverCardVariant?: AgentHoverCardVariant;
   /**
-   * Make the avatar click through to the actor page. Defaults on for members
-   * and agents, while picker/menu controls keep their own click behavior.
+   * Make the avatar click through to the agent page. Defaults on for agents,
+   * while picker/menu controls keep their own click behavior.
    */
   profileLink?: boolean;
 }
@@ -137,35 +136,23 @@ export function ActorAvatar({
   const profileAvailable =
     !profileRequiresDirectoryEntry || hasActor(actorType, actorId) !== false;
   const shouldLinkToProfile =
-    profileAvailable &&
-    (profileLink ?? (actorType === "member" || actorType === "agent"));
-  const profileHref = shouldLinkToProfile
-    ? actorType === "member"
-      ? paths.memberDetail(actorId)
-      : actorType === "agent"
-        ? paths.agentDetail(actorId)
-        : null
-    : null;
+    profileAvailable && (profileLink ?? actorType === "agent");
+  const profileHref =
+    shouldLinkToProfile && actorType === "agent" ? paths.agentDetail(actorId) : null;
   const content = profileHref ? (
     <ActorAvatarProfileLink href={profileHref}>{dotted}</ActorAvatarProfileLink>
   ) : (
     dotted
   );
 
-  if (!enableHoverCard || !profileAvailable) {
+  if (!enableHoverCard || !profileAvailable || actorType !== "agent") {
     return content;
   }
-  if (actorType === "agent") {
-    return (
-      <AgentAvatarHoverCard agentId={actorId} variant={hoverCardVariant}>
-        {content}
-      </AgentAvatarHoverCard>
-    );
-  }
-  if (actorType === "member") {
-    return <MemberAvatarHoverCard userId={actorId}>{content}</MemberAvatarHoverCard>;
-  }
-  return content;
+  return (
+    <AgentAvatarHoverCard agentId={actorId} variant={hoverCardVariant}>
+      {content}
+    </AgentAvatarHoverCard>
+  );
 }
 
 /**
@@ -286,23 +273,7 @@ function AgentAvatarHoverCard({
   );
 }
 
-function MemberAvatarHoverCard({
-  userId,
-  children,
-}: {
-  userId: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <ActorAvatarHoverCardShell content={<MemberProfileCard userId={userId} />}>
-      {children}
-    </ActorAvatarHoverCardShell>
-  );
-}
-
-// Common chrome shared between agent and member hover cards. Keeps focus
-// behaviour and width consistent so the two surfaces feel structurally
-// parallel — content varies, frame doesn't.
+// Chrome of the agent hover card: its focus behaviour and width.
 //
 // Do NOT defer-mount the HoverCard on pointerenter to save per-avatar mount
 // cost (MUL-4827). Base UI drives hover through native mouseenter/mouseleave

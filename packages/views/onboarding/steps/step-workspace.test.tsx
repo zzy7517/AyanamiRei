@@ -107,7 +107,7 @@ describe("StepWorkspace — DISABLE_WORKSPACE_CREATION gate", () => {
     renderStep({ existing: null, disabled: true });
 
     expect(
-      screen.getByText("Ask your administrator for an invitation.", {
+      screen.getByText("Ask your administrator for access.", {
         exact: false,
       }),
     ).toBeInTheDocument();

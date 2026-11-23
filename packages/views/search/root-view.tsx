@@ -39,7 +39,6 @@ const TYPE_ORDER = [
   "views",
   "commands",
   "agents",
-  "members",
   "projects",
   "docs",
   "issues",
@@ -73,7 +72,6 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
   const isBest = (type: BestMatch["type"], id: string) => {
     if (!best || best.type !== type) return false;
     if (best.type === "agent") return best.entry.agent.id === id;
-    if (best.type === "member") return best.member.user_id === id;
     return best.project.id === id;
   };
 
@@ -161,41 +159,12 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
             <ActorRow
               key={entry.agent.id}
               value={`agent:${entry.agent.id}`}
-              actorType="agent"
-              actorId={entry.agent.id}
+              agentId={entry.agent.id}
               name={entry.agent.name}
               query={query}
               showStatusDot
               onSelect={() => palette.navigate(p.agentDetail(entry.agent.id))}
               detail={<AgentPresenceText availability={entry.availability} runtimeLabel={entry.runtimeLabel} />}
-            />
-          ))}
-        </PaletteGroup>
-      ),
-    });
-  }
-  const members = objects.members.filter((hit) => !isBest("member", hit.item.user_id));
-  if (members.length > 0) {
-    groups.push({
-      key: "members",
-      type: "members",
-      score: members[0]!.score,
-      node: (
-        <PaletteGroup key="members" heading={t(($) => $.groups.members)}>
-          {members.map(({ item: member }) => (
-            <ActorRow
-              key={member.user_id}
-              value={`member:${member.user_id}`}
-              actorType="member"
-              actorId={member.user_id}
-              name={member.name}
-              query={query}
-              onSelect={() => palette.navigate(p.memberDetail(member.user_id))}
-              detail={
-                <span className="text-caption text-muted-foreground">
-                  <HighlightText text={member.email} query={query} />
-                </span>
-              }
             />
           ))}
         </PaletteGroup>
@@ -538,8 +507,7 @@ function BestMatchGroups({
     row = (
       <ActorRow
         value={`best:agent:${agent.id}`}
-        actorType="agent"
-        actorId={agent.id}
+        agentId={agent.id}
         name={agent.name}
         query={query}
         showStatusDot
@@ -563,20 +531,6 @@ function BestMatchGroups({
         run: () => palette.navigate(p.chatWithAgent(agent.id)),
       });
     }
-  } else if (best.type === "member") {
-    const { member } = best;
-    row = (
-      <ActorRow
-        value={`best:member:${member.user_id}`}
-        actorType="member"
-        actorId={member.user_id}
-        name={member.name}
-        query={query}
-        onSelect={() => palette.navigate(p.memberDetail(member.user_id))}
-        detail={<span className="text-caption text-muted-foreground">{member.email}</span>}
-        trailing={<RowHint>{t(($) => $.types.member)}</RowHint>}
-      />
-    );
   } else {
     const { project } = best;
     row = (
@@ -682,7 +636,7 @@ function EmptyState({ model }: { model: RootModel }) {
         )}
         {model.scope !== "commands" && (
           <div className="px-5 py-4 text-center text-caption text-muted-foreground">
-            {model.scope === "issues" ? t(($) => $.empty.type_to_find_issue) : t(($) => $.empty.type_to_find_people)}
+            {model.scope === "issues" ? t(($) => $.empty.type_to_find_issue) : t(($) => $.empty.type_to_find_agents)}
           </div>
         )}
       </>

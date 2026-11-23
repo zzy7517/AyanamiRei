@@ -9,7 +9,6 @@ import { AutopilotDetailPage } from "./pages/autopilot-detail-page";
 import { SkillDetailPage } from "./pages/skill-detail-page";
 import { AgentDetailPage } from "./pages/agent-detail-page";
 import { AiBuilderSessionPage } from "./pages/ai-builder-session-page";
-import { MemberDetailPage } from "./pages/member-detail-page";
 import {
   RuntimeDetailPage,
   RuntimeSettingsPage,
@@ -94,7 +93,7 @@ function PageShell() {
  * Route definitions shared by all tabs.
  *
  * Every tab path is workspace-scoped: `/{slug}/{route}/...`. Pre-workspace
- * flows (create workspace, accept invite) are NOT routes — they render as a
+ * flows (create workspace, onboarding) are NOT routes — they render as a
  * window-level overlay via `WindowOverlay`, dispatched by the navigation
  * adapter's transition-path interception. The `activeWorkspaceSlug` in the
  * tab store decides which workspace's tabs are visible in the TabBar;
@@ -163,7 +162,6 @@ export const appRoutes: RouteObject[] = [
           { path: "agents/new/manual", element: <ManualCreateAgentPage /> },
           { path: "agents/new/ai/:sessionId", element: <AiBuilderSessionPage /> },
           { path: "agents/:id", element: <AgentDetailPage /> },
-          { path: "members/:id", element: <MemberDetailPage /> },
           { path: "views", element: <AllViewsPage /> },
           { path: "inbox", element: <InboxPage /> },
           { path: "chat", element: <ChatPage /> },

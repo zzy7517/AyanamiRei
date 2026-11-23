@@ -17,7 +17,6 @@ it("enables only a valid GA4 measurement ID", () => {
 
 it("strips credentials from URLs but keeps campaign params", () => {
   expect(sanitizeAnalyticsUrl("https://multica.ai/wecom/bind?token=t")).toBe("https://multica.ai/wecom/bind");
-  expect(sanitizeAnalyticsUrl("https://multica.ai/invite/inv_1")).toBe("https://multica.ai/invite/[id]");
   expect(sanitizeAnalyticsUrl("https://multica.ai/?utm_source=x&code=c")).toBe("https://multica.ai/?utm_source=x");
   expect(sanitizeAnalyticsUrl("javascript:alert(1)")).toBe("");
 });
@@ -27,7 +26,6 @@ it("reports route labels as page_title, never workspace content", () => {
   expect(t("/")).toBe("Home");
   expect(t("/changelog")).toBe("Changelog");
   expect(t("/contact-sales")).toBe("Contact sales");
-  expect(t("/invite/inv_1")).toBe("Invite");
   expect(t("/lark/bind")).toBe("Lark");
   expect(t("/acme")).toBe("Workspace");
   expect(t("/acme/issues")).toBe("Workspace · Issues");

@@ -132,7 +132,7 @@
   "step_workspace": {
     "headline_first": "Nommez votre espace de travail.",
     "headline_resume": "Continuez avec {{name}}, ou créez-en un autre.",
-    "lede_first": "Un espace de travail réunit vos tâches, vos agents et vos projets. Vous pourrez inviter des coéquipiers ou en créer d'autres plus tard.",
+    "lede_first": "Un espace de travail réunit vos tâches, vos agents et vos projets. Vous pourrez en créer d'autres plus tard.",
     "lede_resume": "Reprenez la configuration avec l'espace de travail que vous avez déjà, ou créez-en un nouveau à côté — vous pouvez appartenir à autant d'espaces que vous voulez.",
     "name_label": "Nom de l'espace de travail",
     "name_placeholder": "Acme Inc, Mon labo, Projets perso…",
@@ -159,8 +159,8 @@
     "slug_reserved_error": "Cette URL d'espace de travail est réservée et ne peut pas être utilisée.",
     "slug_conflict_toast": "Choisissez une autre URL d'espace de travail",
     "create_failed_toast": "Échec de la création de l'espace de travail",
-    "creation_disabled_headline": "Demandez une invitation à votre administrateur.",
-    "creation_disabled_lede": "Cette instance Multica n'autorise pas la création de nouveaux espaces de travail. Dès qu'un administrateur vous invite, acceptez l'invitation et actualisez pour continuer.",
+    "creation_disabled_headline": "Demandez un accès à votre administrateur.",
+    "creation_disabled_lede": "Cette instance Multica n'autorise pas la création de nouveaux espaces de travail. Dès qu'un administrateur vous donne accès à un espace, actualisez pour continuer.",
     "creation_disabled_logout": "Se déconnecter",
     "creation_disabled_headline_resume": "Continuez avec {{name}}.",
     "creation_disabled_lede_resume": "La création d'espaces de travail est désactivée sur cette instance : vous continuerez donc dans votre espace existant."

@@ -20,7 +20,7 @@ describe("MainRendererMessageQueue", () => {
     const { queue, send } = createQueue();
 
     queue.enqueue("a", "auth:token", "token-a");
-    queue.setReady("a", "invite:open", true);
+    queue.setReady("a", "issue:open", true);
     expect(send).not.toHaveBeenCalled();
 
     queue.setReady("a", "auth:token", true);
@@ -61,15 +61,15 @@ describe("MainRendererMessageQueue", () => {
   it("delivers to a recreated window when the target closed with no successor", () => {
     const { queue, send, live } = createQueue(new Set(["a"]));
 
-    queue.setReady("a", "invite:open", true);
+    queue.setReady("a", "issue:open", true);
     live.delete("a");
     queue.release("a", null);
-    queue.enqueue("a", "invite:open", "invite-1");
+    queue.enqueue("a", "issue:open", "issue-1");
     expect(send).not.toHaveBeenCalled();
 
     live.add("c");
-    queue.setReady("c", "invite:open", true);
-    expect(send).toHaveBeenCalledWith("c", "invite:open", "invite-1");
+    queue.setReady("c", "issue:open", true);
+    expect(send).toHaveBeenCalledWith("c", "issue:open", "issue-1");
   });
 
   it("delivers an untargeted message to the first window that becomes ready", () => {

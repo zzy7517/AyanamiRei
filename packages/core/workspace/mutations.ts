@@ -42,19 +42,6 @@ export function useCreateWorkspace() {
   });
 }
 
-export function useLeaveWorkspace() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (workspaceId: string) => api.leaveWorkspace(workspaceId),
-    onSuccess: (_data, workspaceId) => {
-      void forgetLocalSearchIndex(workspaceId);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: workspaceKeys.list() });
-    },
-  });
-}
-
 export function useDeleteWorkspace() {
   const qc = useQueryClient();
   return useMutation({

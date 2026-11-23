@@ -10,12 +10,12 @@ describe("workspaceSlugForPath", () => {
     expect(workspaceSlugForPath("/dingtalk/issues")).toBeNull();
     setWorkspaceSlugLookup((slug) => slug === "dingtalk");
     expect(workspaceSlugForPath("/dingtalk/issues?filter=mine#comment")).toBe("dingtalk");
-    expect(workspaceSlugForPath("/dingtalk/members/member-1")).toBe("dingtalk");
+    expect(workspaceSlugForPath("/dingtalk/agents/agent-1")).toBe("dingtalk");
     expect(workspaceSlugForPath("/dingtalk/attachments/file-1/preview")).toBe("dingtalk");
     expect(isReservedSlug("dingtalk")).toBe(true);
   });
 
-  it.each(["/dingtalk/bind", "/lark/bind", "/slack/bind", "/telegram/bind", "/wecom/bind", "/auth/callback", "/workspaces/new", "/invite/token", "/api/workspaces", "/uploads/file", "/login", "/"])("keeps %s global even with a matching membership", (path) => {
+  it.each(["/dingtalk/bind", "/lark/bind", "/slack/bind", "/telegram/bind", "/wecom/bind", "/auth/callback", "/workspaces/new", "/api/workspaces", "/uploads/file", "/login", "/"])("keeps %s global even with a matching membership", (path) => {
     setWorkspaceSlugLookup(() => true);
     expect(workspaceSlugForPath(path)).toBeNull();
   });

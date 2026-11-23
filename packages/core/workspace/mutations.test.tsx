@@ -13,7 +13,6 @@ import { forgetLocalSearchIndex } from "../search-index/instance";
 import {
   useCreateWorkspace,
   useDeleteWorkspace,
-  useLeaveWorkspace,
   useSetWorkspacePinned,
   useUpdateWorkspaceMcpServer,
 } from "./mutations";
@@ -364,29 +363,6 @@ describe("useUpdateWorkspaceMcpServer", () => {
       expect(result.current.updateServer.error).toBe(responseLost);
     });
     expect(listAgentMcpServers).toHaveBeenCalledWith("agent-1");
-  });
-});
-
-describe("useLeaveWorkspace", () => {
-  afterEach(() => {
-    vi.mocked(forgetLocalSearchIndex).mockClear();
-  });
-
-  it("destroys the local search copy only after the server confirms", async () => {
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const leaveWorkspace = vi.fn().mockRejectedValueOnce(new Error("nope")).mockResolvedValueOnce(undefined);
-    setApiInstance({ leaveWorkspace, listWorkspaces: vi.fn().mockResolvedValue([]) } as unknown as ApiClient);
-    const { result } = renderHook(() => useLeaveWorkspace(), { wrapper: createWrapper(qc) });
-
-    await act(async () => {
-      await expect(result.current.mutateAsync("ws-3")).rejects.toThrow("nope");
-    });
-    expect(forgetLocalSearchIndex).not.toHaveBeenCalled();
-
-    await act(async () => {
-      await result.current.mutateAsync("ws-3");
-    });
-    expect(forgetLocalSearchIndex).toHaveBeenCalledWith("ws-3");
   });
 });
 

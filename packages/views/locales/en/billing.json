@@ -240,16 +240,7 @@
     },
     "confirm": {
       "title": "Continue to Stripe Checkout?",
-      "description": "Plan: {{plan}}. Billing interval: {{interval}}. Current human members: {{count}}. Stripe will re-count seats and show the final amount before payment.",
-      "held_invite": "One more paid seat is included for the invitation to {{email}}. Once the payment goes through, send it from Billing."
-    },
-    "held_invite": {
-      "title": "The workspace is on {{plan}} now",
-      "description": "You held back an invitation for {{email}} as {{role}} until the upgrade. Send it now?",
-      "role_admin": "an admin",
-      "role_member": "a member",
-      "send": "Send invitation",
-      "discard": "Discard"
+      "description": "Plan: {{plan}}. Billing interval: {{interval}}. Current human members: {{count}}. Stripe will re-count seats and show the final amount before payment."
     }
   },
   "return_page": {

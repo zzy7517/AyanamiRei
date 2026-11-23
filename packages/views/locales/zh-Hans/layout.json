@@ -19,7 +19,6 @@
     "project": "项目",
     "autopilot": "自动化任务",
     "agent": "智能体",
-    "member": "成员",
     "skill": "Skill",
     "machine": "机器",
     "runtime": "运行时",
@@ -83,7 +82,6 @@
     "unpin_tooltip": "取消固定",
     "workspaces_label": "工作区",
     "create_workspace": "创建工作区",
-    "pending_invitations_label": "待处理的邀请",
     "log_out": "退出登录",
     "new_issue": "新建任务",
     "pinned_label": "固定",
@@ -194,11 +192,8 @@
       "running_tasks_other": "{{count}} 个运行中",
       "all_agents": "全部智能体",
       "my_agents": "我的智能体",
-      "members_heading": "成员",
-      "members_other": "{{count}} 位成员",
       "resources": "资源",
       "runtimes_online_other": "{{count}} 个在线",
-      "invite_member": "邀请成员",
       "open_issue": "打开 {{identifier}}"
     },
     "autopilots": {

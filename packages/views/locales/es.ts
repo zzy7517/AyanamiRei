@@ -7,9 +7,7 @@ import esIssues from "./es/issues.json";
 import esAgents from "./es/agents.json";
 import esEditor from "./es/editor.json";
 import esOnboarding from "./es/onboarding.json";
-import esInvite from "./es/invite.json";
 import esLabels from "./es/labels.json";
-import esMembers from "./es/members.json";
 import esSearch from "./es/search.json";
 import esInbox from "./es/inbox.json";
 import esWorkspace from "./es/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: esAgents,
   editor: esEditor,
   onboarding: esOnboarding,
-  invite: esInvite,
   labels: esLabels,
-  members: esMembers,
   search: esSearch,
   inbox: esInbox,
   workspace: esWorkspace,

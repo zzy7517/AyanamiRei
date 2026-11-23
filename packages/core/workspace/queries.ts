@@ -6,8 +6,6 @@ export const workspaceKeys = {
   all: (wsId: string) => ["workspaces", wsId] as const,
   list: () => ["workspaces", "list"] as const,
   members: (wsId: string) => ["workspaces", wsId, "members"] as const,
-  invitations: (wsId: string) => ["workspaces", wsId, "invitations"] as const,
-  myInvitations: () => ["invitations", "mine"] as const,
   agents: (wsId: string) => ["workspaces", wsId, "agents"] as const,
   agent: (wsId: string, agentId: string) =>
     ["workspaces", wsId, "agents", "detail", agentId] as const,
@@ -154,23 +152,6 @@ export function selectSkillAssignments(
     }
   }
   return map;
-}
-
-export function invitationListOptions(wsId: string) {
-  return queryOptions({
-    queryKey: workspaceKeys.invitations(wsId),
-    queryFn: () => api.listWorkspaceInvitations(wsId),
-  });
-}
-
-export function myInvitationListOptions() {
-  return queryOptions({
-    queryKey: workspaceKeys.myInvitations(),
-    queryFn: () => api.listMyInvitations(),
-    // Recover missed realtime events without refetching on every tab switch.
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: true,
-  });
 }
 
 /**

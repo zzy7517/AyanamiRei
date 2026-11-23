@@ -465,8 +465,8 @@ function normalizeIssueAliases(value: unknown, tabs: TabSession[]): Record<strin
  * the ones that do.
  *
  * Rejects:
- *  1. **Transition paths** (`/workspaces/new`, `/invite/...`). These are
- *     pre-workspace flows rendered by the window overlay on desktop, not
+ *  1. **Transition paths** (`/workspaces/new`). These are pre-workspace
+ *     flows rendered by the window overlay on desktop, not
  *     tab routes. The navigation adapter normally intercepts these before
  *     they reach the store; this guard catches older persisted state.
  *  2. **Malformed workspace-scoped paths** like a stray `/issues/abc` that
@@ -489,7 +489,7 @@ export function sanitizeTabPath(path: string, savedGroupSlug?: string): string |
   if (!workspaceSlugForPath(path, savedGroupSlug)) {
     // Don't log for known transition paths — these are legitimate inputs
     // at the interception boundary (older persisted state or stale callers).
-    const isTransition = path === "/workspaces/new" || path.startsWith("/invite/");
+    const isTransition = path === "/workspaces/new";
     if (!isTransition) {
       console.warn(
         `[tab-store] tab path "${path}" starts with reserved slug "${firstSegment}" — ` +

@@ -106,7 +106,7 @@ diff，全都挂在同一个任务下——没人需要重新捋一遍上下文�
 - **[整套自托管](SELF_HOSTING.md) →** Docker Compose 或 Helm，装在你自己的基础设施上。
 - **[你的 Git 服务](https://multica.ai/docs/zh/vcs-integration) →** GitHub、GitLab、Gitea、Forgejo，自建实例也行。
 - **[工作区](https://multica.ai/docs/zh/workspaces) →** 按团队隔离智能体、任务和设置。
-- **[角色](https://multica.ai/docs/zh/members-roles)与[使用权限](https://multica.ai/docs/zh/agents#权限与-access) →** 管理工作区角色，并设置谁能运行每个智能体。
+- **[使用权限](https://multica.ai/docs/zh/agents#权限与-access) →** 设置谁能运行每个智能体。
 - **[安全模型](https://multica.ai/docs/zh/security-model) →** 智能体碰得到什么，碰不到什么。
 - **Web、[桌面端](https://multica.ai/docs/zh/desktop-app)、[移动端](https://multica.ai/docs/zh/mobile-app) →** macOS、Windows、Linux、iPhone、iPad，打开都是同一个工作区——iOS App 现在要自己从源码编译安装，还没上 App Store。
 - **[CLI 与 API](https://multica.ai/docs/zh/cli) →** 界面上能点的，CLI 和 API 里都能调。智能体操作 Multica，用的就是你那套 CLI。

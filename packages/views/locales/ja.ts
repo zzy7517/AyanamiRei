@@ -7,9 +7,7 @@ import jaIssues from "./ja/issues.json";
 import jaAgents from "./ja/agents.json";
 import jaEditor from "./ja/editor.json";
 import jaOnboarding from "./ja/onboarding.json";
-import jaInvite from "./ja/invite.json";
 import jaLabels from "./ja/labels.json";
-import jaMembers from "./ja/members.json";
 import jaSearch from "./ja/search.json";
 import jaInbox from "./ja/inbox.json";
 import jaWorkspace from "./ja/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: jaAgents,
   editor: jaEditor,
   onboarding: jaOnboarding,
-  invite: jaInvite,
   labels: jaLabels,
-  members: jaMembers,
   search: jaSearch,
   inbox: jaInbox,
   workspace: jaWorkspace,

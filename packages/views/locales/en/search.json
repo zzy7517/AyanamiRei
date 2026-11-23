@@ -8,7 +8,6 @@
     "pages": "Pages",
     "views": "Views",
     "commands": "Commands",
-    "members": "Members",
     "agents": "Agents",
     "projects": "Projects",
     "issues": "Issues",
@@ -133,7 +132,7 @@
     "no_results": "No results found.",
     "no_labels": "No labels",
     "type_to_find_issue": "Type to find an issue",
-    "type_to_find_people": "Type to find people and agents"
+    "type_to_find_agents": "Type to find an agent"
   },
   "delegate": {
     "row": "Hand to agent: “{{prompt}}”",
@@ -148,8 +147,7 @@
     "issue": "Issue",
     "project": "Project",
     "agent": "Agent",
-    "autopilot": "Autopilot",
-    "member": "Member"
+    "autopilot": "Autopilot"
   },
   "footer": {
     "navigate": "Navigate",
@@ -158,7 +156,7 @@
     "back": "Back",
     "prefix_commands": "Commands",
     "prefix_issues": "Issues",
-    "prefix_people": "People & agents"
+    "prefix_agents": "Agents"
   },
   "trigger": {
     "label": "Search..."

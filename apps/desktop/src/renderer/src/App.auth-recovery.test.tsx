@@ -60,7 +60,6 @@ vi.mock("@multica/core/workspace", () => ({
 
 vi.mock("@multica/core/api", () => ({
   api: {
-    listMyInvitations: vi.fn(),
     listWorkspaces: vi.fn(),
   },
 }));
@@ -180,7 +179,6 @@ beforeEach(() => {
       onAuthToken: () => () => {},
       onCloseActiveTab: () => () => {},
       onContextMenu: () => () => {},
-      onInviteOpen: () => () => {},
       onIssueOpen: () => () => {},
       onSystemLocaleChanged: () => () => {},
       reportAuthSession: vi.fn(),

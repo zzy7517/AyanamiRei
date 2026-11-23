@@ -12,7 +12,7 @@ import { issueKeys } from "../issues/queries";
 import { chatKeys } from "../chat/queries";
 import { runtimeKeys } from "../runtimes/queries";
 import { agentTaskSnapshotKeys, agentTaskSnapshotOptions, agentTasksKeys, workspaceWorkingAgentsKeys } from "../agents/queries";
-import { myInvitationListOptions, workspaceKeys } from "../workspace/queries";
+import { workspaceKeys } from "../workspace/queries";
 import { issueStatusKeys } from "../issue-statuses/queries";
 import { issueWorkflowKeys } from "../issue-workflows/queries";
 import { issueViewKeys } from "../issue-views/queries";
@@ -24,7 +24,7 @@ import {
 } from "../workspace/pending-delete";
 import { setApiInstance } from "../api";
 import type { ApiClient } from "../api/client";
-import type { AgentTask, Invitation, IssueTableQuerySpec } from "../types";
+import type { AgentTask, IssueTableQuerySpec } from "../types";
 import { getCurrentWsId } from "../platform/workspace-storage";
 import { forgetLocalSearchIndex } from "../search-index/instance";
 import { useRealtimeSync, type RealtimeSyncStores } from "./use-realtime-sync";
@@ -150,16 +150,16 @@ describe("useRealtimeSync — ws instance change", () => {
     rerender({ ws: ws2 });
 
     // Should have called invalidateQueries for all workspace-scoped keys
-    // (19 workspace-scoped [incl. property definitions, workflows, saved views
+    // (18 workspace-scoped [incl. property definitions, workflows, saved views
     // view preferences, and docs] + 5 per-issue prefixes + the workspace
     // working-agents projection + 6 per-chat prefixes + 1 workspaceKeys.list()
     // + 1 cross-workspace inbox unread summary + 1 issue unread marks + 1
-    // subscribed issue ids + 1 account invitation list = 37 calls).
+    // subscribed issue ids = 35 calls).
     //
     // Awaited rather than counted synchronously: the inbox unread summary
     // refresh cancels any in-flight request before invalidating (see
     // onInboxSummaryInvalidate), so that one lands after the synchronous ones.
-    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(37));
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(35));
   });
 
   it("does not re-invalidate when rerendered with the same ws instance", () => {
@@ -176,7 +176,7 @@ describe("useRealtimeSync — ws instance change", () => {
     expect(invalidateSpy).not.toHaveBeenCalled();
   });
 
-  it("invalidates chat, pins, labels, and invitations queries on ws instance change", () => {
+  it("invalidates chat, pins, and labels queries on ws instance change", () => {
     const ws1 = createMockWs();
     const { rerender } = renderHook(
       ({ ws }) => useRealtimeSync(ws, stores),
@@ -192,8 +192,7 @@ describe("useRealtimeSync — ws instance change", () => {
     const calls = invalidateSpy.mock.calls.map((call: [{ queryKey?: unknown }, ...unknown[]]) => call[0].queryKey);
     expect(calls).toContainEqual(["chat", "ws-1"]);
     expect(calls).toContainEqual(["labels", "ws-1"]);
-    expect(calls).toContainEqual(["workspaces", "ws-1", "invitations"]);
-    expect(calls).toContainEqual(workspaceKeys.myInvitations());
+    expect(calls).toContainEqual(workspaceKeys.members("ws-1"));
     // A catalog edit made while this client was disconnected is otherwise
     // invisible for the query's whole 5-minute staleTime.
     expect(calls).toContainEqual(issueStatusKeys.all("ws-1"));
@@ -482,54 +481,6 @@ describe("useRealtimeSync — ws instance change", () => {
     expect(calls).toContainEqual(chatKeys.messagesPageAll());
     expect(calls).toContainEqual(chatKeys.pendingTaskAll());
   });
-
-  it.each(["ws-1", null])(
-    "refreshes fresh account invitations on WebSocket reconnect with current workspace %s",
-    async (wsId) => {
-      vi.mocked(getCurrentWsId).mockReturnValue(wsId);
-      const invitation: Invitation = {
-        id: "concluded-invitation",
-        workspace_id: "ws-2",
-        inviter_id: "u2",
-        invitee_email: "me@example.com",
-        invitee_user_id: "u1",
-        role: "member",
-        status: "pending",
-        created_at: "",
-        updated_at: "",
-        expires_at: "",
-      };
-      let rows = [invitation];
-      const listMyInvitations = vi.fn(async () => rows);
-      setApiInstance({ listMyInvitations } as unknown as ApiClient);
-      const observer = new QueryObserver(qc, myInvitationListOptions());
-      const unsubscribe = observer.subscribe(() => {});
-      const ws = createMockWs();
-      const hook = renderHook(() => useRealtimeSync(ws, stores), {
-        wrapper: createWrapper(qc),
-      });
-
-      try {
-        await waitFor(() => expect(observer.getCurrentResult().data).toEqual(rows));
-        expect(listMyInvitations).toHaveBeenCalledTimes(1);
-        expect(observer.getCurrentResult().isStale).toBe(false);
-
-        rows = [{ ...invitation, id: "new-pending-invitation" }];
-        const reconnect = vi.mocked(ws.onReconnect).mock.calls[0]?.[0];
-        expect(reconnect).toBeDefined();
-        // Only the socket reconnects: no focus, visibility, or online event.
-        await act(async () => { reconnect!(); });
-
-        await waitFor(() => expect(observer.getCurrentResult().data).toEqual(rows));
-        expect(listMyInvitations).toHaveBeenCalledTimes(2);
-      } finally {
-        hook.unmount();
-        unsubscribe();
-        qc.clear();
-        vi.mocked(getCurrentWsId).mockReturnValue("ws-1");
-      }
-    },
-  );
 
   it("invalidates one issue attachment cache after detached channel media binds", () => {
     const ws = createMockWs();

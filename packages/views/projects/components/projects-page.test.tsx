@@ -99,7 +99,6 @@ vi.mock("@multica/core/hooks", () => ({
 vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
     projectDetail: (id: string) => `/test-workspace/projects/${id}`,
-    memberDetail: (id: string) => `/test-workspace/members/${id}`,
     agentDetail: (id: string) => `/test-workspace/agents/${id}`,
   }),
 }));

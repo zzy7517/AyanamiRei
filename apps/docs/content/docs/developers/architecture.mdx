@@ -67,7 +67,7 @@ Server data and client state are managed separately:
 - The current workspace is route-driven and is mirrored at the platform layer only where requests, persisted namespaces, or reconnection require it.
 - React Context carries only platform plumbing such as the workspace ID and navigation adapter.
 
-WebSocket events should update or invalidate the TanStack Query cache. Do not copy server objects into Zustand. Mutations that navigate, such as creating, deleting, or leaving a workspace, must wait for server confirmation before clearing local state.
+WebSocket events should update or invalidate the TanStack Query cache. Do not copy server objects into Zustand. Mutations that navigate, such as creating or deleting a workspace, must wait for server confirmation before clearing local state.
 
 API responses are parsed with zod schemas at the `packages/core/api/` boundary. An installed Desktop client may connect to a newer backend, so network JSON must not be asserted directly as a TypeScript type.
 

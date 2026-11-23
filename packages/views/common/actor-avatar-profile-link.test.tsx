@@ -29,7 +29,6 @@ vi.mock("@multica/core/workspace/hooks", () => ({
 
 vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
-    memberDetail: (id: string) => `/acme/members/${id}`,
     agentDetail: (id: string) => `/acme/agents/${id}`,
   }),
   useCurrentWorkspace: () => ({ id: "ws1", slug: "acme" }),
@@ -45,14 +44,11 @@ vi.mock("../agents/components/agent-profile-card", () => ({
 vi.mock("../agents/components/agent-live-peek-card", () => ({
   AgentLivePeekCard: () => null,
 }));
-vi.mock("../members/member-profile-card", () => ({
-  MemberProfileCard: () => null,
-}));
 
 import { ActorAvatar } from "./actor-avatar";
 
-const MEMBER_ID = "8f14e45f-ceea-4d0e-a1a2-9b1c0d3e4f5a";
-const HREF = `/acme/members/${MEMBER_ID}`;
+const AGENT_ID = "8f14e45f-ceea-4d0e-a1a2-9b1c0d3e4f5a";
+const HREF = `/acme/agents/${AGENT_ID}`;
 
 function makeAdapter(overrides: Partial<NavigationAdapter> = {}): NavigationAdapter {
   return {
@@ -70,7 +66,7 @@ function makeAdapter(overrides: Partial<NavigationAdapter> = {}): NavigationAdap
 function renderAvatar(adapter: NavigationAdapter) {
   return render(
     <NavigationProvider value={adapter}>
-      <ActorAvatar actorType="member" actorId={MEMBER_ID} />
+      <ActorAvatar actorType="agent" actorId={AGENT_ID} />
     </NavigationProvider>,
   );
 }
@@ -84,8 +80,8 @@ function renderCardPicker(adapter: NavigationAdapter) {
             trigger={
               <span>
                 <ActorAvatar
-                  actorType="member"
-                  actorId={MEMBER_ID}
+                  actorType="agent"
+                  actorId={AGENT_ID}
                   enableHoverCard
                 />
                 <span>Change assignee</span>
@@ -110,14 +106,14 @@ describe("ActorAvatar profile link", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders a departed timeline member as static hydrated identity", () => {
+  it("renders a departed timeline agent as static hydrated identity", () => {
     actorDirectory.known = false;
     render(
       <NavigationProvider value={makeAdapter()}>
         <ActorAvatar
-          actorType="member"
-          actorId={MEMBER_ID}
-          name="Former Member"
+          actorType="agent"
+          actorId={AGENT_ID}
+          name="Former Agent"
           avatarUrl="https://profiles.example.com/former.png"
           profileRequiresDirectoryEntry
           enableHoverCard
@@ -125,7 +121,7 @@ describe("ActorAvatar profile link", () => {
       </NavigationProvider>,
     );
 
-    expect(screen.getByAltText("Former Member")).toBeInTheDocument();
+    expect(screen.getByAltText("Former Agent")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
@@ -134,8 +130,8 @@ describe("ActorAvatar profile link", () => {
     render(
       <NavigationProvider value={makeAdapter()}>
         <ActorAvatar
-          actorType="member"
-          actorId={MEMBER_ID}
+          actorType="agent"
+          actorId={AGENT_ID}
           name="Ada Lovelace"
           profileRequiresDirectoryEntry
           enableHoverCard
@@ -151,8 +147,8 @@ describe("ActorAvatar profile link", () => {
     render(
       <NavigationProvider value={makeAdapter()}>
         <ActorAvatar
-          actorType="member"
-          actorId={MEMBER_ID}
+          actorType="agent"
+          actorId={AGENT_ID}
           name="Ada Lovelace"
         />
       </NavigationProvider>,

@@ -40,7 +40,6 @@ describe("bucketDiagnosticPath", () => {
     expect(bucketDiagnosticPath("/acme/projects/p1")).toBe("/:slug/projects/:id");
     expect(bucketDiagnosticPath("/acme/autopilots/ap-7")).toBe("/:slug/autopilots/:id");
     expect(bucketDiagnosticPath("/acme/agents/agt_9")).toBe("/:slug/agents/:id");
-    expect(bucketDiagnosticPath("/acme/members/m-3")).toBe("/:slug/members/:id");
     expect(bucketDiagnosticPath("/acme/runtimes/machine-1")).toBe("/:slug/runtimes/:id");
     expect(bucketDiagnosticPath("/acme/skills/skl_123")).toBe("/:slug/skills/:id");
     expect(bucketDiagnosticPath("/acme/attachments/att-8/preview")).toBe(
@@ -86,15 +85,7 @@ describe("bucketDiagnosticPath", () => {
   it("keeps pre-workspace routes intact", () => {
     expect(bucketDiagnosticPath("/login")).toBe("/login");
     expect(bucketDiagnosticPath("/workspaces/new")).toBe("/workspaces/new");
-    expect(bucketDiagnosticPath("/invitations")).toBe("/invitations");
     expect(bucketDiagnosticPath("/auth/callback")).toBe("/auth/callback");
-  });
-
-  it("templates the invitation id", () => {
-    expect(bucketDiagnosticPath("/invite/8db920bc-f982-4d38-95f3-56ec43cbefa8")).toBe(
-      "/invite/:id",
-    );
-    expect(bucketDiagnosticPath("/invite/plain-token")).toBe("/invite/:id");
   });
 
   it("drops query string and hash — they can carry resource ids", () => {
@@ -132,8 +123,6 @@ describe("route coverage stays in step with paths.ts", () => {
     const global = {
       login: paths.login,
       newWorkspace: paths.newWorkspace,
-      invite: paths.invite,
-      invitations: paths.invitations,
       onboarding: paths.onboarding,
       authCallback: paths.authCallback,
       root: paths.root,

@@ -132,7 +132,7 @@
   "step_workspace": {
     "headline_first": "給工作區起個名字。",
     "headline_resume": "繼續 {{name}}，或新建一個。",
-    "lede_first": "工作區是任務、AI 代理和專案所在的地方。之後可以邀請同事，或再開一個工作區。",
+    "lede_first": "工作區是任務、AI 代理和專案所在的地方。之後可以再開一個工作區。",
     "lede_resume": "用已有的工作區繼續，或者另建一個新的——你可以同時屬於多個工作區。",
     "name_label": "工作區名稱",
     "name_placeholder": "Acme Inc、我的實驗室、個人專案...",
@@ -159,8 +159,8 @@
     "slug_reserved_error": "該工作區 URL 是系統保留的，無法使用。",
     "slug_conflict_toast": "請換一個工作區 URL",
     "create_failed_toast": "建立工作區失敗",
-    "creation_disabled_headline": "請聯絡管理員邀請你加入工作區。",
-    "creation_disabled_lede": "該 Multica 例項不允許建立新的工作區。等管理員把你邀請到某個工作區後，接受邀請並重新整理即可繼續。",
+    "creation_disabled_headline": "請聯絡管理員開通訪問權限。",
+    "creation_disabled_lede": "該 Multica 例項不允許建立新的工作區。等管理員為你開通工作區訪問權限後，重新整理即可繼續。",
     "creation_disabled_logout": "退出登入",
     "creation_disabled_headline_resume": "繼續使用 {{name}}。",
     "creation_disabled_lede_resume": "該例項已禁用建立工作區，繼續進入你已有的工作區即可。"

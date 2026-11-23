@@ -12,7 +12,6 @@ import {
   Plus,
   SquareTerminal,
   User,
-  UserPlus,
 } from "@multica/ui/icons";
 import { DropdownMenuItem } from "@multica/ui/components/ui/dropdown-menu";
 import { cn } from "@multica/ui/lib/utils";
@@ -54,7 +53,6 @@ import {
 import { useTeamAgentStatus } from "./team-status";
 
 const EMPTY_TASKS: AgentTask[] = [];
-const MEMBER_AVATAR_LIMIT = 4;
 const AGENT_PREVIEW_LIMIT = 5;
 
 function AgentStatusSection({
@@ -295,27 +293,14 @@ export function TeamPanel() {
   const mineCount = userId ? agents.filter((agent) => agent.owner_id === userId).length : 0;
   const myRole = members.find((member) => member.user_id === userId)?.role;
   const isAdmin = myRole === "owner" || myRole === "admin";
-  const canInvite = isAdmin;
   const canManageAgent = (agent: Agent) => isAdmin || (!!userId && agent.owner_id === userId);
   const canChatWith = (agent: Agent) =>
     !agent.archived_at && canAssignAgentToIssue(agent, { userId: userId ?? null, role: myRole ?? null }).allowed;
   const onAgents = pathname === p.agents();
-  // Member pages live under /members/:id; the list itself is a Settings tab.
-  const membersRoot = p.memberDetail("").replace(/\/$/, "");
 
   return (
     <>
       <PanelHeader title={t(($) => $.spaces.team)}>
-        {canInvite && (
-          <IconButton
-            label={t(($) => $.panels.team.invite_member)}
-            tooltipSide="bottom"
-            className="text-muted-foreground"
-            onClick={() => push(`${p.settings()}?tab=members&invite=1`)}
-          >
-            <UserPlus />
-          </IconButton>
-        )}
         <IconButton
           label={t(($) => $.panels.team.new_agent)}
           tooltipSide="bottom"
@@ -394,30 +379,6 @@ export function TeamPanel() {
               active={onAgents && agentsScope === "mine"}
               trailing={<PanelCount value={mineCount} />}
               onNavigate={() => setAgentsScope("mine")}
-            />
-          </PanelList>
-        </PanelSection>
-
-        <PanelSection label={t(($) => $.panels.team.members_heading)}>
-          <PanelList>
-            <PanelLink
-              href={`${p.settings()}?tab=members`}
-              label={t(($) => $.panels.team.members, { count: members.length })}
-              active={isPathWithin(pathname, membersRoot)}
-              icon={
-                <span className="flex -space-x-1">
-                  {members.slice(0, MEMBER_AVATAR_LIMIT).map((member) => (
-                    <ActorAvatar
-                      key={member.user_id}
-                      name={member.name}
-                      initials={member.name.charAt(0).toUpperCase()}
-                      avatarUrl={resolvePublicFileUrl(member.avatar_url)}
-                      size="xs"
-                      className="ring-1 ring-page-canvas"
-                    />
-                  ))}
-                </span>
-              }
             />
           </PanelList>
         </PanelSection>

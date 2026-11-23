@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { InvitationsPage } from "@multica/views/invitations";
 import { OnboardingFlow } from "@multica/views/onboarding";
 import { useNavigation } from "@multica/views/navigation";
 import { paths } from "@multica/core/paths";
@@ -9,20 +8,19 @@ import { useLocalRuntimesPending } from "../platform/use-local-runtimes-pending"
 
 /**
  * Window-level transition overlay: renders above the tab system when the
- * user is in a pre-workspace flow (onboarding, create workspace, accept
- * invite).
+ * user is in a pre-workspace flow (onboarding, create workspace).
  *
  * This component is intentionally thin — just a fixed positioning shell
  * that covers the tab system. It does NOT hide traffic lights or provide
- * a drag strip: each contained view (OnboardingFlow, NewWorkspacePage,
- * InvitationsPage) renders its own `<DragStrip />` as a flex-child at top so
+ * a drag strip: each contained view (OnboardingFlow, NewWorkspacePage)
+ * renders its own `<DragStrip />` as a flex-child at top so
  * native macOS traffic lights stay visible and the page content can fill
  * the window edge-to-edge. This matches the Linear/Notion/Arc pattern for
  * pre-dashboard flows and keeps platform chrome consistent across every
  * "not-in-dashboard" surface.
  *
- * All UX affordances (Back button, Log out button, welcome copy, invite
- * card) live inside the shared view components under `packages/views/`,
+ * All UX affordances (Back button, Log out button, welcome copy) live
+ * inside the shared view components under `packages/views/`,
  * so web and desktop render identical content.
  */
 export function WindowOverlay() {
@@ -76,12 +74,6 @@ function WindowOverlayInner() {
               push(paths.workspace(ws.slug).issues());
             }
           }}
-        />
-      )}
-      {overlay.type === "invitations" && (
-        <InvitationsPage
-          invitationId={overlay.invitationId}
-          onBack={onBack}
         />
       )}
       {overlay.type === "onboarding" && (

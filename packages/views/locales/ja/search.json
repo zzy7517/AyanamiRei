@@ -8,7 +8,6 @@
     "pages": "ページ",
     "views": "ビュー",
     "commands": "コマンド",
-    "members": "メンバー",
     "agents": "エージェント",
     "projects": "プロジェクト",
     "issues": "タスク",
@@ -130,7 +129,7 @@
     "no_results": "結果が見つかりません。",
     "no_labels": "ラベルがありません",
     "type_to_find_issue": "入力してタスクを検索",
-    "type_to_find_people": "入力してメンバーとエージェントを検索"
+    "type_to_find_agents": "入力してエージェントを検索"
   },
   "delegate": {
     "row": "エージェントに依頼：「{{prompt}}」",
@@ -145,8 +144,7 @@
     "issue": "タスク",
     "project": "プロジェクト",
     "agent": "エージェント",
-    "autopilot": "オートパイロット",
-    "member": "メンバー"
+    "autopilot": "オートパイロット"
   },
   "footer": {
     "navigate": "選択",
@@ -155,7 +153,7 @@
     "back": "戻る",
     "prefix_commands": "コマンド",
     "prefix_issues": "タスク",
-    "prefix_people": "メンバーとエージェント"
+    "prefix_agents": "エージェント"
   },
   "trigger": {
     "label": "検索..."

@@ -20,7 +20,6 @@ export function setWorkspaceSlugLookup(next: WorkspaceSlugLookup): () => void {
 
 const workspaceRoutes = new Set([
   ...Object.values(WORKSPACE_PAGES).map((page) => page.segment),
-  "members",
   "attachments",
 ]);
 

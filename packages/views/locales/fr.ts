@@ -7,9 +7,7 @@ import frIssues from "./fr/issues.json";
 import frAgents from "./fr/agents.json";
 import frEditor from "./fr/editor.json";
 import frOnboarding from "./fr/onboarding.json";
-import frInvite from "./fr/invite.json";
 import frLabels from "./fr/labels.json";
-import frMembers from "./fr/members.json";
 import frSearch from "./fr/search.json";
 import frInbox from "./fr/inbox.json";
 import frWorkspace from "./fr/workspace.json";
@@ -34,9 +32,7 @@ const resources: LocaleResources = {
   agents: frAgents,
   editor: frEditor,
   onboarding: frOnboarding,
-  invite: frInvite,
   labels: frLabels,
-  members: frMembers,
   search: frSearch,
   inbox: frInbox,
   workspace: frWorkspace,

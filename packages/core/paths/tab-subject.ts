@@ -15,8 +15,6 @@
  */
 import { pageForSegment, type WorkspacePageKey } from "./route-icons";
 
-export type TabActorType = "agent" | "member";
-
 export type TabSubject =
   /** A collection or tool page with no specific resource. */
   | { kind: "page"; page: WorkspacePageKey }
@@ -26,8 +24,8 @@ export type TabSubject =
   | { kind: "project"; id: string }
   /** A single autopilot detail. */
   | { kind: "autopilot"; id: string }
-  /** An agent / member detail (has an avatar identity). */
-  | { kind: "actor"; actorType: TabActorType; id: string }
+  /** A single agent detail (has an avatar identity). */
+  | { kind: "agent"; id: string }
   /** A single skill detail. */
   | { kind: "skill"; id: string }
   | { kind: "doc"; id: string }
@@ -88,12 +86,7 @@ export function parseTabSubject(url: string): TabSubject {
       return id ? { kind: "autopilot", id } : { kind: "page", page: "autopilots" };
     case "agents":
       if (id === "new") return { kind: "flow", flow: "create-agent" };
-      return id
-        ? { kind: "actor", actorType: "agent", id }
-        : { kind: "page", page: "agents" };
-    case "members":
-      // No members collection route exists; only `/members/:id`.
-      return id ? { kind: "actor", actorType: "member", id } : { kind: "unknown" };
+      return id ? { kind: "agent", id } : { kind: "page", page: "agents" };
     case "usage":
       return { kind: "page", page: "usage" };
     case "inbox":
@@ -150,8 +143,8 @@ export function tabSubjectKey(subject: TabSubject): string {
       return `project:${subject.id}`;
     case "autopilot":
       return `autopilot:${subject.id}`;
-    case "actor":
-      return `actor:${subject.actorType}:${subject.id}`;
+    case "agent":
+      return `agent:${subject.id}`;
     case "skill":
       return `skill:${subject.id}`;
     case "doc":

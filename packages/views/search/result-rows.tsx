@@ -191,8 +191,7 @@ export function AgentPresenceText({
 
 export function ActorRow({
   value,
-  actorType,
-  actorId,
+  agentId,
   name,
   query,
   onSelect,
@@ -202,8 +201,7 @@ export function ActorRow({
   showStatusDot,
 }: {
   value: string;
-  actorType: "member" | "agent";
-  actorId: string;
+  agentId: string;
   name: string;
   query: string;
   onSelect: () => void;
@@ -215,15 +213,15 @@ export function ActorRow({
   return (
     <CommandPrimitive.Item
       data-mc="palette-item"
-      data-type={actorType}
+      data-type="agent"
       value={value}
       disabled={disabled}
       onSelect={onSelect}
       className={ROW_CLASS}
     >
       <ActorAvatar
-        actorType={actorType}
-        actorId={actorId}
+        actorType="agent"
+        actorId={agentId}
         size="sm"
         profileLink={false}
         showStatusDot={showStatusDot}

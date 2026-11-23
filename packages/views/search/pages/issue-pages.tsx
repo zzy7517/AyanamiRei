@@ -229,8 +229,7 @@ export function IssueAssigneePage({ target, query }: { target: IssueTarget; quer
             <ActorRow
               key={entry.agent.id}
               value={`assignee:agent:${entry.agent.id}`}
-              actorType="agent"
-              actorId={entry.agent.id}
+              agentId={entry.agent.id}
               name={entry.agent.name}
               query={query}
               showStatusDot

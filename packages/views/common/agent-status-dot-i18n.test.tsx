@@ -28,7 +28,6 @@ vi.mock("@multica/core/workspace/hooks", () => ({
 
 vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
-    memberDetail: (id: string) => `/acme/members/${id}`,
     agentDetail: (id: string) => `/acme/agents/${id}`,
   }),
   useCurrentWorkspace: () => ({ id: "ws1", slug: "acme" }),
@@ -46,9 +45,6 @@ vi.mock("../agents/components/agent-profile-card", () => ({
 }));
 vi.mock("../agents/components/agent-live-peek-card", () => ({
   AgentLivePeekCard: () => null,
-}));
-vi.mock("../members/member-profile-card", () => ({
-  MemberProfileCard: () => null,
 }));
 
 import { AgentStatusDot } from "./actor-avatar";

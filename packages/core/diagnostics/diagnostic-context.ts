@@ -67,7 +67,6 @@ const WORKSPACE_ROUTES: readonly RoutePattern[] = [
   ["agents", "new", "ai", ":sessionId"],
   ["agents", "new", "done", ":agentId"],
   ["agents", ":id"],
-  ["members", ":id"],
   ["inbox"],
   ["chat"],
   ["views"],
@@ -92,8 +91,6 @@ const GLOBAL_ROUTES: readonly RoutePattern[] = [
   ["signup"],
   ["logout"],
   ["workspaces", "new"],
-  ["invite", ":id"],
-  ["invitations"],
   ["onboarding"],
   ["auth", "callback"],
 ];

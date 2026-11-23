@@ -39,7 +39,6 @@ vi.mock("@multica/core/agents", () => ({
 vi.mock("@multica/core/paths", () => ({
   useCurrentWorkspace: () => ({ id: "ws-1", slug: "acme" }),
   useWorkspacePaths: () => ({
-    memberDetail: (id: string) => `/acme/members/${id}`,
     agentDetail: (id: string) => `/acme/agents/${id}`,
   }),
 }));
@@ -85,10 +84,6 @@ vi.mock("../../agents/components/agent-profile-card", () => ({
 
 vi.mock("../../agents/components/agent-live-peek-card", () => ({
   AgentLivePeekCard: () => null,
-}));
-
-vi.mock("../../members/member-profile-card", () => ({
-  MemberProfileCard: () => null,
 }));
 
 vi.mock("./issue-agent-activity-indicator", () => ({

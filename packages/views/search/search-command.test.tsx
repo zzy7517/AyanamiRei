@@ -657,7 +657,7 @@ describe("SearchCommand", () => {
       expect(api("searchIssues")).not.toHaveBeenCalled();
     });
 
-    it("'@' limits the list to people and agents", async () => {
+    it("'@' limits the list to agents", async () => {
       const user = userEvent.setup();
       seed(agentListOptions("ws-test"), [makeAgent("agent-lambda", "Lambda")]);
       renderSearch();
@@ -763,23 +763,6 @@ describe("SearchCommand", () => {
       expect(rows[0]).toHaveTextContent("Key rotationEngineering");
       expect(rows[1]).toHaveTextContent("Release runbook...before cutover, follow Key rotation steps...");
       expect(api("searchDocs")).toHaveBeenCalledWith(expect.objectContaining({ q: "rotation", limit: 10 }));
-    });
-
-    it("lists workspace members and navigates to the member page", async () => {
-      const user = userEvent.setup();
-      seed(memberListOptions("ws-test"), [
-        makeMember(ME, "Me Myself", "me@example.com"),
-        makeMember("user-1", "Alice Zhang", "alice@example.com"),
-        makeMember("user-2", "Bob Liu", "bob@example.com"),
-      ]);
-      renderSearch();
-      await user.type(input(), "alice");
-
-      await waitFor(() => expect(renderedValues()[0]).toBe("best:member:user-1"));
-      expect(screen.queryByText("Bob Liu")).not.toBeInTheDocument();
-      fireEvent.keyDown(input(), { key: "Enter" });
-
-      expect(mockPush).toHaveBeenCalledWith("/ws-test/members/user-1");
     });
 
     it("renders recent issues joined from the query cache with type labels", () => {
@@ -1027,19 +1010,16 @@ describe("SearchCommand", () => {
       expect(screen.queryByRole("navigation", { name: "Current menu" })).not.toBeInTheDocument();
     });
 
-    it("searches a person whose name starts with A instead of assigning", async () => {
+    it("searches an agent whose name starts with A instead of assigning", async () => {
       const user = userEvent.setup();
-      seed(memberListOptions("ws-test"), [
-        makeMember(ME, "Me Myself", "me@example.com"),
-        makeMember("user-1", "Alice Zhang", "alice@example.com"),
-      ]);
+      seed(agentListOptions("ws-test"), [makeAgent("agent-alice", "Alice Builder")]);
       renderSearch();
       await user.type(input(), "alice");
 
-      await waitFor(() => expect(renderedValues()[0]).toBe("best:member:user-1"));
+      await waitFor(() => expect(renderedValues()[0]).toBe("best:agent:agent-alice"));
       fireEvent.keyDown(input(), { key: "Enter" });
 
-      expect(mockPush).toHaveBeenCalledWith("/ws-test/members/user-1");
+      expect(mockPush).toHaveBeenCalledWith("/ws-test/agents/agent-alice");
       expect(api("updateIssue")).not.toHaveBeenCalled();
       expect(mockOpenModal).not.toHaveBeenCalled();
     });

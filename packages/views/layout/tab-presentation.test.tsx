@@ -164,9 +164,9 @@ describe("useTabPresentation — live from cache", () => {
     });
   });
 
-  it("actor: avatar visual + resolved name", () => {
+  it("agent: avatar visual + resolved name", () => {
     expect(presentationOf("/acme/agents/ag1")).toEqual({
-      visual: { kind: "actor", actorType: "agent", id: "ag1" },
+      visual: { kind: "agent", id: "ag1" },
       title: "Robby",
     });
   });
@@ -347,7 +347,7 @@ describe("useTabPresentation — pending / fallback", () => {
     });
   });
 
-  it("actor falls back to a type icon before the workspace resolves", () => {
+  it("agent falls back to a type icon before the workspace resolves", () => {
     ws.current = null;
     expect(presentationOf("/acme/agents/ag1").visual).toEqual({
       kind: "icon",
@@ -382,11 +382,9 @@ describe("ResourceLeadingVisual", () => {
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
-  it("renders the actor avatar for an actor visual", () => {
+  it("renders the avatar for an agent visual", () => {
     const { getByTestId } = render(
-      <ResourceLeadingVisual
-        visual={{ kind: "actor", actorType: "agent", id: "ag1" }}
-      />,
+      <ResourceLeadingVisual visual={{ kind: "agent", id: "ag1" }} />,
     );
     expect(getByTestId("actor-avatar").getAttribute("data-actor")).toBe("agent:ag1");
   });

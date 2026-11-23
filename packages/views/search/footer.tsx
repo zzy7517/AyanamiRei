@@ -68,7 +68,7 @@ export function PaletteFooter({ mode }: { mode: "root" | "page" }) {
           <>
             <PrefixHint prefix=">">{t(($) => $.footer.prefix_commands)}</PrefixHint>
             <PrefixHint prefix="#">{t(($) => $.footer.prefix_issues)}</PrefixHint>
-            <PrefixHint prefix="@">{t(($) => $.footer.prefix_people)}</PrefixHint>
+            <PrefixHint prefix="@">{t(($) => $.footer.prefix_agents)}</PrefixHint>
           </>
         )}
       </div>

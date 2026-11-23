@@ -20,7 +20,6 @@ import {
   SlidersHorizontal,
   Tags,
   User,
-  Users,
   X,
   Workflow,
   Zap,
@@ -42,7 +41,6 @@ import { PreferencesTab } from "./preferences-tab";
 import { AppearanceTab } from "./appearance-tab";
 import { TokensTab } from "./tokens-tab";
 import { WorkspaceTab } from "./workspace-tab";
-import { MembersTab } from "./members-tab";
 import { CodeTab } from "./code-tab";
 import { ChannelsTab } from "./channels-tab";
 import { ConnectedAppsTab, useComposioAvailable } from "./connected-apps-tab";
@@ -199,9 +197,6 @@ export function SettingsPage({ extraDeviceTabs = [] }: SettingsPageProps = {}) {
           key: "workspace",
           entries: [
             entry("workspace", t(($) => $.page.tabs.general), Settings, <WorkspaceTab />, {
-              adminOnly: true,
-            }),
-            entry("members", t(($) => $.page.tabs.members), Users, <MembersTab />, {
               adminOnly: true,
             }),
             ...(billingEnabled

@@ -59,7 +59,6 @@ export interface NavPage {
 
 export type BestMatch =
   | { type: "agent"; entry: AgentEntry; score: number }
-  | { type: "member"; member: ObjectHits["members"][number]["item"]; score: number }
   | { type: "project"; project: SearchProjectResult; score: number };
 
 /**
@@ -186,7 +185,7 @@ export function useRootModel(
   const chatGroup = useChatCommandGroup(find("chat"));
   const globalCommands = useGlobalCommands(contexts);
 
-  const searching = active && scope !== "commands" && scope !== "people" ? text : "";
+  const searching = active && scope !== "commands" && scope !== "agents" ? text : "";
   const server = useServerSearch(searching, { projects: scope === "all" });
   const docsEnabled = useFeatureEnabled(DOCS_V1_FLAG, false);
   const terminalEnabled = useFeatureEnabled(TERMINAL_V1_FLAG, false);
@@ -267,10 +266,9 @@ export function useRootModel(
       0,
     );
 
-    const people = scope === "all" || scope === "people";
+    const agentsVisible = scope === "all" || scope === "agents";
     const visibleObjects: ObjectHits = {
-      agents: people ? objects.agents : [],
-      members: people ? objects.members : [],
+      agents: agentsVisible ? objects.agents : [],
       views: scope === "all" ? objects.views : [],
       autopilots: scope === "all" ? objects.autopilots : [],
       chats: scope === "all" ? objects.chats : [],
@@ -296,8 +294,6 @@ export function useRootModel(
       const candidates: BestMatch[] = [];
       const agent = visibleObjects.agents[0];
       if (agent) candidates.push({ type: "agent", entry: agent.item, score: agent.score });
-      const member = visibleObjects.members[0];
-      if (member) candidates.push({ type: "member", member: member.item, score: member.score });
       if (!stale) {
         const project = partitioned.liveProjects.find((p) => scoreText(p.title, resultsQ) >= 80);
         if (project) candidates.push({ type: "project", project, score: scoreText(project.title, resultsQ) });
@@ -308,7 +304,6 @@ export function useRootModel(
 
     const objectCount =
       visibleObjects.agents.length +
-      visibleObjects.members.length +
       visibleObjects.views.length +
       visibleObjects.autopilots.length +
       visibleObjects.chats.length +

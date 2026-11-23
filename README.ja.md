@@ -109,7 +109,7 @@ Multica は、こうしたエージェントとチームメイトを 1 つのワ
 - **[すべてをセルフホスト](SELF_HOSTING.md) →** Docker Compose または Helm で、自前のインフラ上に構築できます。
 - **[お使いの Git ホスト](https://multica.ai/docs/ja/vcs-integration) →** GitHub、GitLab、Gitea、Forgejo に対応しています。セルフホスト版も使えます。
 - **[ワークスペース](https://multica.ai/docs/ja/workspaces) →** エージェント、タスク、設定をチームごとに分けられます。
-- **[ロール](https://multica.ai/docs/ja/members-roles)と[アクセススコープ](https://multica.ai/docs/ja/agents#権限と-access) →** ワークスペースのロールや各エージェントを実行できる人を設定できます。
+- **[アクセススコープ](https://multica.ai/docs/ja/agents#権限と-access) →** 各エージェントを実行できる人を設定できます。
 - **[セキュリティモデル](https://multica.ai/docs/ja/security-model) →** エージェントが何にアクセスでき、何にアクセスできないか。
 - **Web、[デスクトップ](https://multica.ai/docs/ja/desktop-app)、[モバイル](https://multica.ai/docs/ja/mobile-app) →** macOS、Windows、Linux、iPhone、iPad で同じワークスペースを使えます。iOS アプリは現在ソースからビルドする形で、まだ App Store では提供していません。
 - **[CLI と API](https://multica.ai/docs/ja/cli) →** すべての機能をスクリプトから操作できます。エージェントも、あなたと同じ CLI で Multica を操作します。

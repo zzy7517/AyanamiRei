@@ -38,7 +38,6 @@ vi.mock("@multica/core/paths", async (importOriginal) => ({
   useWorkspaceSlug: () => "test",
   useWorkspacePaths: () => ({
     issueDetail: (id: string) => `/test/issues/${id}`,
-    memberDetail: (id: string) => `/test/members/${id}`,
   }),
 }));
 vi.mock("@multica/core/hooks", async (importOriginal) => ({

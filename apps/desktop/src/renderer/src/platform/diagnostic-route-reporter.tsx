@@ -21,7 +21,7 @@ import type { RendererRouteContextInput } from "../../../shared/renderer-route-c
  *     runs a memory router), so without this the watchdog has no route at all.
  *
  * Desktop has three layers that can own the visible page: the logged-out
- * `/login` state, window overlays (onboarding, new-workspace, invite — these
+ * `/login` state, window overlays (onboarding, new-workspace — these
  * are overlay state, not tab routes), and otherwise the active tab's path.
  *
  * Paths are bucketed to route templates before publishing, so telemetry
@@ -99,7 +99,5 @@ function overlayPath(overlay: WindowOverlay): string {
       return "/workspaces/new";
     case "onboarding":
       return "/onboarding";
-    case "invitations":
-      return overlay.invitationId ? `/invite/${overlay.invitationId}` : "/invitations";
   }
 }

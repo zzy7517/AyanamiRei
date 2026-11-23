@@ -57,13 +57,13 @@ describe("resolveTabPresentation — direct resources", () => {
     });
   });
 
-  it("actor shows avatar visual and resolved name", () => {
+  it("agent shows avatar visual and resolved name", () => {
     expect(present("/acme/agents/ag1")).toEqual({
-      visual: { kind: "actor", actorType: "agent", id: "ag1" },
+      visual: { kind: "agent", id: "ag1" },
       title: { kind: "tab", tabKey: "agent" },
     });
-    expect(present("/acme/members/m1", { actorName: "Ada" })).toEqual({
-      visual: { kind: "actor", actorType: "member", id: "m1" },
+    expect(present("/acme/agents/ag1", { agentName: "Ada" })).toEqual({
+      visual: { kind: "agent", id: "ag1" },
       title: { kind: "text", text: "Ada" },
     });
   });
