@@ -91,6 +91,12 @@ var frontendPublicFlags = []string{
 	ComposioMCPApps,
 	PluginsV1,
 	DocsV1,
+	// Clients gate the terminal entry points, the task page's trees section
+	// and the Code settings tab on these, read from GET /api/config. Evaluated
+	// but not published, they read as off in every client whatever the
+	// deployment set.
+	TerminalV1,
+	TaskSessionsV1,
 }
 
 func BillingWorkspaceSubscriptionsEnabled(ctx context.Context, flags *featureflag.Service) bool {
