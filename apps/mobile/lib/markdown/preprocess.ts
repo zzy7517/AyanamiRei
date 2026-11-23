@@ -1,15 +1,8 @@
 /**
  * Pure string transforms applied before marked.lexer parses the content.
  *
- * Two passes, both idempotent:
- *   1. Legacy mention shortcodes `[@ id="..." label="..."]` → modern
- *      mention link `[@Label](mention://member/id)`. Old DB rows from before
- *      the April 2026 migration use the shortcode form; the modern form is
- *      what marked.js can naturally tokenize as a markdown link. Calls into
- *      `@multica/core/markdown` (single source of truth — same regex web/
- *      desktop run).
- *
- *   2. File card lines `!file[name](url)` → standard link `[📎 name](url)`.
+ * Passes, all idempotent:
+ *   1. File card lines `!file[name](url)` → standard link `[📎 name](url)`.
  *      marked.js doesn't recognize the `!file` prefix; web's preprocess
  *      turns it into HTML, which mobile can't render natively. Rewriting
  *      to a normal link with a 📎 emoji makes it a tappable link that
@@ -18,16 +11,19 @@
  *      becomes `![name](url)` instead, as web renders it inline, so it is
  *      tappable and part of the screen's lightbox sequence.
  *
+ *   2. Links to a member or to @all keep only their text.
+ *   3. Legacy member shortcodes `[@ id="UUID" label="LABEL"]` → plain `@LABEL`.
+ *
  * NOTE: Web's preprocess also has a third pass that detects bare CDN
  * URLs as legacy file links. We skip that because mobile doesn't bootstrap
  * the cdnDomain config. Old comments using the legacy form render as plain
  * hyperlinks — same tap behavior, just no 📎 prefix. Acceptable degradation.
  */
-import { preprocessMentionShortcodes } from "@multica/core/markdown";
 import {
   isImageAttachment,
   matchAttachmentByURL,
 } from "@multica/core/attachments/image-sequence";
+import { preprocessMentionShortcodes } from "@multica/core/markdown";
 import type { Attachment } from "@multica/core/types";
 import { fromMarkdown } from "mdast-util-from-markdown";
 
@@ -51,9 +47,9 @@ const FILE_LINE_RE = new RegExp(
   `^!file\\[((?:\\\\.|[^\\]\\\\])*)\\]\\((${FILE_CARD_URL})\\)$`,
 );
 
-// Unescape the file-card label back to the real filename (mirrors web's
+// Unescape a markdown link label back to the text it displays (mirrors web's
 // `newMatch[1].replace(/\\([[\]\\()])/g, "$1")`).
-function unescapeFileLabel(label: string): string {
+function unescapeLabel(label: string): string {
   return label.replace(/\\([[\]\\()])/g, "$1");
 }
 
@@ -90,7 +86,7 @@ function preprocessFileCards(input: string, attachments: readonly Attachment[] |
     .map((line) => {
       const m = line.trim().match(FILE_LINE_RE);
       if (!m) return line;
-      const name = unescapeFileLabel(m[1]!);
+      const name = unescapeLabel(m[1]!);
       const label = escapeLinkLabel(name);
       if (isImageFileCard(name, m[2]!, attachments)) {
         return `![${label}](${imageDestination(m[2]!)})`;
@@ -209,16 +205,33 @@ function findCodeRanges(input: string): [number, number][] {
  * regex. Cannot handle nested tags with attributes containing `>`, but those
  * don't appear in our editor output.
  */
-export function stripHtml(input: string): string {
-  if (!input.includes("<")) return input;
+// Apply `transform` to everything except code spans and code blocks.
+function outsideCode(input: string, transform: (text: string) => string): string {
   let out = "";
   let cursor = 0;
   for (const [start, end] of findCodeRanges(input)) {
     if (start < cursor) continue;
-    out += stripHtmlOutsideCode(input.slice(cursor, start)) + input.slice(start, end);
+    out += transform(input.slice(cursor, start)) + input.slice(start, end);
     cursor = end;
   }
-  return out + stripHtmlOutsideCode(input.slice(cursor));
+  return out + transform(input.slice(cursor));
+}
+
+export function stripHtml(input: string): string {
+  if (!input.includes("<")) return input;
+  return outsideCode(input, stripHtmlOutsideCode);
+}
+
+// A link to a member or to @all has no destination, so the renderer has
+// nothing to open for it: keep only the text the link shows. The label admits
+// backslash escapes, with the two alternatives disjoint so it cannot backtrack.
+const MEMBER_MENTION_LINK_RE = /\[((?:\\.|[^\]\\])+)\]\(mention:\/\/(?:member|all)\/[^)]+\)/g;
+
+function unwrapMemberMentionLinks(input: string): string {
+  if (!input.includes("](mention://")) return input;
+  return outsideCode(input, (text) =>
+    text.replace(MEMBER_MENTION_LINK_RE, (_, label: string) => unescapeLabel(label)),
+  );
 }
 
 export function preprocessMobileMarkdown(
@@ -227,6 +240,8 @@ export function preprocessMobileMarkdown(
 ): string {
   if (!input) return "";
   return preprocessTaskListStrikethrough(
-    preprocessFileCards(preprocessMentionShortcodes(stripHtml(input)), attachments),
+    unwrapMemberMentionLinks(
+      preprocessFileCards(preprocessMentionShortcodes(stripHtml(input)), attachments),
+    ),
   );
 }

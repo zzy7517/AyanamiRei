@@ -4,7 +4,7 @@
  * MUL-4985 regression — cold-load render loop on the Issues route.
  *
  * These tests render Board and Swimlane with the REAL react-virtuoso and the
- * REAL `useActorName`, while the member/agent/squad directory queries are held
+ * REAL `useActorName`, while the member/agent directory queries are held
  * pending (the cold-load state). Before the fix, `useActorName` returned a
  * fresh `getActorName` on every render, which churned BoardView's `groups` /
  * SwimLaneView's `laneGroups`, re-fired the column-resync effect without end,
@@ -252,7 +252,6 @@ describe("Issues cold-load render loop (MUL-4985)", () => {
     setApiInstance({
       listMembers: pending,
       listAgents: pending,
-      listSquads: pending,
       getAgentTaskSnapshot: () => Promise.resolve([]),
       listChildrenByParents: () => Promise.resolve({ issues: [] }),
       listProjects: pending,
@@ -288,7 +287,7 @@ describe("Issues cold-load render loop (MUL-4985)", () => {
   it("Swimlane grouped by assignee paints during cold load (real Virtuoso mounts, no update-depth loop)", async () => {
     mockViewState.swimlaneGrouping = "assignee";
     const issues = [
-      makeIssue({ id: "s1", title: "Swim Card 1", assignee_type: "member", assignee_id: "user-1", status: "todo" }),
+      makeIssue({ id: "s1", title: "Swim Card 1", assignee_type: "agent", assignee_id: "agent-2", status: "todo" }),
       makeIssue({ id: "s2", title: "Swim Card 2", assignee_type: "agent", assignee_id: "agent-1", status: "in_progress" }),
       makeIssue({ id: "s3", title: "Swim Card 3", assignee_type: null, assignee_id: null, status: "todo" }),
     ];

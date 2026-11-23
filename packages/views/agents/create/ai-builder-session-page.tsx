@@ -9,7 +9,6 @@ import { useNavigation } from "../../navigation";
 import { useT } from "../../i18n";
 import { BuilderWorkspace } from "./builder-workspace";
 import { AgentCreateChip, AgentCreateShell } from "./create-shell";
-import { withSquadParam } from "./squad-param";
 
 /**
  * One creation conversation, addressed by its own session id.
@@ -24,7 +23,6 @@ export function AiBuilderSessionPage({ sessionId }: { sessionId: string }) {
   const wsId = useWorkspaceId();
   const paths = useWorkspacePaths();
   const navigation = useNavigation();
-  const squadId = navigation.searchParams.get("squad");
   // The runtime this conversation was just started on. It cannot be read back
   // for the first turn — a conversation joins the list only once it has a
   // message or a saved configuration — so the starting screen hands it over in
@@ -43,24 +41,18 @@ export function AiBuilderSessionPage({ sessionId }: { sessionId: string }) {
   // link that outlived it. Replace rather than push: the address no longer
   // resolves, so it must not stay on the stack for a back to land on.
   const leave = useCallback(
-    () => navigation.replace(withSquadParam(paths.newAgent(), squadId)),
-    [navigation, paths, squadId],
+    () => navigation.replace(paths.newAgent()),
+    [navigation, paths],
   );
 
   return (
     <AgentCreateShell
       fitVisualViewport
-      title={
-        squadId
-          ? t(($) => $.creation_studio.squad_title)
-          : t(($) => $.creation_studio.title)
-      }
+      title={t(($) => $.creation_studio.title)}
       step={t(($) => $.creation_studio.step_ai)}
       // Leaving keeps the conversation — step 1 lists it to resume — so close
       // exits the flow instead of stepping back to the runtime list.
-      onClose={() =>
-        navigation.push(squadId ? paths.squadDetail(squadId) : paths.agents())
-      }
+      onClose={() => navigation.push(paths.agents())}
       chips={
         <>
           <AgentCreateChip>
@@ -79,7 +71,6 @@ export function AiBuilderSessionPage({ sessionId }: { sessionId: string }) {
         // field.
         key={sessionId}
         sessionId={sessionId}
-        squadId={squadId}
         session={session}
         sessionSettled={sessionSettled}
         fallbackRuntimeId={startedRuntimeId}

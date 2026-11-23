@@ -46,9 +46,7 @@ export function shownSidebarStatuses(
 /** The viewer relations each assignee setting lists through the table query, OR'd together. */
 const ASSIGNEE_RELATIONS: Record<SidebarIssueAssignee, IssueTableRelation[]> = {
   anyone: [],
-  me: ["assigned"],
   my_agents: ["my_agents"],
-  me_and_my_agents: ["assigned", "my_agents"],
 };
 
 function projectRowRequest(
@@ -157,7 +155,7 @@ export interface SidebarIssuesRequest {
 
 function viewTableScope(view: SidebarViewFields): IssueTableScope | null {
   const assigneeTypes = assigneeTypesForActorKind(
-    view.scope_variant === "members" || view.scope_variant === "agents" ? view.scope_variant : undefined,
+    view.scope_variant === "agents" ? view.scope_variant : undefined,
   );
   const typed = assigneeTypes ? { assignee_types: assigneeTypes } : {};
   switch (view.scope_type ?? "workspace") {
@@ -165,12 +163,6 @@ function viewTableScope(view: SidebarViewFields): IssueTableScope | null {
       return { kind: "workspace", ...typed };
     case "project":
       return view.scope_id ? { kind: "project", project_id: view.scope_id, ...typed } : null;
-    case "my": {
-      const variant = view.scope_variant ?? "any";
-      return variant === "assigned" || variant === "created" || variant === "involved" || variant === "any"
-        ? { kind: "my", relation: variant }
-        : null;
-    }
     default:
       return null;
   }
@@ -203,12 +195,10 @@ export function viewSidebarRequest(
   const scope = viewTableScope(view);
   if (!scope) return null;
   const { raw } = baselineFromQuery(view.query);
-  // Same as the surface: a project view drops the project dimension, a "my"
-  // view the viewer-relation one.
+  // Same as the surface: a project view drops the project dimension.
   const fields = {
     ...raw,
     ...(scope.kind === "project" ? { projectFilters: [], includeNoProject: false } : {}),
-    ...(scope.kind === "my" ? { relationFilters: [] } : {}),
   };
   const negate = effectiveNegatedFilters(fields).map((dimension) => FILTER_DIMENSION_TABLE_FIELD[dimension]);
   const advanced = advancedFilterToTableQuery(fields.advancedFilter);
@@ -247,7 +237,7 @@ export function viewSidebarRequest(
 /** What each built-in adds to All issues, as the issues page applies it. */
 const BUILTIN_FILTERS: Record<Exclude<BuiltinViewKey, "working" | "snoozed">, IssueTableQuerySpec["filters"]> = {
   all_issues: {},
-  my_work: { relations: ASSIGNEE_RELATIONS.me_and_my_agents },
+  my_work: { relations: ASSIGNEE_RELATIONS.my_agents },
   subscribed: { relations: ["subscribed"] },
 };
 

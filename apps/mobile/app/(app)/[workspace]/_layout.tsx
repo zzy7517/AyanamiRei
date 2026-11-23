@@ -7,7 +7,7 @@ import { useWorkspaceStore } from "@/data/workspace-store";
 import { RealtimeProvider } from "@/data/realtime/realtime-provider";
 import { useInboxRealtime } from "@/data/realtime/use-inbox-realtime";
 import { useIssuesRealtime } from "@/data/realtime/use-issues-realtime";
-import { useMyIssuesRealtime } from "@/data/realtime/use-my-issues-realtime";
+import { useMyListRealtime } from "@/data/realtime/use-my-list-realtime";
 import { useChatSessionsRealtime } from "@/data/realtime/use-chat-sessions-realtime";
 import { useProjectsRealtime } from "@/data/realtime/use-projects-realtime";
 import { usePinsRealtime } from "@/data/realtime/use-pins-realtime";
@@ -76,7 +76,7 @@ export const unstable_settings = { anchor: "(tabs)" } as const;
 function RealtimeSubscriptions() {
   useInboxRealtime();
   useIssuesRealtime();
-  useMyIssuesRealtime();
+  useMyListRealtime();
   useChatSessionsRealtime();
   useProjectsRealtime();
   usePinsRealtime();
@@ -293,8 +293,7 @@ export default function WorkspaceLayout() {
           name="new-project-picker/priority"
           options={SHEET_OPTIONS}
         />
-        {/* Shared filter sheet for My Issues and the workspace Issues page —
-            chooses the right view-store via `?scope=my|all` URL param. */}
+        {/* Filter sheet for the Issues page. */}
         <Stack.Screen name="issues-filter" options={SHEET_OPTIONS} />
         {/* Chat session-switch sheet. */}
         <Stack.Screen name="chat-sessions" options={SHEET_OPTIONS} />

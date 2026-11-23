@@ -1,4 +1,4 @@
-import type { Issue, IssueMetadata, IssueStatus, IssueStatusCategory, IssuePriority, IssueAssigneeType } from "./issue";
+import type { Issue, IssueMetadata, IssueStatus, IssueStatusCategory, IssuePriority, IssueAssigneeType, IssueCreatorType } from "./issue";
 import type { IssuePropertyValues, PropertyFilterValue } from "./property";
 import type { MemberRole } from "./workspace";
 import type { Project, ProjectStatus } from "./project";
@@ -37,7 +37,6 @@ export interface CreateCommentSubIssueAgentRequest {
   capture_token: string;
   quick_create: {
     agent_id?: string;
-    squad_id?: string;
     prompt: string;
     priority?: IssuePriority;
     due_date?: string;
@@ -174,7 +173,7 @@ export interface IssueTriggerPreviewParams {
 }
 
 /** One issue that WILL start a run under the prospective write. `agent_id` is
- *  the runnable agent (squad leader for squads). */
+ *  the agent that would run it. */
 export interface IssueTriggerPreviewItem {
   issue_id: string;
   agent_id: string;
@@ -208,19 +207,15 @@ export interface ListIssuesParams {
   priorities?: IssuePriority[];
   assignee_id?: string;
   assignee_ids?: string[];
-  /**
-   * Narrow to issues assigned to the given actor kinds (member / agent /
-   * squad). Same semantics as `ListGroupedIssuesParams.assignee_types` —
-   * powers the workspace Members/Agents tabs server-side.
-   */
+  /** Narrow to issues assigned to an agent. Same semantics as
+   *  `ListGroupedIssuesParams.assignee_types`. */
   assignee_types?: IssueAssigneeType[];
   creator_id?: string;
-  created_by_user_id?: string;
   project_id?: string;
   /** Actor-aware table facets. OR within each field. */
-  assignee_filters?: IssueActorRef[];
+  assignee_filters?: IssueAssigneeRef[];
   include_no_assignee?: boolean;
-  creator_filters?: IssueActorRef[];
+  creator_filters?: IssueCreatorRef[];
   project_ids?: string[];
   include_no_project?: boolean;
   label_ids?: string[];
@@ -233,14 +228,6 @@ export interface ListIssuesParams {
    * restriction".
    */
   ids?: string[];
-  /**
-   * Widen the assignee filter to issues where the user is the *indirect*
-   * assignee — assignee is one of the user's owned agents, or a squad led by
-   * an agent the user owns. Direct member assignment is intentionally excluded:
-   * `involves_user_id` and `assignee_id=<user>` (tab "Assigned to me") produce
-   * disjoint result sets by construction.
-   */
-  involves_user_id?: string;
   /** JSONB containment filter on `issue.metadata`. AND across keys. */
   metadata?: IssueMetadata;
   /** Custom-property filter: definition id → accepted values (option ids or
@@ -272,8 +259,15 @@ export interface ListIssuesParams {
   sort_direction?: "asc" | "desc";
 }
 
-export interface IssueActorRef {
+/** An agent as an assignee filter value. */
+export interface IssueAssigneeRef {
   type: IssueAssigneeType;
+  id: string;
+}
+
+/** A person or an agent as a creator filter value. */
+export interface IssueCreatorRef {
+  type: IssueCreatorType;
   id: string;
 }
 
@@ -288,19 +282,16 @@ export interface ListGroupedIssuesParams {
   assignee_id?: string;
   assignee_ids?: string[];
   creator_id?: string;
-  created_by_user_id?: string;
   project_id?: string;
-  /** See `ListIssuesParams.involves_user_id` — same semantics. */
-  involves_user_id?: string;
   /** JSONB containment filter on `issue.metadata`. AND across keys. */
   metadata?: IssueMetadata;
   /** Custom-property filter: definition id → accepted values (option ids or
    *  "true"/"false" for checkbox; a plain string is exact equality, an
    *  operator object narrows it). OR within a definition, AND across. */
   properties?: Record<string, PropertyFilterValue[]>;
-  assignee_filters?: IssueActorRef[];
+  assignee_filters?: IssueAssigneeRef[];
   include_no_assignee?: boolean;
-  creator_filters?: IssueActorRef[];
+  creator_filters?: IssueCreatorRef[];
   project_ids?: string[];
   include_no_project?: boolean;
   label_ids?: string[];
@@ -348,11 +339,10 @@ export interface GroupedIssuesResponse {
 export type IssueTableScope =
   | { kind: "workspace"; assignee_types?: IssueAssigneeType[] }
   | { kind: "project"; project_id: string; assignee_types?: IssueAssigneeType[] }
-  | { kind: "assignee"; actor: IssueActorRef }
-  | { kind: "creator"; actor: IssueActorRef }
-  | { kind: "my"; relation: "assigned" | "created" | "involved" | "any" };
+  | { kind: "assignee"; actor: IssueAssigneeRef }
+  | { kind: "creator"; actor: IssueCreatorRef };
 
-export type IssueTableRelation = "assigned" | "created" | "my_agents" | "subscribed";
+export type IssueTableRelation = "created" | "my_agents" | "subscribed";
 
 export type IssueTableNegatableFilter =
   | "statuses"
@@ -387,9 +377,9 @@ export interface IssueTableFilterCondition {
 export interface IssueTableFilters {
   statuses?: IssueStatus[];
   priorities?: IssuePriority[];
-  assignees?: IssueActorRef[];
+  assignees?: IssueAssigneeRef[];
   include_no_assignee?: boolean;
-  creators?: IssueActorRef[];
+  creators?: IssueCreatorRef[];
   project_ids?: string[];
   include_no_project?: boolean;
   /** Lifecycle status of the parent project. A separate dimension from
@@ -398,7 +388,7 @@ export interface IssueTableFilters {
   project_statuses?: ProjectStatus[];
   label_ids?: string[];
   /** How the requesting user relates to the issue, OR within the list:
-   *  assigned to me, created by me, assigned to an agent I own. */
+   *  created by me, assigned to an agent I own, subscribed to. */
   relations?: IssueTableRelation[];
   /** Dimensions whose predicate is inverted ("is not"). Listing a dimension
    *  that has no values of its own changes nothing. */
@@ -716,14 +706,10 @@ export interface UpdateMeRequest {
 export interface CreateMemberRequest {
   email: string;
   role?: MemberRole;
-  /** Required for a guest: the projects it can access. */
-  project_ids?: string[];
 }
 
 export interface UpdateMemberRequest {
   role: MemberRole;
-  /** Required when the member becomes a guest. */
-  project_ids?: string[];
 }
 
 // Personal Access Tokens

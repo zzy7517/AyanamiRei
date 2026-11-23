@@ -5,6 +5,8 @@ export type CommentType = "comment" | "status_change" | "progress_update" | "sys
 // author_id; render paths should branch on author_type rather than the UUID.
 export type CommentAuthorType = "member" | "agent" | "system";
 
+// Reactions are no longer stored or served. This and `Comment.reactions`
+// remain only because apps/mobile still reads them.
 export interface Reaction {
   id: string;
   comment_id: string;
@@ -44,7 +46,7 @@ export interface Comment {
   // server keeps an empty tombstone so the replies keep their parent. Older
   // servers omit it.
   deleted_at?: string | null;
-  // Per-target result of every explicit @agent / @squad mention in this comment
+  // Per-target result of every explicit @agent mention in this comment
   // (MUL-4525 §2). Present only on create/edit responses; older servers omit it.
   trigger_outcomes?: CommentTriggerOutcome[];
   /** Every running turn this comment steered, one receipt per run. */
@@ -79,7 +81,7 @@ export type CommentTriggerStatus =
   | "blocked";
 
 export interface CommentTriggerOutcome {
-  target_type: string; // "agent" | "squad"
+  target_type: string; // "agent"
   target_id: string;
   status: CommentTriggerStatus | string;
   reason_code: string;
@@ -87,8 +89,7 @@ export interface CommentTriggerOutcome {
 
 export type CommentTriggerSource =
   | "issue_assignee"
-  | "mention_agent"
-  | "mention_squad_leader";
+  | "mention_agent";
 
 export interface CommentTriggerPreviewAgent {
   id: string;
@@ -100,7 +101,7 @@ export interface CommentTriggerPreviewAgent {
 
 export interface CommentTriggerPreview {
   agents: CommentTriggerPreviewAgent[];
-  // Explicit @agent / @squad mentions that will NOT trigger if posted as-is
+  // Explicit @agent mentions that will NOT trigger if posted as-is
   // (MUL-4525 §2). Additive: older servers omit it.
   blocked?: CommentTriggerOutcome[];
 }

@@ -57,7 +57,7 @@ const issue = {
   assignee_type: null, assignee_id: null, creator_type: "user", creator_id: fx.USER_ID,
   parent_issue_id: null, project_id: null, position: 0,
   start_date: null, due_date: null, stage: null, metadata: {}, properties: {},
-  labels: [], reactions: [],
+  labels: [],
   created_at: "2026-09-01T00:00:00Z", updated_at: "2026-09-01T00:00:00Z",
 };
 
@@ -74,7 +74,7 @@ function responseFor(pathname: string): unknown | undefined {
     case "/api/issues/unread": return { items: [], next_cursor: null };
     case "/api/inbox/archived/page": return { items: [], next_cursor: null };
     case `/api/inbox/issues/${fx.ISSUE_ID}/read`: return { count: 0 };
-    case "/api/agents": case "/api/runtimes": case "/api/squads":
+    case "/api/agents": case "/api/runtimes":
     case "/api/agent-task-snapshot": case "/api/invitations": case "/api/inbox":
     case "/api/inbox/unread-summary": case "/api/pins": case "/api/chat/sessions":
       return [];

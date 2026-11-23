@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronRight,
@@ -39,6 +39,8 @@ import {
 } from "@multica/core/runtimes";
 import { useConfigStore } from "@multica/core/config";
 import { Button } from "@multica/ui/components/ui/button";
+import { Input } from "@multica/ui/components/ui/input";
+import { Label } from "@multica/ui/components/ui/label";
 import { Spinner } from "@multica/ui/components/ui/spinner";
 import {
   Popover,
@@ -66,8 +68,14 @@ import {
   type WorktreeUnavailableReason,
 } from "./local-directory-mode-options";
 import { GithubRefField, githubRefHasError } from "./github-ref-field";
-import { localDirectoryLabel } from "./local-directory-label";
-import { buildRuntimeMachines } from "../../runtimes/components/runtime-machines";
+import {
+  localDirectoryLabel,
+  localDirectoryNameOfPath,
+} from "./local-directory-label";
+import {
+  buildRuntimeMachines,
+  type RuntimeMachine,
+} from "../../runtimes/components/runtime-machines";
 import { useT } from "../../i18n";
 import { githubShortLabel } from "../../common/github-url";
 
@@ -709,6 +717,12 @@ function LocalFolderGroup({
     ? machines.find((m) => m.daemonId === localDaemonId)
     : undefined;
   const currentTitle = currentMachine?.title ?? daemonStatus.deviceName;
+  // This computer's picker only reaches its own disk, so a folder on any
+  // other machine is attached from a typed path. One way in: under this
+  // computer while no other machine has a folder, otherwise inside each
+  // machine's block, where it starts on that machine.
+  const remote = remoteFolderMachines(machines);
+  const showRemoteEntry = desktopMode && remote.length > 0;
 
   return (
     <div className="space-y-1.5">
@@ -742,6 +756,15 @@ function LocalFolderGroup({
           )}
         </MachineBlock>
       )}
+      {showRemoteEntry && otherDaemonIds.length === 0 && (
+        <div className="pl-[1.125rem]">
+          <RemoteFolderEntry
+            wsId={wsId}
+            projectId={projectId}
+            machines={remote}
+          />
+        </div>
+      )}
       {otherDaemonIds.map((daemonId) => {
         const machine = machines.find((m) => m.daemonId === daemonId);
         return (
@@ -758,6 +781,14 @@ function LocalFolderGroup({
                 serverValidatesWorktree={serverValidatesWorktree}
               />
             ))}
+            {showRemoteEntry && (
+              <RemoteFolderEntry
+                wsId={wsId}
+                projectId={projectId}
+                machines={remote}
+                preselectedDaemonId={daemonId}
+              />
+            )}
           </MachineBlock>
         );
       })}
@@ -1092,6 +1123,183 @@ function LocalFolderSlot({
         {t(($) => $.resources.local_pick)}
       </Button>
     </div>
+  );
+}
+
+type RemoteMachine = Pick<RuntimeMachine, "title" | "health"> & {
+  daemonId: string;
+};
+
+const fieldLabelClassName = "text-micro font-medium text-muted-foreground";
+
+/**
+ * The machines a folder can be typed onto: every machine with a daemon other
+ * than this one, titled as on the runtimes page. Cloud workers are left out;
+ * they hold no folders.
+ */
+function remoteFolderMachines(machines: RuntimeMachine[]): RemoteMachine[] {
+  return machines.flatMap((machine) =>
+    machine.section === "remote" && machine.daemonId
+      ? [
+          {
+            daemonId: machine.daemonId,
+            title: machine.title,
+            health: machine.health,
+          },
+        ]
+      : [],
+  );
+}
+
+/**
+ * Attaches a folder on another machine from a typed path, since this
+ * computer's picker only reaches its own disk. The path is not checked here —
+ * which paths exist is that machine's business — so the server's answer is
+ * what the user sees, kept on screen next to what was typed.
+ */
+function RemoteFolderEntry({
+  wsId,
+  projectId,
+  machines,
+  preselectedDaemonId,
+}: {
+  wsId: string;
+  projectId: string;
+  machines: RemoteMachine[];
+  /** Set when opened from a machine's own block: that machine is the one meant. */
+  preselectedDaemonId?: string;
+}) {
+  const { t } = useT("projects");
+  const createResource = useCreateProjectResource(wsId, projectId);
+  const pathInputId = useId();
+  const machinesLabelId = useId();
+  const [open, setOpen] = useState(false);
+  const [machineId, setMachineId] = useState("");
+  const [path, setPath] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleOpenChange = (next: boolean) => {
+    if (saving) return;
+    setOpen(next);
+    if (next) {
+      setMachineId(
+        machines.find((machine) => machine.daemonId === preselectedDaemonId)
+          ?.daemonId ??
+          machines[0]?.daemonId ??
+          "",
+      );
+      setPath("");
+      setError(null);
+    }
+  };
+
+  const add = async () => {
+    const localPath = path.trim();
+    if (!machineId || !localPath || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await createResource.mutateAsync({
+        resource_type: "local_directory",
+        resource_ref: {
+          local_path: localPath,
+          daemon_id: machineId,
+          // The name the picker flow gives a chosen folder.
+          label: localDirectoryNameOfPath(localPath) ?? localPath,
+          // Whether the folder is a git repository cannot be seen from here,
+          // so it starts on the mode that needs no answer; the row's mode
+          // chip changes it afterwards.
+          execution_mode: "in_place",
+        },
+      });
+      toast.success(t(($) => $.resources.toast_local_attached));
+      setOpen(false);
+    } catch (err) {
+      // Keep the path on screen: the likely failure is the
+      // one-folder-per-machine conflict, which the user acts on here.
+      setError(errorMessage(err, t(($) => $.resources.toast_attach_failed)));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger
+        render={
+          <Button variant="ghost" size="xs" className="text-muted-foreground">
+            <Plus />
+            {t(($) => $.resources.local_remote_add)}
+          </Button>
+        }
+      />
+      <PopoverContent align="start" className="gap-2 p-2">
+        <p id={machinesLabelId} className={fieldLabelClassName}>
+          {t(($) => $.resources.local_remote_machine_label)}
+        </p>
+        <div
+          role="radiogroup"
+          aria-labelledby={machinesLabelId}
+          className="flex max-h-48 flex-col gap-0.5 overflow-y-auto"
+        >
+          {machines.map((machine) => {
+            const selected = machine.daemonId === machineId;
+            return (
+              <button
+                key={machine.daemonId}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setMachineId(machine.daemonId)}
+                className={cn(
+                  "flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-caption transition-colors",
+                  selected
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent/70 hover:text-foreground",
+                )}
+              >
+                <Monitor className="size-3 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{machine.title}</span>
+                {machine.health !== "online" && (
+                  <span className="shrink-0">
+                    · {t(($) => $.resources.local_offline)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <Label htmlFor={pathInputId} className={fieldLabelClassName}>
+          {t(($) => $.resources.local_remote_path_label)}
+        </Label>
+        <Input
+          id={pathInputId}
+          value={path}
+          onChange={(event) => setPath(event.target.value)}
+          spellCheck={false}
+          className="font-mono"
+        />
+        {error && <InlineError message={error} />}
+        <div className="flex justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setOpen(false)}
+            disabled={saving}
+          >
+            {t(($) => $.resources.mode_cancel)}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void add()}
+            disabled={saving || !machineId || !path.trim()}
+          >
+            {t(($) => $.resources.mode_add)}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 

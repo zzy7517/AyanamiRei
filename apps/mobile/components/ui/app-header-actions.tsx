@@ -1,24 +1,21 @@
 /**
- * Header utility buttons shared across primary tabs (Inbox / My Issues).
- * Provides two global actions on the right: search and create-issue. A
- * guest (MUL-9420) cannot create issues, so it gets search only.
+ * Header utility buttons for the Inbox tab: search and create-issue on the
+ * right.
  *
  * The workspace menu (global nav, workspace switcher, settings) is reached
  * via the "More" tab in the bottom bar.
  *
- * Tab-specific actions (e.g. My Issues filter) MUST NOT live here — they
+ * Tab-specific actions (e.g. the Issues filter) MUST NOT live here — they
  * mix scope levels with global actions and would clutter the strip.
  */
 import { router } from "expo-router";
 import { IconButton } from "@/components/ui/icon-button";
 import { useWorkspaceStore } from "@/data/workspace-store";
 import { useT } from "@/lib/i18n";
-import { useIsGuest } from "@/lib/use-is-guest";
 
 export function HeaderActions() {
   const slug = useWorkspaceStore((s) => s.currentWorkspaceSlug);
   const { t } = useT();
-  const guest = useIsGuest();
 
   const onSearch = () => {
     if (slug) router.push(`/${slug}/search`);
@@ -34,14 +31,12 @@ export function HeaderActions() {
         onPress={onSearch}
         accessibilityLabel={t("common:actions.search")}
       />
-      {!guest && (
-        <IconButton
-          name="add"
-          iconSize={24}
-          onPress={onCreate}
-          accessibilityLabel={t("navigation:routes.new_issue")}
-        />
-      )}
+      <IconButton
+        name="add"
+        iconSize={24}
+        onPress={onCreate}
+        accessibilityLabel={t("navigation:routes.new_issue")}
+      />
     </>
   );
 }

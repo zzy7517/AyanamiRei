@@ -38,9 +38,7 @@
       "card4_actor_name": "Review Agent",
       "card4_body": "Revisé el borrador del lunes: dejé 4 notas sobre el tono. A la espera del nuevo.",
       "card5_actor_name": "Coding Agent",
-      "card5_body_prefix": "He publicado la función de exportación que ",
-      "card5_body_suffix": " señaló. Enlace de vista previa en el PR.",
-      "card5_mention_you": "@tú",
+      "card5_body": "He publicado la función de exportación que señalaste. Enlace de vista previa en el PR.",
       "card5_timestamp": "ahora mismo"
     }
   },

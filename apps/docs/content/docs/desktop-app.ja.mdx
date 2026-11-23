@@ -180,6 +180,20 @@ $json = @'
 Desktop が接続できるのは、ブラウザと実行マシンの両方から到達できるアドレスだけです。リモートのセルフホストインスタンスが HTTPS を使っていない、または WebSocket をプロキシしていない場合、Desktop は接続を確立できません。完全な設定は[セルフホストクイックスタート](/self-host-quickstart#remote-access)を参照してください。
 </Callout>
 
+### ログインなしで直接入る
+
+自分だけが使うインスタンスなら、`authToken` を追加するとログインページをスキップできます:
+
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "https://api.example.com",
+  "authToken": "<サーバーの MULTICA_AUTH_TOKEN>"
+}
+```
+
+サーバーの `MULTICA_AUTH_TOKEN` と同じ値を設定し、サーバーには `MULTICA_AUTH_TOKEN_EMAIL` も設定します。[事前共有トークン](/environment-variables#事前共有トークン)を参照してください。これで Desktop はワークスペースへ直接進みます。サーバーがトークンを拒否したときは、ログインページに案内を表示します。ファイルを修正して再起動するか、いつもどおりメールアドレスや Google でログインしてください。`authToken` がなければ、これまでと変わりません。
+
 ### Windows: ファイル名とエンコーディングを確認する
 
 Windows でよく使う 2 つの書き方では、Desktop が読めないファイルができてしまいます:

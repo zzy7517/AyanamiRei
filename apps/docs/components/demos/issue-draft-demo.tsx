@@ -9,7 +9,6 @@ import {
   Maximize2,
   MoreHorizontal,
   Paperclip,
-  Users,
   X,
 } from "@multica/ui/icons";
 import { Button } from "@multica/ui/components/ui/button";
@@ -25,7 +24,7 @@ import {
   useStartWhenVisible,
 } from "./demo-kit";
 
-type Actor = { name: string; squad: boolean };
+type Actor = { name: string };
 
 const copy = {
   en: {
@@ -36,11 +35,9 @@ const copy = {
     close: "Close",
     createdBy: "Created by",
     agentsGroup: "Agents",
-    squadsGroup: "Squads",
     actors: [
-      { name: "Ops helper", squad: false },
-      { name: "Writing helper", squad: false },
-      { name: "Admin squad", squad: true },
+      { name: "Ops helper" },
+      { name: "Writing helper" },
     ] as Actor[],
     prompt:
       "Team dinner next Wednesday. Book a restaurant for 12 people, under $40 a head, close to the office, a private room if possible.",
@@ -68,7 +65,7 @@ const copy = {
     captions: {
       idle: "Say what needs doing in a sentence or two, and an agent turns it into an issue.",
       actor: "The request is written. Created by starts with the agent you picked last time; click it to choose another.",
-      picking: "Pick Ops helper. A squad works too: its leader drafts the issue.",
+      picking: "Pick Ops helper.",
       ready: "The project carries over from the page you opened the dialog on. Click Create.",
       sending: "Sending the request to Ops helper…",
       waiting: "Ops helper drafts it in the background, so the dialog has already closed. The inbox tells you when it's done.",
@@ -84,11 +81,9 @@ const copy = {
     close: "关闭",
     createdBy: "创建者",
     agentsGroup: "智能体",
-    squadsGroup: "小队",
     actors: [
-      { name: "运营助手", squad: false },
-      { name: "文案助手", squad: false },
-      { name: "行政小队", squad: true },
+      { name: "运营助手" },
+      { name: "文案助手" },
     ] as Actor[],
     prompt: "下周三团建，帮忙订一家餐厅：12 个人，人均 150 元以内，离公司近一点，最好有包间。",
     project: "团队活动",
@@ -114,7 +109,7 @@ const copy = {
     captions: {
       idle: "一两句话说清要做的事，由智能体写成任务。",
       actor: "需求已经写好。创建者默认是上次选的智能体，点它换一个。",
-      picking: "选运营助手。也可以选小队，由队长来起草。",
+      picking: "选运营助手。",
       ready: "项目沿用了打开对话框时所在的项目。点击创建。",
       sending: "正在把需求交给运营助手...",
       waiting: "运营助手在后台起草，对话框已经关了，不用守着。写好后收件箱会通知你。",
@@ -130,11 +125,9 @@ const copy = {
     close: "閉じる",
     createdBy: "作成者",
     agentsGroup: "エージェント",
-    squadsGroup: "スクワッド",
     actors: [
-      { name: "運用アシスタント", squad: false },
-      { name: "ライティングアシスタント", squad: false },
-      { name: "総務スクワッド", squad: true },
+      { name: "運用アシスタント" },
+      { name: "ライティングアシスタント" },
     ] as Actor[],
     prompt: "来週水曜のチームの食事会、お店を予約してほしい。12 人、1 人 5,000 円以内、会社の近くで、できれば個室。",
     project: "チームイベント",
@@ -160,7 +153,7 @@ const copy = {
     captions: {
       idle: "やりたいことを一言二言で書けば、エージェントがタスクにまとめます。",
       actor: "依頼文は書けています。作成者には前回選んだエージェントが入っています。クリックして選び直します。",
-      picking: "運用アシスタントを選びます。スクワッドを選ぶと、リーダーが下書きします。",
+      picking: "運用アシスタントを選びます。",
       ready: "プロジェクトは、ダイアログを開いたページのものが引き継がれています。作成をクリックします。",
       sending: "依頼を運用アシスタントに送っています…",
       waiting: "運用アシスタントがバックグラウンドで下書きするので、ダイアログはもう閉じています。終わるとインボックスに通知が届きます。",
@@ -176,11 +169,9 @@ const copy = {
     close: "닫기",
     createdBy: "생성자",
     agentsGroup: "에이전트",
-    squadsGroup: "스쿼드",
     actors: [
-      { name: "운영 도우미", squad: false },
-      { name: "글쓰기 도우미", squad: false },
-      { name: "총무 스쿼드", squad: true },
+      { name: "운영 도우미" },
+      { name: "글쓰기 도우미" },
     ] as Actor[],
     prompt: "다음 주 수요일 팀 회식, 식당 하나 예약해 줘. 12명, 1인 4만 원 이내, 회사 근처, 가능하면 룸.",
     project: "팀 행사",
@@ -206,7 +197,7 @@ const copy = {
     captions: {
       idle: "할 일을 한두 문장으로 적으면 에이전트가 태스크로 만듭니다.",
       actor: "요청은 이미 적혀 있습니다. 생성자에는 지난번에 고른 에이전트가 들어 있습니다. 클릭해서 바꿉니다.",
-      picking: "운영 도우미를 고르세요. 스쿼드를 고르면 리더가 초안을 씁니다.",
+      picking: "운영 도우미를 고르세요.",
       ready: "프로젝트는 대화상자를 연 페이지의 것이 그대로 들어갑니다. 만들기를 클릭하세요.",
       sending: "요청을 운영 도우미에게 보내는 중...",
       waiting: "운영 도우미가 백그라운드에서 초안을 쓰므로 대화상자는 이미 닫혔습니다. 끝나면 인박스로 알려 줍니다.",
@@ -222,11 +213,9 @@ const copy = {
     close: "Fermer",
     createdBy: "Créé par",
     agentsGroup: "Agents",
-    squadsGroup: "Squads",
     actors: [
-      { name: "Assistant ops", squad: false },
-      { name: "Assistant rédaction", squad: false },
-      { name: "Squad services généraux", squad: true },
+      { name: "Assistant ops" },
+      { name: "Assistant rédaction" },
     ] as Actor[],
     prompt:
       "Dîner d'équipe mercredi prochain : réserve un restaurant pour 12 personnes, moins de 35 € par tête, près du bureau, avec un salon privé si possible.",
@@ -254,7 +243,7 @@ const copy = {
     captions: {
       idle: "Décrivez le travail en une ou deux phrases ; un agent en fait une tâche.",
       actor: "La demande est rédigée. Créé par reprend l'agent choisi la dernière fois ; cliquez dessus pour en changer.",
-      picking: "Choisissez Assistant ops. Un squad convient aussi : son chef rédige la tâche.",
+      picking: "Choisissez Assistant ops.",
       ready: "Le projet est repris de la page depuis laquelle vous avez ouvert la fenêtre. Cliquez sur Créer.",
       sending: "Envoi de la demande à Assistant ops…",
       waiting: "Assistant ops rédige en arrière-plan, la fenêtre est donc déjà fermée. La boîte de réception vous prévient quand c'est fait.",
@@ -353,35 +342,27 @@ export function IssueDraftDemo() {
                   aria-label={t.createdBy}
                   className="absolute top-full left-3 z-10 mt-1 w-56 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md motion-safe:animate-in motion-safe:fade-in"
                 >
-                  {[false, true].map((squad) => (
-                    <div key={String(squad)}>
-                      <div className="px-2 pt-1 pb-0.5 text-micro text-muted-foreground">
-                        {squad ? t.squadsGroup : t.agentsGroup}
-                      </div>
-                      {t.actors.map((candidate, i) =>
-                        candidate.squad === squad ? (
-                          <CoachMark
-                            key={candidate.name}
-                            active={i === 0}
-                            side="right"
-                            ringClassName="rounded-md"
-                            className="flex w-full"
-                          >
-                            <button
-                              type="button"
-                              role="option"
-                              aria-selected={i === actorIndex}
-                              disabled={i !== 0}
-                              onClick={() => pick(i)}
-                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-body hover:bg-accent disabled:opacity-50 disabled:hover:bg-transparent"
-                            >
-                              <ActorAvatar actor={candidate} />
-                              <span className="min-w-0 truncate">{candidate.name}</span>
-                            </button>
-                          </CoachMark>
-                        ) : null,
-                      )}
-                    </div>
+                  <div className="px-2 pt-1 pb-0.5 text-micro text-muted-foreground">{t.agentsGroup}</div>
+                  {t.actors.map((candidate, i) => (
+                    <CoachMark
+                      key={candidate.name}
+                      active={i === 0}
+                      side="right"
+                      ringClassName="rounded-md"
+                      className="flex w-full"
+                    >
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={i === actorIndex}
+                        disabled={i !== 0}
+                        onClick={() => pick(i)}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-body hover:bg-accent disabled:opacity-50 disabled:hover:bg-transparent"
+                      >
+                        <ActorAvatar actor={candidate} />
+                        <span className="min-w-0 truncate">{candidate.name}</span>
+                      </button>
+                    </CoachMark>
                   ))}
                 </div>
               )}
@@ -525,14 +506,5 @@ export function IssueDraftDemo() {
 }
 
 function ActorAvatar({ actor }: { actor: Actor }) {
-  return actor.squad ? (
-    <span
-      aria-hidden
-      className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-foreground"
-    >
-      <Users className="size-3" />
-    </span>
-  ) : (
-    <DemoAvatar name={actor.name} agent />
-  );
+  return <DemoAvatar name={actor.name} agent />;
 }

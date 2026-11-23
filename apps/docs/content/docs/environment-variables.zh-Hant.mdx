@@ -121,6 +121,15 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 
 白名單的準確判斷順序見[登入與註冊](/auth-setup#註冊範圍控制)。
 
+### 預共享權杖
+
+一組固定密鑰，讓客戶端直接以某個帳號登入，不需要驗證碼，也不需要 Google。[Desktop](/desktop-app#免登入直接進入)在設定檔設定了 `authToken` 時會傳送它；CLI 與 daemon 接受把它填在設定的 `token` 欄位中。
+
+| 變數 | 預設值 | 說明 |
+|---|---|---|
+| `MULTICA_AUTH_TOKEN` | 空 | 在所有接受個人存取權杖的地方都被接受：`/api/**` 與 WebSocket 端點。未設定則關閉 |
+| `MULTICA_AUTH_TOKEN_EMAIL` | 空 | 權杖所屬帳號的信箱。設定了 `MULTICA_AUTH_TOKEN` 時必填，否則伺服器會記錄一則錯誤並拒絕該權杖。帳號還不存在時，啟動時會建立它並建立第一個工作區 |
+
 ## 附件儲存
 
 沒有設定 `S3_BUCKET` 時，Multica 使用本地磁碟。
@@ -198,7 +207,7 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 
 不配置 `GITHUB_APP_ID` 和私鑰時，PR 仍會正常關聯、映象，並在合併後改狀態，但卡片上不顯示 CI 與可合併狀態，"從 GitHub 選擇"倉庫入口也會禁用。
 
-配置步驟見 [GitHub 整合](/github-integration#自託管配置)、[飛書 Bot](/lark-bot-integration#自託管配置)、[Slack Bot](/slack-bot-integration#自託管配置)和 [Telegram Bot](/telegram-bot-integration#自託管配置)。
+配置步驟見 [GitHub 整合](/github-integration#自託管配置)。
 
 ## 服務端 LLM
 

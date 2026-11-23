@@ -47,7 +47,7 @@ describe("isIssueViewModified", () => {
 
   it("round-trips a negated view without reporting it modified", () => {
     const negatedView = {
-      query: { statusFilters: ["done"], negatedFilters: ["status"], relationFilters: ["assigned"] },
+      query: { statusFilters: ["done"], negatedFilters: ["status"], relationFilters: ["created"] },
       display: {},
     };
     const store = liveStateFor(negatedView);
@@ -55,7 +55,7 @@ describe("isIssueViewModified", () => {
     expect(isIssueViewModified(negatedView, store.getState()).filters).toBe(false);
     expect(issueViewDefinitionFromState(store.getState()).query).toMatchObject({
       negatedFilters: ["status"],
-      relationFilters: ["assigned"],
+      relationFilters: ["created"],
     });
   });
 });

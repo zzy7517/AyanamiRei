@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Users } from "@multica/ui/icons";
+import { Sparkles } from "@multica/ui/icons";
 import { renderWithI18n } from "../test/i18n";
 import { FeatureIntro, FeatureIntroCarousel } from "./feature-intro";
 
@@ -14,15 +14,15 @@ const SLIDES = [
 function renderIntro(locale: "en" | "zh-Hans" = "en") {
   return renderWithI18n(
     <FeatureIntro
-      icon={Users}
-      label="Squads"
-      title="Work as a team"
+      icon={Sparkles}
+      label="Skills"
+      title="Build a shared library"
       description="Explains the feature."
-      action={<button type="button">New squad</button>}
-      docs="squads"
-      columns={["Name", "Leader"]}
+      action={<button type="button">New skill</button>}
+      docs="skills"
+      columns={["Name", "Description"]}
     >
-      <FeatureIntroCarousel label="Work as a team" slides={SLIDES} />
+      <FeatureIntroCarousel label="Build a shared library" slides={SLIDES} />
     </FeatureIntro>,
     { locale },
   );
@@ -36,11 +36,13 @@ describe("FeatureIntro", () => {
   it("names the section by its headline and offers create plus docs", () => {
     renderIntro();
 
-    expect(screen.getByRole("region", { name: "Work as a team" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Work as a team" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New squad" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Build a shared library" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Build a shared library" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New skill" })).toBeInTheDocument();
     const docs = screen.getByRole("link", { name: "Read the docs" });
-    expect(docs).toHaveAttribute("href", "https://multica.ai/docs/squads");
+    expect(docs).toHaveAttribute("href", "https://multica.ai/docs/skills");
     expect(docs).toHaveAttribute("target", "_blank");
   });
 
@@ -48,7 +50,7 @@ describe("FeatureIntro", () => {
     renderIntro("zh-Hans");
     expect(screen.getByRole("link", { name: "阅读文档" })).toHaveAttribute(
       "href",
-      "https://multica.ai/docs/zh/squads",
+      "https://multica.ai/docs/zh/skills",
     );
   });
 
@@ -79,9 +81,9 @@ describe("FeatureIntro", () => {
 
   it("moves between slides with the arrow keys", () => {
     renderIntro();
-    const carousel = screen.getByRole("region", { name: "Work as a team" }).querySelector(
-      "[aria-roledescription='carousel']",
-    )!;
+    const carousel = screen
+      .getByRole("region", { name: "Build a shared library" })
+      .querySelector("[aria-roledescription='carousel']")!;
 
     fireEvent.keyDown(carousel, { key: "ArrowRight" });
     expect(slide("Second idea")).not.toHaveAttribute("aria-hidden", "true");

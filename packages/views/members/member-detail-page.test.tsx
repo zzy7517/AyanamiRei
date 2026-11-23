@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { actorIssuesViewStore } from "@multica/core/issues/stores/actor-issues-view-store";
 import type { Agent, MemberWithUser } from "@multica/core/types";
 import {
   agentListOptions,
@@ -92,7 +91,6 @@ function renderPage(userId = "user-1", members: MemberWithUser[] | null = [MEMBE
 describe("MemberDetailPage", () => {
   beforeEach(() => {
     surfaceProps.current = null;
-    actorIssuesViewStore.getState().setScope("assigned");
   });
 
   it("puts the breadcrumb and the issue tools in one header above a full-width list", () => {
@@ -114,7 +112,7 @@ describe("MemberDetailPage", () => {
       type: "actor",
       actorType: "member",
       actorId: "user-1",
-      relation: "assigned",
+      relation: "created",
     });
   });
 
@@ -131,16 +129,6 @@ describe("MemberDetailPage", () => {
       "/acme/agents/agent-1",
     );
     expect(screen.queryByText("Retired")).not.toBeInTheDocument();
-  });
-
-  it("counts the Created relation as a filter and resets it", () => {
-    actorIssuesViewStore.getState().setScope("created");
-    renderPage();
-
-    const header = screen.getByRole("banner");
-    expect(within(header).getByRole("button", { name: "1 filter" })).toBeInTheDocument();
-    fireEvent.click(within(header).getByRole("button", { name: "Reset" }));
-    expect(actorIssuesViewStore.getState().scope).toBe("assigned");
   });
 
   it("shows not-found in the body under the Members breadcrumb", () => {

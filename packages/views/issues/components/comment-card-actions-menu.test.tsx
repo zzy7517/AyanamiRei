@@ -5,15 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { TimelineEntry } from "@multica/core/types";
 import { renderWithI18n } from "../../test/i18n";
 
-// Comment "more actions" menu layout, in four groups: respond (Reply, Add
-// reaction, Edit), act on the thread (Resolve, Create sub-issue), share (Copy,
-// Copy link), and Delete alone at the bottom. Edit and Delete only show on
-// comments the viewer may change.
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
+// Comment "more actions" menu layout, in four groups: respond (Reply, Edit),
+// act on the thread (Resolve, Create sub-issue), share (Copy, Copy link), and
+// Delete alone at the bottom. Edit and Delete only show on comments the
+// viewer may change.
 vi.mock("@multica/core/api", () => ({
   api: { uploadFile: vi.fn() },
   dispatchReasonCode: () => undefined,
@@ -70,7 +65,6 @@ function comment(
     content: `body ${id}`,
     parent_id: parentId,
     comment_type: "comment",
-    reactions: [],
     attachments: [],
     created_at: "2026-09-11T07:00:00Z",
     updated_at: "2026-09-11T07:00:00Z",
@@ -94,7 +88,6 @@ function renderThread(
         onReply={vi.fn().mockResolvedValue(true)}
         onEdit={vi.fn().mockResolvedValue(undefined)}
         onDelete={vi.fn()}
-        onToggleReaction={vi.fn()}
         onCopyLink={vi.fn()}
         onCreateSubIssue={canCreateSubIssue ? vi.fn() : undefined}
         onResolveToggle={resolvable ? vi.fn() : undefined}
@@ -123,7 +116,6 @@ describe("CommentCard — actions menu layout", () => {
 
     expect(await openMenuLayout(0)).toEqual([
       "Reply",
-      "Add reaction",
       "Edit",
       SEPARATOR,
       "Resolve thread",
@@ -142,7 +134,6 @@ describe("CommentCard — actions menu layout", () => {
     // Menus render in order: root first, then the reply.
     expect(await openMenuLayout(1)).toEqual([
       "Reply",
-      "Add reaction",
       "Edit",
       SEPARATOR,
       "Resolve thread with comment",
@@ -160,7 +151,6 @@ describe("CommentCard — actions menu layout", () => {
 
     expect(await openMenuLayout(0)).toEqual([
       "Reply",
-      "Add reaction",
       SEPARATOR,
       "Resolve thread",
       "Create sub-issue from here",
@@ -170,14 +160,11 @@ describe("CommentCard — actions menu layout", () => {
     ]);
   });
 
-  // A guest (MUL-9420) is never a moderator and cannot create issues, so the
-  // issue page passes canModerate=false and no onCreateSubIssue.
-  it("gives a guest Edit and Delete on its own comment, without Create sub-issue", async () => {
+  it("drops Create sub-issue from the author's menu when no handler is passed", async () => {
     renderThread(comment("root", null), [], { canCreateSubIssue: false });
 
     expect(await openMenuLayout(0)).toEqual([
       "Reply",
-      "Add reaction",
       "Edit",
       SEPARATOR,
       "Resolve thread",
@@ -189,28 +176,11 @@ describe("CommentCard — actions menu layout", () => {
     ]);
   });
 
-  it("gives a guest no Edit or Delete on another member's comment", async () => {
-    renderThread(comment("root", null, { actor_type: "member", actor_id: "user-2" }), [], {
-      canCreateSubIssue: false,
-    });
-
-    expect(await openMenuLayout(0)).toEqual([
-      "Reply",
-      "Add reaction",
-      SEPARATOR,
-      "Resolve thread",
-      SEPARATOR,
-      "Copy",
-      "Copy link",
-    ]);
-  });
-
   it("keeps Create sub-issue when the thread cannot be resolved", async () => {
     renderThread(comment("root", null, agentAuthor), [], { resolvable: false });
 
     expect(await openMenuLayout(0)).toEqual([
       "Reply",
-      "Add reaction",
       SEPARATOR,
       "Create sub-issue from here",
       SEPARATOR,
@@ -232,7 +202,6 @@ describe("CommentCard — right-click", () => {
     const menu = await screen.findByRole("menu");
     expect(menuItems(menu)).toEqual([
       "Reply",
-      "Add reaction",
       "Edit",
       "Resolve thread",
       "Create sub-issue from here",
@@ -260,7 +229,6 @@ describe("CommentCard — menus opened inside a comment", () => {
     expect(scope.submenu?.label).toBe("Comment actions");
     expect(scope.submenu?.groups.flat().map((action) => action.label)).toEqual([
       "Reply",
-      "Add reaction",
       "Edit",
       "Resolve thread with comment",
       "Create sub-issue from here",

@@ -3,9 +3,9 @@
  *
  * Three chip kinds share the same capsule shape (icon + name + remove ×):
  *
- *   - mention  → `@<name>` (or `@all` for the workspace-wide pick). Tap is a
- *                no-op; only the × button removes. Drives the comment's
- *                mention markdown header on submit.
+ *   - mention  → `@<name>` for an agent, or the identifier for an issue.
+ *                Tap is a no-op; only the × button removes. Drives the
+ *                comment's mention markdown header on submit.
  *   - image    → filename + image icon. Tap opens the lightbox using the
  *                LOCAL file:// uri so completed and uploading items both
  *                preview without waiting for the server URL.
@@ -37,11 +37,11 @@ import { useT } from "@/lib/i18n";
 
 /** Mention chip data — composer-local state. No store, no cross-route
  *  sharing. The composer owns the array and passes it in. */
-export type MentionChipType = "member" | "agent" | "squad" | "all" | "issue";
+export type MentionChipType = "agent" | "issue";
 
 export interface MentionChip {
   type: MentionChipType;
-  /** UUID for member/agent/squad/issue; literal "all" for @all. */
+  /** UUID for agent/issue. */
   id: string;
   /** Display name without leading `@`. For type "issue" this stores the
    *  human identifier (e.g. "MUL-123"), which is what the chip + the
@@ -134,14 +134,9 @@ function MentionChipView({
   const { colorScheme } = useColorScheme();
   const theme = THEME[colorScheme];
 
-  // Icon picks: @all → people; issue → git-branch (matches web's status icon
-  // styling for issue mentions); else single-person glyph.
-  const iconName =
-    mention.type === "all"
-      ? "people"
-      : mention.type === "issue"
-        ? "git-branch-outline"
-        : "person";
+  // Icon picks: issue → git-branch (matches web's status icon styling for
+  // issue mentions); else a single-person glyph.
+  const iconName = mention.type === "issue" ? "git-branch-outline" : "person";
 
   // Issue chips show the bare identifier (e.g. "MUL-123") — no leading @.
   // Mirrors how the serialized markdown link renders on web/desktop.

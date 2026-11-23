@@ -21,6 +21,7 @@ export interface TimelineEntry {
   comment_type?: string;
   /** Set only on comments a quick action produced (MUL-5465). Unforgeable. */
   quick_action_id?: string | null;
+  /** Not served any more; apps/mobile still reads it. */
   reactions?: Reaction[];
   attachments?: Attachment[];
   resolved_at?: string | null;

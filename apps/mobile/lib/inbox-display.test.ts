@@ -5,7 +5,6 @@ import {
   getAutopilotQuotaBody,
   getInboxDisplayTitle,
   getInboxNavigationTarget,
-  getInboxNoticeBody,
   resolveTimelineHighlight,
 } from "./inbox-display";
 
@@ -175,33 +174,15 @@ describe("getAutopilotQuotaBody", () => {
   });
 });
 
-describe("getInboxNoticeBody", () => {
-  const joined = (details: InboxItem["details"]) =>
-    item({
-      issue_id: null,
-      type: "project_owner_joined",
-      title: "Secret Plan",
-      body: "Server fallback",
-      details,
-    });
+describe("issue-less notices", () => {
+  it("keeps the server body of notices without facts to rewrite", () => {
+    const notice = item({ issue_id: null, type: "autopilot_paused", body: "Paused" });
 
-  it("names the workspace owner who joined a private project", () => {
-    const notice = joined({ project_id: "p1", joined_by: "Grace" });
-
-    expect(getInboxNoticeBody(notice)).toContain("Grace is a workspace owner");
-    expect(getInboxDisplayTitle(notice)).toBe("Secret Plan");
+    expect(getAutopilotQuotaBody(notice)).toBe("Paused");
+    expect(getInboxDisplayTitle(notice)).toBe(notice.title);
     expect(getInboxNavigationTarget(notice, "acme", "history-1")).toEqual({
       pathname: "/[workspace]/inbox/[id]",
       params: { workspace: "acme", id: "inbox-1" },
     });
-  });
-
-  it("keeps the server body when the name is missing, and other notices as they were", () => {
-    expect(getInboxNoticeBody(joined(null))).toBe("Server fallback");
-    expect(
-      getInboxNoticeBody(
-        item({ issue_id: null, type: "autopilot_paused", body: "Paused" }),
-      ),
-    ).toBe("Paused");
   });
 });

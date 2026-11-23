@@ -153,8 +153,8 @@ describe("useUpdateIssue — optimistic move keeps every bucketed board in sync"
   const projectFilter = { project_id: "p1" };
   const wsKey = issueKeys.listSorted(WS_ID, sort);
   const inboxKey = inboxKeys.list(WS_ID);
-  // My-Issues AND the Project board both ride this myList cache; a move that
-  // only patched the workspace cache snaps back on those boards.
+  // Scoped boards such as the Project board ride this myList cache; a move
+  // that only patched the workspace cache snaps back on those boards.
   const myKey = issueKeys.myListSorted(WS_ID, myScope, myFilter, sort);
   const projectKey = issueKeys.myListSorted(WS_ID, projectScope, projectFilter, sort);
 
@@ -1310,7 +1310,6 @@ describe("comment mutations — owner revision and last activity", () => {
         content: "before",
         parent_id: null,
         comment_type: "comment",
-        reactions: [],
         attachments: [],
         created_at: "2026-01-01T00:00:00Z",
         updated_at: "2026-01-01T00:00:00Z",
@@ -1465,7 +1464,6 @@ describe("useResolveComment", () => {
       content: id,
       parent_id: parentId,
       comment_type: "comment",
-      reactions: [],
       attachments: [],
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
@@ -1586,7 +1584,6 @@ describe("useCreateComment — sibling caches under a shared key prefix", () => 
         content: "hello",
         type: "comment",
         parent_id: null,
-        reactions: [],
         attachments: [],
         created_at: "2026-08-19T00:00:00Z",
         updated_at: "2026-08-19T00:00:00Z",
@@ -1682,10 +1679,10 @@ describe("useUpdateIssue — star prompt moment", () => {
     expect(useStarPromptStore.getState().moment).toMatchObject({ agentId: "agent-1" });
   });
 
-  it("ignores done issues owned by members and edits that leave status alone", async () => {
+  it("ignores done issues no agent owns and edits that leave status alone", async () => {
     await update(
       { id: "issue-1", status: "done" },
-      makeIssue(1, { status: "done", assignee_type: "member", assignee_id: "user-1" }),
+      makeIssue(1, { status: "done", assignee_type: null, assignee_id: null }),
     );
     await update(
       { id: "issue-2", title: "Renamed" },

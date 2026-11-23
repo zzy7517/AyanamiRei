@@ -71,8 +71,8 @@ describe("AppShellProvider", () => {
 
   it("gives panels to work, team and autopilots only", () => {
     const cases: [string, string | null, boolean][] = [
-      ["/acme/my-issues", "work", true],
-      ["/acme/squads/s-1", "team", true],
+      ["/acme/issues", "work", true],
+      ["/acme/agents/a-1", "team", true],
       ["/acme/autopilots", "autopilots", true],
       ["/acme/inbox", "work", true],
       ["/acme/chat", "chat", false],

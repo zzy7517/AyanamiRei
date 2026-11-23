@@ -42,8 +42,8 @@ describe("invalidateIssueOwnerProjections", () => {
     const issueId = "issue-1";
     const owner = { id: issueId, revision: 9 } as Issue;
     const other = { id: "issue-2", revision: 1 } as Issue;
-    const withOwner = issueKeys.myList(wsId, "assigned", { assignee_id: "user-1" });
-    const withoutOwner = issueKeys.myList(wsId, "created", { creator_id: "user-1" });
+    const withOwner = issueKeys.myList(wsId, { creator_id: "user-1" });
+    const withoutOwner = issueKeys.myList(wsId, { creator_id: "user-2" });
     qc.setQueryData<Issue>(issueKeys.detail(wsId, issueId), owner);
     qc.setQueryData<Issue[]>(withOwner, [owner]);
     qc.setQueryData<Issue[]>(withoutOwner, [other]);

@@ -16,17 +16,17 @@ import { SteerDemo } from "@/components/demos/steer-demo";
 | Best for | Making the agent own the whole issue | Having the agent handle the current comment |
 | Changes the assignee | Yes | No |
 | Changes the status | No | No |
-| Targets per action | One agent or squad | Multiple agents or squads |
+| Targets per action | One agent | Multiple agents |
 | Focus of the run | The whole issue | The triggering comment, plus comments merged in the same batch |
 
 Use [assignment](/assigning-issues) when the issue needs a clear owner; use an @-mention to bring an agent into the discussion temporarily.
 
 ## Trigger preview
 
-After you pick an agent or squad in the comment editor, a trigger preview appears under the input:
+After you pick an agent in the comment editor, a trigger preview appears under the input:
 
 - which agents will start working once you send;
-- whether each target comes from a direct @-mention, the issue assignee, or a squad leader;
+- whether each target comes from a direct @-mention or the issue assignee;
 - whether a target is unavailable, or you lack permission to run it.
 
 Unticking an agent skips this one trigger only. You don't need to delete its name from the comment, and the agent's Access is not changed.
@@ -41,9 +41,9 @@ A plain comment (containing no @ at all) is routed by discussion context:
 
 1. Replying to an agent's comment hands it to that agent.
 2. Replying inside a discussion an agent already participates in keeps that discussion's agent.
-3. A top-level comment that matches neither case goes to the issue's agent assignee; when the assignee is a squad, the leader handles it. A plain reply directly to a member does not fall back to the assignee; @-mention an agent or squad explicitly when you want one to join.
+3. A top-level comment that matches neither case goes to the issue's agent assignee. A plain reply directly to a member does not fall back to the assignee; @-mention an agent explicitly when you want one to join.
 
-When a comment explicitly @-mentions other targets (including members), the assignee fallback no longer applies.
+When a comment explicitly @-mentions another agent, the assignee fallback no longer applies.
 
 Replies stay with the target agent even while its runtime is offline or busy. Multica does not automatically start the issue assignee after a timeout. To involve another agent, explicitly @-mention it.
 
@@ -77,16 +77,8 @@ When one comment @-mentions several different agents, each agent gets its own ru
 
 ## Comments that don't trigger agents
 
-There are two ways:
-
-- Start the comment with `/note`: it's posted as a note between members and triggers no agent.
-- Use `@all`: it notifies every workspace member and switches off this comment's automatic trigger for the assignee.
-
+Start the comment with `/note`: it's posted as a note between members and triggers no agent.
 If the trigger preview still lists an agent, untick it before sending.
-
-<Callout type="info">
-`@all` does not include agents. Agents have no inbox; to put one to work, @-mention it explicitly, reply in its discussion, or assign the issue to it.
-</Callout>
 
 ## Access restrictions
 
@@ -102,4 +94,3 @@ Agents can @-mention other agents in their replies. When A @-mentions B and B @-
 
 - [Comments](/comments) — replies, resolving discussions, notifications, and subscriptions.
 - [Agents](/agents) — configure identity, Access, and runtimes.
-- [Squads](/squads) — have a leader coordinate multiple agents.

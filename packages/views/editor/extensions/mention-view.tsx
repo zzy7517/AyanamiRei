@@ -3,7 +3,7 @@
 /**
  * MentionView — NodeView for rendering @mentions inline in the editor.
  *
- * Member/agent mentions: plain "@Name" text with .mention class styling.
+ * Agent mentions: plain "@Name" text with .mention class styling.
  * Issue/project mentions render the same navigable chips as readonly content
  * (IssueMentionCard / ProjectMentionCard), so click behavior — plain click,
  * modifier click, middle click — cannot drift between an editing and a

@@ -124,7 +124,7 @@
     "field_name_placeholder": "코드 리뷰",
     "field_target": "실행자",
     "no_target": "에이전트 없음(댓글만 작성)",
-    "no_target_hint": "아무도 멘션하지 않고 메시지를 게시합니다.",
+    "no_target_hint": "에이전트를 멘션하지 않고 메시지를 게시합니다.",
     "field_prompt": "프롬프트",
     "field_prompt_placeholder": "이 태스크에 연결된 코드를 검토하고 정확성과 예외 상황을 중점적으로 확인하세요.",
     "prompt_hint": "작성한 그대로 전달됩니다. 에이전트는 태스크를 이미 읽을 수 있습니다.",
@@ -427,7 +427,7 @@
       },
       "unsubscribeArchiveInboxItem": {
         "label": "구독 해제 후 보관",
-        "description": "열린 알림의 태스크 구독을 해제하고 보관합니다. 나 또는 내 에이전트의 태스크가 아닐 때 사용할 수 있습니다."
+        "description": "열린 알림의 태스크 구독을 해제하고 보관합니다. 내 에이전트의 태스크가 아닐 때 사용할 수 있습니다."
       },
       "snoozeInboxItem": {
         "label": "알림 미루기",
@@ -457,10 +457,6 @@
         "label": "채팅으로 이동",
         "description": "워크스페이스 채팅을 엽니다."
       },
-      "goMyIssues": {
-        "label": "내 태스크로 이동",
-        "description": "나에게 할당된 태스크를 엽니다."
-      },
       "goIssues": {
         "label": "태스크로 이동",
         "description": "태스크 목록을 엽니다."
@@ -476,10 +472,6 @@
       "goAgents": {
         "label": "에이전트로 이동",
         "description": "에이전트 목록을 엽니다."
-      },
-      "goSquads": {
-        "label": "스쿼드로 이동",
-        "description": "스쿼드 목록을 엽니다."
       },
       "goUsage": {
         "label": "사용량으로 이동",
@@ -844,7 +836,7 @@
     },
     "others_issues": {
       "label": "다른 사람의 태스크",
-      "description": "다른 사람이나 그 사람의 에이전트에게 배정된 태스크 중 생성·댓글 작성 또는 멘션으로 팔로우 중인 항목입니다. 주요 업데이트에는 @멘션, 참여한 스레드의 답글, 그리고 \"상태 변경\"을 켠 경우 확인이 필요한 상태(검토 중, 막힘, 완료)가 포함됩니다.",
+      "description": "다른 사람이나 그 사람의 에이전트에게 배정된 태스크 중 생성·댓글 작성으로 팔로우 중인 항목입니다. 주요 업데이트에는 참여한 스레드의 답글, 그리고 \"상태 변경\"을 켠 경우 확인이 필요한 상태(검토 중, 막힘, 완료)가 포함됩니다.",
       "key_updates": "주요 업데이트만",
       "all": "모든 활동"
     },
@@ -900,14 +892,6 @@
       "comments": {
         "label": "댓글",
         "description": "팔로우 중인 태스크에 새 댓글이 달릴 때"
-      },
-      "mentions": {
-        "label": "멘션",
-        "description": "누군가 나를 @멘션할 때(@all, @squad 포함)"
-      },
-      "reactions": {
-        "label": "반응",
-        "description": "내가 만든 태스크나 내가 쓴 댓글에 누군가 반응할 때"
       },
       "updates": {
         "label": "우선순위 및 마감일",
@@ -1390,40 +1374,15 @@
       "member": {
         "label": "멤버",
         "description": "태스크 생성 및 작업"
-      },
-      "guest": {
-        "label": "게스트",
-        "description": "공유된 프로젝트만 보고 댓글을 남길 수 있습니다. 에이전트는 실행할 수 없습니다."
       }
     },
-    "share_links_create_title": "공유 링크 만들기",
-    "share_links_create_button": "생성",
-    "share_links_creating": "생성 중...",
-    "share_link_uses": "{{used}} / {{max}}회 사용",
-    "share_link_expires": "만료 {{date}}",
-    "share_link_copy_tooltip": "링크 복사",
-    "share_link_revoke_tooltip": "링크 취소",
-    "toast_share_link_created": "공유 링크가 생성되었습니다",
-    "toast_share_link_failed": "공유 링크 생성에 실패했습니다",
-    "toast_share_link_revoked": "공유 링크가 취소되었습니다",
-    "toast_share_link_revoke_failed": "공유 링크 취소에 실패했습니다",
-    "toast_share_link_copied": "링크가 복사되었습니다",
-    "toast_share_link_copy_failed": "링크 복사에 실패했습니다",
-    "expiry_24h": "24시간",
-    "expiry_7d": "7일",
-    "expiry_30d": "30일",
-    "expiry_never": "무기한",
     "members_label": "멤버",
     "pending_label": "대기 중인 초대",
-    "share_links_label": "공유 링크",
-    "share_links_description": "링크가 있는 사람은 만료되거나 취소될 때까지 선택한 역할로 참여할 수 있습니다.",
     "search_placeholder": "이름 또는 이메일 검색",
     "no_results": "일치하는 멤버가 없습니다.",
     "no_invitations": "대기 중인 초대가 없습니다.",
-    "no_share_links": "아직 공유 링크가 없습니다.",
     "email_label": "이메일",
     "role_label": "역할",
-    "expiry_label": "만료",
     "you": "나",
     "joined": "{{date}} 참여",
     "member_actions": "{{name}} 작업",
@@ -1444,31 +1403,6 @@
     "toast_invite_check_unavailable": "기존 멤버와 초대를 확인하지 못했습니다. 잠시 후 다시 시도하세요.",
     "member_limit_full_description_billing": "워크스페이스 구독에 조치가 필요합니다. 결제 및 요금제에서 구독을 복구하면 멤버를 추가할 수 있습니다. 먼저 멤버를 제거할 수도 있습니다.",
     "open_billing": "결제 및 요금제 열기",
-    "guest_free_tag": "무료 · 좌석 없음",
-    "guest_projects_label": "접근할 수 있는 프로젝트",
-    "guest_projects_add": "프로젝트 추가…",
-    "guest_projects_remove": "{{project}} 제거",
-    "guest_projects_hint": "게스트는 다른 프로젝트, 에이전트, 자동화, 설정을 볼 수 없습니다.",
-    "invite_guest_button": "게스트 초대",
-    "all_label": "전체",
-    "guests_label": "게스트",
-    "guest_count": "게스트 {{count}}명",
-    "list_separator": ", ",
-    "takes_seat": "좌석 1개 사용",
-    "frees_seat": "좌석 반환",
-    "make_member": "멤버로 전환",
-    "make_member_title": "{{name}} 님을 멤버로 전환할까요?",
-    "make_member_description": "{{name}} 님이 워크스페이스 전체를 보고 에이전트를 실행할 수 있습니다. 좌석 1개를 사용합니다.",
-    "make_member_seat_description": "{{name}} 님이 워크스페이스 전체를 보고 에이전트를 실행할 수 있습니다. 구매한 좌석을 모두 사용 중이라 1개를 추가 구매합니다.",
-    "purchase_seat_and_make_member": "좌석 구매 후 멤버로 전환",
-    "making_member": "멤버로 전환 중…",
-    "make_guest_title": "{{name}} 님을 게스트로 전환할까요?",
-    "make_guest_description": "{{name}} 님은 아래 프로젝트만 볼 수 있고 좌석이 반환됩니다. 에이전트, 자동화, 런타임 접근은 회수됩니다.",
-    "make_guest_button": "게스트로 전환",
-    "manage_projects": "접근 가능한 프로젝트 관리",
-    "manage_projects_title": "{{name}} 님이 접근할 수 있는 프로젝트",
-    "save_projects": "저장",
-    "toast_projects_updated": "프로젝트를 업데이트했습니다",
     "revoke_invitation_confirm": "초대 취소",
     "remove_member_confirm": "멤버 제거"
   },
@@ -1758,7 +1692,13 @@
   "code": {
     "hosting_title": "코드 호스팅",
     "pr_linking_title": "풀 리퀘스트와 태스크",
-    "github_actions": "GitHub 작업"
+    "github_actions": "GitHub 작업",
+    "task_trees_title": "Worktree",
+    "task_tree_retention": {
+      "label": "완료된 태스크의 worktree 보관 기간",
+      "unit": "일",
+      "description": "이후 worktree는 머신에서 제거됩니다. 브랜치는 유지됩니다."
+    }
   },
   "channels": {
     "breadcrumb": "탐색 경로",
@@ -2110,26 +2050,5 @@
       "retry_failed": "이 녹음을 변환하지 못했습니다",
       "show_more": "더 보기"
     }
-  },
-  "private_projects": {
-    "title": "비공개 프로젝트",
-    "description": "비공개 프로젝트는 해당 프로젝트 멤버만 열 수 있습니다. 워크스페이스 소유자는 각 프로젝트의 멤버를 확인하고, 개입이 필요할 때 자신을 추가할 수 있습니다.",
-    "empty": "이 워크스페이스에는 비공개 프로젝트가 없습니다.",
-    "load_failed": "비공개 프로젝트를 불러오지 못했습니다.",
-    "retry": "다시 시도",
-    "no_members": "멤버 없음",
-    "lead_name": "{{name}}(리드)",
-    "more_members": "외 {{count}}명",
-    "archived": "보관됨",
-    "member": "참여 중",
-    "open": "열기",
-    "join": "참여",
-    "join_title": "“{{title}}” 프로젝트에 참여할까요?",
-    "join_description": "이 프로젝트의 멤버 목록에 추가되며 태스크, 댓글, 첨부 파일을 볼 수 있게 됩니다. 현재 멤버에게 알림이 전송됩니다.",
-    "join_description_empty": "이 프로젝트에는 멤버가 없습니다. 참여하면 유일한 멤버가 되며 태스크, 댓글, 첨부 파일을 볼 수 있게 됩니다.",
-    "join_confirm": "프로젝트 참여",
-    "cancel": "취소",
-    "toast_joined": "{{title}}에 참여했습니다",
-    "toast_failed": "프로젝트에 참여하지 못했습니다."
   }
 }

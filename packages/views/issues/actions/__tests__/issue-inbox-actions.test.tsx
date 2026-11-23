@@ -27,9 +27,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), dismiss: vi.fn() } }));
-vi.mock("@multica/core/hooks", () => ({ useWorkspaceId: () => "ws" }));
-vi.mock("@multica/core/permissions", () => ({ useIsGuest: () => false }));
-vi.mock("@multica/core/paths", async (importOriginal) => {
+vi.mock("@multica/core/hooks", () => ({ useWorkspaceId: () => "ws" }));vi.mock("@multica/core/paths", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@multica/core/paths")>();
   return { ...actual, useWorkspacePaths: () => actual.paths.workspace("acme") };
 });
@@ -83,7 +81,7 @@ function setup({
   rows?: InboxItem[];
   issueId?: string;
   snoozed?: SnoozedInboxIssue[];
-  /** The viewer follows the issue, and someone else owns it. */
+  /** The viewer follows the issue, which is assigned to an agent they do not own. */
   theirs?: boolean;
   issueActions?: ReactNode;
 } = {}) {
@@ -117,8 +115,8 @@ function setup({
   if (theirs) {
     qc.setQueryData(issueDetailOptions("ws", issueId).queryKey, {
       id: issueId,
-      assignee_type: "member",
-      assignee_id: "member-other",
+      assignee_type: "agent",
+      assignee_id: "agent-other",
     } as Issue);
     qc.setQueryData(agentListOptions("ws").queryKey, []);
     qc.setQueryData(issueSubscribersOptions(issueId).queryKey, [

@@ -106,10 +106,6 @@ vi.mock("@multica/core/workspace/queries", () => ({
     queryKey: ["workspaces", "ws-1", "agents"],
     queryFn: () => mockApiObj.listAgents(),
   }),
-  squadListOptions: () => ({
-    queryKey: ["workspaces", "ws-1", "squads"],
-    queryFn: () => Promise.resolve([]),
-  }),
   workspaceListOptions: () => ({
     queryKey: ["workspaces"],
     queryFn: () => Promise.resolve([{ id: "ws-1", name: "Test WS", slug: "test" }]),
@@ -362,12 +358,7 @@ const mockApiObj = vi.hoisted(() => ({
   listProperties: vi.fn().mockResolvedValue({ properties: [], total: 0 }),
   listIssues: vi.fn().mockResolvedValue({ issues: [], total: 0 }),
   uploadFile: vi.fn(),
-  listIssueReactions: vi.fn().mockResolvedValue([]),
-  addIssueReaction: vi.fn(),
-  removeIssueReaction: vi.fn(),
   listAttachments: vi.fn().mockResolvedValue([]),
-  addCommentReaction: vi.fn(),
-  removeCommentReaction: vi.fn(),
   listMembers: vi.fn().mockResolvedValue([{ user_id: "user-1", name: "Test User", email: "test@test.com", role: "admin" }]),
   listAgents: vi.fn().mockResolvedValue([]),
   getAgent: vi.fn().mockResolvedValue(null),
@@ -680,8 +671,8 @@ const mockIssue: Issue = {
   description: "Add JWT auth to the backend",
   status: "in_progress",
   priority: "high",
-  assignee_type: "member",
-  assignee_id: "user-1",
+  assignee_type: null,
+  assignee_id: null,
   creator_type: "member",
   creator_id: "user-1",
   parent_issue_id: null,
@@ -845,7 +836,6 @@ describe("IssueDetail (shared)", () => {
     mockApiObj.listTimeline.mockResolvedValue(mockTimeline);
     mockApiObj.listAttachments.mockResolvedValue([]);
     mockApiObj.listComments.mockResolvedValue([]);
-    mockApiObj.listIssueReactions.mockResolvedValue([]);
     mockApiObj.listIssueSubscribers.mockResolvedValue([]);
     mockApiObj.listChildIssues.mockResolvedValue({ issues: [] });
     mockApiObj.getChildIssueProgress.mockResolvedValue({ progress: [] });
@@ -995,7 +985,7 @@ describe("IssueDetail (shared)", () => {
     const root = {
       id: "older-root", issue_id: "issue-1", author_type: "agent", author_id: "agent-1",
       content: "Historical image discussion", type: "comment", parent_id: null,
-      created_at: image.created_at, updated_at: image.created_at, reactions: [], attachments: [],
+      created_at: image.created_at, updated_at: image.created_at, attachments: [],
       resolved_at: null, resolved_by_type: null, resolved_by_id: null,
     };
     mockApiObj.listComments.mockResolvedValue([root, {

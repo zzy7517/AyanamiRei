@@ -14,7 +14,7 @@ export default function NewIssueAssigneePickerRoute() {
   const { t } = useT("issues");
   const assignee = useNewIssueDraftStore((s) => s.assignee);
   const setAssignee = useNewIssueDraftStore((s) => s.setAssignee);
-  const query = useNativeSearchBar(t("picker.search_people"), { autoFocus: true });
+  const query = useNativeSearchBar(t("picker.search_agents"), { autoFocus: true });
 
   return (
     <AssigneePickerBody

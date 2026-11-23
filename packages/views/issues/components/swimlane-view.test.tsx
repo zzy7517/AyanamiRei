@@ -66,7 +66,6 @@ const { mockActorNameResult } = vi.hoisted(() => ({
     getActorAvatarUrl: () => null,
     getMemberName: () => "Mock Member",
     getAgentName: () => "Mock Agent",
-    getSquadName: () => "Mock Squad",
   },
 }));
 vi.mock("@multica/core/workspace/hooks", () => ({
@@ -274,8 +273,8 @@ const mockIssues: Issue[] = [
     description: "Child description",
     status: "in_progress",
     priority: "medium",
-    assignee_type: "member",
-    assignee_id: "user-1",
+    assignee_type: "agent",
+    assignee_id: "agent-1",
     creator_type: "member",
     creator_id: "user-1",
     parent_issue_id: "parent-1",
@@ -565,8 +564,8 @@ describe("SwimLaneView", () => {
     description: null,
     status: "todo",
     priority: "medium",
-    assignee_type: "member",
-    assignee_id: "user-1",
+    assignee_type: "agent",
+    assignee_id: "agent-1",
     creator_type: "member",
     creator_id: "user-1",
     parent_issue_id: "missing-parent",
@@ -1276,8 +1275,8 @@ describe("SwimLaneView", () => {
       id: "issue-x",
       identifier: "PROJ-200",
       title: "Issue X",
-      assignee_type: "member",
-      assignee_id: "user-1",
+      assignee_type: "agent",
+      assignee_id: "agent-1",
       parent_issue_id: null,
       project_id: null,
       status: "todo",
@@ -1330,7 +1329,7 @@ describe("SwimLaneView", () => {
       <SwimLaneView issues={assigneeIssues} onMoveIssue={mockOnMoveIssue} />,
     );
 
-    const target = "swim:assignee:member:user-1:in_progress";
+    const target = "swim:assignee:agent:agent-1:in_progress";
     act(() => {
       lastOnDragOver({ active: { id: "issue-z" }, over: { id: target } });
     });
@@ -1341,8 +1340,8 @@ describe("SwimLaneView", () => {
     expect(mockOnMoveIssue).toHaveBeenCalledWith(
       "issue-z",
       expect.objectContaining({
-        assignee_type: "member",
-        assignee_id: "user-1",
+        assignee_type: "agent",
+        assignee_id: "agent-1",
         status: "in_progress",
       }),
       expect.any(Function),

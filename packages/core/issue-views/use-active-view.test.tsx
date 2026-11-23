@@ -38,7 +38,7 @@ describe("useActiveIssueView and the built-in filtered views", () => {
   });
 
   it.each([
-    ["my_work", { relationFilters: ["assigned", "my_agents"] }],
+    ["my_work", { relationFilters: ["my_agents"] }],
     ["working", { agentRunningFilter: true }],
     ["subscribed", { relationFilters: ["subscribed"] }],
   ])("opens %s on the workspace page without a saved view behind it", async (id, query) => {

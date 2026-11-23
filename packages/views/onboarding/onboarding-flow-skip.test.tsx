@@ -145,9 +145,8 @@ describe("OnboardingFlow — skipping runtime setup", () => {
     expect(body).toMatchObject({
       title: "Connect a runtime to start with Mika",
       status: "in_progress",
-      assignee_type: "member",
-      assignee_id: "u-1",
     });
+    expect(body).not.toHaveProperty("assignee_id");
     expect(mockCompleteOnboarding).toHaveBeenCalledWith(
       "runtime_skipped",
       "ws-new",

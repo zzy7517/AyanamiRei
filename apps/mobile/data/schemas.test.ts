@@ -2,7 +2,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseWithFallback } from "@/lib/parse-response";
 import {
-  MemberListSchema,
   MemberWithUserSchema,
   ProjectSchema,
   EMPTY_TASK_MESSAGE_LIST,
@@ -70,14 +69,10 @@ describe("TaskMessageListSchema", () => {
 describe("MemberWithUserSchema role", () => {
   const member = {
     id: "m-1", workspace_id: "ws-1", user_id: "u-1", created_at: "2026-01-01T00:00:00Z",
-    name: "Guest", email: "guest@example.com", avatar_url: null,
+    name: "Ada Lovelace", email: "ada@example.com", avatar_url: null,
   };
-  it.each(["owner", "admin", "member", "guest"] as const)("keeps the %s role", (role) => {
+  it.each(["owner", "admin", "member"] as const)("keeps the %s role", (role) => {
     expect(MemberWithUserSchema.parse({ ...member, role }).role).toBe(role);
-  });
-  it("does not fold a guest into a member (MUL-9420)", () => {
-    const [parsed] = MemberListSchema.parse([{ ...member, role: "guest", project_ids: ["p-1"] }]);
-    expect(parsed).toMatchObject({ role: "guest", project_ids: ["p-1"] });
   });
   it("still falls back to member for an unknown role", () => {
     expect(MemberWithUserSchema.parse({ ...member, role: "superuser" }).role).toBe("member");

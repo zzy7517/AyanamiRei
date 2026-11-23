@@ -1,0 +1,30 @@
+{
+  "directory_label": "目錄",
+  "directory_placeholder": "/home/you/project",
+  "directory_required": "請輸入絕對路徑。",
+  "open": "開啟",
+  "end_session": "結束工作階段",
+  "agent_terminal": "AI 代理終端",
+  "restart": "重新啟動",
+  "status": {
+    "connecting": "正在連線…",
+    "reconnecting": "正在重新連線…",
+    "ended": "工作階段已結束",
+    "ended_with_code": "工作階段已結束，結束代碼為 {{code}}",
+    "ended_by_signal": "工作階段已由訊號 {{signal}} 終止",
+    "reattached": "已重新連接。在程式再次輸出之前，畫面保持空白。"
+  },
+  "errors": {
+    "unavailable": "此伺服器未提供終端。",
+    "flag_disabled": "此伺服器未啟用終端。",
+    "bad_request": "伺服器拒絕了該請求。",
+    "terminal_root_unconfigured": "該機器尚未設定終端目錄。",
+    "path_not_allowed": "無法在該目錄開啟終端。",
+    "daemon_unavailable": "該機器未連線。",
+    "not_found": "該終端已不再執行。",
+    "unsupported_platform": "該機器的系統不支援終端。",
+    "tree_not_ready": "worktree 尚未建立完成。",
+    "runtime_offline": "建立該 worktree 的機器未連線。",
+    "internal": "發生未知錯誤。"
+  }
+}

@@ -33,7 +33,6 @@ const apiListQuickActions = vi.hoisted(() => vi.fn());
 const apiRenderQuickAction = vi.hoisted(() => vi.fn());
 const apiGetIssue = vi.hoisted(() => vi.fn());
 const apiListAgents = vi.hoisted(() => vi.fn());
-const apiListSquads = vi.hoisted(() => vi.fn());
 const apiListMembers = vi.hoisted(() => vi.fn());
 const apiPreviewCommentTriggers = vi.hoisted(() => vi.fn());
 const apiListTasksByIssue = vi.hoisted(() => vi.fn());
@@ -66,11 +65,6 @@ const editorUploadSignal = vi.hoisted(
 // the uploader, which adopts it as the draft `clientUploadId`. Mocks must do
 // the same or the two records drift apart only in tests.
 let mockUploadIdSeq = 0;
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("@multica/core/api", () => ({
   api: {
     getBaseUrl: () => "https://api.example.test",
@@ -80,7 +74,6 @@ vi.mock("@multica/core/api", () => ({
     renderQuickAction: apiRenderQuickAction,
     getIssue: apiGetIssue,
     listAgents: apiListAgents,
-    listSquads: apiListSquads,
     listMembers: apiListMembers,
     previewCommentTriggers: apiPreviewCommentTriggers,
     listTasksByIssue: apiListTasksByIssue,
@@ -322,7 +315,6 @@ beforeEach(() => {
   apiRenderQuickAction.mockReset();
   apiGetIssue.mockReset().mockResolvedValue({ id: "issue-1", assignee_type: null, assignee_id: null });
   apiListAgents.mockReset().mockResolvedValue([]);
-  apiListSquads.mockReset().mockResolvedValue([]);
   apiListMembers.mockReset().mockResolvedValue([{ user_id: "user-1", role: "member", name: "User" }]);
   apiPreviewCommentTriggers.mockReset();
   apiListTasksByIssue.mockReset();
@@ -400,18 +392,15 @@ describe("quick action `/` menu", () => {
     timeline,
     parentId = "comment-1",
     targetMissing = false,
-    squads = [],
   }: {
     timeline: unknown[];
     parentId?: string;
     targetMissing?: boolean;
-    squads?: unknown[];
   }) {
     const agentIds = [
       "cccccccc-cccc-cccc-cccc-cccccccccccc",
       "parent-agent",
       "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-      "root-leader",
     ];
     apiGetIssue.mockResolvedValue({
       id: "issue-1",
@@ -427,7 +416,6 @@ describe("quick action `/` menu", () => {
       invocation_targets: [{ target_type: "workspace", target_id: null }],
       skills: [{ id: `${id}-skill`, name: id, description: "" }],
     })));
-    apiListSquads.mockResolvedValue(squads);
     const view = renderInWorkspace(
       <ReplyInput
         issueId="issue-1"
@@ -443,9 +431,6 @@ describe("quick action `/` menu", () => {
     await waitFor(() => {
       expect(view.queryClient.getQueryData(issueKeys.detail("ws-1", "issue-1"))).toBeDefined();
       expect(view.queryClient.getQueryData(workspaceKeys.agents("ws-1"))).toHaveLength(agentIds.length);
-      if (squads.length) {
-        expect(view.queryClient.getQueryData(workspaceKeys.squads("ws-1"))).toHaveLength(squads.length);
-      }
     });
     const editor = { state: { doc: { descendants: () => {} } } } as unknown as Editor;
     const ids = editorQuickActionMenu.last?.getSkills?.(editor).map((skill) => skill.id) ?? [];
@@ -543,31 +528,19 @@ describe("quick action `/` menu", () => {
       .toEqual(["parent-agent-skill"]);
   });
 
-  it.each([
-    {
-      name: "agent",
-      content: "[@Root](mention://agent/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa) [@Assignee](mention://agent/cccccccc-cccc-cccc-cccc-cccccccccccc)",
-      squads: [],
-      expected: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-skill",
-    },
-    {
-      name: "squad",
-      content: "[@Team](mention://squad/dddddddd-dddd-dddd-dddd-dddddddddddd) [@Assignee](mention://agent/cccccccc-cccc-cccc-cccc-cccccccccccc)",
-      squads: [{ id: "dddddddd-dddd-dddd-dddd-dddddddddddd", leader_id: "root-leader", archived_at: null }],
-      expected: "root-leader-skill",
-    },
-  ])("uses the first root $name mention in ReplyInput", async ({ content, squads, expected }) => {
+  it("uses the first root agent mention in ReplyInput", async () => {
     const root = {
       type: "comment",
       id: "root",
       actor_type: "member",
       actor_id: "user-2",
-      content,
+      content: "[@Root](mention://agent/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa) [@Assignee](mention://agent/cccccccc-cccc-cccc-cccc-cccccccccccc)",
       parent_id: null,
     };
     const reply = { ...root, id: "comment-1", content: "Reply", parent_id: root.id };
 
-    expect(await replySkillIds({ timeline: [root, reply], squads })).toEqual([expected]);
+    expect(await replySkillIds({ timeline: [root, reply] }))
+      .toEqual(["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa-skill"]);
   });
 
   it("keeps member-to-member ReplyInput threads silent", async () => {

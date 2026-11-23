@@ -47,8 +47,7 @@ const RESET_STATE = {
     },
     agent: {
       prompt: "",
-      actorType: undefined,
-      actorId: undefined,
+      agentId: undefined,
     },
     activeMode: "manual" as const,
   },
@@ -66,13 +65,13 @@ describe("issue draft store — last assignee", () => {
     const { setManual, setLastAssignee, clearDraft } =
       useIssueDraftStore.getState();
 
-    setManual({ title: "first", assigneeType: "member", assigneeId: "alice" });
-    setLastAssignee("member", "alice");
+    setManual({ title: "first", assigneeType: "agent", assigneeId: "alice" });
+    setLastAssignee("agent", "alice");
     clearDraft();
 
     const { draft } = useIssueDraftStore.getState();
     expect(draft.manual.title).toBe("");
-    expect(draft.manual.assigneeType).toBe("member");
+    expect(draft.manual.assigneeType).toBe("agent");
     expect(draft.manual.assigneeId).toBe("alice");
   });
 
@@ -95,7 +94,7 @@ describe("issue draft store — last assignee", () => {
     const store = useIssueDraftStore.getState();
     // "Create another" resets the form but carries the submitted status and
     // assignee into the next issue, so the reset itself is not user input.
-    store.setManual({ status: "in_progress", assigneeType: "member", assigneeId: "alice" });
+    store.setManual({ status: "in_progress", assigneeType: "agent", assigneeId: "alice" });
     store.beginBatchContinuation();
     expect(storedStatus()).toBe("todo");
 
@@ -235,7 +234,7 @@ describe("issue draft store — last assignee", () => {
   it("setLastAssignee(undefined) lets the user opt back out of a default", () => {
     const { setLastAssignee, clearDraft } = useIssueDraftStore.getState();
 
-    setLastAssignee("member", "alice");
+    setLastAssignee("agent", "alice");
     clearDraft();
     expect(useIssueDraftStore.getState().draft.manual.assigneeId).toBe("alice");
 
@@ -255,7 +254,7 @@ describe("issue draft store — keep-open batch continuation", () => {
   // writes the carried values, then marks the result as the baseline.
   function beginContinuation() {
     const store = useIssueDraftStore.getState();
-    store.setManual({ status: "in_progress", assigneeType: "member", assigneeId: "alice" });
+    store.setManual({ status: "in_progress", assigneeType: "agent", assigneeId: "alice" });
     store.beginBatchContinuation();
   }
 
@@ -327,7 +326,7 @@ describe("issue draft store — keep-open batch continuation", () => {
 
     const switching = useIssueDraftStore.getState();
     switching.setShared({ projectId: undefined, priority: "none", dueDate: null });
-    switching.setAgent({ actorType: "agent", actorId: "agent-1" });
+    switching.setAgent({ agentId: "agent-1" });
     switching.setActiveMode("agent");
 
     // The agent slot belongs to the other form, so filling it is not an edit of
@@ -406,7 +405,7 @@ describe("issue draft store — keep-open batch continuation", () => {
     // from the manual form and flips the mode — none of it a manual edit.
     const switching = useIssueDraftStore.getState();
     switching.setShared({ projectId: undefined, priority: "none", dueDate: null });
-    switching.setAgent({ prompt: "audit the flaky test", actorType: "agent", actorId: "agent-1" });
+    switching.setAgent({ prompt: "audit the flaky test", agentId: "agent-1" });
     switching.setActiveMode("agent");
 
     useIssueDraftStore.getState().endBatchContinuation();
@@ -415,7 +414,7 @@ describe("issue draft store — keep-open batch continuation", () => {
     // Only the inherited status is dropped; the agent side is left intact.
     expect(state.draft.manual.status).toBe("todo");
     expect(state.draft.agent.prompt).toBe("audit the flaky test");
-    expect(state.draft.agent.actorId).toBe("agent-1");
+    expect(state.draft.agent.agentId).toBe("agent-1");
     expect(state.draft.activeMode).toBe("agent");
     expect(state.batchContinuationBaseline).toBeUndefined();
   });
@@ -466,13 +465,13 @@ describe("issue draft store — mode switch preserves both sides", () => {
     setManual({ title: "Manual title", description: "Manual body" });
     setShared({ projectId: "project-1", priority: "high" });
     // Switching to agent seeds the agent slot but must not clear manual.
-    setAgent({ prompt: "Agent prompt", actorType: "agent", actorId: "agent-1" });
+    setAgent({ prompt: "Agent prompt", agentId: "agent-1" });
 
     const { draft } = useIssueDraftStore.getState();
     expect(draft.manual.title).toBe("Manual title");
     expect(draft.manual.description).toBe("Manual body");
     expect(draft.agent.prompt).toBe("Agent prompt");
-    expect(draft.agent.actorId).toBe("agent-1");
+    expect(draft.agent.agentId).toBe("agent-1");
     // Shared fields are visible to both sides.
     expect(draft.shared.projectId).toBe("project-1");
     expect(draft.shared.priority).toBe("high");
@@ -559,6 +558,69 @@ describe("issue draft store — legacy rehydrate", () => {
     // A legacy draft had no agent prompt (it lived in a separate store).
     expect(draft.agent.prompt).toBe("");
     expect(draft.activeMode).toBe("manual");
+  });
+
+  it("drops a saved assignee and remembered pick that do not name an agent", async () => {
+    localStorage.setItem(
+      "multica_issue_draft:gamma",
+      JSON.stringify({
+        state: {
+          draft: {
+            manual: {
+              title: "kept",
+              assigneeType: "member",
+              assigneeId: "user-1",
+              assigneePick: { type: "member", id: "user-1" },
+            },
+          },
+          lastAssigneeType: "member",
+          lastAssigneeId: "user-1",
+        },
+        version: 0,
+      }),
+    );
+
+    setCurrentWorkspace("gamma", "ws_g");
+    await flush();
+    await flush();
+
+    const state = useIssueDraftStore.getState();
+    expect(state.draft.manual.title).toBe("kept");
+    expect(state.draft.manual.assigneeType).toBeUndefined();
+    expect(state.draft.manual.assigneeId).toBeUndefined();
+    expect(state.draft.manual.assigneePick).toBeUndefined();
+    expect(state.lastAssigneeType).toBeUndefined();
+    expect(state.lastAssigneeId).toBeUndefined();
+    state.clearDraft();
+    expect(state.draft.manual.assigneeId).toBeUndefined();
+  });
+
+  it("keeps a saved agent assignee", async () => {
+    localStorage.setItem(
+      "multica_issue_draft:delta",
+      JSON.stringify({
+        state: {
+          draft: {
+            manual: { title: "kept", assigneeType: "agent", assigneeId: "agent-1" },
+          },
+          lastAssigneeType: "agent",
+          lastAssigneeId: "agent-1",
+        },
+        version: 0,
+      }),
+    );
+
+    setCurrentWorkspace("delta", "ws_d");
+    await flush();
+    await flush();
+
+    const state = useIssueDraftStore.getState();
+    expect(state.draft.manual.assigneeId).toBe("agent-1");
+    state.clearDraft();
+    expect(useIssueDraftStore.getState().draft.manual).toMatchObject({
+      assigneeType: "agent",
+      assigneeId: "agent-1",
+    });
   });
 
   it("backfills missing sub-fields on an already-nested persisted draft", async () => {
@@ -689,8 +751,8 @@ describe("issue draft store — logout cleanup", () => {
 
   it("registered reset wipes the last-assignee preference, not just the draft", () => {
     const { setManual, setLastAssignee } = useIssueDraftStore.getState();
-    setManual({ title: "wip", assigneeType: "member", assigneeId: "alice" });
-    setLastAssignee("member", "alice");
+    setManual({ title: "wip", assigneeType: "agent", assigneeId: "alice" });
+    setLastAssignee("agent", "alice");
 
     resetAllRegisteredDrafts();
 
@@ -710,7 +772,7 @@ describe("issue draft store — logout cleanup", () => {
 
     const { setManual, setLastAssignee } = useIssueDraftStore.getState();
     setManual({ title: "secret wip" });
-    setLastAssignee("member", "alice");
+    setLastAssignee("agent", "alice");
     expect(localStorage.getItem("multica_issue_draft:acme")).not.toBeNull();
 
     // use-logout's order: reset first (each reset is a setState, and persist

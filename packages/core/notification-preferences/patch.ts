@@ -14,7 +14,6 @@ const PREFERENCE_DEFAULTS: { [K in PreferenceKey]-?: NonNullable<NotificationPre
   status_changes: "muted",
   comments: "all",
   chat_replies: "all",
-  mentions: "all",
   reactions: "all",
   updates: "all",
   new_issues: "all",

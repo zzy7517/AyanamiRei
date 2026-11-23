@@ -259,13 +259,7 @@ function WelcomeIllustration() {
           provider: "claude",
         }}
         issueId="MCA-35"
-        content={
-          <>
-            {t(($) => $.welcome.illustration.card5_body_prefix)}
-            <Mention>{t(($) => $.welcome.illustration.card5_mention_you)}</Mention>
-            {t(($) => $.welcome.illustration.card5_body_suffix)}
-          </>
-        }
+        content={t(($) => $.welcome.illustration.card5_body)}
         status="done"
         timestamp={t(($) => $.welcome.illustration.card5_timestamp)}
       />

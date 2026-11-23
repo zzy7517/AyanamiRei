@@ -121,7 +121,7 @@ describe("useDeleteComment", () => {
 
   it("refetches the owner issue projections because the 204 carries no issue_revision", async () => {
     const issue = { id: issueId, revision: 3 } as Issue;
-    const myKey = issueKeys.myList(wsId, "assigned", { assignee_id: "user-1" });
+    const myKey = issueKeys.myList(wsId, { creator_id: "user-1" });
     state.qc.setQueryData<Issue>(issueKeys.detail(wsId, issueId), issue);
     state.qc.setQueryData<Issue[]>(myKey, [issue]);
     state.qc.setQueryData<Issue[]>(issueKeys.list(wsId), [issue]);
@@ -244,8 +244,7 @@ describe("useCancelTask", () => {
 
 describe("useDeleteIssue", () => {
   const listKey = issueKeys.list(wsId);
-  const assignedKey = issueKeys.myList(wsId, "assigned", { assignee_id: "user-1" });
-  const createdKey = issueKeys.myList(wsId, "created", { creator_id: "user-1" });
+  const mineKey = issueKeys.myList(wsId, { creator_id: "user-1" });
   const detailKey = issueKeys.detail(wsId, issueId);
   const issue = { id: issueId, title: "Keep until deleted" } as Issue;
   const other = { id: "issue-2" } as Issue;
@@ -253,7 +252,7 @@ describe("useDeleteIssue", () => {
   beforeEach(() => {
     state.qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     vi.mocked(api.deleteIssue).mockReset();
-    for (const key of [listKey, assignedKey, createdKey]) {
+    for (const key of [listKey, mineKey]) {
       state.qc.setQueryData<Issue[]>(key, [issue, other]);
     }
     state.qc.setQueryData(detailKey, issue);
@@ -268,13 +267,13 @@ describe("useDeleteIssue", () => {
     vi.mocked(api.deleteIssue).mockReturnValueOnce(new Promise<void>((resolve) => { resolveDelete = resolve; }));
     const pending = useDeleteIssue().mutateAsync(issueId);
     await vi.waitFor(() => expect(api.deleteIssue).toHaveBeenCalledWith(issueId));
-    for (const key of [listKey, assignedKey, createdKey]) {
+    for (const key of [listKey, mineKey]) {
       expect(state.qc.getQueryData(key)).toEqual([issue, other]);
     }
     expect(state.qc.getQueryData(detailKey)).toEqual(issue);
     resolveDelete();
     await pending;
-    for (const key of [listKey, assignedKey, createdKey]) {
+    for (const key of [listKey, mineKey]) {
       expect(state.qc.getQueryData(key)).toEqual([other]);
     }
     for (const key of [detailKey, timelineKey, issueKeys.activeTasks(wsId, issueId), issueKeys.tasks(wsId, issueId)]) {
@@ -287,7 +286,7 @@ describe("useDeleteIssue", () => {
     const error = Object.assign(new Error("Delete rejected"), { status });
     vi.mocked(api.deleteIssue).mockRejectedValueOnce(error);
     await expect(useDeleteIssue().mutateAsync(issueId)).rejects.toBe(error);
-    for (const key of [listKey, assignedKey, createdKey]) {
+    for (const key of [listKey, mineKey]) {
       expect(state.qc.getQueryData(key)).toEqual([issue, other]);
       expect(state.qc.getQueryState(key)?.isInvalidated).toBe(false);
     }

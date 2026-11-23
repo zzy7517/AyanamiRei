@@ -22,7 +22,7 @@ import type {
 } from "@multica/core/types";
 import { useBuiltinViewLabel } from "../issue-views/builtin-views";
 import { scoreRow, scoreText } from "./matching";
-import { useActorDirectory, type AgentEntry, type SquadEntry } from "./use-actor-directory";
+import { useActorDirectory, type AgentEntry } from "./use-actor-directory";
 
 export interface Scored<T> {
   item: T;
@@ -36,7 +36,6 @@ export type PaletteView =
 
 export interface ObjectHits {
   agents: Scored<AgentEntry>[];
-  squads: Scored<SquadEntry>[];
   members: Scored<MemberWithUser>[];
   views: Scored<PaletteView>[];
   autopilots: Scored<Autopilot>[];
@@ -141,11 +140,10 @@ export function useObjectSearch(
 
   const hits = useMemo<ObjectHits>(() => {
     if (!query) {
-      return { agents: [], squads: [], members: [], views: [], autopilots: [], chats: [], skills: [], docs: [], workspaces: [] };
+      return { agents: [], members: [], views: [], autopilots: [], chats: [], skills: [], docs: [], workspaces: [] };
     }
     return {
       agents: rank(directory.agents, (e) => scoreText(e.agent.name, query), 8),
-      squads: rank(directory.squads, (e) => scoreText(e.squad.name, query), 5),
       members: rank(directory.members, (m) => memberScore(m, query), 10),
       views: rank(views, (v) => viewScore(v, query), 8),
       autopilots: rank(

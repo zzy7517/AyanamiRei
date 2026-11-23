@@ -18,7 +18,6 @@ import { docsLocalePrefix } from "../common/docs-locale";
 import { useLocale, useT } from "../i18n";
 
 export type FeatureDocsSlug =
-  | "squads"
   | "projects"
   | "skills"
   | "autopilots"

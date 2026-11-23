@@ -39,7 +39,7 @@ export const PAGE_GUTTER = "px-[var(--page-padding-x,var(--space-md,1rem))]";
  * Full-width borders and backgrounds stay on the outer element; the rail goes
  * on the child that holds the content.
  *
- * Not for list surfaces that are genuinely tables — Issues, My Issues, member
+ * Not for list surfaces that are genuinely tables — Issues, agent and member
  * detail — which stay full-bleed on `PAGE_GUTTER` alone.
  */
 export const PAGE_RAIL = "mx-auto w-full max-w-[1440px]";

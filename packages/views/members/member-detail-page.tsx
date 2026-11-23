@@ -2,28 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useStore } from "zustand";
-import { ListTodo, UserRound, Users } from "@multica/ui/icons";
+import { ListTodo, UserRound } from "@multica/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import type { MemberRole, MemberWithUser } from "@multica/core/types";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useWorkspacePaths } from "@multica/core/paths";
 import { agentListOptions, memberListOptions } from "@multica/core/workspace/queries";
-import {
-  actorIssuesViewStore,
-  type ActorIssuesScope,
-} from "@multica/core/issues/stores/actor-issues-view-store";
 import { countAdvancedConditions } from "@multica/core/issues/stores/filter-tree";
 import { useViewStore } from "@multica/core/issues/stores/view-store-context";
-import {
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@multica/ui/components/ui/dropdown-menu";
 import { Skeleton } from "@multica/ui/components/ui/skeleton";
-import { cn } from "@multica/ui/lib/utils";
 import { ActorAvatar } from "../common/actor-avatar";
 import {
   IssueDisplayControls,
@@ -47,12 +34,10 @@ import { AppLink } from "../navigation";
 import { useLocale, useT } from "../i18n";
 
 const LAYOUT_ID = "multica_member_detail_layout";
-const SCOPE_VALUES: ActorIssuesScope[] = ["assigned", "created"];
-
 /**
- * A member's page is the list of issues assigned to or created by them, so it
- * keeps the list full width under the breadcrumb header; who they are sits in
- * the properties panel.
+ * A member's page is the list of issues they created, so it keeps the list
+ * full width under the breadcrumb header; who they are sits in the properties
+ * panel.
  */
 export function MemberDetailPage({ userId }: { userId: string }) {
   const { t } = useT("members");
@@ -115,8 +100,6 @@ function MemberIssues({
   segments: { href: string; label: string }[];
 }) {
   const { t } = useT("issues");
-  const scope = useStore(actorIssuesViewStore, (s) => s.scope);
-  const setScope = useStore(actorIssuesViewStore, (s) => s.setScope);
   // The tools read the issue surface's view store and controller, which only
   // exist inside the surface, so they render there and portal into the header.
   const [toolsSlot, setToolsSlot] = useState<HTMLDivElement | null>(null);
@@ -126,9 +109,9 @@ function MemberIssues({
         type: "actor" as const,
         actorType: "member" as const,
         actorId: member.user_id,
-        relation: scope,
+        relation: "created" as const,
       }),
-    [member.user_id, scope],
+    [member.user_id],
   );
 
   return (
@@ -159,11 +142,7 @@ function MemberIssues({
           renderHeader={({ controller }) =>
             toolsSlot
               ? createPortal(
-                  <MemberIssueTools
-                    controller={controller}
-                    scope={scope}
-                    onScopeChange={setScope}
-                  />,
+                  <MemberIssueTools controller={controller} />,
                   toolsSlot,
                 )
               : null
@@ -171,7 +150,7 @@ function MemberIssues({
           renderEmpty={() => (
             <CollectionPageState
               icon={ListTodo}
-              title={t(($) => $.actor_issues.empty[scope].title)}
+              title={t(($) => $.actor_issues.empty.created.title)}
             />
           )}
         />
@@ -180,72 +159,25 @@ function MemberIssues({
   );
 }
 
-function MemberIssueTools({
-  controller,
-  scope,
-  onScopeChange,
-}: {
-  controller: IssueSurfaceController;
-  scope: ActorIssuesScope;
-  onScopeChange: (scope: ActorIssuesScope) => void;
-}) {
-  const { t } = useT("issues");
-  const { t: tMembers } = useT("members");
+function MemberIssueTools({ controller }: { controller: IssueSurfaceController }) {
   const advancedFilter = useViewStore((s) => s.advancedFilter);
   const clearFilters = useViewStore((s) => s.clearFilters);
   const { chips } = useFilterChips(null);
-  const scopeCounts = scope !== "assigned";
   const filterCount =
     chips.filter((chip) => chip.key !== "advanced").length +
-    countAdvancedConditions(advancedFilter) +
-    (scopeCounts ? 1 : 0);
+    countAdvancedConditions(advancedFilter);
 
   return (
     <>
       <IssueFilterMenu
         align="end"
         trigger={<CollectionFilterButton count={filterCount} />}
-        leadingSections={
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Users className="size-3.5" />
-              <span className="flex-1">{tMembers(($) => $.detail.relation)}</span>
-              <span
-                className={cn(
-                  "ml-3 text-caption font-medium",
-                  scopeCounts ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                {t(($) => $.actor_issues.scope[scope].label)}
-              </span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-auto min-w-44">
-              <DropdownMenuRadioGroup
-                value={scope}
-                onValueChange={(next) => onScopeChange(next as ActorIssuesScope)}
-              >
-                {SCOPE_VALUES.map((value) => (
-                  <DropdownMenuRadioItem key={value} value={value}>
-                    {t(($) => $.actor_issues.scope[value].label)}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        }
         scopedIssues={controller.surfaceIssues}
         facetCountsExact={controller.facetCountsExact}
         tableFacetCounts={controller.tableFacetCounts}
         onTableFacetChange={controller.setActiveTableFacet}
       />
-      {filterCount > 0 ? (
-        <CollectionResetButton
-          onClick={() => {
-            clearFilters();
-            onScopeChange("assigned");
-          }}
-        />
-      ) : null}
+      {filterCount > 0 ? <CollectionResetButton onClick={clearFilters} /> : null}
       <IssueDisplayControls
         scopedIssues={controller.surfaceIssues}
         hideViewToggle

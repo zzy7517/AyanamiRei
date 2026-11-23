@@ -114,7 +114,7 @@ export function AllViewsPage() {
     if (view.scope_type === "project") {
       return projectTitle.get(view.scope_id ?? "") ?? t(($) => $.views.directory.location_project);
     }
-    return view.scope_type === "my" ? t(($) => $.views.builtin.my_issues) : t(($) => $.views.builtin.all_issues);
+    return t(($) => $.views.builtin.all_issues);
   };
 
   const newView = () =>

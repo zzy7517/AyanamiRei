@@ -134,6 +134,15 @@ describe("LoginPage", () => {
     expect(screen.queryByText(/your session expired/i)).not.toBeInTheDocument();
   });
 
+  it("says what the caller knows about the ended session instead of assuming it expired", () => {
+    mockAuthState.expired = true;
+    renderWithI18n(
+      <LoginPage onSuccess={onSuccess} expiredMessage="The token was refused." />,
+    );
+    expect(screen.getByText("The token was refused.")).toBeInTheDocument();
+    expect(screen.queryByText(/your session expired/i)).not.toBeInTheDocument();
+  });
+
   it("renders email form with 'Sign in to Multica' title", () => {
     renderWithI18n(<LoginPage onSuccess={onSuccess} />);
     expect(

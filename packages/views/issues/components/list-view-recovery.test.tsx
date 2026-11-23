@@ -57,7 +57,6 @@ describe("ListView row-page recovery through the agent work dialog", () => {
     vi.spyOn(api, "listPausedWakeups").mockResolvedValue([]);
     vi.spyOn(api, "listIssueWorkflows").mockResolvedValue({ workflows: [], total: 0 });
     vi.spyOn(api, "listLabels").mockResolvedValue({ labels: [], total: 0 });
-    vi.spyOn(api, "listSquads").mockResolvedValue([]);
     vi.spyOn(api, "listMembers").mockResolvedValue([]);
     vi.spyOn(api, "listAgents").mockResolvedValue([]);
     vi.spyOn(api, "getAgentTaskSnapshot").mockResolvedValue([]);

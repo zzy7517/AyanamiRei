@@ -19,10 +19,9 @@ vi.mock("../../i18n", () => ({
       selector: (translations: {
         creation_studio: {
           create_agent: string;
-          create_and_add: string;
           creating: string;
           name_conflict: string;
-        };
+        },
         create_dialog: {
           name_label: string;
           name_placeholder: string;
@@ -32,7 +31,6 @@ vi.mock("../../i18n", () => ({
       selector({
         creation_studio: {
           create_agent: "Create agent",
-          create_and_add: "Create and add",
           creating: "Creating…",
           name_conflict: "An agent with this name already exists.",
         },
@@ -126,7 +124,6 @@ describe("Agent creation errors", () => {
       createElement(CreateAgentFooter, {
         canCreate: true,
         creating: false,
-        squad: false,
         error: "Network request failed",
         onCreate: vi.fn(),
       }),

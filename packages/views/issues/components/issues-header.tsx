@@ -76,7 +76,7 @@ import {
 } from "./filter-chips-bar";
 import { useQuery } from "@tanstack/react-query";
 import { useWorkspaceId } from "@multica/core/hooks";
-import { memberListOptions, agentListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { memberListOptions, agentListOptions } from "@multica/core/workspace/queries";
 import { projectListOptions } from "@multica/core/projects/queries";
 import { PROJECT_STATUS_CONFIG, PROJECT_STATUS_ORDER } from "@multica/core/projects/config";
 import { labelListOptions } from "@multica/core/labels/queries";
@@ -104,6 +104,7 @@ import {
   sortOptionsForView,
   ISSUE_RELATION_FILTERS,
   type ActorFilterValue,
+  type AssigneeFilterValue,
   type IssueDateField,
   type IssueDateFilter,
   type IssueRelationFilter,
@@ -155,7 +156,7 @@ function getActiveFilterCount(
   state: {
     statusFilters: string[];
     priorityFilters: string[];
-    assigneeFilters: ActorFilterValue[];
+    assigneeFilters: AssigneeFilterValue[];
     includeNoAssignee: boolean;
     creatorFilters: ActorFilterValue[];
     projectFilters: string[];
@@ -346,50 +347,46 @@ function useIssueCounts(
 
 // Actor sub-menu content (shared between Assignee and Creator)
 
-export function ActorSubContent({
-  counts,
-  selected,
-  onToggle,
-  showNoAssignee,
-  includeNoAssignee,
-  onToggleNoAssignee,
-  noAssigneeCount,
-  showSquads = true,
-  fixedKeys,
-  noAssigneeFixed = false,
-  fixedTitle,
-}: {
+type ActorSubContentProps = {
   counts: Map<string, number>;
-  selected: ActorFilterValue[];
-  onToggle: (value: ActorFilterValue) => void;
-  showNoAssignee?: boolean;
-  includeNoAssignee?: boolean;
-  onToggleNoAssignee?: () => void;
-  noAssigneeCount?: number;
-  showSquads?: boolean;
   /** Actor keys (`type:id`) fixed by the open saved view. */
   fixedKeys?: Set<string>;
-  noAssigneeFixed?: boolean;
   fixedTitle?: string;
-}) {
+} & (
+  | {
+      /** Lists agents only: an issue is assigned to an agent or to nobody. */
+      kind: "assignee";
+      selected: AssigneeFilterValue[];
+      onToggle: (value: AssigneeFilterValue) => void;
+      showNoAssignee?: boolean;
+      includeNoAssignee?: boolean;
+      onToggleNoAssignee?: () => void;
+      noAssigneeCount?: number;
+      noAssigneeFixed?: boolean;
+    }
+  | {
+      kind: "creator";
+      selected: ActorFilterValue[];
+      onToggle: (value: ActorFilterValue) => void;
+    }
+);
+
+export function ActorSubContent(props: ActorSubContentProps) {
   const { t } = useT("issues");
   const [search, setSearch] = useState("");
   const wsId = useWorkspaceId();
   const { data: members = [] } = useQuery(memberListOptions(wsId));
   const { data: agents = [] } = useQuery(agentListOptions(wsId));
-  const { data: squads = [] } = useQuery(squadListOptions(wsId));
+  const { counts, fixedKeys, fixedTitle, selected } = props;
+  const creator = props.kind === "creator" ? props : null;
+  const assignee = props.kind === "assignee" ? props : null;
   const query = search.trim().toLowerCase();
-  const filteredMembers = members.filter((m) =>
-    m.name.toLowerCase().includes(query) || matchesPinyin(m.name, query),
-  );
-  const filteredAgents = agents.filter((a) =>
-    !a.archived_at && (a.name.toLowerCase().includes(query) || matchesPinyin(a.name, query)),
-  );
-  const filteredSquads = squads.filter((s) =>
-    !s.archived_at && (s.name.toLowerCase().includes(query) || matchesPinyin(s.name, query)),
-  );
+  const matches = (name: string) =>
+    name.toLowerCase().includes(query) || matchesPinyin(name, query);
+  const filteredMembers = creator ? members.filter((m) => matches(m.name)) : [];
+  const filteredAgents = agents.filter((a) => !a.archived_at && matches(a.name));
 
-  const isSelected = (type: "member" | "agent" | "squad", id: string) =>
+  const isSelected = (type: "member" | "agent", id: string) =>
     selected.some((f) => f.type === type && f.id === id);
 
   return (
@@ -407,27 +404,27 @@ export function ActorSubContent({
       </div>
 
       <div className="max-h-64 overflow-y-auto p-1">
-        {showNoAssignee &&
+        {assignee?.showNoAssignee &&
           (!query || "no assignee".includes(query) || "unassigned".includes(query)) && (
             <DropdownMenuCheckboxItem
-              checked={includeNoAssignee ?? false}
-              disabled={noAssigneeFixed}
-              title={noAssigneeFixed ? fixedTitle : undefined}
-              onCheckedChange={() => onToggleNoAssignee?.()}
+              checked={assignee.includeNoAssignee ?? false}
+              disabled={assignee.noAssigneeFixed}
+              title={assignee.noAssigneeFixed ? fixedTitle : undefined}
+              onCheckedChange={() => assignee.onToggleNoAssignee?.()}
               className={FILTER_ITEM_CLASS}
             >
-              <HoverCheck checked={includeNoAssignee ?? false} />
+              <HoverCheck checked={assignee.includeNoAssignee ?? false} />
               <UserMinus className="size-3.5 text-muted-foreground" />
               {t(($) => $.filters.no_assignee)}
-              {(noAssigneeCount ?? 0) > 0 && (
+              {(assignee.noAssigneeCount ?? 0) > 0 && (
                 <span className="ml-auto text-caption text-muted-foreground">
-                  {noAssigneeCount}
+                  {assignee.noAssigneeCount}
                 </span>
               )}
             </DropdownMenuCheckboxItem>
           )}
 
-        {filteredMembers.length > 0 && (
+        {creator && filteredMembers.length > 0 && (
           <DropdownMenuGroup>
             <DropdownMenuLabel>{t(($) => $.filters.members_group)}</DropdownMenuLabel>
             {filteredMembers.map((m) => {
@@ -439,9 +436,7 @@ export function ActorSubContent({
                   checked={checked}
                   disabled={fixedKeys?.has(`member:${m.user_id}`) === true}
                   title={fixedKeys?.has(`member:${m.user_id}`) === true ? fixedTitle : undefined}
-                  onCheckedChange={() =>
-                    onToggle({ type: "member", id: m.user_id })
-                  }
+                  onCheckedChange={() => creator.onToggle({ type: "member", id: m.user_id })}
                   className={FILTER_ITEM_CLASS}
                 >
                   <HoverCheck checked={checked} />
@@ -470,9 +465,7 @@ export function ActorSubContent({
                   checked={checked}
                   disabled={fixedKeys?.has(`agent:${a.id}`) === true}
                   title={fixedKeys?.has(`agent:${a.id}`) === true ? fixedTitle : undefined}
-                  onCheckedChange={() =>
-                    onToggle({ type: "agent", id: a.id })
-                  }
+                  onCheckedChange={() => props.onToggle({ type: "agent", id: a.id })}
                   className={FILTER_ITEM_CLASS}
                 >
                   <HoverCheck checked={checked} />
@@ -489,38 +482,7 @@ export function ActorSubContent({
           </DropdownMenuGroup>
         )}
 
-        {showSquads && filteredSquads.length > 0 && (
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t(($) => $.filters.squads_group)}</DropdownMenuLabel>
-            {filteredSquads.map((s) => {
-              const checked = isSelected("squad", s.id);
-              const count = counts.get(`squad:${s.id}`) ?? 0;
-              return (
-                <DropdownMenuCheckboxItem
-                  key={s.id}
-                  checked={checked}
-                  disabled={fixedKeys?.has(`squad:${s.id}`) === true}
-                  title={fixedKeys?.has(`squad:${s.id}`) === true ? fixedTitle : undefined}
-                  onCheckedChange={() =>
-                    onToggle({ type: "squad", id: s.id })
-                  }
-                  className={FILTER_ITEM_CLASS}
-                >
-                  <HoverCheck checked={checked} />
-                  <ActorAvatar actorType="squad" actorId={s.id} size="sm" />
-                  <span className="truncate">{s.name}</span>
-                  {count > 0 && (
-                    <span className="ml-auto text-caption text-muted-foreground">
-                      {count}
-                    </span>
-                  )}
-                </DropdownMenuCheckboxItem>
-              );
-            })}
-          </DropdownMenuGroup>
-        )}
-
-        {filteredMembers.length === 0 && filteredAgents.length === 0 && (!showSquads || filteredSquads.length === 0) && search && (
+        {filteredMembers.length === 0 && filteredAgents.length === 0 && search && (
           <div className="px-2 py-3 text-center text-body text-muted-foreground">
             {t(($) => $.filters.no_results)}
           </div>
@@ -958,7 +920,6 @@ function FilterOperatorSwitch({ dimension }: { dimension: NegatableFilterDimensi
 }
 
 const RELATION_ICONS: Record<IssueRelationFilter, typeof User> = {
-  assigned: CircleUser,
   created: UserPen,
   my_agents: Bot,
   subscribed: BellRing,
@@ -1385,6 +1346,7 @@ export function IssueFilterMenu({
               <DropdownMenuSubContent className="w-auto min-w-52 p-0">
                 <FilterOperatorSwitch dimension="assignee" />
                 <ActorSubContent
+                  kind="assignee"
                   counts={counts.assignee}
                   selected={assigneeFilters}
                   onToggle={act.toggleAssigneeFilter}
@@ -1415,10 +1377,10 @@ export function IssueFilterMenu({
               <DropdownMenuSubContent className="w-auto min-w-52 p-0">
                 <FilterOperatorSwitch dimension="creator" />
                 <ActorSubContent
+                  kind="creator"
                   counts={counts.creator}
                   selected={creatorFilters}
                   onToggle={act.toggleCreatorFilter}
-                  showSquads={false}
                   fixedKeys={viewBaseline?.creator}
                   fixedTitle={fixedTitle}
                 />
@@ -1426,8 +1388,8 @@ export function IssueFilterMenu({
             </DropdownMenuSub>
             )}
 
-            {/* Relation to me — OR across assigned / created / my agents /
-                subscribed, which no single actor dimension can express. */}
+            {/* Relation to me — OR across created / my agents / subscribed,
+                which no single actor dimension can express. */}
             {showRelation && show("relation") && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
@@ -1867,7 +1829,7 @@ export function IssueDisplayControls({
    *  the trigger count only counts additions on top. */
   viewBaseline?: IssueViewBaseline;
   // Only Project Detail renders <GanttView>; other surfaces (global /issues,
-  // /my-issues, actor panel) ignore viewMode === "gantt" and would silently
+  // member and actor panels) ignore viewMode === "gantt" and would silently
   // fall back to List if the option were exposed there. Keep Gantt opt-in.
   allowGantt?: boolean;
   /**

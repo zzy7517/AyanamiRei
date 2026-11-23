@@ -38,13 +38,6 @@ vi.mock("../../navigation", () => ({
   }),
 }));
 
-// The composer asks whether the viewer is a guest (MUL-9420); these tests
-// render as a member without an auth store.
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
-
 vi.mock("@multica/core/workspace/hooks", () => ({
   useActorName: () => ({ getActorName: () => "Ada" }),
 }));
@@ -82,7 +75,6 @@ const reply: TimelineEntry = {
   content: "Agent report",
   parent_id: null,
   comment_type: "comment",
-  reactions: [],
   attachments: [],
   created_at: "2026-09-11T07:00:00Z",
   updated_at: "2026-09-11T07:00:00Z",
@@ -107,7 +99,6 @@ const handlers = {
   onReply: vi.fn().mockResolvedValue(true),
   onEdit: vi.fn().mockResolvedValue(undefined),
   onDelete: vi.fn(),
-  onToggleReaction: vi.fn(),
   onCopyLink: vi.fn(),
   onCreateSubIssue: vi.fn(),
 };

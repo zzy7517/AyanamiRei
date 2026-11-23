@@ -45,9 +45,7 @@ const TYPE_KEY: Record<InboxItemType, string> = {
   start_date_changed: "type.start_date_changed",
   due_date_changed: "type.due_date_changed",
   new_comment: "type.new_comment",
-  mentioned: "type.mentioned",
   doc_comment: "type.doc_comment",
-  doc_mentioned: "type.doc_mentioned",
   review_requested: "type.review_requested",
   task_completed: "type.task_completed",
   task_failed: "type.task_failed",
@@ -60,7 +58,6 @@ const TYPE_KEY: Record<InboxItemType, string> = {
   autopilot_paused: "type.autopilot_paused",
   autopilot_quota_exceeded: "type.autopilot_quota_exceeded",
   children_done: "type.children_done",
-  project_owner_joined: "type.project_owner_joined",
   app_action_requested: "type.app_action_requested",
   app_action_reminder: "type.app_action_reminder",
   app_connect_requested: "type.app_connect_requested",
@@ -137,7 +134,7 @@ export function InboxDetailLabel({
       case "assignee_changed":
         if (details.new_assignee_id) {
           const name = getName(
-            (details.new_assignee_type ?? "member") as "member" | "agent",
+            (details.new_assignee_type ?? "agent") as "member" | "agent",
             details.new_assignee_id,
           );
           return t("type.assigned_to", { name });

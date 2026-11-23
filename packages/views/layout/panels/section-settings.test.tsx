@@ -68,14 +68,14 @@ describe("InboxSectionSettings", () => {
   it("shows each notification kind as delivered unless muted, status changes off by default", () => {
     open();
     expect(toggle("Comments")).not.toBeChecked();
-    expect(toggle("Mentions")).toBeChecked();
+    expect(toggle("Assignments")).toBeChecked();
     expect(toggle("Status changes")).not.toBeChecked();
   });
 
   it("mutes a kind at write time through the notification preferences", () => {
     open();
-    fireEvent.click(toggle("Mentions"));
-    expect(preferences.mutate).toHaveBeenCalledWith({ comments: "muted", mentions: "muted" }, expect.anything());
+    fireEvent.click(toggle("New issues"));
+    expect(preferences.mutate).toHaveBeenCalledWith({ comments: "muted", new_issues: "muted" }, expect.anything());
   });
 
   it("turns a kind back on", () => {

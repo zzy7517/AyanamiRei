@@ -73,7 +73,7 @@ export function InboxRow({ item, onPress }: Props) {
           </View>
           {/* Bottom row: [type-aware detail label] (left) | [time] (right).
               Detail label mirrors web InboxDetailLabel — same per-type
-              wording (Mentioned / Set status to ... / Assigned to ... / etc),
+              wording (New comment / Set status to ... / Assigned to ... / etc),
               not the raw markdown body. */}
           <View className="flex-row items-center gap-2 mt-0.5">
             <View className="flex-1 min-w-0">

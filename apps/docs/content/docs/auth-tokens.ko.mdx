@@ -94,6 +94,8 @@ curl https://api.multica.ai/api/issues \
 
 일반 Cloud, 자체 호스팅, Desktop 설치에서는 이를 직접 만들 필요가 없습니다. 사용자 측 CLI와 데몬은 항상 `mul_` PAT를 사용합니다. 다른 접두사의 토큰을 직접 만들지 마세요.
 
+자체 호스팅 관리자는 `MULTICA_AUTH_TOKEN`도 설정할 수 있습니다. 개인 액세스 토큰이 받아들여지는 모든 곳에서 받아들여지는 고정 비밀값으로, Desktop이 로그인 페이지를 건너뛰게 해줍니다. 설정하지 않으면 꺼져 있습니다. [사전 공유 토큰](/auth-setup#사전-공유-토큰)을 참고하세요.
+
 ## 다음 단계
 
 - [CLI 사용](/cli) — `login`, `auth status`, profile 설정을 알아봅니다.

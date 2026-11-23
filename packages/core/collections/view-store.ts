@@ -9,7 +9,7 @@ import {
 import { defaultStorage } from "../platform/storage";
 
 // Shared view preferences for the collection list pages (agents, skills,
-// autopilots, projects, squads): sort, column visibility and multi-select
+// autopilots, projects): sort, column visibility and multi-select
 // filters, persisted per workspace. Row selection stays session-local.
 //
 // The list search lives here too but is never persisted: it has to survive

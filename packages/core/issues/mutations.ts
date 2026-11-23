@@ -43,7 +43,7 @@ import { getCurrentWsId } from "../platform/workspace-storage";
 import { useRecentContextStore } from "../chat/recent-context-store";
 import { useRecentIssuesStore } from "./stores";
 import { useStarPromptStore } from "../star-prompt";
-import type { InboxItem, Issue, IssueReaction } from "../types";
+import type { InboxItem, Issue } from "../types";
 import type {
   CreateCommentSubIssueManualRequest,
   CreateIssueRequest,
@@ -54,32 +54,18 @@ import type {
   BatchIssueLabelOps,
   BatchIssuePropertyOps,
 } from "../types";
-import type { TimelineEntry, IssueSubscriber, Reaction } from "../types";
+import type { TimelineEntry, IssueSubscriber } from "../types";
 import { sortTimelineEntriesAsc } from "./timeline-sort";
 import { applyCommentDeletion, removeCommentSubtree } from "./comment-deletion";
 import { configStore } from "../config";
 import {
-  addReactionToList,
   onIssueAuxiliaryRevision,
   invalidateIssueOwnerProjections,
-  patchIssueReactions,
   reconcileIssueFullSnapshotRevision,
-  removeReactionFromList,
 } from "./ws-updaters";
 
 // Shared mutation variable types — used by both mutation hooks and
 // useMutationState consumers to keep the type assertion in sync.
-
-export type ToggleCommentReactionVars = {
-  commentId: string;
-  emoji: string;
-  existing: Reaction | undefined;
-};
-
-export type ToggleIssueReactionVars = {
-  emoji: string;
-  existing: IssueReaction | undefined;
-};
 
 export type UpdateIssueMutationInput = {
   id: string;
@@ -919,7 +905,6 @@ export function useCreateComment(issueId: string) {
         content: comment.content,
         parent_id: comment.parent_id,
         comment_type: comment.type,
-        reactions: comment.reactions ?? [],
         attachments: comment.attachments ?? [],
         created_at: comment.created_at,
         updated_at: comment.updated_at,
@@ -1128,57 +1113,6 @@ export function useResolveComment(issueId: string) {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: issueKeys.timeline(issueId) });
-    },
-  });
-}
-
-export function useToggleCommentReaction(issueId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["toggleCommentReaction", issueId] as const,
-    mutationFn: async ({
-      commentId,
-      emoji,
-      existing,
-    }: ToggleCommentReactionVars) => {
-      if (existing) {
-        await api.removeReaction(commentId, emoji);
-        return null;
-      }
-      return api.addReaction(commentId, emoji);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: issueKeys.timeline(issueId) });
-    },
-  });
-}
-
-// Issue-level Reactions
-
-export function useToggleIssueReaction(issueId: string) {
-  const qc = useQueryClient();
-  const wsId = useWorkspaceId();
-  return useMutation({
-    mutationKey: ["toggleIssueReaction", issueId] as const,
-    mutationFn: async ({
-      emoji,
-      existing,
-    }: ToggleIssueReactionVars) => {
-      if (existing) {
-        await api.removeIssueReaction(issueId, emoji);
-        return null;
-      }
-      return api.addIssueReaction(issueId, emoji);
-    },
-    onSuccess: (reaction, { existing }) => {
-      if (reaction) {
-        patchIssueReactions(qc, wsId, issueId, addReactionToList(reaction), reaction.issue_revision);
-      } else if (existing) {
-        patchIssueReactions(qc, wsId, issueId, removeReactionFromList(existing));
-      }
-    },
-    onError: () => {
-      qc.invalidateQueries({ queryKey: issueKeys.detail(wsId, issueId), exact: true });
     },
   });
 }

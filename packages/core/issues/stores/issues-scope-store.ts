@@ -5,7 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { createWorkspaceAwareStorage, registerForWorkspaceRehydration } from "../../platform/workspace-storage";
 import { defaultStorage } from "../../platform/storage";
 
-export type IssuesScope = "all" | "members" | "agents";
+export type IssuesScope = "all" | "agents";
 
 /**
  * Page identity for the assignee-type tab. Every surface remembers its own
@@ -38,10 +38,7 @@ export const useIssuesScopeStore = create<IssuesScopeState>()(
           const legacy = (persisted as { scope?: IssuesScope } | undefined)
             ?.scope;
           return {
-            scopes:
-              legacy === "members" || legacy === "agents"
-                ? { issues: legacy }
-                : {},
+            scopes: legacy === "agents" ? { issues: "agents" } : {},
           } as IssuesScopeState;
         }
         return persisted as IssuesScopeState;
@@ -52,7 +49,7 @@ export const useIssuesScopeStore = create<IssuesScopeState>()(
 
 /** The page's current tab; "all" until the user picks one. */
 export function useIssuesScope(page: IssuesScopePageKey): IssuesScope {
-  return useIssuesScopeStore((s) => s.scopes[page] ?? "all");
+  return useIssuesScopeStore((s) => (s.scopes[page] === "agents" ? "agents" : "all"));
 }
 
 registerForWorkspaceRehydration(() => useIssuesScopeStore.persist.rehydrate());

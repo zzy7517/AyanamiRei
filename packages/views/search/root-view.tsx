@@ -13,7 +13,6 @@ import { projectListOptions } from "@multica/core/projects/queries";
 import type { InboxWorkspaceUnread } from "@multica/core/types";
 import { openCreateIssueWithPreference } from "@multica/core/issues/stores";
 import { useModalStore } from "@multica/core/modals";
-import { useIsGuest } from "@multica/core/permissions";
 import { cn } from "@multica/ui/lib/utils";
 import { ActorAvatar } from "../common/actor-avatar";
 import { BUILTIN_VIEW_ICON, useBuiltinViewNavigation } from "../issue-views/builtin-views";
@@ -40,7 +39,6 @@ const TYPE_ORDER = [
   "views",
   "commands",
   "agents",
-  "squads",
   "members",
   "projects",
   "docs",
@@ -64,8 +62,6 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
   const p = useWorkspacePaths();
   const { data: unreadSummary = EMPTY_UNREAD_SUMMARY } = useQuery(inboxUnreadSummaryOptions());
   const unreadWsIds = unreadWorkspaceIds(unreadSummary);
-  // A guest (MUL-9420) can neither create issues nor hand work to an agent.
-  const guest = useIsGuest(useWorkspaceId());
   const { server, partitioned, objects, text } = model;
   const query = text;
 
@@ -77,7 +73,6 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
   const isBest = (type: BestMatch["type"], id: string) => {
     if (!best || best.type !== type) return false;
     if (best.type === "agent") return best.entry.agent.id === id;
-    if (best.type === "squad") return best.entry.squad.id === id;
     if (best.type === "member") return best.member.user_id === id;
     return best.project.id === id;
   };
@@ -173,29 +168,6 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
               showStatusDot
               onSelect={() => palette.navigate(p.agentDetail(entry.agent.id))}
               detail={<AgentPresenceText availability={entry.availability} runtimeLabel={entry.runtimeLabel} />}
-            />
-          ))}
-        </PaletteGroup>
-      ),
-    });
-  }
-  const squads = objects.squads.filter((hit) => !isBest("squad", hit.item.squad.id));
-  if (squads.length > 0) {
-    groups.push({
-      key: "squads",
-      type: "squads",
-      score: squads[0]!.score,
-      node: (
-        <PaletteGroup key="squads" heading={t(($) => $.groups.squads)}>
-          {squads.map(({ item: entry }) => (
-            <ActorRow
-              key={entry.squad.id}
-              value={`squad:${entry.squad.id}`}
-              actorType="squad"
-              actorId={entry.squad.id}
-              name={entry.squad.name}
-              query={query}
-              onSelect={() => palette.navigate(p.squadDetail(entry.squad.id))}
             />
           ))}
         </PaletteGroup>
@@ -412,7 +384,7 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
 
   return (
     <>
-      {best && <BestMatchGroups best={best} query={query} target={model.primaryIssueTarget} canCreateIssue={!guest} />}
+      {best && <BestMatchGroups best={best} query={query} target={model.primaryIssueTarget} />}
       {groups.map((group) => group.node)}
       {partitioned.hasCancelled && (
         <PaletteGroup heading={t(($) => $.groups.cancelled)}>
@@ -450,7 +422,7 @@ export function RootView({ model, rawQuery }: { model: RootModel; rawQuery: stri
       {!server.isLoading && nothing && (
         <div className="py-10 text-center text-body text-muted-foreground">{t(($) => $.empty.no_results)}</div>
       )}
-      {model.handToAgent && !guest && <HandToAgentRow seed={model.handToAgent} disabled={server.stale} />}
+      {model.handToAgent && <HandToAgentRow seed={model.handToAgent} disabled={server.stale} />}
     </>
   );
 }
@@ -486,9 +458,7 @@ function ViewResultRow({ view, query }: { view: PaletteView; query: string }) {
   const target = issueViewTarget(wsId, saved, p);
   const location = projectId
     ? (projects?.find((project) => project.id === projectId)?.title ?? t(($) => $.views.directory.location_project))
-    : saved.scope_type === "my"
-      ? t(($) => $.views.builtin.my_issues)
-      : t(($) => $.views.builtin.all_issues);
+    : t(($) => $.views.builtin.all_issues);
   return (
     <ObjectRow
       value={`view:${saved.id}`}
@@ -546,12 +516,10 @@ function BestMatchGroups({
   best,
   query,
   target,
-  canCreateIssue,
 }: {
   best: BestMatch;
   query: string;
   target: IssueTarget | null;
-  canCreateIssue: boolean;
 }) {
   const { t } = useT("search");
   const palette = usePalette();
@@ -595,26 +563,6 @@ function BestMatchGroups({
         run: () => palette.navigate(p.chatWithAgent(agent.id)),
       });
     }
-  } else if (best.type === "squad") {
-    const { squad } = best.entry;
-    row = (
-      <ActorRow
-        value={`best:squad:${squad.id}`}
-        actorType="squad"
-        actorId={squad.id}
-        name={squad.name}
-        query={query}
-        onSelect={() => palette.navigate(p.squadDetail(squad.id))}
-        trailing={<RowHint>{t(($) => $.types.squad)}</RowHint>}
-      />
-    );
-    if (best.entry.assignable && target && subject) {
-      actions.push({
-        id: "assign",
-        label: t(($) => $.best.assign, { subject, name: squad.name }),
-        icon: UserPlus,
-      });
-    }
   } else if (best.type === "member") {
     const { member } = best;
     row = (
@@ -629,13 +577,6 @@ function BestMatchGroups({
         trailing={<RowHint>{t(($) => $.types.member)}</RowHint>}
       />
     );
-    if (target && subject) {
-      actions.push({
-        id: "assign",
-        label: t(($) => $.best.assign, { subject, name: member.name }),
-        icon: UserPlus,
-      });
-    }
   } else {
     const { project } = best;
     row = (
@@ -646,7 +587,7 @@ function BestMatchGroups({
         trailing={<RowHint>{t(($) => $.types.project)}</RowHint>}
       />
     );
-    if (!project.archived_at && canCreateIssue) {
+    if (!project.archived_at) {
       actions.push({
         id: "new-issue",
         label: t(($) => $.best.new_issue_in, { name: project.title }),
@@ -710,8 +651,6 @@ function AssignActionRow({
       onSelect={() => {
         palette.close();
         if (best.type === "agent") writer.assign("agent", best.entry.agent.id);
-        else if (best.type === "squad") writer.assign("squad", best.entry.squad.id);
-        else if (best.type === "member") writer.assign("member", best.member.user_id);
       }}
       className={ROW_CLASS}
     >

@@ -39,19 +39,6 @@ export function getAutopilotQuotaBody(item: InboxItem): string | null {
   });
 }
 
-/**
- * Body of an issue-less notice, in the UI locale where the client has the
- * facts to write it and as the server sent it otherwise.
- */
-export function getInboxNoticeBody(item: InboxItem): string | null {
-  if (item.type === "project_owner_joined" && item.details?.joined_by) {
-    return i18n.t("inbox:body.project_owner_joined", {
-      name: item.details.joined_by,
-    });
-  }
-  return getAutopilotQuotaBody(item);
-}
-
 function singleLine(value: string | null | undefined): string {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
@@ -103,11 +90,7 @@ export function getInboxDisplayTitle(item: InboxItem): string {
 
 /** Issue-less notices that open in the inbox's own detail sheet. */
 export function isInboxNotice(type: InboxItem["type"]): boolean {
-  return (
-    type === "autopilot_quota_exceeded" ||
-    type === "autopilot_paused" ||
-    type === "project_owner_joined"
-  );
+  return type === "autopilot_quota_exceeded" || type === "autopilot_paused";
 }
 
 export function getInboxNavigationTarget(

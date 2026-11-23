@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
-  AtSign,
   Bell,
   Bot,
   BotOff,
@@ -58,7 +57,6 @@ export const INBOX_FILTER_ICONS: Record<InboxFilterKey, IconComponent> = {
 };
 
 export const INBOX_TYPE_ICONS: Record<InboxTypeGroup, IconComponent> = {
-  mention: AtSign,
   comment: MessageSquare,
   assign: UserPlus,
   review: Eye,
@@ -90,7 +88,6 @@ export function useInboxFilterLabels() {
     dueDate: tIssues(($) => $.filters.section_due_date),
   };
   const type: Record<InboxTypeGroup, string> = {
-    mention: t(($) => $.filters.type_mention),
     comment: t(($) => $.filters.type_comment),
     assign: t(($) => $.filters.type_assign),
     review: t(($) => $.filters.type_review),

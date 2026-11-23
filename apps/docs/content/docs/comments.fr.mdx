@@ -1,6 +1,6 @@
 ---
 title: Commentaires
-description: Ajoutez des informations, répondez aux discussions et @mentionnez des membres ou des agents sur une tâche, en conservant un historique complet de la collaboration.
+description: Ajoutez des informations, répondez aux discussions et @mentionnez des agents sur une tâche, en conservant un historique complet de la collaboration.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -44,7 +44,7 @@ Avec le bouton d'envoi habituel, publiez toutes les annotations en une seule ré
 
 Sur la description d'une tâche, la barre d'outils de sélection propose **Ajouter au commentaire** : les annotations vont dans un brouillon de nouveau commentaire, et l'envoyer crée un nouveau fil. Les annotations sur un commentaire continuent d'aller dans le brouillon de réponse de leur fil.
 
-Pour les annotations de commentaire, la première que vous enregistrez fixe la cible de la réponse, y compris pour les réponses imbriquées. Les citations d'autres messages du même fil rejoignent ce brouillon, et le tout est publié en un seul commentaire. Les mentions citées ne notifient ni ne déclenchent personne ; les mentions que vous rédigez vous-même suivent les règles habituelles.
+Pour les annotations de commentaire, la première que vous enregistrez fixe la cible de la réponse, y compris pour les réponses imbriquées. Les citations d'autres messages du même fil rejoignent ce brouillon, et le tout est publié en un seul commentaire. Les mentions citées ne déclenchent aucune exécution ; les mentions que vous rédigez vous-même suivent les règles habituelles.
 
 <Accordions>
 <Accordion title="Modifier, supprimer et raccourcis" id="annotation-editing">
@@ -96,12 +96,9 @@ Tapez `@` et choisissez une cible dans la liste :
 
 | Cible | Effet |
 |---|---|
-| **Membre** | Reçoit une notification de mention dans la boîte de réception ; une @mention dans un commentaire ne crée pas d'abonnement. |
 | **Agent** | Crée une exécution pour cet agent ; les agents n'ont pas de boîte de réception. |
-| **Squad** | Déclenche le chef du squad ; les membres du squad ne sont pas notifiés. |
 | **Tâche** | Insère un lien vers une autre tâche — aucune notification, aucun déclenchement d'agent. |
 | **Projet** | Insère un lien vers un projet — aucune notification, aucun déclenchement d'agent. |
-| **@all** | Notifie tous les membres de l'espace de travail ; la mention elle-même ne lance aucun agent. Le commentaire d'un agent worker revient toujours au chef du squad assigné, ou au chef du squad invité dans son fil de délégation, sauf si un agent ou un squad est explicitement mentionné. |
 
 Taper `@name` en texte brut ne crée pas de mention ; choisissez dans la liste de suggestions de l'éditeur. Taper un identifiant de tâche valide le convertit automatiquement en lien vers la tâche.
 
@@ -111,11 +108,7 @@ Taper `@name` en texte brut ne crée pas de mention ; choisissez dans la liste d
 
 ## Abonnements et boîte de réception
 
-Les membres qui commentent sont automatiquement abonnés à la tâche, et l'activité ultérieure ainsi que les @mentions arrivent dans la [boîte de réception](/inbox) ; vous pouvez aussi vous abonner ou vous désabonner manuellement en haut à droite de la tâche. Voir [Boîte de réception et abonnements](/inbox) pour la liste complète des sources d'abonnement et les règles de notification.
-
-## Réactions
-
-Ajoutez une réaction emoji à un commentaire pour montrer que vous l'avez lu, marquer votre accord ou donner un retour rapide. Les réactions ne déclenchent pas d'agents et ne changent pas le statut de la tâche.
+Les membres qui commentent sont automatiquement abonnés à la tâche, et l'activité ultérieure arrive dans la [boîte de réception](/inbox) ; vous pouvez aussi vous abonner ou vous désabonner manuellement en haut à droite de la tâche. Voir [Boîte de réception et abonnements](/inbox) pour la liste complète des sources d'abonnement et les règles de notification.
 
 ## Modifier et supprimer
 

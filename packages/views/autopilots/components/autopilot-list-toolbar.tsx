@@ -18,7 +18,7 @@ import { useT } from "../../i18n";
 import { CollectionFilterButton } from "../../layout/collection-page";
 
 // Composite "type:id" value for polymorphic actor filter dimensions, so the
-// string[] filter store can hold agent/squad/member references alike.
+// string[] filter store can hold agent and member references alike.
 export function actorFilterValue(type: string, id: string): string {
   return `${type}:${id}`;
 }

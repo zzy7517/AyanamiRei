@@ -25,10 +25,10 @@ function tokenize(src: string) {
 
 describe("mention tokenizer", () => {
   it("parses a plain mention", () => {
-    const token = tokenize("[@Alice](mention://member/aaa-bbb)");
+    const token = tokenize("[@Alice](mention://agent/aaa-bbb)");
     expect(token).toBeDefined();
     expect(token!.attributes.label).toBe("Alice");
-    expect(token!.attributes.type).toBe("member");
+    expect(token!.attributes.type).toBe("agent");
     expect(token!.attributes.id).toBe("aaa-bbb");
   });
 
@@ -53,7 +53,7 @@ describe("mention tokenizer", () => {
       // and the mention fails to parse back (regression guard for the
       // de-ambiguation fix).
       const md = renderMarkdown({
-        attrs: { id: "aaa-bbb", label, type: "member" },
+        attrs: { id: "aaa-bbb", label, type: "agent" },
       });
       const token = tokenize(md);
       expect(token).toBeDefined();
@@ -112,7 +112,7 @@ describe("mention tokenizer", () => {
 
   it("does not start at escaped Java stacktrace source markers before a real mention", () => {
     const prefix = JAVA_STACKTRACE_SOURCE_MARKER.repeat(3);
-    const src = `${prefix}[@Alice](mention://member/aaa-bbb)`;
+    const src = `${prefix}[@Alice](mention://agent/aaa-bbb)`;
 
     const start = startFn(src);
     expect(start).toBe(prefix.length);
@@ -120,7 +120,7 @@ describe("mention tokenizer", () => {
     const token = tokenizeFn(src.slice(start));
     expect(token).toBeDefined();
     expect(token!.attributes.label).toBe("Alice");
-    expect(token!.attributes.type).toBe("member");
+    expect(token!.attributes.type).toBe("agent");
     expect(token!.attributes.id).toBe("aaa-bbb");
   });
 
@@ -139,7 +139,7 @@ describe("mention tokenizer", () => {
     // Each "\a" pair is ambiguous under (?:\\.|[^\]]) — the pre-fix regex
     // enumerates 2^28 backtrack paths (~10s) before failing. The disjoint
     // char class must fail fast instead.
-    const src = `[@${"\\a".repeat(28)}](mention://member/abc`;
+    const src = `[@${"\\a".repeat(28)}](mention://agent/abc`;
 
     const t0 = performance.now();
     const token = tokenizeFn(src);

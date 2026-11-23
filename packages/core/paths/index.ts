@@ -1,7 +1,6 @@
 export {
   paths,
   isGlobalPath,
-  isMyAgentsSearch,
   issueRouteRef,
   AGENT_FOCUS_CONVERSATION_STARTERS,
 } from "./paths";

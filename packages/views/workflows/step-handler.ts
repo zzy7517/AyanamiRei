@@ -9,10 +9,10 @@ import { useT } from "../i18n";
 export function stepHandlerActor(
   step: IssueWorkflowStep | undefined,
   project: Pick<Project, "lead_type" | "lead_id"> | null | undefined,
-): { type: "agent" | "squad" | "member"; id: string } | null {
+): { type: "agent" | "member"; id: string } | null {
   if (!step) return null;
   const { type, id } = step.handler;
-  if ((type === "agent" || type === "squad" || type === "member") && id) return { type, id };
+  if ((type === "agent" || type === "member") && id) return { type, id };
   if (type === "project_lead" && project?.lead_type && project.lead_id) {
     return { type: project.lead_type, id: project.lead_id };
   }
@@ -20,9 +20,9 @@ export function stepHandlerActor(
 }
 
 /**
- * Names who a workflow step hands an issue to (MUL-7420): the agent, squad or
- * member it names, the project lead, or the issue creator. Returns null for a
- * step that keeps the assignee.
+ * Names who a workflow step hands an issue to (MUL-7420): the agent or member
+ * it names, the project lead, or the issue creator. Returns null for a step
+ * that keeps the assignee.
  */
 export function useStepHandlerLabel(
   project: Pick<Project, "lead_type" | "lead_id"> | null | undefined,
@@ -35,7 +35,6 @@ export function useStepHandlerLabel(
       const { type, id } = step.handler;
       switch (type) {
         case "agent":
-        case "squad":
         case "member":
           return id ? getActorName(type, id) : t(($) => $.workflows.handler[type]);
         case "project_lead":

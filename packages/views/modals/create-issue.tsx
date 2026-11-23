@@ -1,8 +1,11 @@
 "use client";
 
-import { issueStatusCategory } from "@multica/core/issues";
+import { issueStatusCategory, useReplaceIssueProjectScope } from "@multica/core/issues";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useFeatureEnabled } from "@multica/core/config";
+import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
+import { isProjectScopeValid, type ProjectScopePair } from "@multica/core/projects";
 import { AppLink, resolveClickIntent, useNavigation } from "../navigation";
 import {
   AlertTriangle,
@@ -14,6 +17,7 @@ import {
   Check,
   ChevronRight,
   CircleUser,
+  FolderGit2,
   FolderKanban,
   Maximize2,
   Minimize2,
@@ -60,6 +64,7 @@ import { StatusIcon, StatusPicker, PriorityIcon, PriorityPicker, StagePicker, As
 import { useRecordAssigneePick } from "../issues/components/pickers/assignee-picker";
 import { maxSiblingStage } from "../issues/components/pickers/stage-picker";
 import { ProjectPicker } from "../projects/components/project-picker";
+import { ProjectScopeEditor } from "../projects/components/project-scope-editor";
 import { useIssueTriggerPreview } from "../issues/hooks/use-issue-trigger-preview";
 import { useActorName } from "@multica/core/workspace/hooks";
 import { useCurrentWorkspace, useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
@@ -87,6 +92,7 @@ import {
   ApiError,
   DuplicateIssueErrorBodySchema,
   type DuplicateIssueErrorBody,
+  clientErrorMessage,
   parseWithFallback,
 } from "@multica/core/api";
 import { FileUploadButton } from "@multica/ui/components/common/file-upload-button";
@@ -132,41 +138,29 @@ function CreateRunHint({
 }) {
   const { t } = useT("modals");
   const { getActorName } = useActorName();
-  const isAgentLike = assigneeType === "agent" || assigneeType === "squad";
+  const isAgent = assigneeType === "agent";
   const preview = useIssueTriggerPreview({
     isCreate: true,
     assigneeType: assigneeType ?? null,
     assigneeId: assigneeId ?? null,
     status,
-    enabled: isAgentLike && !!assigneeId,
+    enabled: isAgent && !!assigneeId,
   });
 
   // Reveal only after the predicate resolves so the band animates to the final
   // copy instead of flashing "parked" before the run preview lands.
-  const ready = isAgentLike && !!assigneeId && !preview.isLoading;
+  const ready = isAgent && !!assigneeId && !preview.isLoading;
   const willStart = preview.totalCount > 0;
-  const isSquad = assigneeType === "squad";
   const triggerAgentId = preview.triggers[0]?.agent_id ?? assigneeId;
 
-  // Avatar + copy mirror the flow. A squad doesn't "work" — its leader
-  // evaluates and delegates — so the squad path keeps the squad as the subject
-  // (avatar + name) and uses the leader-delegates copy. A single agent picks
-  // the issue up directly; a parked issue shows whoever it was assigned to.
-  let avatarType: string;
+  // Avatar + copy mirror the flow. An agent picks the issue up directly; a
+  // parked issue shows the agent it was assigned to.
   let avatarId: string | undefined;
   let text: string;
   if (!willStart) {
-    avatarType = assigneeType ?? "agent";
     avatarId = assigneeId;
     text = t(($) => $.run_confirm.create_parked);
-  } else if (isSquad) {
-    avatarType = "squad";
-    avatarId = assigneeId;
-    text = t(($) => $.run_confirm.create_will_start_squad, {
-      name: getActorName("squad", assigneeId ?? ""),
-    });
   } else {
-    avatarType = "agent";
     avatarId = triggerAgentId;
     text = t(($) => $.run_confirm.create_will_start, {
       name: getActorName("agent", triggerAgentId ?? assigneeId ?? ""),
@@ -188,7 +182,7 @@ function CreateRunHint({
         >
           {avatarId && (
             <ActorAvatar
-              actorType={avatarType}
+              actorType="agent"
               actorId={avatarId}
               size="sm"
               profileLink={false}
@@ -354,10 +348,20 @@ export function ManualCreatePanel({
   // object, and we never need to hydrate from an ID the way we do for parent.
   const [childIssues, setChildIssues] = useState<Issue[]>([]);
   const [childPickerOpen, setChildPickerOpen] = useState(false);
+  // The "project + branch" pairs the new task works on. The server takes them
+  // only once the task has an id, so they are held here until it is created.
+  // An added row nobody filled in is not a pair.
+  const taskSessions = useFeatureEnabled(TASK_SESSIONS_V1_FLAG, false);
+  const [scopePairs, setScopePairs] = useState<ProjectScopePair[]>([]);
+  const scopeFilled = scopePairs.filter((pair) => pair.project_id !== "" || pair.branch !== "");
+  const scopeItems = scopeFilled.map(({ project_id, branch }) => ({ project_id, base_branch: branch }));
+  // The editor says what is wrong with each row; a list that is not valid is not sent.
+  const scopeInvalid = scopeFilled.length > 0 && !isProjectScopeValid(scopeFilled);
   // Fetch parent issue details for the chip (status/identifier/title).
   // List cache usually has it already, so this resolves synchronously.
   const wsId = useWorkspaceId();
   const queryClient = useQueryClient();
+  const replaceScope = useReplaceIssueProjectScope(wsId, "");
   const { categoryOf: draftStatusCategory, colorOf, iconOf } = useIssueStatuses(wsId);
   const { data: workspaceProperties = [] } = useQuery(propertyListOptions(wsId));
   const { data: parentIssue } = useQuery({
@@ -489,6 +493,7 @@ export function ManualCreatePanel({
     setUnavailablePropertyRemoved(false);
     setProjectId(undefined);
     setChildIssues([]);
+    setScopePairs([]);
     // Keep status and assignee in this batch. Parent and stage stay in local
     // state, while other manual and shared fields reset for the next issue.
     setManual({
@@ -616,6 +621,21 @@ export function ManualCreatePanel({
           stage: parentIssueId && stage != null ? stage : undefined,
           project_id: projectId,
         });
+      }
+
+      // The task exists from here on, so its trees can be built. A refusal
+      // leaves it created without them, which only this toast would say.
+      if (scopeItems.length > 0) {
+        try {
+          await replaceScope.mutateAsync({ issue_id: issue.id, items: scopeItems });
+        } catch (err) {
+          const reason = clientErrorMessage(err);
+          toast.error(
+            reason != null
+              ? tProjects(($) => $.scope.create_failed, { reason })
+              : tProjects(($) => $.scope.create_failed_unknown),
+          );
+        }
       }
 
       // Link queued children to the new parent. Deferred to after create
@@ -881,6 +901,7 @@ export function ManualCreatePanel({
       titleEditorRef.current?.focus();
       return;
     }
+    if (scopeInvalid) return;
     void composer.submit();
   };
   const submitting = composer.submitting;
@@ -912,12 +933,8 @@ export function ManualCreatePanel({
       const seeded = [title.trim(), desc].filter(Boolean).join("\n\n");
       if (seeded) setAgent({ prompt: seeded });
     }
-    if (
-      !draft.agent.actorId &&
-      assigneeId &&
-      (assigneeType === "agent" || assigneeType === "squad")
-    ) {
-      setAgent({ actorType: assigneeType, actorId: assigneeId });
+    if (!draft.agent.agentId && assigneeId && assigneeType === "agent") {
+      setAgent({ agentId: assigneeId });
     }
     setLastMode("agent");
     setActiveMode("agent");
@@ -938,7 +955,13 @@ export function ManualCreatePanel({
 
   // One state for the button and the keyboard paths, so a rendered affordance
   // can never disagree with what `handleSubmit` will actually do.
-  const submitState: "submitting" | "uploading" | "missing_title" | "source_unavailable" | "ready" =
+  const submitState:
+    | "submitting"
+    | "uploading"
+    | "missing_title"
+    | "source_unavailable"
+    | "invalid_trees"
+    | "ready" =
     submitting
       ? "submitting"
       : gate.uploading
@@ -947,7 +970,9 @@ export function ManualCreatePanel({
           ? "source_unavailable"
           : !title.trim()
             ? "missing_title"
-            : "ready";
+            : scopeInvalid
+              ? "invalid_trees"
+              : "ready";
   const submitBusy = submitState === "submitting" || submitState === "uploading";
 
   // Built once and reused by both footer branches: rendering a separate Button
@@ -960,7 +985,8 @@ export function ManualCreatePanel({
       // for a missing title — a native-disabled button is not focusable, so
       // keyboard and screen-reader users could never reach the tooltip that
       // explains why nothing happens. `handleSubmit` is the real gate either way.
-      disabled={submitBusy}
+      // An invalid list of pairs needs no tooltip: the editor marks each faulty row.
+      disabled={submitBusy || submitState === "invalid_trees"}
       aria-disabled={submitState === "missing_title" || submitState === "source_unavailable" || undefined}
       aria-busy={submitBusy || undefined}
       // The Button base only dims/blocks on native `disabled`, so aria-disabled
@@ -1510,6 +1536,20 @@ export function ManualCreatePanel({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
+            {/* The task's "project + branch" pairs. The list scrolls on its own
+                so the compact dialog keeps room for the editor. */}
+            {taskSessions && (
+              <div role="group" aria-label={tProjects(($) => $.scope.section_title)} className="shrink-0 border-t px-4 py-2">
+                <div className="mb-1.5 flex items-center gap-1.5 px-1 text-micro font-medium text-muted-foreground">
+                  <FolderGit2 className="size-3.5" />
+                  {tProjects(($) => $.scope.section_title)}
+                </div>
+                <div className="max-h-40 overflow-y-auto">
+                  <ProjectScopeEditor value={scopePairs} onChange={setScopePairs} busy={submitBusy} />
+                </div>
+              </div>
+            )}
 
             {unavailablePropertyRemoved && (
               <p role="alert" className="px-5 pb-3 text-caption text-destructive">

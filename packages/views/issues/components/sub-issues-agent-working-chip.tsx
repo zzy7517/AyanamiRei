@@ -44,7 +44,7 @@ export const SubIssuesAgentWorkingChip = memo(
     const { t } = useT("issues");
     const wsId = useWorkspaceId();
     const { data: agents = [] } = useQuery(
-      workspaceWorkingAgentsOptions(wsId, "issue", undefined, parentIssueId),
+      workspaceWorkingAgentsOptions(wsId, "issue", parentIssueId),
     );
 
     if (agents.length === 0) return null;

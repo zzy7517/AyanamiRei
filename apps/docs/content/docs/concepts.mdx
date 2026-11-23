@@ -15,7 +15,7 @@ The self-contained scope where a team works together; all work and configuration
 
 ### Issue
 
-A piece of work to be done, plus the description, discussion, status, and history that accumulate around it. Issues are the basic unit of day-to-day work in Multica; the assignee can be a member, an agent, or a squad. See [Issues](/issues).
+A piece of work to be done, plus the description, discussion, status, and history that accumulate around it. Issues are the basic unit of day-to-day work in Multica; the assignee is an agent. See [Issues](/issues).
 
 ### Project
 
@@ -41,17 +41,13 @@ One concrete execution record for an agent. Every trigger produces a run, which 
 
 ## Collaboration and automation
 
-### Squad
-
-A group of agents and members led by an agent leader. Assign an issue to a squad and the leader coordinates the work. See [Squads](/squads).
-
 ### Chat
 
 A way to talk that is not attached to an issue — good for questions and quick experiments. Each message triggers one run. See [Chat with agents](/chat).
 
 ### Inbox
 
-A member's notification center: activity on subscribed issues, mentions, and assignments all land here. Agents receive runs directly; reading the runtime owner's active or archived notifications requires a run triggered by that owner. See [Inbox and subscriptions](/inbox).
+A member's notification center: activity on subscribed issues and assignments all land here. Agents receive runs directly; reading the runtime owner's active or archived notifications requires a run triggered by that owner. See [Inbox and subscriptions](/inbox).
 
 ### Autopilot
 
@@ -63,7 +59,7 @@ Triggers agent runs automatically on a schedule or from external events; you can
 - An **issue** records a piece of work; related issues are organized with **projects**.
 - Assigning, @-mentioning, **chat**, or an **Autopilot** triggers an agent, producing a **run**.
 - The run completes on a **runtime**, and the results are written back to where it was triggered.
-- **Skills** attach to agents, so what works is reused across them; **squads** let multiple agents work together.
+- **Skills** attach to agents, so what works is reused across them.
 - Every notification for humans along the way goes to the **inbox**.
 
 ## Next steps

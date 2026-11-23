@@ -39,11 +39,6 @@ export {
 export { useCommentComposerStore, type CommentImageLayout, type RunningAgentReply } from "./comment-composer-store";
 export { useCommentDraftStore, type CommentDraftKey, type PendingAnnotationDraft } from "./comment-draft-store";
 export {
-  myIssuesViewStore,
-  type MyIssuesViewState,
-  type MyIssuesScope,
-} from "./my-issues-view-store";
-export {
   actorIssuesViewStore,
   type ActorIssuesViewState,
   type ActorIssuesScope,
@@ -63,6 +58,7 @@ export {
   type SortDirection,
   type CardProperties,
   type ActorFilterValue,
+  type AssigneeFilterValue,
   type IssueViewState,
   type TableSystemColumnKey,
   type TableColumnKey,

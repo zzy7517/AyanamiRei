@@ -312,17 +312,8 @@ describe("ProjectDetail rename", () => {
   });
 });
 
-describe("ProjectDetail lead permissions", () => {
-  it("does not let ordinary members change the lead of a private project", async () => {
-    mocks.role = "member";
-    qc.setQueryData(projectKeys.detail("workspace-1", PROJECT.id), { ...PROJECT, visibility: "private" });
-    renderProjectDetail();
-    expect(screen.getByRole("button", { name: "No lead" })).toBeDisabled();
-    await userEvent.click(screen.getByRole("button", { name: "No lead" }));
-    expect(screen.queryByPlaceholderText("Assign lead...")).not.toBeInTheDocument();
-  });
-
-  it("keeps the lead of a workspace project editable for ordinary members", async () => {
+describe("ProjectDetail lead", () => {
+  it("lets ordinary members change the lead", async () => {
     mocks.role = "member";
     renderProjectDetail();
     expect(screen.getByRole("button", { name: "No lead" })).toBeEnabled();

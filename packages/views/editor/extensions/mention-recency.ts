@@ -1,5 +1,5 @@
-// Tracks the last time the current user mentioned a given target (member /
-// agent / issue / "all"), per workspace, in browser storage. Used to rank the
+// Tracks the last time the current user mentioned a given target (agent /
+// issue / project / doc), per workspace, in browser storage. Used to rank the
 // mention suggestion dropdown so recently-mentioned targets surface first.
 //
 // Data is per-device by design — the goal is "make the next mention faster",
@@ -63,8 +63,8 @@ export function recordMentionUsage(
   const map = readRecencyMap(workspaceId);
   map[recencyKey(item)] = Date.now();
 
-  // Lazy prune: keep the map bounded so it doesn't grow forever as members
-  // and agents come and go.
+  // Lazy prune: keep the map bounded so it doesn't grow forever as targets
+  // come and go.
   const entries = Object.entries(map);
   if (entries.length > MAX_ENTRIES) {
     entries.sort(([, ta], [, tb]) => tb - ta);
@@ -84,10 +84,9 @@ export function getRecencyMap(workspaceId: string): RecencyMap {
   return readRecencyMap(workspaceId);
 }
 
-// Sorts user-type mention items (member/agent) by recency DESC, with an
-// alphabetical name fallback for items the user has never mentioned. Used to
-// merge the previously-separate member and agent buckets into a single list.
-export function sortUserItemsByRecency(
+// Sorts agent mention items by recency DESC, with an alphabetical name
+// fallback for agents the user has never mentioned.
+export function sortAgentItemsByRecency(
   items: MentionItem[],
   recency: RecencyMap,
 ): MentionItem[] {

@@ -257,6 +257,112 @@ describe("ProjectResourcesSection — local folders", () => {
     expect(state.createMock).not.toHaveBeenCalled();
   });
 
+  // A folder on another computer is out of this computer's picker's reach, so
+  // desktop takes a typed path for it; nothing of it exists on web.
+  it("offers no typed path for another computer outside the desktop app", () => {
+    state.desktop = false;
+    state.daemon = { daemonId: null, deviceName: null, running: false };
+    state.runtimes = [runtime("daemon-2", "studio-pc.local", "online")];
+    state.resources = [folder("server-checkout", "daemon-2")];
+    renderWithI18n(<ProjectResourcesSection projectId="p1" />);
+
+    expect(
+      screen.queryByRole("button", { name: strings.local_remote_add }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("attaches a typed path on another computer, offline ones included", async () => {
+    state.runtimes = [
+      runtime("daemon-2", "studio-pc.local", "offline"),
+      runtime("daemon-3", "build-server.local", "online"),
+    ];
+    renderWithI18n(<ProjectResourcesSection projectId="p1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: strings.local_remote_add }));
+
+    const offline = await screen.findByRole("radio", { name: /studio-pc\.local/ });
+    expect(offline).toHaveTextContent(`· ${strings.local_offline}`);
+    expect(offline).toBeEnabled();
+    fireEvent.click(offline);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: strings.local_remote_path_label }),
+      { target: { value: "  /srv/repos/game-client/  " } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: strings.mode_add }));
+
+    // Only whitespace is trimmed: the path is sent as typed, including its
+    // trailing separator, and named by its last segment.
+    await waitFor(() =>
+      expect(state.createMock).toHaveBeenCalledWith({
+        resource_type: "local_directory",
+        resource_ref: {
+          local_path: "/srv/repos/game-client/",
+          daemon_id: "daemon-2",
+          label: "game-client",
+          execution_mode: "in_place",
+        },
+      }),
+    );
+  });
+
+  it("does not attach a folder on another computer without a path", async () => {
+    state.runtimes = [runtime("daemon-2", "studio-pc.local", "online")];
+    renderWithI18n(<ProjectResourcesSection projectId="p1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: strings.local_remote_add }));
+
+    const add = await screen.findByRole("button", { name: strings.mode_add });
+    expect(add).toBeDisabled();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: strings.local_remote_path_label }),
+      { target: { value: "   " } },
+    );
+    expect(add).toBeDisabled();
+    fireEvent.click(add);
+
+    expect(state.createMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the typed path on screen with the server's reason when adding fails", async () => {
+    state.runtimes = [runtime("daemon-2", "studio-pc.local", "online")];
+    state.createMock.mockRejectedValueOnce(
+      new Error("this computer already has a folder"),
+    );
+    renderWithI18n(<ProjectResourcesSection projectId="p1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: strings.local_remote_add }));
+    fireEvent.change(
+      await screen.findByRole("textbox", { name: strings.local_remote_path_label }),
+      { target: { value: "/srv/repos/game-client" } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: strings.mode_add }));
+
+    expect(await screen.findByText("this computer already has a folder")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: strings.local_remote_path_label }),
+    ).toHaveValue("/srv/repos/game-client");
+  });
+
+  // Once another computer has a folder, the entry sits in that computer's
+  // block and starts on it, in place of the one under this computer.
+  it("starts on the computer whose block the entry sits in", async () => {
+    state.runtimes = [
+      runtime("daemon-2", "studio-pc.local", "online"),
+      runtime("daemon-3", "build-server.local", "online"),
+    ];
+    state.resources = [folder("server-checkout", "daemon-2")];
+    renderWithI18n(<ProjectResourcesSection projectId="p1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: strings.local_remote_add }));
+
+    expect(
+      await screen.findByRole("radio", { name: /studio-pc\.local/ }),
+    ).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("radio", { name: /build-server\.local/ }),
+    ).toHaveAttribute("aria-checked", "false");
+  });
+
   it("saves a mode as soon as it is picked, keeping the rest of the ref", async () => {
     state.resources = [folder("game-client", "daemon-1")];
     renderWithI18n(<ProjectResourcesSection projectId="p1" />);

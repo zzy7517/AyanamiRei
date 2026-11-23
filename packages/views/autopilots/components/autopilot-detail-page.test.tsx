@@ -52,7 +52,6 @@ vi.mock("@multica/core/projects/queries", () => ({
 vi.mock("@multica/core/workspace/queries", () => ({
   memberListOptions: () => ({ queryKey: ["members"], queryFn: async () => [] }),
   agentListOptions: () => ({ queryKey: ["agents"], queryFn: async () => [] }),
-  squadListOptions: () => ({ queryKey: ["squads"], queryFn: async () => [] }),
 }));
 vi.mock("@multica/core/workspace/hooks", () => ({
   useActorName: () => ({ getActorName: (_type: string, id: string) => (id === "agent-1" ? "Eve" : "Jiayuan") }),

@@ -38,9 +38,7 @@
       "card4_actor_name": "Review Agent",
       "card4_body": "Brouillon de lundi relu — 4 remarques sur le ton. J'attends le suivant.",
       "card5_actor_name": "Coding Agent",
-      "card5_body_prefix": "Fonctionnalité d'export livrée, celle que ",
-      "card5_body_suffix": " avait signalée. Lien d'aperçu dans la PR.",
-      "card5_mention_you": "@vous",
+      "card5_body": "Fonctionnalité d'export livrée, celle que vous avez signalée. Lien d'aperçu dans la PR.",
       "card5_timestamp": "à l'instant"
     }
   },

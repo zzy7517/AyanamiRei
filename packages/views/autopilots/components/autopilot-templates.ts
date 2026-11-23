@@ -41,7 +41,7 @@ export const AUTOPILOT_TEMPLATES: AutopilotTemplate[] = [
 2. Filter for topics relevant to our team and industry
 3. For each item, write a short summary including: title, source, key takeaways
 4. Compile everything into a single digest post
-5. Post the digest as a comment on this issue and @mention all workspace members`,
+5. Post the digest as a comment on this issue`,
     icon: Newspaper,
     schedule: { time: { kind: "at", time: "09:00" }, days: { kind: "every" } },
   },
@@ -50,8 +50,7 @@ export const AUTOPILOT_TEMPLATES: AutopilotTemplate[] = [
     prompt: `1. List all open pull requests in the repository
 2. Identify PRs that have been open for more than 24 hours without a review
 3. For each stale PR, note the author, age, and a one-line summary of the change
-4. Post a comment on this issue listing all stale PRs with links
-5. @mention the team to remind them to review`,
+4. Post a comment on this issue listing all stale PRs with links`,
     icon: GitPullRequest,
     schedule: { time: { kind: "at", time: "10:00" }, days: WEEKDAYS },
   },

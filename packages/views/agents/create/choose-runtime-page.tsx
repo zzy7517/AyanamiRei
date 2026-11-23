@@ -24,7 +24,7 @@ import { CreateFlowFooter } from "./create-agent-footer";
 import { AgentCreateShell } from "./create-shell";
 import { buildRuntimeChoiceGroups, type HarnessOption } from "./runtime-choice";
 import { RuntimeChoiceList, qoderChoiceState } from "./runtime-choice-list";
-import { createPathWithParams } from "./squad-param";
+import { createPathWithParams } from "./create-route-params";
 import { UnfinishedDraftsBanner } from "./unfinished-drafts";
 
 type Selection = { kind: "runtime"; runtimeId: string } | { kind: "qoder" } | null;
@@ -59,7 +59,6 @@ export function ChooseRuntimePage({
   const paths = useWorkspacePaths();
   const navigation = useNavigation();
   const backOrReplace = useBackOrReplace();
-  const squadId = navigation.searchParams.get("squad");
   const runtimeParam = navigation.searchParams.get("runtime");
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
 
@@ -174,17 +173,9 @@ export function ChooseRuntimePage({
         : null;
 
   const goNext = (runtimeId: string) =>
-    navigation.push(
-      createPathWithParams(paths.newAgentManual(), {
-        squad: squadId,
-        runtime: runtimeId,
-      }),
-    );
+    navigation.push(createPathWithParams(paths.newAgentManual(), { runtime: runtimeId }));
 
-  const resumeSession = (sessionId: string) =>
-    navigation.push(
-      createPathWithParams(paths.newAgentAiSession(sessionId), { squad: squadId }),
-    );
+  const resumeSession = (sessionId: string) => navigation.push(paths.newAgentAiSession(sessionId));
 
   const summary =
     selection?.kind === "qoder"
@@ -195,11 +186,7 @@ export function ChooseRuntimePage({
 
   return (
     <AgentCreateShell
-      title={
-        squadId
-          ? t(($) => $.creation_studio.squad_title)
-          : t(($) => $.creation_studio.title)
-      }
+      title={t(($) => $.creation_studio.title)}
       step={t(($) => $.creation_studio.steps.runtime)}
       stepIndex={1}
       onClose={() => backOrReplace(paths.agents())}

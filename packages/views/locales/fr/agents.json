@@ -297,7 +297,6 @@
   },
   "creation_studio": {
     "title": "Créer un agent",
-    "squad_title": "Créer un agent pour ce squad",
     "duplicate_title": "Dupliquer {{name}}",
     "step_ai": "Construire par la conversation",
     "modes": {
@@ -355,7 +354,6 @@
     "duplicate_env_notice": "Les instructions, les skills et les arguments de commande sont copiés. Les variables d'environnement, les serveurs MCP et la configuration de runtime locale à la machine ne le sont pas.",
     "duplicate_runtime_reset_notice": "Le runtime d'origine est indisponible : cette copie s'exécute donc sur un autre. Le modèle, le niveau de réflexion et la vitesse ont été effacés car ils ne valent que pour le runtime sur lequel ils ont été choisis.",
     "create_agent": "Créer l'agent",
-    "create_and_add": "Créer et ajouter au squad",
     "creating": "Création de l'agent…",
     "create_failed": "Impossible de créer l'agent.",
     "name_conflict": "Un agent portant ce nom existe déjà.",
@@ -389,12 +387,9 @@
       "loading": "Finalisation…",
       "title": "{{name}} est prêt",
       "runs_on": "S'exécute sur {{runtime}}",
-      "joined_squad": "Ajouté à l'escouade {{squad}}",
       "next": "Et ensuite",
       "assign_title": "Lui confier une première tâche",
       "mention_title": "Le mentionner dans un ticket",
-      "squad_title": "L'ajouter à une escouade",
-      "open_squad_title": "Ouvrir {{squad}}",
       "open_agent": "Ouvrir l'agent",
       "back_to_list": "Retour aux agents"
     },
@@ -467,7 +462,6 @@
     "runtime_group_online": "{{online}}/{{total}} en ligne",
     "duplicate_copy_suffix": " (copie)",
     "skill_attach_failed_toast": "Agent créé, mais échec du rattachement des skills : {{error}}",
-    "squad_join_failed_toast": "L'agent « {{name}} » a été créé mais n'a pas pu rejoindre le squad : {{error}}. Vous pouvez l'ajouter manuellement depuis Membres.",
     "instructions": {
       "label": "Instructions",
       "editor_placeholder": "Indiquez ce que cet agent doit faire, sur quoi se concentrer, ce qu'il faut éviter…"

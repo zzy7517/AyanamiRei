@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { useCanonicalIssue } from "@multica/core/issues/canonical-id";
+import { useIssueShown } from "@multica/core/issues/agent-reply";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
 import { useInboxSelectionStore } from "@multica/core/inbox/selection-store";
@@ -22,6 +23,8 @@ interface IssueDetailRouteProps {
    * link: open the newest version of that deliverable.
    */
   deliverable?: string;
+  /** Passed on to `IssueDetail`: the desktop app passes the task's trees, hosts without a terminal route do not. */
+  trees?: (issueId: string) => ReactNode;
 }
 
 /**
@@ -86,11 +89,14 @@ function useHighlightHash(): { hash: string; commentId?: string; appRequestId?: 
  *    the route and only the route — the inbox renders `IssueDetail` in a side
  *    panel, where replacing the URL would navigate the user out of the inbox.
  */
-export function IssueDetailRoute({ routeId, onDelete, deliverable }: IssueDetailRouteProps) {
+export function IssueDetailRoute({ routeId, onDelete, deliverable, trees }: IssueDetailRouteProps) {
   const wsId = useWorkspaceId();
   const {
     canonicalId, issue, isResolving, notFound, loadFailed, isRetrying, retry, hasLoaded,
   } = useCanonicalIssue(wsId, routeId);
+  // The page is on screen from the moment its address resolves, so a reply
+  // that lands while it loads is not announced over the page showing it.
+  useIssueShown(canonicalId);
   const highlight = useHighlightHash();
   const landing = useInboxSelectionStore((s) =>
     s.landing && s.landing.issueId === canonicalId ? s.landing : null,
@@ -146,6 +152,7 @@ export function IssueDetailRoute({ routeId, onDelete, deliverable }: IssueDetail
         onHighlightLanded={onHighlightLanded}
         openDeliverable={deliverable}
         onDeliverableLinkDone={deliverable ? onDeliverableLinkDone : undefined}
+        trees={trees}
       />
     </IssuePeekHost>
   );

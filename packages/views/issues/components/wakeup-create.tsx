@@ -24,7 +24,7 @@ import { labelListOptions } from "@multica/core/labels/queries";
 import { propertyListOptions } from "@multica/core/properties/queries";
 import { isAgentRuntimeBound } from "@multica/core/agents";
 import { ApiError } from "@multica/core/api";
-import { agentListOptions, memberListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { agentListOptions, memberListOptions } from "@multica/core/workspace/queries";
 import { shortcutMatchesEvent, useShortcut } from "@multica/core/shortcuts";
 import { Button } from "@multica/ui/components/ui/button";
 import { IconButton } from "@multica/ui/components/common/icon-button";
@@ -964,18 +964,9 @@ function AssigneeChoice({
   const { t } = useT("issues");
   const [open, setOpen] = useState(false);
   const { setFilter, matches } = useMatches();
-  const { data: members = [] } = useQuery(memberListOptions(workspaceId));
   const { data: agentRows = [] } = useQuery(agentListOptions(workspaceId));
-  const { data: squads = [] } = useQuery(squadListOptions(workspaceId));
   const agents = agentRows.filter((a) => !a.archived_at);
-  const name =
-    value?.type === "member"
-      ? members.find((m) => m.user_id === value.id)?.name
-      : value?.type === "agent"
-        ? agents.find((a) => a.id === value.id)?.name
-        : value?.type === "squad"
-          ? squads.find((s) => s.id === value.id)?.name
-          : undefined;
+  const name = value ? agents.find((a) => a.id === value.id)?.name : undefined;
   const pick = (next: WakeupDraft["assignee"]) => {
     onChange(next);
     setOpen(false);
@@ -993,45 +984,20 @@ function AssigneeChoice({
       triggerRender={<button type="button" className={pillClass} />}
       trigger={
         <>
-          {value && value.type !== "squad" ? <ActorAvatar actorType={value.type} actorId={value.id} size="sm" /> : null}
+          {value ? <ActorAvatar actorType={value.type} actorId={value.id} size="sm" /> : null}
           <span className={cn("truncate", !name && "text-muted-foreground")}>{name ?? t(($) => $.wakeups.create.choose_assignee)}</span>
           <ChevronDown className="size-3 text-muted-foreground" aria-hidden="true" />
         </>
       }
     >
       {section(
-        t(($) => $.wakeups.create.members),
-        members
-          .filter((m) => matches(m.name))
-          .map((m) => (
-            <PickerItem
-              key={m.user_id}
-              selected={value?.type === "member" && value.id === m.user_id}
-              onClick={() => pick({ type: "member", id: m.user_id })}
-            >
-              <ActorAvatar actorType="member" actorId={m.user_id} size="sm" />
-              <span className="truncate">{m.name}</span>
-            </PickerItem>
-          )),
-      )}
-      {section(
         t(($) => $.wakeups.create.agents),
         agents
           .filter((a) => matches(a.name))
           .map((a) => (
-            <PickerItem key={a.id} selected={value?.type === "agent" && value.id === a.id} onClick={() => pick({ type: "agent", id: a.id })}>
+            <PickerItem key={a.id} selected={value?.id === a.id} onClick={() => pick({ type: "agent", id: a.id })}>
               <ActorAvatar actorType="agent" actorId={a.id} size="sm" />
               <span className="truncate">{a.name}</span>
-            </PickerItem>
-          )),
-      )}
-      {section(
-        t(($) => $.wakeups.create.squads),
-        squads
-          .filter((s) => matches(s.name))
-          .map((s) => (
-            <PickerItem key={s.id} selected={value?.type === "squad" && value.id === s.id} onClick={() => pick({ type: "squad", id: s.id })}>
-              <span className="truncate">{s.name}</span>
             </PickerItem>
           )),
       )}

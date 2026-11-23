@@ -65,15 +65,17 @@ For an existing project, open **Resources → Local folders** and follow the ste
 </Step>
 <Step>
 
-Under your computer, click **Choose folder...**, then pick the folder to use.
+Under your computer, click **Choose folder...**, then pick the folder to use. The picker only reaches this computer: for a folder on another computer, click **Add folder on another computer...** instead, pick the computer, type the folder's path as it is written on that machine, and click **Add folder**.
 
 </Step>
 <Step>
 
-Pick **Edit directly** or **Run in parallel**, described under [How runs share the directory](#how-runs-share-the-directory), then click **Add folder**. Desktop preselects **Run in parallel** when the folder is a git repository the runtime on that machine can isolate, and **Edit directly** otherwise. To change it later, click the folder's mode label in **Resources** and choose another mode; the selection saves immediately.
+Pick **Edit directly** or **Run in parallel**, described under [How runs share the directory](#how-runs-share-the-directory), then click **Add folder**. Desktop preselects **Run in parallel** when the folder is a git repository the runtime on that machine can isolate, and **Edit directly** otherwise. To change it later, click the folder's mode label in **Resources** and choose another mode; the selection saves immediately. A folder added by path starts in **Edit directly**, since whether it is a git repository cannot be checked from this computer; change it later the same way.
 
 </Step>
 </Steps>
+
+The computers in that list are titled as on the [Daemon and runtimes](/daemon-runtimes) page, with offline ones marked. The path is sent as typed, and if the server rejects it, the error is shown under the field. A computer can hold only one local folder per project, so add the folder before that computer has one.
 
 Preselection applies only to a directory you are linking now. A directory linked earlier keeps the mode it was saved with, so an existing setup is never switched under you.
 

@@ -64,8 +64,6 @@ const INBOX_NOTIFICATION_GROUPS = [
   "assignments",
   "status_changes",
   "comments",
-  "mentions",
-  "reactions",
   "updates",
   "new_issues",
   "agent_activity",
@@ -225,9 +223,7 @@ function ProjectIssuesGroup({
   const directionLabel = ti(($) => $.display[sortDirectionLabelKey(settings.sortBy, settings.sortDirection)]);
   const assigneeOptions: { value: SidebarIssueAssignee; label: string }[] = [
     { value: "anyone", label: t(($) => $.panels.work.assignee_anyone) },
-    { value: "me", label: t(($) => $.panels.work.assignee_me) },
     { value: "my_agents", label: t(($) => $.panels.work.assignee_my_agents) },
-    { value: "me_and_my_agents", label: t(($) => $.panels.work.assignee_me_and_my_agents) },
   ];
 
   return (

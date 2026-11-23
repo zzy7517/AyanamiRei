@@ -12,12 +12,6 @@ import { renderWithI18n } from "../../test/i18n";
 import { useCommentAnnotations } from "./use-comment-annotations";
 import { ReplyInput } from "./reply-input";
 import { CommentInput } from "./comment-input";
-
-// Avatar profile navigation is unrelated to composer behavior.
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("../../common/actor-avatar", () => ({ ActorAvatar: () => null, AgentStatusDot: () => null }));
 
 const preview = vi.hoisted(() => vi.fn<typeof import("@multica/core/api")["api"]["previewCommentTriggers"]>(async () => ({ agents: [], blocked: [] })));
@@ -25,7 +19,7 @@ vi.mock("@multica/core/api", async (original) => {
   const actual = await original<typeof import("@multica/core/api")>();
   return { ...actual, api: { ...actual.api, getBaseUrl: () => "https://api.example.test", previewCommentTriggers: preview, listTasksByIssue: vi.fn(async () => []),
     listWorkspaces: vi.fn(async () => [{ id: "workspace", slug: "test", name: "Test" }]),
-    listMembers: vi.fn(async () => []), listAgents: vi.fn(async () => []), listSquads: vi.fn(async () => []),
+    listMembers: vi.fn(async () => []), listAgents: vi.fn(async () => []),
     listQuickActions: vi.fn(async () => ({ quick_actions: [] })) } };
 });
 

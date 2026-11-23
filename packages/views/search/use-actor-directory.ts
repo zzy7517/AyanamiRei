@@ -9,9 +9,8 @@ import { runtimeDisplayLabel, runtimeListOptions } from "@multica/core/runtimes"
 import {
   agentListOptions,
   memberListOptions,
-  squadListOptions,
 } from "@multica/core/workspace/queries";
-import type { Agent, MemberWithUser, Squad } from "@multica/core/types";
+import type { Agent, MemberWithUser } from "@multica/core/types";
 
 export interface AgentEntry {
   agent: Agent;
@@ -22,26 +21,18 @@ export interface AgentEntry {
   runtimeLabel: string | null;
 }
 
-export interface SquadEntry {
-  squad: Squad;
-  /** A squad runs through its leader, so it is assignable when the leader is. */
-  assignable: boolean;
-}
-
 const EMPTY_AGENTS: Agent[] = [];
-const EMPTY_SQUADS: Squad[] = [];
 const EMPTY_MEMBERS: MemberWithUser[] = [];
 
 /**
- * Agents, squads and members as the palette shows them: archived ones out,
- * each agent annotated with whether the viewer can assign it and where it
- * runs. One pass shared by search, the assignee submenu and delegation.
+ * Agents and members as the palette shows them: archived ones out, each agent
+ * annotated with whether the viewer can assign it and where it runs. One pass
+ * shared by search, the assignee submenu and delegation.
  */
 export function useActorDirectory(enabled: boolean) {
   const wsId = useWorkspaceId();
   const { userId, role } = useCurrentMember(wsId);
   const { data: agentsData = EMPTY_AGENTS } = useQuery({ ...agentListOptions(wsId), enabled });
-  const { data: squadsData = EMPTY_SQUADS } = useQuery({ ...squadListOptions(wsId), enabled });
   const { data: members = EMPTY_MEMBERS } = useQuery({ ...memberListOptions(wsId), enabled });
   const { data: runtimes } = useQuery({ ...runtimeListOptions(wsId), enabled });
   const { byAgent } = useWorkspacePresenceMap(enabled ? wsId : undefined);
@@ -64,12 +55,5 @@ export function useActorDirectory(enabled: boolean) {
       });
   }, [agentsData, byAgent, role, runtimes, userId]);
 
-  const squads = useMemo<SquadEntry[]>(() => {
-    const assignable = new Set(agents.filter((entry) => entry.assignable).map((entry) => entry.agent.id));
-    return squadsData
-      .filter((squad) => !squad.archived_at)
-      .map((squad) => ({ squad, assignable: assignable.has(squad.leader_id) }));
-  }, [agents, squadsData]);
-
-  return useMemo(() => ({ agents, squads, members }), [agents, squads, members]);
+  return useMemo(() => ({ agents, members }), [agents, members]);
 }

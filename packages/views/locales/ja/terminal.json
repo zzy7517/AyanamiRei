@@ -1,0 +1,30 @@
+{
+  "directory_label": "ディレクトリ",
+  "directory_placeholder": "/home/you/project",
+  "directory_required": "絶対パスを入力してください。",
+  "open": "開く",
+  "end_session": "セッションを終了",
+  "agent_terminal": "エージェントターミナル",
+  "restart": "再起動",
+  "status": {
+    "connecting": "接続中…",
+    "reconnecting": "再接続中…",
+    "ended": "セッションが終了しました",
+    "ended_with_code": "セッションが終了しました (終了コード {{code}})",
+    "ended_by_signal": "セッションはシグナル {{signal}} により終了しました",
+    "reattached": "再接続しました。プログラムが再び出力するまで画面は空のままです。"
+  },
+  "errors": {
+    "unavailable": "このサーバーではターミナルを利用できません。",
+    "flag_disabled": "このサーバーではターミナルが無効になっています。",
+    "bad_request": "サーバーがリクエストを拒否しました。",
+    "terminal_root_unconfigured": "このマシンにはターミナルのディレクトリが設定されていません。",
+    "path_not_allowed": "このディレクトリではターミナルを開けません。",
+    "daemon_unavailable": "マシンが接続されていません。",
+    "not_found": "このターミナルはすでに終了しています。",
+    "unsupported_platform": "このマシンの OS ではターミナルを利用できません。",
+    "tree_not_ready": "worktree はまだ構築されていません。",
+    "runtime_offline": "worktree を構築したマシンが接続されていません。",
+    "internal": "問題が発生しました。"
+  }
+}

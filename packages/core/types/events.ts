@@ -62,6 +62,7 @@ export type WSEventType =
   | "subscriber:added"
   | "subscriber:removed"
   | "activity:created"
+  // Reaction events are no longer sent; apps/mobile still subscribes to them.
   | "reaction:added"
   | "reaction:removed"
   | "issue_reaction:added"
@@ -79,14 +80,12 @@ export type WSEventType =
   | "project:created"
   | "project:updated"
   | "project:deleted"
-  | "squad:created"
-  | "squad:updated"
-  | "squad:deleted"
   | "label:created"
   | "label:updated"
   | "label:deleted"
   | "issue_labels:changed"
   | "issue_unread:changed"
+  | "issue:agent_replied"
   | "app_request:changed"
   | "app_call:created"
   | "issue_metadata:changed"
@@ -260,6 +259,14 @@ export interface IssueUnreadChangedPayload {
   recipient_id: string;
   issue_id: string;
   unread: boolean;
+}
+
+/** Workspace-wide: an issue's "new reply" marker changed — it moved forward
+ * when the agent ended a turn, or a member marked the reply seen. Sent only
+ * when the stored marker changed, so `agent_replied_at` is null after that. */
+export interface IssueAgentRepliedPayload {
+  issue_id: string;
+  agent_replied_at: string | null;
 }
 
 export interface InboxBatchReadPayload {
@@ -458,6 +465,7 @@ export interface TaskCancelledPayload {
   status: string;
 }
 
+// Payloads of the four reaction events: no longer sent, kept for apps/mobile.
 export interface ReactionAddedPayload {
   reaction: Reaction;
   issue_id: string;
@@ -673,6 +681,7 @@ export interface WSEventPayloadMap {
   "issue_attachments:changed": IssueAttachmentsChangedPayload;
   "issue_labels:changed": IssueLabelsChangedPayload;
   "issue_unread:changed": IssueUnreadChangedPayload;
+  "issue:agent_replied": IssueAgentRepliedPayload;
   "issue_properties:changed": IssuePropertiesChangedPayload;
   "property:created": PropertyChangedPayload;
   "property:updated": PropertyChangedPayload;
@@ -744,9 +753,6 @@ export interface WSEventPayloadMap {
   "skill:created": unknown;
   "skill:updated": unknown;
   "skill:deleted": unknown;
-  "squad:created": unknown;
-  "squad:updated": unknown;
-  "squad:deleted": unknown;
   "label:created": unknown;
   "label:updated": unknown;
   "label:deleted": unknown;

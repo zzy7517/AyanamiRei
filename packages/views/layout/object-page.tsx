@@ -40,7 +40,7 @@ export const OBJECT_PAGE_BODY =
 const OBJECT_PAGE_SCROLL_KEY = "object";
 
 /** What an object page shows, as themes see it on `data-type`. */
-export type ObjectPageType = "project" | "agent" | "squad" | "runtime" | "member" | "autopilot" | "skill";
+export type ObjectPageType = "project" | "agent" | "runtime" | "member" | "autopilot" | "skill";
 
 interface ObjectPageProps {
   type: ObjectPageType;

@@ -1,9 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { api } from "../api";
-import type {
-  WorkspaceWorkingAgentMineRelation,
-  WorkspaceWorkingAgentType,
-} from "../types";
+import type { WorkspaceWorkingAgentType } from "../types";
 
 export const agentTaskSnapshotKeys = {
   all: (wsId: string) => ["workspaces", wsId, "agent-task-snapshot"] as const,
@@ -15,18 +12,13 @@ export const workspaceWorkingAgentsKeys = {
   list: (
     wsId: string,
     type?: WorkspaceWorkingAgentType,
-    mineRelation?: WorkspaceWorkingAgentMineRelation,
     parentIssueId?: string,
   ) =>
     [
       ...workspaceWorkingAgentsKeys.all(wsId),
       "list",
       type ?? "all",
-      mineRelation
-        ? `mine:${mineRelation}`
-        : parentIssueId
-          ? `parent:${parentIssueId}`
-          : "workspace",
+      parentIssueId ? `parent:${parentIssueId}` : "workspace",
     ] as const,
 };
 
@@ -47,9 +39,8 @@ export const agentRunCountsKeys = {
 // this cache with zero additional network traffic.
 //
 // Presence itself is derived from the active tasks only (see derive-presence.ts
-// and #1823). The one terminal row per agent is used solely for the Squad hover
-// card's "last activity" line; MUL-5436 tracks moving it to a dedicated lazy
-// endpoint so this hot query stops carrying history at all.
+// and #1823). The one terminal row per agent is read only for the agent hover
+// card's "last activity" line.
 //
 // The 30s staleTime is a safety net only; the primary freshness signal is
 // WS task events, which invalidate this query immediately. Without WS,
@@ -64,25 +55,17 @@ export function agentTaskSnapshotOptions(wsId: string) {
   });
 }
 
-// Working-agent summaries, optionally narrowed to a My Issues relation or to
-// one issue's direct children. Task lifecycle WebSocket events invalidate
+// Working-agent summaries, optionally narrowed to one issue's direct children. Task lifecycle WebSocket events invalidate
 // every narrowing immediately; the short stale time is the reconnect /
 // missed-event safety net.
 export function workspaceWorkingAgentsOptions(
   wsId: string,
   type?: WorkspaceWorkingAgentType,
-  mineRelation?: WorkspaceWorkingAgentMineRelation,
   parentIssueId?: string,
 ) {
   return queryOptions({
-    queryKey: workspaceWorkingAgentsKeys.list(
-      wsId,
-      type,
-      mineRelation,
-      parentIssueId,
-    ),
-    queryFn: () =>
-      api.getWorkspaceWorkingAgents(type, mineRelation, parentIssueId),
+    queryKey: workspaceWorkingAgentsKeys.list(wsId, type, parentIssueId),
+    queryFn: () => api.getWorkspaceWorkingAgents(type, parentIssueId),
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,

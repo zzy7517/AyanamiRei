@@ -64,10 +64,6 @@ vi.mock("@multica/core/hooks", () => ({
   useWorkspaceId: () => "workspace-1",
 }));
 
-vi.mock("@multica/core/permissions", () => ({
-  useIsGuest: () => false,
-}));
-
 vi.mock("@multica/core/paths", () => ({
   issueRouteRef: (issue: { id: string; identifier?: string | null }) => issue.identifier || issue.id,
   useWorkspacePaths: () => ({
@@ -384,7 +380,7 @@ describe("InboxPage", () => {
     layout.width = DESKTOP;
     searchParams = new URLSearchParams("issue=quick-failed");
     listData.active = [item({ id: "quick-failed", issue_id: null, type: "quick_create_failed", title: "Review quick-create failure" })];
-    useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "mentions");
+    useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "assign");
     render(<InboxPage />);
     expect(replace).not.toHaveBeenCalledWith("/acme/inbox");
     expect(screen.getByText("Review quick-create failure")).toBeInTheDocument();
@@ -597,26 +593,26 @@ describe("InboxPage", () => {
     reset();
     listData.active = [
       item({ id: "newest-comment", issue_id: "issue-1", type: "new_comment", created_at: "2026-06-15T09:00:00Z" }),
-      item({ id: "older-mention", issue_id: "issue-1", type: "mentioned", created_at: "2026-06-15T08:00:00Z" }),
+      item({ id: "older-change", issue_id: "issue-1", type: "status_changed", created_at: "2026-06-15T08:00:00Z" }),
       item({ id: "other-comment", issue_id: "issue-2", type: "new_comment" }),
     ];
-    useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "mention");
+    useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "change");
 
     render(<InboxPage />);
 
     expect(screen.getAllByTestId("row")).toHaveLength(1);
-    expect(screen.getByTestId("row")).toHaveTextContent("older-mention");
-    expect(screen.getByTestId("filter-chips").dataset.types).toBe("mention");
+    expect(screen.getByTestId("row")).toHaveTextContent("older-change");
+    expect(screen.getByTestId("filter-chips").dataset.types).toBe("change");
   });
 
   it("keeps a type filtered out with is not", () => {
     reset();
     listData.active = [
-      item({ id: "mention", issue_id: "issue-1", type: "mentioned" }),
+      item({ id: "change", issue_id: "issue-1", type: "status_changed" }),
       item({ id: "comment", issue_id: "issue-2", type: "new_comment" }),
     ];
     const filters = useInboxFilterStore.getState();
-    filters.toggleFilterValue("workspace-1", "type", "mention");
+    filters.toggleFilterValue("workspace-1", "type", "change");
     filters.setFilterNegated("workspace-1", "type", true);
 
     render(<InboxPage />);

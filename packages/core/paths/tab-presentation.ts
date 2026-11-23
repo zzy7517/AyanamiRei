@@ -45,7 +45,6 @@ export type TabLabelKey =
   | "autopilot"
   | "agent"
   | "member"
-  | "squad"
   | "doc"
   | "docFolder"
   | "skill"
@@ -53,7 +52,6 @@ export type TabLabelKey =
   | "runtime"
   | "attachment"
   | "create_agent"
-  | "my_agents"
   | "unknown";
 
 /** How a tab's title should be produced. */
@@ -109,7 +107,6 @@ function textOr(text: string | undefined | null, tabKey: TabLabelKey): TabTitleS
 const ACTOR_LABEL: Record<TabActorType, TabLabelKey> = {
   agent: "agent",
   member: "member",
-  squad: "squad",
 };
 
 // Extension → file-type icon. The preview URL only carries the filename, so the
@@ -160,11 +157,6 @@ export function resolveTabPresentation(
         title: { kind: "nav", navKey: page.navKey },
       };
     }
-    case "myAgents":
-      return {
-        visual: { kind: "icon", icon: "Bot" },
-        title: { kind: "tab", tabKey: "my_agents" },
-      };
     case "issue":
       return {
         visual: {

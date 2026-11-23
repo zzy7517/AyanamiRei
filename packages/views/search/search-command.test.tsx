@@ -15,7 +15,7 @@ import { issueViewEverywhereOptions } from "@multica/core/issue-views/queries";
 import { projectListOptions } from "@multica/core/projects/queries";
 import { configStore } from "@multica/core/config";
 import { docTreeOptions } from "@multica/core/docs";
-import { DOCS_V1_FLAG } from "@multica/core/feature-flags";
+import { DOCS_V1_FLAG, TERMINAL_V1_FLAG } from "@multica/core/feature-flags";
 import { I18nProvider } from "@multica/core/i18n/react";
 import { issueDetailOptions, issueTimelineOptions } from "@multica/core/issues/queries";
 import { WORKSPACE_PAGES } from "@multica/core/paths";
@@ -23,7 +23,6 @@ import type { Issue } from "@multica/core/types";
 import {
   agentListOptions,
   memberListOptions,
-  squadListOptions,
   workspaceListOptions,
 } from "@multica/core/workspace/queries";
 import { RESOURCES } from "../locales";
@@ -374,7 +373,7 @@ describe("SearchCommand", () => {
     apiFns.set("searchIssues", vi.fn(() => Promise.resolve({ issues: [], total: 0 })));
     apiFns.set("searchProjects", vi.fn(() => Promise.resolve({ projects: [], total: 0 })));
     apiFns.set("searchDocs", vi.fn(() => Promise.resolve({ docs: [] })));
-    configStore.getState().setFeatureFlags({ [DOCS_V1_FLAG]: true });
+    configStore.getState().setFeatureFlags({ [DOCS_V1_FLAG]: true, [TERMINAL_V1_FLAG]: true });
     mockPush.mockReset();
     mockPathname.current = "/ws-test/issues";
     mockGetShareableUrl.mockReset().mockImplementation((p: string) => `https://app.multica/${p}`);
@@ -395,7 +394,6 @@ describe("SearchCommand", () => {
 
     seed(memberListOptions("ws-test"), [makeMember(ME, "Me Myself", "me@example.com")]);
     seed(agentListOptions("ws-test"), []);
-    seed(squadListOptions("ws-test"), []);
 
     act(() => {
       for (const token of registered.splice(0)) useCommandBarContextStore.getState().unregister(token);
@@ -424,39 +422,6 @@ describe("SearchCommand", () => {
     expect(renderedValues()).toEqual(["command:new-issue", "command:chat-with-agent"]);
   });
 
-  describe("guest (MUL-9420)", () => {
-    beforeEach(() => {
-      seed(memberListOptions("ws-test"), [{ ...makeMember(ME, "Me Myself", "me@example.com"), role: "guest" }]);
-    });
-
-    it("offers no New issue on an empty query", () => {
-      renderSearch();
-
-      expect(renderedValues()).not.toContain("command:new-issue");
-    });
-
-    it("finds no New issue command and no hand-to-agent row while typing", async () => {
-      const user = userEvent.setup();
-      renderSearch();
-      await user.type(input(), "new");
-
-      expect(await rowText("New project")).toBeInTheDocument();
-      expect(screen.queryByText((_, el) => el?.textContent === "New issue" && el?.tagName === "SPAN")).toBeNull();
-      expect(renderedValues()).not.toContain("hand-to-agent");
-    });
-
-    it("drops New issue from a project's context commands", () => {
-      registerContext({
-        kind: "project",
-        project: { id: "proj-1", title: "Shared project", archived_at: null },
-      } as CommandBarContext);
-      renderSearch();
-
-      expect(renderedValues()).toContain("command:context-project:project-status");
-      expect(renderedValues()).not.toContain("command:context-project:project-new-issue");
-    });
-  });
-
   describe("pages and global commands", () => {
     it("filters navigation pages by query", async () => {
       const user = userEvent.setup();
@@ -477,7 +442,8 @@ describe("SearchCommand", () => {
         await user.type(input(), enLayout.nav[page.navKey]);
         await waitFor(() => expect(renderedValues()).toContain(`page:${key}`));
       }
-    });
+      // Typed one page at a time, so it grows with the registry and needs more than the default.
+    }, 20_000);
 
     it("does not surface a page on an incidental substring of a hidden keyword", async () => {
       const user = userEvent.setup();

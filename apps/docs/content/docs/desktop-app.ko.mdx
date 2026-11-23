@@ -180,6 +180,20 @@ $json = @'
 Desktop은 브라우저와 실행 컴퓨터에서 모두 접근할 수 있는 주소에만 연결할 수 있습니다. 원격 자체 호스팅 인스턴스에 HTTPS가 없거나 WebSocket 프록시가 설정되지 않으면 Desktop이 연결되지 않습니다. 전체 설정은 [자체 호스팅 빠른 시작](/self-host-quickstart#remote-access)을 참고하세요.
 </Callout>
 
+### 로그인 없이 바로 진입
+
+나만 사용하는 인스턴스라면 `authToken`을 추가해 로그인 페이지를 건너뛰세요:
+
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "https://api.example.com",
+  "authToken": "<서버의 MULTICA_AUTH_TOKEN>"
+}
+```
+
+서버의 `MULTICA_AUTH_TOKEN`과 같은 값을 넣고, 서버에 `MULTICA_AUTH_TOKEN_EMAIL`도 설정하세요. [사전 공유 토큰](/environment-variables#사전-공유-토큰)을 참고하세요. 그러면 Desktop이 바로 워크스페이스로 진입합니다. 서버가 토큰을 거부하면 Desktop은 로그인 페이지와 안내를 표시합니다. 파일을 수정한 뒤 다시 시작하거나, 평소처럼 이메일이나 Google로 로그인하세요. `authToken`이 없으면 아무것도 달라지지 않습니다.
+
 ### Windows: 파일 이름과 인코딩 확인
 
 Windows에서 흔히 쓰는 두 가지 방법으로 파일을 만들면 Desktop이 읽을 수 없는 파일이 생깁니다.

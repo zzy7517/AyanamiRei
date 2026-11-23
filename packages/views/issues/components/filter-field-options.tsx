@@ -23,7 +23,7 @@ import { PRIORITY_DISPLAY_ORDER } from "@multica/core/issues/config";
 import { PROJECT_STATUS_CONFIG, PROJECT_STATUS_ORDER } from "@multica/core/projects/config";
 import { projectListOptions } from "@multica/core/projects/queries";
 import { labelListOptions } from "@multica/core/labels/queries";
-import { memberListOptions, agentListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { memberListOptions, agentListOptions } from "@multica/core/workspace/queries";
 import {
   DUE_DATE_FILTERS,
   FILTER_NONE_VALUE,
@@ -32,7 +32,7 @@ import {
   type IssueRelationFilter,
   type NegatableFilterDimension,
 } from "@multica/core/issues/stores/filter-tree";
-import type { ActorFilterValue } from "@multica/core/issues/stores/view-store";
+import type { ActorFilterValue, AssigneeFilterValue } from "@multica/core/issues/stores/view-store";
 import { useT } from "../../i18n";
 import { useStatusOptions } from "../utils/status-options";
 import { matchesPinyin } from "../../editor/extensions/pinyin-match";
@@ -56,7 +56,6 @@ export const FILTER_FIELD_ICONS: Record<NegatableFilterDimension, IconComponent>
 };
 
 const RELATION_ICONS: Record<IssueRelationFilter, IconComponent> = {
-  assigned: CircleUser,
   created: UserPen,
   my_agents: Bot,
   subscribed: BellRing,
@@ -75,9 +74,8 @@ export const DUE_DATE_LABEL_KEY: Record<
 
 export const RELATION_LABEL_KEY: Record<
   IssueRelationFilter,
-  "relation_assigned" | "relation_created" | "relation_my_agents" | "relation_subscribed"
+  "relation_created" | "relation_my_agents" | "relation_subscribed"
 > = {
-  assigned: "relation_assigned",
   created: "relation_created",
   my_agents: "relation_my_agents",
   subscribed: "relation_subscribed",
@@ -103,7 +101,7 @@ export interface FilterValueOption {
   value: string;
   label: string;
   icon: ReactNode;
-  /** Heading the option sits under (members / agents / squads). */
+  /** Heading the option sits under (members / agents). */
   group?: string;
 }
 
@@ -127,12 +125,10 @@ export function useFilterValueCatalog(
   const projectStatusLabels = useProjectStatusLabels();
   const { data: members = [] } = useQuery({ ...memberListOptions(wsId), enabled });
   const { data: agents = [] } = useQuery({ ...agentListOptions(wsId), enabled });
-  const { data: squads = [] } = useQuery({ ...squadListOptions(wsId), enabled });
   const { data: projects = [] } = useQuery({ ...projectListOptions(wsId), enabled });
   const { data: labels = [] } = useQuery({ ...labelListOptions(wsId), enabled });
   const membersGroup = t(($) => $.filters.members_group);
   const agentsGroup = t(($) => $.filters.agents_group);
-  const squadsGroup = t(($) => $.filters.squads_group);
   const noAssignee = t(($) => $.filters.no_assignee);
   const noProject = t(($) => $.filters.no_project);
   const priorityLabels = Object.fromEntries(
@@ -147,36 +143,24 @@ export function useFilterValueCatalog(
   // Labels are fresh strings per render; key the memo on their content.
   const labelKey = JSON.stringify([
     priorityLabels, relationLabels, dueDateLabels, projectStatusLabels,
-    membersGroup, agentsGroup, squadsGroup, noAssignee, noProject,
+    membersGroup, agentsGroup, noAssignee, noProject,
   ]);
 
   return useMemo(() => {
-    const actorOptions = (withSquads: boolean): FilterValueOption[] => [
-      ...members.map((m) => ({
-        value: `member:${m.user_id}`,
-        label: m.name,
-        group: membersGroup,
-        icon: <ActorAvatar actorType="member" actorId={m.user_id} size="xs" profileLink={false} />,
-      })),
-      ...agents
-        .filter((a) => !a.archived_at)
-        .map((a) => ({
-          value: `agent:${a.id}`,
-          label: a.name,
-          group: agentsGroup,
-          icon: <ActorAvatar actorType="agent" actorId={a.id} size="xs" profileLink={false} />,
-        })),
-      ...(withSquads
-        ? squads
-            .filter((s) => !s.archived_at)
-            .map((s) => ({
-              value: `squad:${s.id}`,
-              label: s.name,
-              group: squadsGroup,
-              icon: <ActorAvatar actorType="squad" actorId={s.id} size="xs" profileLink={false} />,
-            }))
-        : []),
-    ];
+    const memberOptions: FilterValueOption[] = members.map((m) => ({
+      value: `member:${m.user_id}`,
+      label: m.name,
+      group: membersGroup,
+      icon: <ActorAvatar actorType="member" actorId={m.user_id} size="xs" profileLink={false} />,
+    }));
+    const agentOptions: FilterValueOption[] = agents
+      .filter((a) => !a.archived_at)
+      .map((a) => ({
+        value: `agent:${a.id}`,
+        label: a.name,
+        group: agentsGroup,
+        icon: <ActorAvatar actorType="agent" actorId={a.id} size="xs" profileLink={false} />,
+      }));
     const byField: Record<NegatableFilterDimension, FilterValueOption[]> = {
       status: statusOptions.map((option) => ({
         value: option.key,
@@ -202,9 +186,9 @@ export function useFilterValueCatalog(
           label: noAssignee,
           icon: <UserMinus className="size-3.5 text-muted-foreground" />,
         },
-        ...actorOptions(true),
+        ...agentOptions,
       ],
-      creator: actorOptions(false),
+      creator: [...memberOptions, ...agentOptions],
       project: [
         {
           value: FILTER_NONE_VALUE,
@@ -243,14 +227,20 @@ export function useFilterValueCatalog(
     };
     return (field: NegatableFilterDimension) => byField[field];
     // eslint-disable-next-line react-hooks/exhaustive-deps -- translated labels are keyed by content
-  }, [agents, labelKey, labels, members, projects, squads, statusOptions]);
+  }, [agents, labelKey, labels, members, projects, statusOptions]);
 }
 
-function parseActorValue(value: string): ActorFilterValue | null {
+function parseAssigneeValue(value: string): AssigneeFilterValue | null {
+  return value.startsWith("agent:") && value.length > "agent:".length
+    ? { type: "agent", id: value.slice("agent:".length) }
+    : null;
+}
+
+function parseCreatorValue(value: string): ActorFilterValue | null {
   const separator = value.indexOf(":");
   if (separator <= 0) return null;
   const type = value.slice(0, separator);
-  if (type !== "member" && type !== "agent" && type !== "squad") return null;
+  if (type !== "member" && type !== "agent") return null;
   return { type, id: value.slice(separator + 1) };
 }
 
@@ -258,7 +248,7 @@ function parseActorValue(value: string): ActorFilterValue | null {
 export interface SimpleFilterToggles {
   toggleStatusFilter: (status: string) => void;
   togglePriorityFilter: (priority: (typeof PRIORITY_DISPLAY_ORDER)[number]) => void;
-  toggleAssigneeFilter: (value: ActorFilterValue) => void;
+  toggleAssigneeFilter: (value: AssigneeFilterValue) => void;
   toggleNoAssignee: () => void;
   toggleCreatorFilter: (value: ActorFilterValue) => void;
   toggleProjectFilter: (projectId: string) => void;
@@ -282,11 +272,11 @@ export function toggleSimpleFilterValue(
       return act.togglePriorityFilter(value as (typeof PRIORITY_DISPLAY_ORDER)[number]);
     case "assignee": {
       if (value === FILTER_NONE_VALUE) return act.toggleNoAssignee();
-      const actor = parseActorValue(value);
-      return actor ? act.toggleAssigneeFilter(actor) : undefined;
+      const agent = parseAssigneeValue(value);
+      return agent ? act.toggleAssigneeFilter(agent) : undefined;
     }
     case "creator": {
-      const actor = parseActorValue(value);
+      const actor = parseCreatorValue(value);
       return actor ? act.toggleCreatorFilter(actor) : undefined;
     }
     case "project":

@@ -16,7 +16,6 @@
     "role": "Rôle",
     "email": "E-mail",
     "joined": "Membre depuis",
-    "relation": "Relation",
     "breadcrumb_fallback": "Membre",
     "not_found_title": "Membre introuvable",
     "not_found_description": "Ce membre a peut-être quitté l'espace de travail."

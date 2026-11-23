@@ -10,11 +10,11 @@ describe("issues scope store", () => {
   it("keeps each page's tab independent", () => {
     const { setScope } = useIssuesScopeStore.getState();
     setScope("project:p1", "agents");
-    setScope("issues", "members");
+    setScope("issues", "all");
 
     const { scopes } = useIssuesScopeStore.getState();
     expect(scopes["project:p1"]).toBe("agents");
-    expect(scopes["issues"]).toBe("members");
+    expect(scopes["issues"]).toBe("all");
     expect(scopes["project:p2"]).toBeUndefined();
   });
 

@@ -23,7 +23,6 @@ vi.mock("@multica/core/hooks", () => ({
 vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
     agentDetail: (agentId: string) => `/acme/agents/${agentId}`,
-    squadDetail: (squadId: string) => `/acme/squads/${squadId}`,
     newAgentDone: (agentId: string) => `/acme/agents/new/done/${agentId}`,
   }),
 }));
@@ -45,15 +44,10 @@ vi.mock("@multica/core/api", () => {
   return {
     api: {
       createAgent: mockCreateAgent,
-      addSquadMember: vi.fn(),
     },
     ApiError,
   };
 });
-
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), warning: vi.fn() },
-}));
 
 import { useCreateAgentSubmit } from "./use-create-agent-submit";
 
@@ -134,7 +128,6 @@ describe("useCreateAgentSubmit cache handoff", () => {
             runtimeId: CREATED_AGENT.runtime_id,
           },
           runtimeId: CREATED_AGENT.runtime_id,
-          squadId: null,
         }),
       { wrapper: wrapper(queryClient) },
     );
@@ -166,7 +159,6 @@ describe("useCreateAgentSubmit plan refusal", () => {
         useCreateAgentSubmit({
           draft: { ...EMPTY_AGENT_DRAFT, name: "Shared", runtimeId: "runtime-1", permissionScope: "members", memberIds: new Set(["u2"]) },
           runtimeId: "runtime-1",
-          squadId: null,
         }),
       { wrapper: wrapper(queryClient) },
     );

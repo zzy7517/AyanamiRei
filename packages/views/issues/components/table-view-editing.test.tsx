@@ -300,7 +300,6 @@ describe("TableView cell editors under data refresh", () => {
       listProperties: async () => ({ properties: [] }),
       listMembers: async () => [],
       listAgents: async () => [],
-      listSquads: async () => [],
       listIssueStatuses: async () => ({ statuses: [] }),
       listIssueTableRows: async () => ({
         query_fingerprint: "test",
@@ -436,7 +435,7 @@ describe("TableView cell editors under data refresh", () => {
     });
   });
 
-  it("offers no sub-issue creation when the viewer cannot create issues (guest, MUL-9420)", async () => {
+  it("offers no sub-issue creation when the surface does not allow creating issues", async () => {
     serverIssues = [makeIssue("a", "Alpha task", "todo")];
 
     renderWithI18n(

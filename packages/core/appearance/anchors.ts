@@ -19,7 +19,7 @@ export const THEME_ANCHORS = {
   "bottom-bar": "The status bar under the page, on windows wide enough to show it.",
   "issue-group-header": "A status group header in issue lists; `data-status` is the status key.",
   "issue-row":
-    "One issue in a list; `data-status`, `data-priority`, `data-assignee-type` (member, agent, squad or none), `data-parity` (even or odd within its status group) and `data-selected` (true or false).",
+    "One issue in a list; `data-status`, `data-priority`, `data-assignee-type` (member, agent or none), `data-parity` (even or odd within its status group) and `data-selected` (true or false).",
   "board-column": "One column on a board.",
   "board-card":
     "One issue card on a board; `data-status`, `data-priority` and `data-assignee-type` as on `issue-row`.",
@@ -49,11 +49,11 @@ export const THEME_ANCHORS = {
   "issue-properties": "The properties sidebar next to an issue.",
   "issue-activity": "The activity and comments under an issue.",
   "object-page":
-    "The page of one project, agent, squad, runtime, member, autopilot or skill; `data-type` names which.",
+    "The page of one project, agent, runtime, member, autopilot or skill; `data-type` names which.",
   "command-palette": "The search and command palette.",
   "palette-item":
-    "A row in the palette; `data-type` is command, page, workspace, issue, project, member, agent, squad, object or option (a choice inside a palette page). The highlighted row has `data-selected`.",
-  avatar: "An avatar; `data-type` is member, agent, squad or system.",
+    "A row in the palette; `data-type` is command, page, workspace, issue, project, member, agent, object or option (a choice inside a palette page). The highlighted row has `data-selected`.",
+  avatar: "An avatar; `data-type` is member, agent or system.",
   "empty-state": "A placeholder for something with nothing in it yet; `data-variant` is page or section.",
   "editor-toolbar": "The formatting toolbar over selected text; `data-mode` is format or link.",
   "editor-menu": "A menu floating over the editor while typing; `data-kind` is slash or mention.",

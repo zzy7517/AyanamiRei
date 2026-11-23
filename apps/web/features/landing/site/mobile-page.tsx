@@ -9,7 +9,6 @@ import {
   InboxTabVisual,
   MobileScene,
   MoreTabVisual,
-  MyIssuesTabVisual,
   RunsVisual,
 } from "./demo/mobile-visuals";
 import { CtaBand, SitePage } from "./site-page";
@@ -68,11 +67,6 @@ const TABS: Walkthrough[] = [
     visual: InboxTabVisual,
   },
   {
-    title: "My Issues",
-    body: "What’s assigned to you, what you created, and what your agents are on, filtered by status, priority, or project.",
-    visual: MyIssuesTabVisual,
-  },
-  {
     title: "Chat",
     body: "Talk to any agent in the workspace, send it images and files, and pick up an earlier chat.",
     visual: ChatTabVisual,
@@ -88,7 +82,7 @@ function Tabs() {
   return (
     <Section>
       <Container>
-        <SectionHeader title="Four tabs, the whole workspace" />
+        <SectionHeader title="Three tabs, the whole workspace" />
         <div className="mt-site-block">
           <WalkthroughTabs steps={TABS} numbered={false} fill />
         </div>
@@ -137,7 +131,7 @@ function Everything() {
         <div className="grid gap-x-10 gap-y-3 sm:grid-cols-2">
           <CheckList
             items={[
-              "Create issues and @-mention people, agents, or squads",
+              "Create issues and @-mention people or agents",
               "Comment, reply in threads, and react",
               "Change status, priority, assignee, and due date",
               "Resolve a thread once it’s settled",

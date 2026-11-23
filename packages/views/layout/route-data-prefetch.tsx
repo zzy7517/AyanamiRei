@@ -12,7 +12,6 @@ import { chatSessionsOptions } from "@multica/core/chat/queries";
 import { inboxListOptions } from "@multica/core/inbox/queries";
 import { fetchIssueByRef, prefetchIssuePage } from "@multica/core/issues/queries";
 import { useAuthStore } from "@multica/core/auth";
-import { useIsGuest } from "@multica/core/permissions";
 import { paths, useCurrentWorkspace, useWorkspaceSlug } from "@multica/core/paths";
 import { pinListOptions } from "@multica/core/pins/queries";
 import { projectListOptions } from "@multica/core/projects/queries";
@@ -22,7 +21,6 @@ import {
   agentListOptions,
   memberListOptions,
   skillListOptions,
-  squadListOptions,
 } from "@multica/core/workspace/queries";
 import { RouteDataPrefetchProvider } from "../navigation/route-data-prefetch";
 
@@ -47,11 +45,6 @@ const ROUTES = {
     void qc.prefetchQuery(agentListOptions(wsId));
     void qc.prefetchQuery(memberListOptions(wsId));
     void qc.prefetchQuery(runtimeListOptions(wsId));
-  },
-  squads: (qc, wsId) => {
-    void qc.prefetchQuery(squadListOptions(wsId));
-    void qc.prefetchQuery(agentListOptions(wsId));
-    void qc.prefetchQuery(memberListOptions(wsId));
   },
   autopilots: (qc, wsId) => {
     void qc.prefetchQuery(autopilotListOptions(wsId));
@@ -81,16 +74,12 @@ type RouteKey = keyof typeof ROUTES;
 const ISSUE_FETCH_INTENT_MS = 40;
 const ISSUE_HOVER_INTENT_MS = 80;
 
-// A guest (MUL-9420) only reaches these pages.
-const GUEST_ROUTES: RouteKey[] = ["projects", "inbox"];
-
 // Small, workspace-scoped lists worth fetching before anyone asks, so the
 // first visit to each is already warm. Unobserved queries are collected after
 // their gcTime; hover/focus prefetch covers visits after that.
 const WARM_ON_IDLE: RouteKey[] = [
   "agents",
   "skills",
-  "squads",
   "autopilots",
   "projects",
 ];
@@ -104,12 +93,10 @@ const WARM_ON_IDLE: RouteKey[] = [
 export function RouteDataPrefetch({
   wsId,
   userId,
-  guest = false,
   children,
 }: {
   wsId: string | undefined;
   userId: string | null;
-  guest?: boolean;
   children: ReactNode;
 }) {
   const qc = useQueryClient();
@@ -119,9 +106,9 @@ export function RouteDataPrefetch({
   const routeByHref = useMemo(() => {
     if (!slug) return new Map<string, WarmRoute>();
     const p = paths.workspace(slug);
-    const keys = guest ? GUEST_ROUTES : (Object.keys(ROUTES) as RouteKey[]);
+    const keys = Object.keys(ROUTES) as RouteKey[];
     return new Map<string, WarmRoute>(keys.map((key) => [p[key](), ROUTES[key]]));
-  }, [slug, guest]);
+  }, [slug]);
 
   const issuePrefix = slug ? `${paths.workspace(slug).issues()}/` : null;
   const pending = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -152,8 +139,6 @@ export function RouteDataPrefetch({
         const warm = () => {
           const issue = fetchIssueByRef(qc, wsId, ref);
           issue.catch(() => undefined);
-          // A guest's issue page reads the issue alone (MUL-9420).
-          if (guest) return;
           later(
             () => issue.then((loaded) => prefetchIssuePage(qc, wsId, loaded.id)).catch(() => undefined),
             trigger === "hover" ? ISSUE_HOVER_INTENT_MS - ISSUE_FETCH_INTENT_MS : ISSUE_HOVER_INTENT_MS,
@@ -165,14 +150,14 @@ export function RouteDataPrefetch({
       }
       routeByHref.get(path)?.(qc, wsId, userId);
     },
-    [qc, routeByHref, issuePrefix, wsId, userId, guest, cancel],
+    [qc, routeByHref, issuePrefix, wsId, userId, cancel],
   );
   const prefetcher = useMemo(() => ({ prefetch, cancel }), [prefetch, cancel]);
 
   useEffect(() => {
     if (!wsId) return;
     const warm = () => {
-      for (const key of guest ? GUEST_ROUTES : WARM_ON_IDLE) ROUTES[key](qc, wsId, userId);
+      for (const key of WARM_ON_IDLE) ROUTES[key](qc, wsId, userId);
     };
     if (typeof window.requestIdleCallback === "function") {
       const id = window.requestIdleCallback(warm, { timeout: 3000 });
@@ -180,7 +165,7 @@ export function RouteDataPrefetch({
     }
     const timer = window.setTimeout(warm, 1500);
     return () => window.clearTimeout(timer);
-  }, [qc, wsId, userId, guest]);
+  }, [qc, wsId, userId]);
 
   return (
     <RouteDataPrefetchProvider value={prefetcher}>
@@ -193,9 +178,8 @@ export function RouteDataPrefetch({
 export function ShellRouteDataPrefetch({ children }: { children: ReactNode }) {
   const wsId = useCurrentWorkspace()?.id;
   const userId = useAuthStore((s) => s.user?.id ?? null);
-  const guest = useIsGuest(wsId);
   return (
-    <RouteDataPrefetch wsId={wsId} userId={userId} guest={guest}>
+    <RouteDataPrefetch wsId={wsId} userId={userId}>
       {children}
     </RouteDataPrefetch>
   );

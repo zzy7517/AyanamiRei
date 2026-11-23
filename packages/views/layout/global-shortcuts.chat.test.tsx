@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
-import { configureShortcutPlatform } from "@multica/core/shortcuts";
+import { configureShortcutPlatform, RAW_KEYBOARD_ATTRIBUTE } from "@multica/core/shortcuts";
 import { openCreateIssueWithPreference } from "@multica/core/issues/stores";
 import { useRef } from "react";
 import { useChatInputFocus } from "../chat/components/use-chat-input-focus";
@@ -21,7 +21,6 @@ const h = vi.hoisted(() => ({
   navigation: { pathname: "/acme/issues", push: vi.fn() },
   toggleSidebar: vi.fn(),
   searchToggle: vi.fn(),
-  guest: false,
 }));
 
 vi.mock("@multica/core/chat", () => ({
@@ -36,18 +35,15 @@ vi.mock("@multica/core/issues/stores", () => ({
 vi.mock("@multica/core/modals", () => ({
   useModalStore: { getState: () => ({ modal: null }) },
 }));
-vi.mock("@multica/core/permissions", () => ({ useIsGuest: () => h.guest }));
 vi.mock("@multica/core/paths", () => ({
   useCurrentWorkspace: () => ({ id: "ws-1" }),
   useWorkspacePaths: () => ({
     inbox: () => "/acme/inbox",
     chat: () => "/acme/chat",
-    myIssues: () => "/acme/my-issues",
     issues: () => "/acme/issues",
     projects: () => "/acme/projects",
     autopilots: () => "/acme/autopilots",
     agents: () => "/acme/agents",
-    squads: () => "/acme/squads",
     usage: () => "/acme/usage",
     runtimes: () => "/acme/runtimes",
     skills: () => "/acme/skills",
@@ -87,6 +83,18 @@ function pressNewChat(target: EventTarget = document): boolean {
   return event.defaultPrevented;
 }
 
+/** Mod+K on macOS: the command palette. */
+function pressSearch(target: EventTarget = document): boolean {
+  const event = new KeyboardEvent("keydown", {
+    key: "k",
+    metaKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  target.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
 beforeEach(() => {
   // Pin the platform: jsdom's user agent reports the host OS, so Command vs
   // Control would otherwise depend on where the suite runs.
@@ -95,7 +103,6 @@ beforeEach(() => {
   h.chat.isOpen = false;
   h.chat.activeSessionId = null;
   h.navigation.pathname = "/acme/issues";
-  h.guest = false;
 });
 
 afterEach(() => {
@@ -126,16 +133,6 @@ describe("chat toggle shortcut", () => {
     expect(getByTestId("composer").parentElement).toHaveAttribute("inert");
     pressCreate();
     expect(openCreateIssueWithPreference).toHaveBeenCalledTimes(1);
-  });
-
-  it("leaves C unclaimed for a guest, who cannot create issues (MUL-9420)", () => {
-    h.guest = true;
-    render(<GlobalShortcuts />);
-    const event = new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true });
-    document.dispatchEvent(event);
-
-    expect(event.defaultPrevented).toBe(false);
-    expect(openCreateIssueWithPreference).not.toHaveBeenCalled();
   });
 
   it("toggles the floating window and consumes the chord", () => {
@@ -254,5 +251,49 @@ describe("new chat shortcut", () => {
     render(<GlobalShortcuts />);
     expect(pressNewChat()).toBe(false);
     expect(h.chat.startNewChat).not.toHaveBeenCalled();
+  });
+});
+
+describe("raw keyboard targets", () => {
+  // A terminal is focused through a textarea, so the text-field rules alone
+  // would let these chords through to the app.
+  it("leaves every chord to an element that reads the whole keyboard", () => {
+    render(<GlobalShortcuts />);
+    const owner = document.createElement("div");
+    owner.setAttribute(RAW_KEYBOARD_ATTRIBUTE, "");
+    const reader = document.createElement("textarea");
+    owner.appendChild(reader);
+    document.body.appendChild(owner);
+    reader.focus();
+
+    expect(pressToggleChat(reader)).toBe(false);
+    expect(pressNewChat(reader)).toBe(false);
+    expect(pressSearch(reader)).toBe(false);
+    reader.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true, bubbles: true, cancelable: true }));
+    expect(h.chat.toggle).not.toHaveBeenCalled();
+    expect(h.chat.startNewChat).not.toHaveBeenCalled();
+    expect(h.searchToggle).not.toHaveBeenCalled();
+    expect(h.toggleSidebar).not.toHaveBeenCalled();
+
+    // A bare key is left alone too: it may be an app-wide binding by default.
+    reader.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true, cancelable: true }));
+    expect(openCreateIssueWithPreference).not.toHaveBeenCalled();
+    owner.remove();
+  });
+
+  it("fires again once focus has left that element", () => {
+    render(<GlobalShortcuts />);
+    const owner = document.createElement("div");
+    owner.setAttribute(RAW_KEYBOARD_ATTRIBUTE, "");
+    const reader = document.createElement("textarea");
+    owner.appendChild(reader);
+    document.body.appendChild(owner);
+    reader.focus();
+    expect(pressToggleChat(reader)).toBe(false);
+
+    reader.blur();
+    expect(pressToggleChat()).toBe(true);
+    expect(h.chat.toggle).toHaveBeenCalledTimes(1);
+    owner.remove();
   });
 });

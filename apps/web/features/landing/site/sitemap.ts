@@ -36,7 +36,6 @@ export const PRODUCT_GROUPS: PageGroup[] = [
     title: "Workforce",
     pages: [
       { slug: "agents", title: "Agents", summary: "Coding agents that take issues, report progress, and open PRs." },
-      { slug: "squads", title: "Squads", summary: "A leader agent that routes work across a team." },
       { slug: "skills", title: "Skills", summary: "Reusable know-how every agent on the team can use." },
       { slug: "autopilots", title: "Autopilots", summary: "Recurring work that runs on a schedule." },
       { slug: "workflows", title: "Workflows", summary: "The steps a project's issues follow, and who owns each one." },
@@ -173,7 +172,7 @@ export function buildFooterGroups(docsHref: string, nav: NavLabels, isLive: IsLi
         links: [
           ...pick(
             PRODUCT_GROUPS,
-            ["cloud", "desktop", "cli", "agents", "squads", "skills", "autopilots", "runtimes", "self-hosting"],
+            ["cloud", "desktop", "cli", "agents", "skills", "autopilots", "runtimes", "self-hosting"],
             productHref,
           ),
           { label: nav.pricing, href: "/pricing" },

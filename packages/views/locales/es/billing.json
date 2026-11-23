@@ -88,7 +88,7 @@
       "billing_interval": "Intervalo de facturación",
       "period_end": "El periodo actual termina",
       "change_plan": "Cambiar de plan",
-      "business_adds": "Business añade proyectos privados, acceso por miembro, cuentas de apps del equipo y límites de automatización más altos.",
+      "business_adds": "Business añade acceso por miembro, cuentas de apps del equipo y límites de automatización más altos.",
       "plan_change_hold": "Cambio de plan",
       "plan_change_confirming": "Cambiando a {{plan}}. Esperando la confirmación de Stripe; hasta entonces no se pueden cambiar los puestos ni el plan.",
       "plan_change_unresolved": "No se ha podido confirmar el cambio a {{plan}}. Contacta con soporte para resolverlo; hasta entonces no se pueden cambiar los puestos ni el plan.",
@@ -112,7 +112,7 @@
         "pro_storage": "10 GB de almacenamiento de adjuntos por miembro",
         "pro_dashboard": "90 días de historial de analítica",
         "business_everything": "Todo lo incluido en Pro",
-        "business_access": "Proyectos privados y acceso por miembro",
+        "business_access": "Acceso por miembro",
         "business_apps": "Cuentas de apps del equipo y reglas de aprobación",
         "business_autopilots": "3.000 ejecuciones de automatización por miembro al mes",
         "business_reports": "Informes de uso y coste por miembro"
@@ -308,7 +308,7 @@
     "welcome": {
       "title_one": "¡Bienvenido! Este espacio de trabajo tiene una prueba gratuita de Business de {{count}} día",
       "title_other": "¡Bienvenido! Este espacio de trabajo tiene una prueba gratuita de Business de {{count}} días",
-      "body": "Los proyectos privados y las demás funciones de Business están activos. No hace falta tarjeta; al terminar la prueba, el espacio de trabajo pasa a Free.",
+      "body": "Las funciones de Business están activas. No hace falta tarjeta; al terminar la prueba, el espacio de trabajo pasa a Free.",
       "action": "Ver qué incluye",
       "close": "Cerrar"
     },
@@ -317,7 +317,6 @@
       "description": "{{workspace}} ahora está en Free. No se eliminó nada.",
       "description_without_name": "Este espacio de trabajo ahora está en Free. No se eliminó nada.",
       "kept": "Los miembros, proyectos y ajustes que ya tienes se mantienen igual.",
-      "private_projects": "Los proyectos privados siguen siendo privados. Sus listas de acceso son de solo lectura hasta que actualices.",
       "autopilot": "Las automatizaciones tienen {{limit}} ejecuciones al mes; este mes se usaron {{used}}.",
       "autopilot_paused": "Las automatizaciones tienen {{limit}} ejecuciones al mes y este mes se usaron {{used}}, así que están en pausa hasta el {{date}}.",
       "keep_free": "Seguir en Free",
@@ -337,18 +336,6 @@
       "ended_description": "La prueba terminó el {{date}}. Elige un plan abajo para recuperar las funciones de Business.",
       "choose_plan": "Elegir un plan",
       "ended_description_member": "La prueba terminó el {{date}}. Pide a un administrador del espacio de trabajo que actualice el plan para recuperar las funciones de Business."
-    },
-    "features": {
-      "title": "Funciones de Business en tu prueba",
-      "description": "Cuando termine la prueba, no se eliminará ni se desactivará nada: la configuración existente seguirá activa en modo de solo lectura y no podrás añadir nuevas opciones.",
-      "private_projects": {
-        "name": "Proyectos privados",
-        "after": "Siguen siendo privados después de la prueba. Sus listas de acceso pasan a solo lectura."
-      },
-      "guests": {
-        "name": "Invitados",
-        "after": "Los invitados actuales conservan su acceso después de la prueba. Para invitar a nuevos invitados necesitas Pro o Business."
-      }
     }
   },
   "storage_limit": {

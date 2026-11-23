@@ -2,6 +2,8 @@ import {
   isKnownPropertyFilterOp,
   isPropertyOperatorFilter,
   propertyFilterValueKey,
+  type IssueAssigneeType,
+  type IssueCreatorType,
   type IssuePriority,
   type IssueStatus,
   type IssueTableFilterGroup,
@@ -15,12 +17,11 @@ import { PROJECT_STATUS_ORDER } from "../../projects/config";
 import { dateOnlyToUTCDate } from "../date";
 import { createSafeId } from "../../utils";
 
-/** How the viewer relates to an issue. Unlike the "my issues" scope axis this
- *  is an ordinary filter dimension: OR within, AND with everything else. */
-export type IssueRelationFilter = "assigned" | "created" | "my_agents" | "subscribed";
+/** How the viewer relates to an issue: an ordinary filter dimension, OR
+ *  within, AND with everything else. */
+export type IssueRelationFilter = "created" | "my_agents" | "subscribed";
 
 export const ISSUE_RELATION_FILTERS: readonly IssueRelationFilter[] = [
-  "assigned",
   "created",
   "my_agents",
   "subscribed",
@@ -140,9 +141,9 @@ export type AdvancedFilterNode = AdvancedFilterCondition | AdvancedFilterGroup;
 export interface SimpleFilterFields {
   statusFilters: IssueStatus[];
   priorityFilters: IssuePriority[];
-  assigneeFilters: { type: "member" | "agent" | "squad"; id: string }[];
+  assigneeFilters: { type: IssueAssigneeType; id: string }[];
   includeNoAssignee: boolean;
-  creatorFilters: { type: "member" | "agent" | "squad"; id: string }[];
+  creatorFilters: { type: IssueCreatorType; id: string }[];
   projectFilters: string[];
   includeNoProject: boolean;
   projectStatusFilters: ProjectStatus[];
@@ -270,7 +271,13 @@ export function pruneAdvancedFilter(
   return children.length > 0 ? { ...group, children } : null;
 }
 
-const ACTOR_TYPES = new Set(["member", "agent", "squad"]);
+const ASSIGNEE_TYPES: ReadonlySet<string> = new Set(["agent"]);
+const CREATOR_TYPES: ReadonlySet<string> = new Set(["member", "agent"]);
+
+/** The actor types a dimension's `type:id` values can name. */
+function actorTypesOf(field: NegatableFilterDimension): ReadonlySet<string> {
+  return field === "assignee" ? ASSIGNEE_TYPES : CREATOR_TYPES;
+}
 
 function knownValues(field: NegatableFilterDimension, values: string[]): string[] {
   const keep = (allowed: readonly string[]) => values.filter((v) => allowed.includes(v));
@@ -284,12 +291,14 @@ function knownValues(field: NegatableFilterDimension, values: string[]): string[
     case "dueDate":
       return keep(DUE_DATE_FILTERS);
     case "assignee":
-    case "creator":
+    case "creator": {
+      const types = actorTypesOf(field);
       return values.filter((v) => {
         if (v === FILTER_NONE_VALUE) return field === "assignee";
         const [type, id] = v.split(":");
-        return !!type && !!id && ACTOR_TYPES.has(type);
+        return !!type && !!id && types.has(type);
       });
+    }
     default:
       return values.filter((v) => v.length > 0);
   }
@@ -344,12 +353,20 @@ function actorValue(actor: { type: string; id: string }): string {
   return `${actor.type}:${actor.id}`;
 }
 
-function parseActorValue(value: string): { type: "member" | "agent" | "squad"; id: string } | null {
-  const separator = value.indexOf(":");
-  if (separator <= 0) return null;
-  const type = value.slice(0, separator);
-  const id = value.slice(separator + 1);
-  return ACTOR_TYPES.has(type) && id ? { type: type as "member" | "agent" | "squad", id } : null;
+/** The actors a condition's `type:id` values name. Values of an unknown type
+ *  drop out. */
+function conditionActors<T extends { type: string; id: string }>(
+  values: readonly string[],
+  types: ReadonlySet<string>,
+): T[] {
+  const actors: T[] = [];
+  for (const value of values) {
+    const separator = value.indexOf(":");
+    const type = value.slice(0, separator);
+    const id = value.slice(separator + 1);
+    if (separator > 0 && id && types.has(type)) actors.push({ type, id } as T);
+  }
+  return actors;
 }
 
 /** One simple dimension's selection in condition-value form. */
@@ -431,10 +448,7 @@ export function simpleFromAdvancedFilter(
     if (child.negated) fields.negatedFilters.push(child.field);
     const values = child.values;
     const none = values.includes(FILTER_NONE_VALUE);
-    const actors = () =>
-      values
-        .map(parseActorValue)
-        .filter((actor): actor is NonNullable<typeof actor> => actor !== null);
+    const types = actorTypesOf(child.field);
     switch (child.field) {
       case "status":
         fields.statusFilters = [...values];
@@ -443,11 +457,11 @@ export function simpleFromAdvancedFilter(
         fields.priorityFilters = values as IssuePriority[];
         break;
       case "assignee":
-        fields.assigneeFilters = actors();
+        fields.assigneeFilters = conditionActors<SimpleFilterFields["assigneeFilters"][number]>(values, types);
         fields.includeNoAssignee = none;
         break;
       case "creator":
-        fields.creatorFilters = actors();
+        fields.creatorFilters = conditionActors<SimpleFilterFields["creatorFilters"][number]>(values, types);
         break;
       case "project":
         fields.projectFilters = values.filter((v) => v !== FILTER_NONE_VALUE);

@@ -93,7 +93,7 @@ router → middleware → handler → service → sqlc query → PostgreSQL
 - `internal/service/` porte les workflows métier qui couvrent plusieurs queries, ainsi que les transactions.
 - `pkg/db/queries/` contient le SQL écrit à la main.
 - `pkg/db/generated/` est généré par sqlc et ne doit pas être modifié directement.
-- `internal/integrations/` gère les événements externes provenant de GitHub, Slack, Feishu et d'autres services.
+- `internal/integrations/` gère les événements externes provenant de GitHub et d'autres services.
 - `internal/storage/` gère les pièces jointes locales et S3.
 
 PostgreSQL est la source de vérité pour les données métier. Redis est facultatif et sert aux événements temps réel entre instances, au cache ou à la coordination temporaire. Sans Redis, un environnement de développement à instance unique utilise des implémentations en processus.
@@ -123,7 +123,7 @@ La couche d'adaptateurs de fournisseurs normalise le démarrage, les événement
 
 Les queries métier doivent être limitées par `workspace_id`, et l'appartenance est vérifiée avant qu'une requête n'entre dans une route d'espace de travail. `X-Workspace-ID` sélectionne l'espace de travail courant mais ne remplace pas les vérifications d'autorisation.
 
-L'assigné d'une tâche est polymorphe et peut désigner un membre, un agent ou un squad. Les nouvelles queries, clés de cache et événements temps réel doivent conserver à la fois l'espace de travail et le type d'assigné, au lieu de supposer qu'un ID de ressource suffit à constituer un contexte globalement unique.
+L'assigné d'une tâche est un agent. Les autres acteurs d'une tâche, comme son créateur et ses abonnés, peuvent être un membre ou un agent. Les nouvelles queries, clés de cache et événements temps réel doivent conserver à la fois l'espace de travail et le type d'acteur, au lieu de supposer qu'un ID de ressource suffit à constituer un contexte globalement unique.
 
 ## Étapes suivantes
 

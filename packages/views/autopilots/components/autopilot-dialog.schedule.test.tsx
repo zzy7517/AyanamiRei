@@ -34,10 +34,6 @@ vi.mock("@multica/core/workspace/queries", () => ({
       },
     ],
   }),
-  squadListOptions: (wsId: string) => ({
-    queryKey: ["squads", wsId],
-    queryFn: async () => [],
-  }),
 }));
 
 vi.mock("@multica/core/projects/queries", () => ({

@@ -21,7 +21,7 @@ import { cn } from "@multica/ui/lib/utils";
 import type { Lang } from "@/lib/i18n";
 import { CoachMark, DemoAvatar, DemoComment, DemoFrame, useDemoCopy, useStartWhenVisible } from "./demo-kit";
 
-type NoticeId = "mention" | "draft" | "failed" | "assigned";
+type NoticeId = "comment" | "draft" | "failed" | "assigned";
 
 type Notice = {
   id: NoticeId;
@@ -34,8 +34,6 @@ type Notice = {
   time: string;
   /** What the issue shows when the notification is opened. */
   body: string;
-  /** A mention that opens the comment body. */
-  mention?: string;
 };
 
 type Copy = {
@@ -71,14 +69,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["Pinned", "Views", "Projects"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "Sort out March expense claims",
         actor: "Lei Li",
         agent: false,
-        detail: "Mentioned you",
+        detail: "Commented",
         time: "5m",
-        mention: "@You",
         body: "Two March invoices are still missing. Can you send them by Friday?",
       },
       {
@@ -125,7 +122,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "Unarchive",
     captions: {
       idle: "Notifications that concern you sit at the top of the Work panel.",
-      start: "Three unread notifications. Open the one where someone mentioned you.",
+      start: "Three unread notifications. Open the one with a new comment.",
       opened:
         "The issue opened at the comment. The notification turned read and stayed in the list. When you're done with it, click Archive (E).",
       archived:
@@ -143,14 +140,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["固定", "视图", "项目"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "整理三月报销单",
         actor: "李雷",
         agent: false,
-        detail: "提及了你",
+        detail: "评论了",
         time: "5 分钟",
-        mention: "@你",
         body: "三月还差两张发票，周五前能补上吗？",
       },
       {
@@ -197,7 +193,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "取消归档",
     captions: {
       idle: "和你有关的通知在工作面板的最上方。",
-      start: "三条未读通知。打开有人 @你 的那一条。",
+      start: "三条未读通知。打开有新评论的那一条。",
       opened: "任务打开并定位到那条评论。通知变为已读，但仍留在列表里。处理完点\"归档\"（E）。",
       archived: "这一行离开了收件箱，下一条通知自动打开：初稿到了。看完也点\"归档\"（E）。归档不会改变任务的状态。",
       archivedAgain: "这条通知也归档了，下一条自动打开。初稿仍是审核中，直到你在任务的\"状态\"里修改。已归档的通知在分区的 ⋯ 菜单里。点 ⋯。",
@@ -211,14 +207,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["固定", "檢視", "專案"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "整理三月報銷單",
         actor: "李雷",
         agent: false,
-        detail: "提及了你",
+        detail: "留言了",
         time: "5 分鐘",
-        mention: "@你",
         body: "三月還差兩張發票，週五前能補上嗎？",
       },
       {
@@ -265,7 +260,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "取消歸檔",
     captions: {
       idle: "和你有關的通知在工作面板的最上方。",
-      start: "三條未讀通知。開啟有人 @你 的那一條。",
+      start: "三條未讀通知。開啟有新評論的那一條。",
       opened: "任務開啟並定位到那條評論。通知變為已讀，但仍留在列表裡。處理完點\"歸檔\"（E）。",
       archived: "這一列離開了收件箱，下一條通知自動開啟：初稿到了。看完也點\"歸檔\"（E）。歸檔不會改變任務的狀態。",
       archivedAgain: "這條通知也歸檔了，下一條自動開啟。初稿仍是審查中，直到你在任務的\"狀態\"裡修改。已歸檔的通知在分區的 ⋯ 選單裡。點 ⋯。",
@@ -279,14 +274,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["ピン留め済み", "ビュー", "プロジェクト"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "3 月の経費精算を整理する",
         actor: "李雷",
         agent: false,
-        detail: "メンションされました",
+        detail: "コメントしました",
         time: "5分",
-        mention: "@あなた",
         body: "3 月分の領収書がまだ 2 枚足りません。金曜までに出してもらえますか？",
       },
       {
@@ -339,7 +333,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "アーカイブ解除",
     captions: {
       idle: "あなたに関係する通知は作業パネルの一番上に並びます。",
-      start: "未読の通知が 3 件あります。あなたがメンションされた通知を開きます。",
+      start: "未読の通知が 3 件あります。新しいコメントの通知を開きます。",
       opened:
         "タスクがそのコメントの位置で開きました。通知は既読になりましたが、リストには残っています。対応が済んだら「アーカイブ」（E）をクリックします。",
       archived:
@@ -356,14 +350,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["고정됨", "뷰", "프로젝트"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "3월 경비 청구 정리",
         actor: "리레이",
         agent: false,
-        detail: "멘션됨",
+        detail: "댓글을 달았습니다",
         time: "5분",
-        mention: "@나",
         body: "3월 영수증이 아직 두 장 빠져 있어요. 금요일까지 보내 주실 수 있나요?",
       },
       {
@@ -410,7 +403,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "보관 해제",
     captions: {
       idle: "나와 관련된 알림은 작업 패널 맨 위에 모입니다.",
-      start: "읽지 않은 알림이 3개 있습니다. 누군가 나를 멘션한 알림을 여세요.",
+      start: "읽지 않은 알림이 3개 있습니다. 새 댓글이 달린 알림을 여세요.",
       opened:
         "태스크가 그 댓글 위치에서 열렸습니다. 알림은 읽음이 되었지만 목록에 그대로 남아 있습니다. 처리가 끝나면 '보관'(E)을 클릭하세요.",
       archived:
@@ -427,14 +420,13 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     sections: ["Épinglés", "Vues", "Projets"],
     notices: [
       {
-        id: "mention",
+        id: "comment",
         issue: "OPS-41",
         title: "Régulariser les notes de frais de mars",
         actor: "Lei Li",
         agent: false,
-        detail: "Vous a mentionné",
+        detail: "A commenté",
         time: "5 min",
-        mention: "@Vous",
         body: "Il manque encore deux factures de mars. Pouvez-vous les envoyer d'ici vendredi ?",
       },
       {
@@ -487,7 +479,7 @@ const copy: { en: Copy } & Partial<Record<Lang, Copy>> = {
     unarchive: "Désarchiver",
     captions: {
       idle: "Les notifications qui vous concernent sont en haut du panneau Travail.",
-      start: "Trois notifications non lues. Ouvrez celle où quelqu'un vous a mentionné.",
+      start: "Trois notifications non lues. Ouvrez celle qui annonce un nouveau commentaire.",
       opened:
         "La tâche s'est ouverte au commentaire. La notification est devenue lue et reste dans la liste. Une fois qu'elle est traitée, cliquez sur Archiver (E).",
       archived:
@@ -507,22 +499,22 @@ type Step = Exclude<Phase, "idle">;
 const ARCHIVED: Record<Step, NoticeId[]> = {
   start: [],
   opened: [],
-  archived: ["mention"],
-  archivedAgain: ["mention", "draft"],
-  menu: ["mention", "draft"],
-  archivedView: ["mention", "draft"],
+  archived: ["comment"],
+  archivedAgain: ["comment", "draft"],
+  menu: ["comment", "draft"],
+  archivedView: ["comment", "draft"],
 };
 const READ: Record<Step, NoticeId[]> = {
   start: ["assigned"],
-  opened: ["assigned", "mention"],
-  archived: ["assigned", "mention", "draft"],
-  archivedAgain: ["assigned", "mention", "draft", "failed"],
-  menu: ["assigned", "mention", "draft", "failed"],
-  archivedView: ["assigned", "mention", "draft", "failed"],
+  opened: ["assigned", "comment"],
+  archived: ["assigned", "comment", "draft"],
+  archivedAgain: ["assigned", "comment", "draft", "failed"],
+  menu: ["assigned", "comment", "draft", "failed"],
+  archivedView: ["assigned", "comment", "draft", "failed"],
 };
 const OPEN: Record<Step, NoticeId | null> = {
   start: null,
-  opened: "mention",
+  opened: "comment",
   archived: "draft",
   archivedAgain: "failed",
   menu: "failed",
@@ -701,7 +693,7 @@ export function InboxDemo() {
         {rows.map((notice) => {
           const rowUnread = !isRead(notice.id);
           const active = notice.id === selected?.id;
-          const clickable = visible && phase === "start" && notice.id === "mention";
+          const clickable = visible && phase === "start" && notice.id === "comment";
           return (
             <li key={notice.id} className="m-0 p-0">
               <CoachMark active={clickable} side="right" ringClassName="rounded-md" className="flex w-full">
@@ -784,7 +776,6 @@ export function InboxDemo() {
           </>
         ) : (
           <DemoComment author={selected.actor} agent={selected.agent}>
-            {selected.mention && <span className="font-medium text-brand">{selected.mention} </span>}
             {selected.body}
           </DemoComment>
         )}

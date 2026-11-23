@@ -13,10 +13,21 @@ import { CodeBlock, InlineCode } from './CodeBlock'
 import { isAllowedFileCardHref, preprocessFileCards } from './file-cards'
 import { preprocessLinks } from './linkify'
 import { preprocessIssueIdentifiers } from './issue-identifiers'
-import { preprocessMentionShortcodes } from './mentions'
 import { markdownSanitizeSchema, markdownUrlTransform } from './sanitize'
 import 'katex/dist/katex.min.css'
 import './markdown.css'
+
+// Same rewrite as `preprocessMentionShortcodes` in
+// packages/core/markdown/mention-shortcodes.ts. Kept here because packages/ui
+// cannot import core.
+function preprocessMentionShortcodes(text: string): string {
+  if (!text.includes('[@ ')) return text
+  return text.replace(/\[@\s+([^\]]*)\]/g, (match, attrs: string) => {
+    const id = /\bid="([^"]*)"/.exec(attrs)?.[1]
+    const label = /\blabel="([^"]*)"/.exec(attrs)?.[1]
+    return id && label ? `@${label}` : match
+  })
+}
 
 /**
  * Render modes for markdown content:
@@ -151,9 +162,13 @@ function createComponents(
     },
     // Links: Make clickable with callbacks, or render as mention
     a: ({ href, children }) => {
-      // Mention links: mention://member/id, mention://agent/id, mention://issue/id, mention://project/id, mention://doc/id, mention://all/all
+      // Mention links: mention://agent/id, mention://issue/id,
+      // mention://project/id, mention://doc/id
       if (href?.startsWith('mention://')) {
-        const mentionMatch = href.match(/^mention:\/\/(member|agent|issue|project|doc|all)\/(.+)$/)
+        // A link to a member or to @all has no destination, so it shows only
+        // its own text.
+        if (/^mention:\/\/(member|all)\//.test(href)) return <>{children}</>
+        const mentionMatch = href.match(/^mention:\/\/(agent|issue|project|doc)\/(.+)$/)
         if (mentionMatch?.[1] && mentionMatch[2]) {
           const type = mentionMatch[1]
           const id = mentionMatch[2]
@@ -404,8 +419,9 @@ export function Markdown({
     [mode, onUrlClick, onFileClick, renderMention, renderImage, renderFileCard]
   )
 
-  // Preprocess: convert mention shortcodes, bare issue identifiers, raw URLs,
-  // and file cards to renderable content. Issue-identifier autolinking runs
+  // Preprocess: turn legacy member shortcodes into plain labels, then convert
+  // bare issue identifiers, raw URLs, and file cards to renderable content.
+  // Issue-identifier autolinking runs
   // BEFORE linkify/file-card so those passes treat the rewritten spans as
   // existing markdown links and skip them.
   const processedContent = React.useMemo(

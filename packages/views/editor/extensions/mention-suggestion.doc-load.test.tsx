@@ -9,6 +9,7 @@ import { I18nProvider } from "@multica/core/i18n/react";
 import { configStore } from "@multica/core/config";
 import { docKeys } from "@multica/core/docs";
 import { DOCS_V1_FLAG } from "@multica/core/feature-flags";
+import { workspaceKeys } from "@multica/core/workspace/queries";
 import { createMentionSuggestion } from "./mention-suggestion";
 import { SuggestionTriggerArmingExtension } from "./suggestion-trigger-arming";
 import enDocs from "../../locales/en/docs.json";
@@ -61,6 +62,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   configStore.getState().setFeatureFlags({ [DOCS_V1_FLAG]: true });
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  qc.setQueryData(workspaceKeys.agents("review-ws"), [
+    { id: "aegis", name: "Aegis", archived_at: null, owner_id: "reviewer", runtime_id: "runtime-1", runtime_bound: true,
+      permission_mode: "public_to", invocation_targets: [{ target_type: "workspace", target_id: null }] },
+  ]);
   apiMock.listDocTree.mockResolvedValue(tree);
     apiMock.searchIssues.mockResolvedValue({ issues: [] });
   apiMock.searchProjects.mockResolvedValue({ projects: [] });
@@ -89,7 +94,7 @@ it("first @ shows recent docs after the request resolves, without another keystr
     );
     if (!handled) editor!.view.dispatch(editor!.state.tr.insertText("@", from, to));
   });
-  await screen.findByRole("button", { name: "All members" });
+  await screen.findByRole("button", { name: /Aegis/ });
   expect(apiMock.listDocTree).toHaveBeenCalledOnce();
   await act(async () => { resolve(tree); });
   await waitFor(() => expect(qc.getQueryData(docKeys.tree("review-ws"))).toEqual(tree));

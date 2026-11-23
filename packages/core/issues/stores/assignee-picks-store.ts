@@ -23,6 +23,12 @@ interface AssigneePicksState {
 
 const scopeKey = (userId: string, wsId: string) => `${userId}:${wsId}`;
 
+function isAgentPick(pick: unknown): pick is AssigneePick {
+  if (!pick || typeof pick !== "object") return false;
+  const { type, id } = pick as { type?: unknown; id?: unknown };
+  return type === "agent" && typeof id === "string";
+}
+
 // Scoped by user + workspace id so another account or workspace on this device
 // never borrows the ranking. Not cleared on logout, like the other recents.
 export const useAssigneePicksStore = create<AssigneePicksState>()(
@@ -49,6 +55,17 @@ export const useAssigneePicksStore = create<AssigneePicksState>()(
       storage: createJSONStorage(() => defaultStorage),
       partialize: (state) => ({ byScope: state.byScope }),
       version: 1,
+      // The saved queue outlives the code that wrote it: a pick that does not
+      // name an agent cannot be ranked and drops out on rehydration.
+      merge: (persisted, current) => {
+        const saved = (persisted as Partial<AssigneePicksState>).byScope ?? {};
+        const byScope: Record<string, AssigneePick[]> = {};
+        for (const [scope, queue] of Object.entries(saved)) {
+          const kept = queue.filter(isAgentPick);
+          if (kept.length > 0) byScope[scope] = kept;
+        }
+        return { ...current, ...(persisted as Partial<AssigneePicksState>), byScope };
+      },
     },
   ),
 );

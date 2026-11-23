@@ -18,11 +18,11 @@
  */
 import { create } from "zustand";
 
-export type MentionTargetType = "member" | "agent" | "squad" | "all" | "issue";
+export type MentionTargetType = "agent" | "issue";
 
 export interface MentionChipDraft {
   type: MentionTargetType;
-  /** UUID for member / agent / squad / issue; literal "all" for @all. */
+  /** UUID for agent / issue. */
   id: string;
   /** Display name without leading `@`. For type "issue" this stores the
    *  human identifier (e.g. "MUL-123"). */

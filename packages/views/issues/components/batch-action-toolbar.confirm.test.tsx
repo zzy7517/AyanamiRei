@@ -4,7 +4,7 @@ import type { Issue, UpdateIssueRequest } from "@multica/core/types";
 import { BatchActionToolbar } from "./batch-action-toolbar";
 
 // MUL-4155: batch status changes must apply directly (no run-confirm modal),
-// while agent/squad assignment still confirms and delete still confirms. These
+// while agent assignment still confirms and delete still confirms. These
 // tests drive the pickers' onUpdate callbacks and assert which path is taken.
 
 const selection = vi.hoisted(() => ({
@@ -82,10 +82,6 @@ vi.mock("./pickers", () => ({
       <button
         data-testid="assign-agent"
         onClick={() => onUpdate({ assignee_type: "agent", assignee_id: "agent-1" })}
-      />
-      <button
-        data-testid="assign-member"
-        onClick={() => onUpdate({ assignee_type: "member", assignee_id: "user-1" })}
       />
     </div>
   ),
@@ -171,7 +167,7 @@ describe("BatchActionToolbar status routing (MUL-4155)", () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("still routes agent assignment through the run-confirm modal", () => {
+  it("routes agent assignment through the run-confirm modal", () => {
     render(<BatchActionToolbar issues={[makeIssue({ status: "todo" })]} />);
     fireEvent.click(screen.getByTestId("assign-agent"));
     expect(openModal).toHaveBeenCalledWith(
@@ -179,16 +175,6 @@ describe("BatchActionToolbar status routing (MUL-4155)", () => {
       expect.objectContaining({ issueIds: ["a"], mode: "assign", assigneeType: "agent", assigneeId: "agent-1" }),
     );
     expect(batchUpdate).not.toHaveBeenCalled();
-  });
-
-  it("applies member assignment directly (never starts a run)", () => {
-    render(<BatchActionToolbar issues={[makeIssue({ status: "todo" })]} />);
-    fireEvent.click(screen.getByTestId("assign-member"));
-    expect(openModal).not.toHaveBeenCalled();
-    expect(batchUpdate).toHaveBeenCalledWith({
-      ids: ["a"],
-      updates: { assignee_type: "member", assignee_id: "user-1" },
-    });
   });
 
   it("disables deleting a selection containing an unauthorized issue", async () => {

@@ -240,8 +240,13 @@ function RichLink({ href, children }: { href?: string; children?: ReactNode }) {
   const isAttachmentLink = href ? !!attachmentLink.resolve(href) : false;
 
   if (isMentionHref(href)) {
-    const match = href.match(/^mention:\/\/(member|agent|issue|project|doc|all)\/(.+)$/);
-    if (match?.[1] === "issue" && match[2]) {
+    const match = href.match(/^mention:\/\/(agent|issue|project|doc)\/(.+)$/);
+    if (!match?.[1] || !match[2]) {
+      // A link to a member or to @all has no destination, so it shows only
+      // its own text.
+      return <>{children}</>;
+    }
+    if (match[1] === "issue") {
       // A bare identifier (from the autolink preprocessor) is carried as the id
       // segment; a real mention carries a UUID. Dispatch on the id shape.
       if (isIssueIdentifier(match[2])) {
@@ -254,13 +259,12 @@ function RichLink({ href, children }: { href?: string; children?: ReactNode }) {
       }
       return <IssueMentionLink issueId={match[2]} label={childrenToLabel(children)} />;
     }
-    if (match?.[1] === "project" && match[2]) {
+    if (match[1] === "project") {
       return <ProjectMentionLink projectId={match[2]} label={childrenToLabel(children)} />;
     }
-    if (match?.[1] === "doc" && match[2]) {
+    if (match[1] === "doc") {
       return <DocMentionLink docId={match[2]} label={childrenToLabel(children)} />;
     }
-    // Member / agent / all mentions
     return <span className="mention">{children}</span>;
   }
 

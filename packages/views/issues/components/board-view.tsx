@@ -244,8 +244,7 @@ function buildGroups(
   const order: Record<string, number> = {
     member: 0,
     agent: 1,
-    squad: 2,
-    none: 3,
+    none: 2,
   };
 
   return Array.from(groups.values()).toSorted((a, b) => {
@@ -355,13 +354,9 @@ function BoardViewImpl({
       return groupBranches.descriptors.flatMap((descriptor): BoardColumnGroup[] => {
         if (descriptor.value.kind !== "assignee") return [];
         const actorRef = descriptor.value.actor;
-        const actor: { type: IssueAssigneeType; id: string } | null =
-          actorRef &&
-          (actorRef.type === "member" ||
-            actorRef.type === "agent" ||
-            actorRef.type === "squad")
-            ? { type: actorRef.type, id: actorRef.id }
-            : null;
+        const actor: { type: IssueAssigneeType; id: string } | null = actorRef
+          ? { type: "agent", id: actorRef.id }
+          : null;
         return [{
           id: descriptor.key,
           title: actor

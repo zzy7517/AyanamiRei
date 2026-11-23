@@ -94,6 +94,8 @@ The server also recognizes two credentials used in internal or managed scenarios
 
 Regular Cloud, self-hosted, and Desktop installations never need to create them manually. The user-side CLI and daemon always use `mul_` PATs; don't construct tokens with other prefixes yourself.
 
+A self-hosted administrator can also set `MULTICA_AUTH_TOKEN`: a fixed secret the server accepts wherever a personal access token is, so that Desktop can skip the login page. It stays off unless it is set; see [Pre-shared token](/auth-setup#pre-shared-token).
+
 ## Next steps
 
 - [Using the CLI](/cli) — `login`, `auth status`, and profile configuration.

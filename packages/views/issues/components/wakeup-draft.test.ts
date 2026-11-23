@@ -78,8 +78,8 @@ describe("platform conditions", () => {
     expect(input({ condition: "field", field: "status", fieldTarget: "in_review" })).toMatchObject({
       input: { kind: "event", mode: "once", condition: { type: "issue_field", field: "status", value: "in_review" }, expires_in_seconds: 604800 },
     });
-    expect(input({ condition: "field", field: "assignee", assignee: { type: "squad", id: "sq" } })).toMatchObject({
-      input: { condition: { type: "issue_field", field: "assignee", assignee_type: "squad", assignee_id: "sq" } },
+    expect(input({ condition: "field", field: "assignee", assignee: { type: "agent", id: "a-1" } })).toMatchObject({
+      input: { condition: { type: "issue_field", field: "assignee", assignee_type: "agent", assignee_id: "a-1" } },
     });
     expect(input({ condition: "field", field: "label", fieldTarget: "lbl" })).toMatchObject({
       input: { condition: { type: "issue_field", field: "label", label_id: "lbl" } },

@@ -48,12 +48,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
-    // Long-press actions on the installed launcher icon. Both are legacy
-    // segments, so they resolve to the last workspace the same way start_url
+    // Long-press action on the installed launcher icon. It is a legacy
+    // segment, so it resolves to the last workspace the same way start_url
     // does instead of needing a slug the manifest cannot know.
-    shortcuts: [
-      { name: "Inbox", url: "/inbox" },
-      { name: "My Issues", url: "/my-issues" },
-    ],
+    shortcuts: [{ name: "Inbox", url: "/inbox" }],
   };
 }

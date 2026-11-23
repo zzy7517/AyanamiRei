@@ -15,11 +15,9 @@ const spies = vi.hoisted(() => ({
   unsnoozeAsync: vi.fn(() => Promise.resolve()),
   undoUnsubscribe: vi.fn((..._args: unknown[]) => Promise.resolve()),
   undoBatch: vi.fn((..._args: unknown[]) => Promise.resolve()),
-  guest: false,
 }));
 
 vi.mock("@multica/core/hooks", () => ({ useWorkspaceId: () => "ws" }));
-vi.mock("@multica/core/permissions", () => ({ useIsGuest: () => spies.guest }));
 vi.mock("@multica/core/paths", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@multica/core/paths")>();
   return { ...actual, useWorkspacePaths: () => actual.paths.workspace("acme") };
@@ -105,7 +103,6 @@ function renderEmpty({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  spies.guest = false;
   useInboxSelectionStore.setState({
     lastClearedByWorkspace: {},
     leftRowKeyByWorkspace: {},
@@ -314,19 +311,6 @@ describe("InboxEmptyState", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Clear filters and continue/ }));
     expect(onClearFiltersAndContinue).toHaveBeenCalledTimes(1);
-  });
-
-  it("hides member-only shortcuts and working agents for guests", () => {
-    spies.guest = true;
-    renderEmpty({
-      workingAgents: [
-        { id: "a-1", name: "Emacs", avatar_url: null, running_task_count: 1, issue_ids: ["issue-1"] },
-      ],
-    });
-
-    expect(screen.queryByRole("button", { name: "My work" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /agent/i })).toBeNull();
-    expect(screen.getByRole("button", { name: "View archived" })).toBeInTheDocument();
   });
 
   it("keeps the archived empty state quiet and separate from Inbox Zero", () => {

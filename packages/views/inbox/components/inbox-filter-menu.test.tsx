@@ -66,7 +66,7 @@ function item(
     recipient_id: "member-1",
     actor_type: null,
     actor_id: null,
-    type: "mentioned",
+    type: "new_comment",
     severity: "info",
     issue_id: `issue-${id}`,
     title: id,
@@ -115,7 +115,6 @@ function renderMenu({
     listLabels: async () => ({ labels: [], total: 0 }),
     listMembers: async () => [],
     listAgents: async () => [],
-    listSquads: async () => [],
   } as unknown as ApiClient);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -176,7 +175,7 @@ describe("InboxFilterMenu", () => {
 
   it("pins the fields in use on top with their current value", async () => {
     const store = useInboxFilterStore.getState();
-    store.toggleFilterValue("ws-1", "type", "mention");
+    store.toggleFilterValue("ws-1", "type", "comment");
     store.setFilterNegated("ws-1", "type", true);
     renderMenu();
     openMenu("1 active filter");
@@ -184,7 +183,7 @@ describe("InboxFilterMenu", () => {
     expect(await screen.findByText("Active")).toBeTruthy();
     const type = screen.getByRole("menuitem", { name: /^Type/ });
     expect(type).toHaveTextContent(/is not/);
-    expect(type).toHaveTextContent(/Mentions/);
+    expect(type).toHaveTextContent(/Comments/);
     // Pinned once: the notification section no longer repeats it.
     expect(screen.getAllByRole("menuitem", { name: /^Type/ })).toHaveLength(1);
   });
@@ -192,12 +191,12 @@ describe("InboxFilterMenu", () => {
   it("selects a notification type and switches it to is not", async () => {
     renderMenu({
       items: [
-        item("mention", "todo", "high"),
-        item("comment", "todo", "high", { type: "new_comment" }),
+        item("comment", "todo", "high"),
+        item("assigned", "todo", "high", { type: "issue_assigned" }),
       ],
     });
     await openSubmenu("Type");
-    fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: /Comments & reactions.*1 notification/ }));
+    fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: /^Comments.*1 notification/ }));
     expect(storedFilters()?.types).toEqual(["comment"]);
 
     fireEvent.click(screen.getByRole("menuitemradio", { name: "is not" }));
@@ -205,7 +204,7 @@ describe("InboxFilterMenu", () => {
   });
 
   it("keeps is not when it is chosen before the first type", async () => {
-    renderMenu({ items: [item("mention", "todo", "high")] });
+    renderMenu({ items: [item("comment", "todo", "high")] });
     await openSubmenu("Type");
     fireEvent.click(await screen.findByRole("menuitemradio", { name: "is not" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: /^Agent runs/ }));

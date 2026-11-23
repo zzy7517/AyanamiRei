@@ -34,7 +34,6 @@ import type {
   SearchIssuesResponse,
   SearchProjectsResponse,
   SendChatMessageResponse,
-  Squad,
   TaskMessagePayload,
   User,
   Workspace,
@@ -620,9 +619,7 @@ export const MemberWithUserSchema: z.ZodType<MemberWithUser> = z.object({
   id: z.string(),
   workspace_id: z.string().default(""),
   user_id: z.string().default(""),
-  // `guest` (MUL-9420) must survive parsing: folded into `member`, a guest
-  // would be offered every member control the server then refuses.
-  role: z.enum(["owner", "admin", "member", "guest"]).catch("member"),
+  role: z.enum(["owner", "admin", "member"]).catch("member"),
   created_at: z.string().default(""),
   name: z.string().default(""),
   email: z.string().default(""),
@@ -733,28 +730,6 @@ export const RuntimeSchema: z.ZodType<RuntimeDevice> = z.object({
 
 export const RuntimeListSchema = z.array(RuntimeSchema).default([]);
 export const EMPTY_RUNTIME_LIST: RuntimeDevice[] = [];
-
-// Squad schema — fields mobile actually consumes for the @mention suggestion
-// bar (id, name, archived_at filter) plus identity/timestamp fields that are
-// safe to default. `.loose()` so the server can add squad fields without
-// breaking the parser.
-export const SquadSchema: z.ZodType<Squad> = z.object({
-  id: z.string(),
-  workspace_id: z.string().default(""),
-  name: z.string().default(""),
-  description: z.string().default(""),
-  instructions: z.string().default(""),
-  avatar_url: z.string().nullable().default(null),
-  leader_id: z.string().default(""),
-  creator_id: z.string().default(""),
-  created_at: z.string().default(""),
-  updated_at: z.string().default(""),
-  archived_at: z.string().nullable().default(null),
-  archived_by: z.string().nullable().default(null),
-}).loose();
-
-export const SquadListSchema = z.array(SquadSchema).default([]);
-export const EMPTY_SQUAD_LIST: Squad[] = [];
 
 // Single-issue fallback used by getIssue. Mobile reuses IssueSchema from core
 // for parsing; this sentinel lets parseWithFallback yield a structurally-

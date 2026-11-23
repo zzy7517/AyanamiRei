@@ -330,8 +330,6 @@ const REFRESH_EVENTS = [
   "project_folder:updated",
   "project_folder:deleted",
   "project_folder:filed",
-  // Visibility changes decide which filed projects the caller may see.
-  "project:updated",
   "project:deleted",
 ] as WSEventType[];
 

@@ -10,7 +10,6 @@ import jaOnboarding from "./ja/onboarding.json";
 import jaInvite from "./ja/invite.json";
 import jaLabels from "./ja/labels.json";
 import jaMembers from "./ja/members.json";
-import jaMyIssues from "./ja/my-issues.json";
 import jaSearch from "./ja/search.json";
 import jaInbox from "./ja/inbox.json";
 import jaWorkspace from "./ja/workspace.json";
@@ -23,8 +22,8 @@ import jaRuntimes from "./ja/runtimes.json";
 import jaLayout from "./ja/layout.json";
 import jaUsage from "./ja/usage.json";
 import jaUi from "./ja/ui.json";
-import jaSquads from "./ja/squads.json";
 import jaBilling from "./ja/billing.json";
+import jaTerminal from "./ja/terminal.json";
 
 const resources: LocaleResources = {
   docs: jaDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: jaInvite,
   labels: jaLabels,
   members: jaMembers,
-  "my-issues": jaMyIssues,
   search: jaSearch,
   inbox: jaInbox,
   workspace: jaWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: jaLayout,
   usage: jaUsage,
   ui: jaUi,
-  squads: jaSquads,
   billing: jaBilling,
+  terminal: jaTerminal,
 };
 
 export default resources;

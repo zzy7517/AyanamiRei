@@ -532,8 +532,6 @@ export interface CreateWorkspaceSubscriptionPortalResponse {
  * write; this is only for rendering.
  */
 export type PaidFeature =
-  | "private_projects"
-  | "guests"
   | "agent_invocation_members"
   | "runtime_member_sharing"
   | "team_app_accounts";
@@ -560,7 +558,7 @@ export interface WorkspaceFeatureLimits {
 /**
  * The plan's member limit (MUL-9488). `off` means no limit applies, which is
  * also every self-hosted workspace; the counts are null then. Members and
- * pending invitations both take a slot; guests take none.
+ * pending invitations both take a slot.
  */
 /**
  * The plan's attachment storage limit (MUL-9489). `off` means no limit

@@ -34,7 +34,7 @@ function item(
     recipient_id: "member-1",
     actor_type: null,
     actor_id: null,
-    type: "mentioned",
+    type: "new_comment",
     severity: "info",
     issue_id: issueStatus == null ? null : `issue-${id}`,
     title: id,
@@ -157,7 +157,7 @@ describe("notification dimensions", () => {
   });
 
   it("groups every notification kind, unknown ones as system", () => {
-    expect(inboxTypeGroup("mentioned")).toBe("mention");
+    expect(inboxTypeGroup("new_comment")).toBe("comment");
     expect(inboxTypeGroup("reaction_added")).toBe("comment");
     expect(inboxTypeGroup("issue_subscribed")).toBe("assign");
     expect(inboxTypeGroup("children_done")).toBe("change");
@@ -292,15 +292,15 @@ describe("pinned row with agent filtering", () => {
 describe("inboxFacetCounts", () => {
   it("counts each value as if it alone were selected", () => {
     const rows = [
-      item("mention", "todo", "high", { issue_id: "issue-1", created_at: "2026-08-23T00:00:00Z", actor_type: "member", actor_id: "alice" }),
+      item("comment", "todo", "high", { issue_id: "issue-1", created_at: "2026-08-23T00:00:00Z", actor_type: "member", actor_id: "alice" }),
       item("change", "todo", "high", { issue_id: "issue-1", type: "status_changed", read: true, actor_type: "agent", actor_id: "bob" }),
-      item("other", "done", "low", { type: "new_comment", issue_project_id: "project-1", issue_label_ids: ["bug"] }),
+      item("other", "done", "low", { type: "issue_assigned", issue_project_id: "project-1", issue_label_ids: ["bug"] }),
       item("no-issue", null, null, { type: "quick_create_failed" }),
     ];
-    const counts = inboxFacetCounts(rows, { ...EMPTY_INBOX_FILTERS, types: ["mention"], statuses: ["todo"] });
+    const counts = inboxFacetCounts(rows, { ...EMPTY_INBOX_FILTERS, types: ["comment"], statuses: ["todo"] });
     // Type ignores its own selection; status still applies.
-    expect(Object.fromEntries(counts.types)).toEqual({ mention: 1, change: 1 });
-    // Status ignores its own selection; the mention filter picks the rows.
+    expect(Object.fromEntries(counts.types)).toEqual({ comment: 1, change: 1 });
+    // Status ignores its own selection; the comment filter picks the rows.
     expect(Object.fromEntries(counts.statuses)).toEqual({ todo: 1 });
     expect(Object.fromEntries(counts.actors)).toEqual({ "member:alice": 1 });
     expect(counts.unread).toBe(1);
@@ -308,7 +308,7 @@ describe("inboxFacetCounts", () => {
     const unfiltered = inboxFacetCounts(rows, EMPTY_INBOX_FILTERS);
     expect(Object.fromEntries(unfiltered.projects)).toEqual({ none: 1, "project-1": 1 });
     expect(Object.fromEntries(unfiltered.labels)).toEqual({ bug: 1 });
-    expect(Object.fromEntries(unfiltered.types)).toEqual({ mention: 1, change: 1, comment: 1, system: 1 });
+    expect(Object.fromEntries(unfiltered.types)).toEqual({ assign: 1, change: 1, comment: 1, system: 1 });
   });
 });
 
@@ -328,7 +328,7 @@ describe("backend capability", () => {
   it("keeps unproven dimensions dormant, and on the archive everything an old server would ignore", () => {
     const filters: InboxFilters = {
       ...EMPTY_INBOX_FILTERS,
-      types: ["mention"], statuses: ["done"], projects: ["p"], agent: "idle",
+      types: ["comment"], statuses: ["done"], projects: ["p"], agent: "idle",
       negated: ["status"], received: "today",
     };
     expect(effectiveInboxFilters(filters, { priority: "supported", issueFields: "unknown" })).toEqual({
@@ -348,11 +348,11 @@ describe("archivedInboxQuery", () => {
     const now = new Date(2026, 7, 24, 15, 0);
     expect(archivedInboxQuery({
       ...EMPTY_INBOX_FILTERS,
-      types: ["run", "mention"], actors: ["system"], statuses: ["todo"], projects: ["none", "p"],
+      types: ["run", "comment"], actors: ["system"], statuses: ["todo"], projects: ["none", "p"],
       assignees: ["member:m"], labels: ["l"], dueDates: ["overdue"], received: "last_7_days",
       negated: ["type", "label", "priority"], unreadOnly: true,
     }, now)).toEqual({
-      types: "mention,run", actors: "system", statuses: "todo", projects: "none,p",
+      types: "comment,run", actors: "system", statuses: "todo", projects: "none,p",
       assignees: "member:m", labels: "l", due_dates: "overdue",
       // A dimension with nothing selected has nothing to negate.
       negated: "label,type",
@@ -408,9 +408,9 @@ describe("useInboxFilterStore", () => {
 
   it("keeps a dimension's operator across its values and drops it when the field is cleared", () => {
     const store = useInboxFilterStore.getState();
-    store.toggleFilterValue("ws-1", "type", "mention");
+    store.toggleFilterValue("ws-1", "type", "comment");
     store.setFilterNegated("ws-1", "type", true);
-    useInboxFilterStore.getState().toggleFilterValue("ws-1", "type", "mention");
+    useInboxFilterStore.getState().toggleFilterValue("ws-1", "type", "comment");
     useInboxFilterStore.getState().toggleFilterValue("ws-1", "type", "run");
     expect(useInboxFilterStore.getState().filtersByWorkspace["ws-1"]).toMatchObject({
       types: ["run"], negated: ["type"],
@@ -457,11 +457,11 @@ describe("useInboxFilterStore", () => {
 describe("sanitizeInboxFilters", () => {
   it("rebuilds a stored entry, dropping unknown values and carrying the old idle toggle over", () => {
     expect(sanitizeInboxFilters({
-      statuses: ["todo", 3], types: ["mention", "bogus"], idleOnly: true,
+      statuses: ["todo", 3], types: ["comment", "bogus"], idleOnly: true,
       negated: ["status", "label", "creator"], received: "yesterday",
     })).toEqual({
       ...EMPTY_INBOX_FILTERS,
-      statuses: ["todo"], types: ["mention"], agent: "idle", negated: ["status"],
+      statuses: ["todo"], types: ["comment"], agent: "idle", negated: ["status"],
     });
     expect(sanitizeInboxFilters(null)).toEqual(EMPTY_INBOX_FILTERS);
   });

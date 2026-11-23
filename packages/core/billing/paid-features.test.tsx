@@ -45,9 +45,9 @@ describe("resolvePaidFeatureAccess", () => {
 
 describe("usePaidFeatureAccess", () => {
   it("is read-only for a resource that already uses a locked feature, and never blocks reductions", async () => {
-    const { wrapper } = setup(async () => ({ features: { private_projects: "locked" }, limits: NO_LIMITS }));
+    const { wrapper } = setup(async () => ({ features: { agent_invocation_members: "locked" }, limits: NO_LIMITS }));
     const { result } = renderHook(
-      () => usePaidFeatureAccess("ws-1", "private_projects", { hasExistingConfig: true }),
+      () => usePaidFeatureAccess("ws-1", "agent_invocation_members", { hasExistingConfig: true }),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isPending).toBe(false));
@@ -56,15 +56,15 @@ describe("usePaidFeatureAccess", () => {
 
   it("keys the read by workspace", async () => {
     const { api, wrapper } = setup(async (wsId) => ({
-      features: { private_projects: wsId === "ws-locked" ? "locked" : "available" },
+      features: { agent_invocation_members: wsId === "ws-locked" ? "locked" : "available" },
       limits: NO_LIMITS,
     }));
     const locked = renderHook(
-      () => usePaidFeatureAccess("ws-locked", "private_projects", { hasExistingConfig: false }),
+      () => usePaidFeatureAccess("ws-locked", "agent_invocation_members", { hasExistingConfig: false }),
       { wrapper },
     );
     const open = renderHook(
-      () => usePaidFeatureAccess("ws-open", "private_projects", { hasExistingConfig: false }),
+      () => usePaidFeatureAccess("ws-open", "agent_invocation_members", { hasExistingConfig: false }),
       { wrapper },
     );
     await waitFor(() => expect(locked.result.current.state).toBe("unavailable"));
@@ -76,7 +76,7 @@ describe("usePaidFeatureAccess", () => {
   it("offers no additions while loading, so a locked form never flashes as editable", () => {
     const { wrapper } = setup(() => new Promise<WorkspaceFeatures>(() => {}));
     const { result } = renderHook(
-      () => usePaidFeatureAccess("ws-1", "private_projects", { hasExistingConfig: false }),
+      () => usePaidFeatureAccess("ws-1", "agent_invocation_members", { hasExistingConfig: false }),
       { wrapper },
     );
     expect(result.current).toMatchObject({ state: null, isPending: true, canAdd: false });
@@ -87,7 +87,7 @@ describe("usePaidFeatureAccess", () => {
       throw new Error("offline");
     });
     const { result } = renderHook(
-      () => usePaidFeatureAccess("ws-1", "private_projects", { hasExistingConfig: false }),
+      () => usePaidFeatureAccess("ws-1", "agent_invocation_members", { hasExistingConfig: false }),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -97,7 +97,7 @@ describe("usePaidFeatureAccess", () => {
   it("treats a feature the server did not report as available", async () => {
     const { wrapper } = setup(async () => ({ features: {}, limits: NO_LIMITS }));
     const { result } = renderHook(
-      () => usePaidFeatureAccess("ws-1", "private_projects", { hasExistingConfig: true }),
+      () => usePaidFeatureAccess("ws-1", "agent_invocation_members", { hasExistingConfig: true }),
       { wrapper },
     );
     await waitFor(() => expect(result.current.state).toBe("available"));
@@ -105,7 +105,7 @@ describe("usePaidFeatureAccess", () => {
 });
 
 describe("feature_locked errors", () => {
-  const locked = new ApiError("locked", 403, "Forbidden", { code: "feature_locked", feature: "private_projects" });
+  const locked = new ApiError("locked", 403, "Forbidden", { code: "feature_locked", feature: "agent_invocation_members" });
 
   it("is recognised only from the machine-readable code", () => {
     expect(isFeatureLockedError(locked)).toBe(true);
@@ -129,14 +129,14 @@ describe("WorkspaceFeaturesSchema", () => {
     expect(
       WorkspaceFeaturesSchema.parse({
         features: {
-          private_projects: { state: "locked" },
+          agent_invocation_members: { state: "locked" },
           future_feature: { state: "something_new" },
           broken: "locked",
         },
         extra: true,
       }),
     ).toEqual({
-      features: { private_projects: "locked", future_feature: "available", broken: "available" },
+      features: { agent_invocation_members: "locked", future_feature: "available", broken: "available" },
       limits: NO_LIMITS,
     });
     expect(WorkspaceFeaturesSchema.parse({ features: [] })).toEqual({ features: {}, limits: NO_LIMITS });
@@ -165,9 +165,8 @@ describe("WorkspaceFeaturesSchema", () => {
       WorkspaceFeaturesSchema.parse({
         features: {
           agent_invocation_members: { state: "trialing" },
-          runtime_member_sharing: null,
+          runtime_member_sharing: { state: 1 },
           team_app_accounts: { state: "locked" },
-          private_projects: { state: 1 },
         },
       }),
     ).toEqual({
@@ -175,7 +174,6 @@ describe("WorkspaceFeaturesSchema", () => {
         agent_invocation_members: "available",
         runtime_member_sharing: "available",
         team_app_accounts: "locked",
-        private_projects: "available",
       },
       limits: NO_LIMITS,
     });
@@ -186,10 +184,11 @@ describe("usePaidFeatureAccess for the Business access and app features", () => 
   it.each(["agent_invocation_members", "runtime_member_sharing", "team_app_accounts"] as const)(
     "resolves %s independently of the other features",
     async (feature) => {
-      const { wrapper } = setup(async () => ({ features: { [feature]: "locked", private_projects: "available" }, limits: NO_LIMITS }));
+      const otherFeature = feature === "agent_invocation_members" ? "runtime_member_sharing" : "agent_invocation_members";
+      const { wrapper } = setup(async () => ({ features: { [feature]: "locked", [otherFeature]: "available" }, limits: NO_LIMITS }));
       const existing = renderHook(() => usePaidFeatureAccess("ws-1", feature, { hasExistingConfig: true }), { wrapper });
       const fresh = renderHook(() => usePaidFeatureAccess("ws-1", feature, { hasExistingConfig: false }), { wrapper });
-      const other = renderHook(() => usePaidFeatureAccess("ws-1", "private_projects", { hasExistingConfig: false }), { wrapper });
+      const other = renderHook(() => usePaidFeatureAccess("ws-1", otherFeature, { hasExistingConfig: false }), { wrapper });
       await waitFor(() => expect(existing.result.current.state).toBe("read_only"));
       expect(existing.result.current).toMatchObject({ canAdd: false, canReduce: true });
       await waitFor(() => expect(fresh.result.current.state).toBe("unavailable"));

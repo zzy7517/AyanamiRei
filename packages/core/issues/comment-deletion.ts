@@ -2,7 +2,7 @@ import type { TimelineEntry } from "@multica/core/types";
 
 /**
  * True for a comment deleted while it still had replies (#8296). The server
- * keeps its row as a tombstone — empty content, no attachments, reactions or
+ * keeps its row as a tombstone — empty content, no attachments or
  * resolution — so every reply keeps its direct parent. Clients render nothing
  * in its place: the replies it held render flat, where it was. The one
  * exception is a thread ROOT, which keeps a placeholder as the thread's head.
@@ -13,7 +13,7 @@ export function isDeletedComment(entry: { deleted_at?: string | null }): boolean
 
 /**
  * The comment a deep link should land on. A deleted REPLY renders nothing, so
- * an inbox notification or a share link that names one has no anchor to scroll
+ * an inbox notification or a comment link that names one has no anchor to scroll
  * to and no row to flash: land on the comment just above where it was — the
  * nearest visible reply before it, or the thread root when it had none. The
  * original id stays the notification's identity; only the landing moves.
@@ -78,7 +78,6 @@ export function applyCommentDeletion(
             ...e,
             content: "",
             attachments: [],
-            reactions: [],
             resolved_at: null,
             resolved_by_type: null,
             resolved_by_id: null,

@@ -35,7 +35,7 @@ Before the runtime is ready, you can:
 1. Create a project for your current work.
 2. Create a few issues and move them across backlog, todo, in_progress, and done.
 3. Add priorities, labels, comments, and subscriptions.
-4. Use Inbox to track assignments and mentions.
+4. Use Inbox to track your assignments.
 
 That gives you the project-management layer first. Once a runtime is connected, agents can start working from the same issues.
 
@@ -77,7 +77,7 @@ const zh = `欢迎来到 Multica。
 1. 为当前工作创建一个项目。
 2. 新建几个任务,并在 backlog、todo、in_progress、done 之间流转。
 3. 给任务加优先级、标签、评论和订阅。
-4. 用收件箱追踪分配给你的事项和 @mention。
+4. 用收件箱追踪分配给你的事项。
 
 这样你先熟悉项目管理层。连上运行时后,智能体会直接在这些任务上开始工作。
 
@@ -121,7 +121,7 @@ runtime이 준비되기 전에는 다음을 해볼 수 있습니다:
 1. 현재 작업을 위한 project를 만듭니다.
 2. 태스크 몇 개를 만들고 backlog, todo, in_progress, done 사이에서 이동해 봅니다.
 3. priority, label, comment, subscription을 추가합니다.
-4. Inbox에서 나에게 배정된 작업과 mention을 확인합니다.
+4. Inbox에서 나에게 배정된 작업을 확인합니다.
 
 이렇게 프로젝트 관리 계층을 먼저 익힐 수 있습니다. runtime이 연결되면 agent가 같은 태스크에서 바로 작업을 시작합니다.
 
@@ -163,7 +163,7 @@ runtime が準備できる前に、次のことを試せます:
 1. いまの仕事のための project を作る。
 2. タスクをいくつか作り、backlog、todo、in_progress、done の間で動かしてみる。
 3. priority、label、comment、subscription を追加する。
-4. Inbox で自分への割り当てや mention を確認する。
+4. Inbox で自分への割り当てを確認する。
 
 これでまずプロジェクト管理のレイヤーに慣れることができます。runtime を接続すると、agent が同じタスクから作業を始められます。
 

@@ -770,11 +770,11 @@ describe("handleInboxNew", () => {
       recipient_id: "member-1",
       actor_type: "member",
       actor_id: "member-2",
-      type: "mentioned",
+      type: "new_comment",
       severity: "info",
       issue_id: "issue-1",
-      title: "Mentioned you",
-      body: "in a comment",
+      title: "New comment",
+      body: "on an issue you follow",
       issue_status: null,
       read: false,
       archived: false,
@@ -811,8 +811,8 @@ describe("handleInboxNew", () => {
       slug: "",
       itemId: "item-1",
       issueKey: "issue-1",
-      title: "Mentioned you",
-      body: "in a comment",
+      title: "New comment",
+      body: "on an issue you follow",
     });
   });
 
@@ -989,7 +989,7 @@ describe("handleInboxNew", () => {
     await handleInboxNew(qc, inboxItem());
 
     expect(webBanners).toHaveLength(1);
-    expect(webBanners[0]?.title).toBe("Mentioned you");
+    expect(webBanners[0]?.title).toBe("New comment");
   });
 
   it("shows no browser banner when the SOURCE workspace is muted", async () => {

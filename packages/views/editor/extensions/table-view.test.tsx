@@ -135,8 +135,8 @@ describe("editor TableView", () => {
       [
         "| Owner | Issue |",
         "| --- | --- |",
-        "| [@Alice](mention://member/u1) | [DEV-1](mention://issue/i1) |",
-        "| [@Bob](mention://member/u2) | none |",
+        "| [@Alice](mention://agent/u1) | [DEV-1](mention://issue/i1) |",
+        "| [@Bob](mention://agent/u2) | none |",
       ].join("\n"),
       "Owner",
     );

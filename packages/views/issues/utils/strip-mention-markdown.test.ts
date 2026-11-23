@@ -9,12 +9,6 @@ describe("stripMentionMarkdown", () => {
     ).toBe("@魏和尚");
   });
 
-  it("strips simple member mention", () => {
-    expect(
-      stripMentionMarkdown("[@Alice](mention://member/abc-123)"),
-    ).toBe("@Alice");
-  });
-
   it("strips issue mention (no @ prefix)", () => {
     expect(
       stripMentionMarkdown("[MUL-123](mention://issue/some-uuid)"),
@@ -30,7 +24,7 @@ describe("stripMentionMarkdown", () => {
   it("handles multiple mentions in one string", () => {
     expect(
       stripMentionMarkdown(
-        "Triggered by [@Alice](mention://member/a1) and [@Bob](mention://agent/b2)",
+        "Triggered by [@Alice](mention://agent/a1) and [@Bob](mention://agent/b2)",
       ),
     ).toBe("Triggered by @Alice and @Bob");
   });

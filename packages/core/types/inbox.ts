@@ -14,15 +14,13 @@ export type InboxItemType =
   | "start_date_changed"
   | "due_date_changed"
   | "new_comment"
-  | "mentioned"
-  // A new comment in a doc discussion the recipient wrote in, or one that
-  // mentions them. Details carry doc_id, thread_id and the quoted text.
+  // A new comment in a doc discussion the recipient wrote in. Details carry
+  // doc_id, thread_id and the quoted text.
   | "doc_comment"
-  | "doc_mentioned"
   | "task_failed"
-  | "reaction_added"
   // No longer written, but older servers wrote them and those rows remain;
   // keep their labels and filter groups so history still reads and filters.
+  | "reaction_added"
   | "review_requested"
   | "task_completed"
   | "agent_blocked"
@@ -37,13 +35,8 @@ export type InboxItemType =
   // same Inbox model so read/archive/realtime behavior remains consistent.
   | "autopilot_paused"
   | "autopilot_quota_exceeded"
-  // Sub-issues of an issue assigned to the recipient closed (the child_done
-  // system rule notifies a member assignee instead of waking an agent).
+  // Sub-issues of an issue assigned to the recipient closed.
   | "children_done"
-  // A workspace owner added themselves to a private project the recipient is
-  // a member of. Issue-less: details carry project_id, project_title and
-  // joined_by (the owner's name).
-  | "project_owner_joined"
   // Connected Apps (MUL-8516): an agent waits on the recipient to confirm an
   // app call, or to connect their account.
   | "app_action_requested"

@@ -29,7 +29,6 @@ import {
 } from "@multica/core/inbox/selection-store";
 import { openCreateIssueWithPreference } from "@multica/core/issues/stores";
 import { useModalStore } from "@multica/core/modals";
-import { useIsGuest } from "@multica/core/permissions";
 import {
   getShortcut,
   isEditableShortcutTarget,
@@ -87,7 +86,6 @@ export function InboxEmptyState({
   const qc = useQueryClient();
   const { push } = useNavigation();
   const builtinNav = useBuiltinViewNavigation();
-  const guest = useIsGuest(wsId);
   const restoreInbox = useRestoreInbox();
   const { mutateAsync: unsnoozeAsync } = useUnsnoozeInbox();
 
@@ -103,7 +101,7 @@ export function InboxEmptyState({
   });
   const { data: workingAgents = NO_AGENTS } = useQuery({
     ...workspaceWorkingAgentsOptions(wsId, "issue"),
-    enabled: isInboxZero && !guest && !!wsId,
+    enabled: isInboxZero && !!wsId,
   });
 
   const activeSnoozed = useMemo(() => {
@@ -328,20 +326,18 @@ export function InboxEmptyState({
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-          {!guest && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                builtinNav.prepare("my_work");
-                push?.(builtinNav.hrefFor("my_work"));
-              }}
-            >
-              <CircleUser />
-              <span>{t(($) => $.zero.my_work)}</span>
-            </Button>
-          )}
-          {!guest && workingCount > 0 && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              builtinNav.prepare("my_work");
+              push?.(builtinNav.hrefFor("my_work"));
+            }}
+          >
+            <CircleUser />
+            <span>{t(($) => $.zero.my_work)}</span>
+          </Button>
+          {workingCount > 0 && (
             <Button
               size="sm"
               variant="outline"
@@ -367,16 +363,14 @@ export function InboxEmptyState({
 
         {!isCompact && (
           <div className="mt-5 flex items-center justify-center gap-4 text-caption text-faint-foreground">
-            {!guest && (
-              <button
-                type="button"
-                onClick={() => openCreateIssueWithPreference()}
-                className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 transition-colors hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                <ActionShortcutKeycaps action="createIssue" />
-                <span>{tLayout(($) => $.sidebar.new_issue)}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => openCreateIssueWithPreference()}
+              className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 transition-colors hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <ActionShortcutKeycaps action="createIssue" />
+              <span>{tLayout(($) => $.sidebar.new_issue)}</span>
+            </button>
             <button
               type="button"
               onClick={() => useSearchStore.getState().setOpen(true)}

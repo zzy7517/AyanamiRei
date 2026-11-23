@@ -14,7 +14,6 @@ import type onboarding from "../locales/en/onboarding.json";
 import type invite from "../locales/en/invite.json";
 import type labels from "../locales/en/labels.json";
 import type members from "../locales/en/members.json";
-import type myIssues from "../locales/en/my-issues.json";
 import type search from "../locales/en/search.json";
 import type inbox from "../locales/en/inbox.json";
 import type workspace from "../locales/en/workspace.json";
@@ -26,8 +25,8 @@ import type modals from "../locales/en/modals.json";
 import type runtimes from "../locales/en/runtimes.json";
 import type layout from "../locales/en/layout.json";
 import type usage from "../locales/en/usage.json";
-import type squads from "../locales/en/squads.json";
 import type billing from "../locales/en/billing.json";
+import type terminal from "../locales/en/terminal.json";
 
 // Module augmentation enables i18next v26 selector API across the monorepo:
 // `t($ => $.signin.title)` resolves to the value in en/auth.json.
@@ -56,7 +55,6 @@ declare global {
     invite: typeof invite;
     labels: typeof labels;
     members: typeof members;
-    "my-issues": typeof myIssues;
     search: typeof search;
     inbox: typeof inbox;
     workspace: typeof workspace;
@@ -68,8 +66,8 @@ declare global {
     runtimes: typeof runtimes;
     layout: typeof layout;
     usage: typeof usage;
-    squads: typeof squads;
     billing: typeof billing;
+    terminal: typeof terminal;
   }
 }
 

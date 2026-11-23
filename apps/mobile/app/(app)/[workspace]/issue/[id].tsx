@@ -44,7 +44,6 @@ import { useViewedIssuesStore } from "@/data/viewed-issues-store";
 import { useCommentSelectStore } from "@/data/comment-select-store";
 import { useReplyTargetStore } from "@/data/stores/reply-target-store";
 import { useT } from "@/lib/i18n";
-import { useIsGuest } from "@/lib/use-is-guest";
 
 export default function IssueDetail() {
   // `highlight` + `h` come from inbox deep-link (apps/mobile/app/(app)/
@@ -108,9 +107,6 @@ export default function IssueDetail() {
   const createPin = useCreatePin();
   const deletePin = useDeletePin();
   const { t } = useT("issues");
-  // A guest (MUL-9420) reads and comments: no editing, deleting, or agent runs.
-  const guest = useIsGuest();
-
   // Three-dot menu: Pin/Unpin / Copy link / Open on web (if web URL set) /
   // Delete. Mirrors apps/mobile/app/(app)/[workspace]/project/[id].tsx — same
   // ActionSheetIOS + Alert.alert confirm pattern. Property edits (status,
@@ -124,10 +120,10 @@ export default function IssueDetail() {
       : null;
     const actions = ["cancel", "pin"];
     if (isPinned) actions[1] = "unpin";
-    if (!guest) actions.push("edit");
+    actions.push("edit");
     if (issueLink) actions.push("copy_link");
     if (issueLink) actions.push("open_web");
-    if (!guest) actions.push("delete");
+    actions.push("delete");
     const options = actions.map((action) =>
       action === "cancel"
         ? t("common:actions.cancel")
@@ -178,7 +174,7 @@ export default function IssueDetail() {
         }
       },
     );
-  }, [issue, wsSlug, deleteIssue, isPinned, createPin, deletePin, guest, t]);
+  }, [issue, wsSlug, deleteIssue, isPinned, createPin, deletePin, t]);
 
   return (
     <View className="flex-1 bg-background">
@@ -192,7 +188,7 @@ export default function IssueDetail() {
                   {/* Ambient agent-working badge — renders null when no
                    *  active tasks, so it doesn't crowd the header in the
                    *  common case. See agent-header-badge.tsx. */}
-                  {!guest && <AgentHeaderBadge issueId={id} />}
+                  <AgentHeaderBadge issueId={id} />
                   <IconButton
                     name="ellipsis-horizontal"
                     onPress={onPressMore}

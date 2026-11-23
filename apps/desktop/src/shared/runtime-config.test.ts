@@ -58,6 +58,47 @@ describe("runtime config", () => {
     });
   });
 
+  it("reads the pre-shared token, without the whitespace around it", () => {
+    expect(
+      parseRuntimeConfig(
+        JSON.stringify({
+          schemaVersion: 1,
+          apiUrl: "https://api.example.com",
+          authToken: " open-sesame\n",
+        }),
+      ),
+    ).toEqual({
+      schemaVersion: 1,
+      apiUrl: "https://api.example.com",
+      wsUrl: "wss://api.example.com/ws",
+      appUrl: "https://example.com",
+      authToken: "open-sesame",
+    });
+  });
+
+  it("leaves the pre-shared token out when the file does not set it", () => {
+    const config = parseRuntimeConfig(
+      JSON.stringify({ schemaVersion: 1, apiUrl: "https://api.example.com" }),
+    );
+    expect(config).not.toHaveProperty("authToken");
+    expect(runtimeConfigFromDevEnv({ apiUrl: "http://localhost:8080" })).not.toHaveProperty(
+      "authToken",
+    );
+  });
+
+  it("rejects a blank pre-shared token", () => {
+    expect(() =>
+      parseRuntimeConfig(
+        JSON.stringify({ schemaVersion: 1, apiUrl: "https://api.example.com", authToken: "  " }),
+      ),
+    ).toThrow(/authToken must be a non-empty string when set/);
+    expect(() =>
+      parseRuntimeConfig(
+        JSON.stringify({ schemaVersion: 1, apiUrl: "https://api.example.com", authToken: 42 }),
+      ),
+    ).toThrow(/authToken must be a non-empty string when set/);
+  });
+
   it("rejects invalid JSON", () => {
     expect(() => parseRuntimeConfig("{")).toThrow(/Invalid desktop runtime config JSON/);
   });

@@ -440,8 +440,8 @@ function buildAssigneeLanes(
     });
   }
 
-  // Sort by actor type (members before agents before squads) then by name.
-  const typeOrder: Record<string, number> = { member: 0, agent: 1, squad: 2 };
+  // Sort by actor type (members before agents) then by name.
+  const typeOrder: Record<string, number> = { member: 0, agent: 1 };
   const orderIndex = new Map<string, number>();
   storedOrder.forEach((id, idx) => orderIndex.set(`assignee:${id}`, idx));
   const ordered = Array.from(seen.values()).sort((a, b) => {
@@ -510,13 +510,9 @@ function buildServerLanes(
     const value = descriptor.value;
     if (grouping === "assignee" && value.kind === "assignee") {
       const actorRef = value.actor;
-      const actor: { type: IssueAssigneeType; id: string } | null =
-        actorRef &&
-        (actorRef.type === "member" ||
-          actorRef.type === "agent" ||
-          actorRef.type === "squad")
-          ? { type: actorRef.type, id: actorRef.id }
-          : null;
+      const actor: { type: IssueAssigneeType; id: string } | null = actorRef
+        ? { type: "agent", id: actorRef.id }
+        : null;
       const rawId = actor ? `${actor.type}:${actor.id}` : NONE_LANE_ID;
       return [{
         key: `assignee:${rawId}`,

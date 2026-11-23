@@ -36,8 +36,6 @@ vi.mock("@multica/core/hooks", () => ({ useWorkspaceId: () => "ws-1" }));
 vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
     issues: () => "/acme/issues",
-    myIssues: () => "/acme/my-issues",
-    myAgents: () => "/acme/my-issues?scope=agents",
     projectDetail: (id: string) => `/acme/projects/${id}`,
   }),
 }));
@@ -105,7 +103,7 @@ beforeEach(() => {
     view("v1", "Needs review", { query: { statusFilters: ["in_review"], labelFilters: ["l1"] } }),
     view("v2", "Team backlog", { owner_id: "someone", visibility: "workspace" }),
   ];
-  mocks.starred = new Set(["builtin:my_issues", "view:v1"]);
+  mocks.starred = new Set(["view:v1"]);
   mocks.star.mockReset();
   mocks.unstar.mockReset();
   mocks.open.mockReset();

@@ -26,10 +26,14 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ setQueryData: vi.fn() }),
 }));
 
-vi.mock("@multica/core/platform", () => ({
-  CoreProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-  setCurrentWorkspace: vi.fn(),
-}));
+vi.mock("@multica/core/platform", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@multica/core/platform")>();
+  return {
+    ...actual,
+    CoreProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+    setCurrentWorkspace: vi.fn(),
+  };
+});
 
 vi.mock("@multica/core/i18n", () => ({
   pickLocale: () => "en",

@@ -10,7 +10,6 @@ import koOnboarding from "./ko/onboarding.json";
 import koInvite from "./ko/invite.json";
 import koLabels from "./ko/labels.json";
 import koMembers from "./ko/members.json";
-import koMyIssues from "./ko/my-issues.json";
 import koSearch from "./ko/search.json";
 import koInbox from "./ko/inbox.json";
 import koWorkspace from "./ko/workspace.json";
@@ -23,8 +22,8 @@ import koRuntimes from "./ko/runtimes.json";
 import koLayout from "./ko/layout.json";
 import koUsage from "./ko/usage.json";
 import koUi from "./ko/ui.json";
-import koSquads from "./ko/squads.json";
 import koBilling from "./ko/billing.json";
+import koTerminal from "./ko/terminal.json";
 
 const resources: LocaleResources = {
   docs: koDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: koInvite,
   labels: koLabels,
   members: koMembers,
-  "my-issues": koMyIssues,
   search: koSearch,
   inbox: koInbox,
   workspace: koWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: koLayout,
   usage: koUsage,
   ui: koUi,
-  squads: koSquads,
   billing: koBilling,
+  terminal: koTerminal,
 };
 
 export default resources;

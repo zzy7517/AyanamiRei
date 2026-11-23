@@ -143,8 +143,8 @@ describe("useMoveOnAfterAutoArchive", () => {
     qc.setQueryData(issueDetailOptions("ws", "issue-h").queryKey, {
       id: "issue-h",
       status: "in_review",
-      assignee_type: "member",
-      assignee_id: "member-1",
+      assignee_type: "agent",
+      assignee_id: "agent-other",
     } as Issue);
     noteInboxBarAction("issue-h", { type: "assignee", assignee: { type: "agent", id: "agent-nova" } });
     noteInboxAutoArchive({ issue_id: "issue-h", reason: "actor_acted" });

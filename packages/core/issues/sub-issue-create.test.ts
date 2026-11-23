@@ -5,7 +5,7 @@ import { copyableParentProperties, copyParentIssueFields, subIssueCreateDefaults
 
 const parent = {
   id: "parent", identifier: "TEST-1", project_id: "project",
-  assignee_type: "member", assignee_id: "owner", status: "in_progress",
+  assignee_type: "agent", assignee_id: "owner", status: "in_progress",
   priority: "high", description: "Parent scope", start_date: "2026-11-05", due_date: "2026-11-20",
   labels: [{ id: "label", name: "Product" }],
   properties: { customer: "Acme", budget: 100000, targets: ["A", "B"], approved: false, zero: 0, archived: "old", future: "unknown" },
@@ -14,13 +14,13 @@ const property = (id: string, type = "text", archived = false) => ({ id, name: i
 const catalog = [property("customer"), property("budget", "number"), property("targets", "multi_text"), property("approved", "checkbox"), property("zero", "number"), property("archived", "text", true), property("future", "future")];
 
 describe("sub-issue create context", () => {
-  it.each(["member", "agent", "squad"] as const)("seeds project and %s assignee, never unrelated fields", (type) => {
-    expect(subIssueCreateDefaults({ ...parent, assignee_type: type })).toEqual({
-      parent_issue_id: "parent", parent_issue_identifier: "TEST-1", project_id: "project", assignee_type: type, assignee_id: "owner",
+  it("seeds project and the agent assignee, never unrelated fields", () => {
+    expect(subIssueCreateDefaults(parent)).toEqual({
+      parent_issue_id: "parent", parent_issue_identifier: "TEST-1", project_id: "project", assignee_type: "agent", assignee_id: "owner",
     });
   });
   it("omits absent or incomplete assignees rather than clearing sticky defaults", () => {
-    expect(subIssueCreateDefaults({ id: "parent", assignee_type: "member", assignee_id: null })).toEqual({ parent_issue_id: "parent", parent_issue_identifier: undefined });
+    expect(subIssueCreateDefaults({ id: "parent", assignee_type: "agent", assignee_id: null })).toEqual({ parent_issue_id: "parent", parent_issue_identifier: undefined });
   });
 });
 

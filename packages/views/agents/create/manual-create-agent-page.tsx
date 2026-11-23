@@ -23,7 +23,7 @@ import { splitRuntimeName } from "../../runtimes/components/runtime-machines";
 import { AgentConfigurationPanel } from "./agent-configuration-panel";
 import { CreateAgentFooter } from "./create-agent-footer";
 import { AgentCreateChip, AgentCreateShell } from "./create-shell";
-import { createPathWithParams } from "./squad-param";
+import { createPathWithParams } from "./create-route-params";
 import { useCreateAgentForm } from "./use-create-agent-form";
 import { useCreateAgentSubmit } from "./use-create-agent-submit";
 import { useDuplicateDraftSeed } from "./use-duplicate-draft-seed";
@@ -49,7 +49,6 @@ export function ManualCreateAgentPage() {
   const navigation = useNavigation();
   const backOrReplace = useBackOrReplace();
   const duplicateId = navigation.searchParams.get("duplicate");
-  const squadId = navigation.searchParams.get("squad");
   const runtimeParam = duplicateId ? null : navigation.searchParams.get("runtime");
   // On desktop the location is the tab's URL, and it moves to the done page
   // while this route is still mounted. Its missing `?runtime=` is not a
@@ -58,10 +57,8 @@ export function ManualCreateAgentPage() {
   const needsRuntime = onThisRoute && !duplicateId && !runtimeParam;
 
   useEffect(() => {
-    if (needsRuntime) {
-      navigation.replace(createPathWithParams(paths.newAgent(), { squad: squadId }));
-    }
-  }, [needsRuntime, navigation, paths, squadId]);
+    if (needsRuntime) navigation.replace(paths.newAgent());
+  }, [needsRuntime, navigation, paths]);
 
   const form = useCreateAgentForm({
     runtimeSeed: { ready: !needsRuntime, runtimeId: runtimeParam ?? "" },
@@ -119,7 +116,6 @@ export function ManualCreateAgentPage() {
     draft: form.draft,
     runtimeId: form.selectedRuntime?.id ?? null,
     runtimeProvider: form.selectedRuntime?.provider,
-    squadId,
     duplicateSource: duplicateAgent,
     // The work is committed; leaving it stored would hand the finished agent's
     // fields to whoever opens this form next. Only this flow's slot — another
@@ -130,7 +126,6 @@ export function ManualCreateAgentPage() {
   const changeRuntime = () =>
     navigation.replace(
       createPathWithParams(paths.newAgent(), {
-        squad: squadId,
         runtime: form.draft.runtimeId || runtimeParam,
       }),
     );
@@ -139,9 +134,7 @@ export function ManualCreateAgentPage() {
   // Behind step 2 is step 1, so leaving the flow has to go forward to where it
   // was opened from instead.
   const leave = () =>
-    duplicateId
-      ? backOrReplace(paths.agents())
-      : navigation.push(squadId ? paths.squadDetail(squadId) : paths.agents());
+    duplicateId ? backOrReplace(paths.agents()) : navigation.push(paths.agents());
 
   // Hands the current draft to a builder conversation on the same runtime.
   const [startingAi, setStartingAi] = useState(false);
@@ -168,7 +161,6 @@ export function ManualCreateAgentPage() {
       void qc.invalidateQueries({ queryKey: agentBuilderSessionKeys.list(wsId) });
       navigation.replace(
         createPathWithParams(paths.newAgentAiSession(session.session_id), {
-          squad: squadId,
           runtime: runtime.id,
         }),
       );
@@ -194,9 +186,7 @@ export function ManualCreateAgentPage() {
           ? t(($) => $.creation_studio.duplicate_title, {
               name: duplicateAgent.name,
             })
-          : squadId
-            ? t(($) => $.creation_studio.squad_title)
-            : t(($) => $.creation_studio.title)
+          : t(($) => $.creation_studio.title)
       }
       step={t(($) => $.creation_studio.steps.configure)}
       stepIndex={duplicateId ? undefined : 2}
@@ -277,7 +267,6 @@ export function ManualCreateAgentPage() {
         stepIndex={duplicateId ? undefined : 2}
         canCreate={canCreate}
         creating={submit.creating}
-        squad={!!squadId}
         error={submit.formError}
         onCreate={() => void submit.create()}
         onCancel={leave}

@@ -19,7 +19,6 @@ function comment(id: string, parentId: string | null, extra: Partial<TimelineEnt
     content: `body ${id}`,
     parent_id: parentId,
     comment_type: "comment",
-    reactions: [],
     attachments: [],
     created_at: "2026-09-11T07:00:00Z",
     updated_at: "2026-09-11T07:00:00Z",
@@ -46,7 +45,6 @@ describe("applyCommentDeletion", () => {
     const timeline = [
       comment("a", null),
       comment("b", "a", {
-        reactions: [{ id: "r", comment_id: "b", actor_type: "member", actor_id: "u", emoji: "👍", created_at: DELETED_AT }],
         resolved_at: DELETED_AT,
         resolved_by_type: "member",
         resolved_by_id: "u",
@@ -60,7 +58,6 @@ describe("applyCommentDeletion", () => {
     expect(ids(next)).toEqual(["a", "b", "c", "d"]);
     expect(next[1]).toMatchObject({
       content: "",
-      reactions: [],
       attachments: [],
       resolved_at: null,
       deleted_at: DELETED_AT,

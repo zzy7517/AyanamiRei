@@ -37,7 +37,7 @@ it("updates an open project's access when a refocus discovers a mid-trial Pro co
   const returnAt = daySeven + 6 * 60 * 1000;
   vi.setSystemTime(daySeven);
   const getWorkspaceFeatures = vi.fn(async () => ({
-    features: { private_projects: Date.now() < returnAt + 30_000 ? "available" : "locked" },
+    features: { agent_invocation_members: Date.now() < returnAt + 30_000 ? "available" : "locked" },
   }));
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => paid,
@@ -45,13 +45,13 @@ it("updates an open project's access when a refocus discovers a mid-trial Pro co
   } as unknown as ApiClient);
   const qc = createQueryClient();
   qc.setQueryData(workspaceSubscriptionKeys.summary(ws), active);
-  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     expect(result.current.trial.kind).toBe("active");
@@ -112,7 +112,7 @@ it("refreshes Business-only feature access after a trial converts to Pro on anot
   const featureReads: number[] = [];
   const getWorkspaceFeatures = async () => {
     featureReads.push(Date.now() - endsAt);
-    return { features: { private_projects: Date.now() < endsAt + 500 ? "available" : "locked" } };
+    return { features: { agent_invocation_members: Date.now() < endsAt + 500 ? "available" : "locked" } };
   };
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => paid,
@@ -120,13 +120,13 @@ it("refreshes Business-only feature access after a trial converts to Pro on anot
   } as unknown as ApiClient);
   const qc = createQueryClient();
   qc.setQueryData(workspaceSubscriptionKeys.summary(ws), active);
-  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     for (const ms of [1_000, 5, 70_000, 3_600_000]) await advance(ms);
@@ -149,20 +149,20 @@ it("keeps a converted workspace's feature refresh across a workspace switch", as
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => paid,
     getWorkspaceFeatures: async () => ({
-      features: { private_projects: Date.now() < t0 + 60_000 ? "available" : "locked" },
+      features: { agent_invocation_members: Date.now() < t0 + 60_000 ? "available" : "locked" },
     }),
   } as unknown as ApiClient);
   const qc = createQueryClient();
   qc.setQueryData(workspaceSubscriptionKeys.summary(ws), active);
   qc.setQueryData(workspaceSubscriptionKeys.summary(other), active);
-  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, rerender, unmount } = renderHook(
     ({ wsId }) => ({
       trial: useWorkspaceTrial(wsId, true),
-      access: usePaidFeatureAccess(wsId, "private_projects", { hasExistingConfig: true }),
+      access: usePaidFeatureAccess(wsId, "agent_invocation_members", { hasExistingConfig: true }),
     }),
     { wrapper, initialProps: { wsId: ws } },
   );
@@ -201,18 +201,18 @@ it("converges an open tab to Pro's access after a refocus shortly after conversi
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => (Date.now() < convertedAt ? active : paid),
     getWorkspaceFeatures: async () => ({
-      features: { private_projects: Date.now() < convertedAt + 60_000 ? "available" : "locked" },
+      features: { agent_invocation_members: Date.now() < convertedAt + 60_000 ? "available" : "locked" },
     }),
   } as unknown as ApiClient);
   const qc = createQueryClient();
   qc.setQueryData(workspaceSubscriptionKeys.summary(ws), active);
-  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     focusManager.setFocused(false);
@@ -238,7 +238,7 @@ it("converges a freshly opened app to Pro's access", async () => {
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => paid,
     getWorkspaceFeatures: async () => ({
-      features: { private_projects: Date.now() < t0 + 50_000 ? "available" : "locked" },
+      features: { agent_invocation_members: Date.now() < t0 + 50_000 ? "available" : "locked" },
     }),
   } as unknown as ApiClient);
   const qc = createQueryClient();
@@ -247,7 +247,7 @@ it("converges a freshly opened app to Pro's access", async () => {
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     await advance(10);
@@ -270,18 +270,18 @@ it("re-reads the plan on refocus during a trial even while the summary is fresh"
   setApiInstance({
     getWorkspaceSubscriptionSummary: async () => (Date.now() < convertedAt ? active : paid),
     getWorkspaceFeatures: async () => ({
-      features: { private_projects: Date.now() < convertedAt + 60_000 ? "available" : "locked" },
+      features: { agent_invocation_members: Date.now() < convertedAt + 60_000 ? "available" : "locked" },
     }),
   } as unknown as ApiClient);
   const qc = createQueryClient();
   qc.setQueryData(workspaceSubscriptionKeys.summary(ws), active);
-  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     focusManager.setFocused(false);
@@ -311,7 +311,7 @@ it.each([
     getWorkspaceFeatures: async () => {
       const elapsed = Date.now() - t0;
       if (elapsed >= failFrom && elapsed < failUntil) throw new Error("HTTP 503");
-      return { features: { private_projects: elapsed < 50_000 ? "available" : "locked" } };
+      return { features: { agent_invocation_members: elapsed < 50_000 ? "available" : "locked" } };
     },
   } as unknown as ApiClient);
   const qc = createQueryClient();
@@ -320,7 +320,7 @@ it.each([
   );
   const { result, unmount } = renderHook(() => ({
     trial: useWorkspaceTrial(ws, true),
-    access: usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   try {
     // Step through ten minutes so renders between timers run, as in a page.
@@ -348,12 +348,12 @@ it.each([
       const startedAt = Date.now() - t0;
       await new Promise((resolve) => setTimeout(resolve, 2_000));
       if (startedAt >= 69_000 && startedAt < 80_000) throw new Error("HTTP 503");
-      return { features: { private_projects: startedAt < 50_000 ? "available" : "locked" } };
+      return { features: { agent_invocation_members: startedAt < 50_000 ? "available" : "locked" } };
     },
   } as unknown as ApiClient);
   const qc = createQueryClient();
   if (cached) {
-    qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { private_projects: "available" } });
+    qc.setQueryData(workspaceFeatureKeys.all(ws), { features: { agent_invocation_members: "available" } });
   }
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
@@ -370,7 +370,7 @@ it.each([
       });
     }
     const page = renderHook(
-      () => usePaidFeatureAccess(ws, "private_projects", { hasExistingConfig: true }),
+      () => usePaidFeatureAccess(ws, "agent_invocation_members", { hasExistingConfig: true }),
       { wrapper },
     );
     unmountPage = page.unmount;

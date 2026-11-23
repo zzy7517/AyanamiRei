@@ -57,7 +57,6 @@ export function CreateAgentFooter({
   stepIndex,
   canCreate,
   creating,
-  squad,
   error,
   onCreate,
   onCancel,
@@ -67,7 +66,6 @@ export function CreateAgentFooter({
   stepIndex?: AgentCreateStep;
   canCreate: boolean;
   creating: boolean;
-  squad: boolean;
   error: string | null;
   onCreate: () => void;
   onCancel?: () => void;
@@ -105,9 +103,7 @@ export function CreateAgentFooter({
         {creating && <Loader2 className="size-4 animate-spin" />}
         {creating
           ? t(($) => $.creation_studio.creating)
-          : squad
-            ? t(($) => $.creation_studio.create_and_add)
-            : t(($) => $.creation_studio.create_agent)}
+          : t(($) => $.creation_studio.create_agent)}
       </Button>
     </CreateFlowFooter>
   );

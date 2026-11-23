@@ -22,3 +22,5 @@ export {
 export * from "./wakeups";
 
 export * from "./sub-issue-create";
+export * from "./project-scope";
+export * from "./agent-reply";

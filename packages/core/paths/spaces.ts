@@ -29,17 +29,16 @@ export const RAIL_SPACES: readonly RailSpaceId[] = [
 const SPACE_BY_SEGMENT: Record<string, AppSpaceId> = {
   // The full notification list; its sidebar section heads the Work panel.
   inbox: "work",
-  "my-issues": "work",
   issues: "work",
   projects: "work",
   views: "work",
   agents: "team",
-  squads: "team",
   members: "team",
   skills: "team",
   docs: "docs",
   runtimes: "team",
   usage: "team",
+  terminal: "team",
   chat: "chat",
   autopilots: "autopilots",
   settings: "settings",

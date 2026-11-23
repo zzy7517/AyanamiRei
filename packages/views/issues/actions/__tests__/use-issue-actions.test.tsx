@@ -261,23 +261,6 @@ describe("useIssueActions", () => {
     expect(mockOpenModal).not.toHaveBeenCalled();
   });
 
-  it("assigning a member applies directly without the run-confirm modal", () => {
-    const { result } = renderHook(() => useIssueActions(mockIssue), { wrapper });
-
-    act(() => {
-      result.current.updateField({
-        assignee_type: "member",
-        assignee_id: "user-1",
-      });
-    });
-
-    expect(mockUpdateMutateAsync).toHaveBeenCalledWith(
-      { id: "issue-1", assignee_type: "member", assignee_id: "user-1" },
-      expect.any(Object),
-    );
-    expect(mockOpenModal).not.toHaveBeenCalled();
-  });
-
   it("copyLink writes the issue's human-readable shareable URL to the clipboard", async () => {
     const { result } = renderHook(() => useIssueActions(mockIssue), { wrapper });
 

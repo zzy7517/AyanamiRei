@@ -22,7 +22,7 @@ const copy = {
     title: "OPS-31 · Prepare the November customer appreciation event",
     you: "You",
     assigneeLabel: "Assignee",
-    assignee: "Lei Li",
+    assignee: "Ops helper",
     earlier: {
       author: "Lei Li",
       body: "The venue and catering are booked. The guest list is still missing 20 people from marketing.",
@@ -61,7 +61,7 @@ const copy = {
     title: "OPS-31 · 筹备 11 月客户答谢会",
     you: "你",
     assigneeLabel: "负责人",
-    assignee: "李雷",
+    assignee: "运营助手",
     earlier: {
       author: "李雷",
       body: "场地和餐饮已经订好，邀请名单还差市场部的 20 人。",
@@ -96,7 +96,7 @@ const copy = {
     title: "OPS-31 · 11 月の顧客感謝イベントを準備する",
     you: "あなた",
     assigneeLabel: "担当者",
-    assignee: "李雷",
+    assignee: "運用アシスタント",
     earlier: {
       author: "李雷",
       body: "会場とケータリングは予約済みです。招待リストはマーケティング部の 20 人分がまだ足りません。",
@@ -139,7 +139,7 @@ const copy = {
     title: "OPS-31 · 11월 고객 감사 행사 준비",
     you: "나",
     assigneeLabel: "담당자",
-    assignee: "리레이",
+    assignee: "운영 도우미",
     earlier: {
       author: "리레이",
       body: "장소와 케이터링은 예약했습니다. 초대 명단에는 아직 마케팅팀 20명이 빠져 있어요.",
@@ -176,7 +176,7 @@ const copy = {
     title: "OPS-31 · Préparer l'événement clients de novembre",
     you: "Vous",
     assigneeLabel: "Assigné à",
-    assignee: "Lei Li",
+    assignee: "Assistant ops",
     earlier: {
       author: "Lei Li",
       body: "Le lieu et le traiteur sont réservés. Il manque encore 20 personnes du marketing sur la liste des invités.",
@@ -307,7 +307,7 @@ export function QuickActionDemo() {
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex items-center gap-2 text-caption text-muted-foreground">
             <span>{t.assigneeLabel}</span>
-            <DemoAvatar name={t.assignee} />
+            <DemoAvatar name={t.assignee} agent />
             <span className="text-label text-foreground">{t.assignee}</span>
           </div>
 

@@ -18,13 +18,12 @@ const h = vi.hoisted(() => {
     trial: { kind: "none" } as WorkspaceTrialView,
     workspace: { id: "ws-1", name: "Acme Labs" },
     role: "owner" as "owner" | "admin" | "member" | null,
-    features: { private_projects: "available" } as Record<string, string>,
     usage: null as AutopilotQuotaUsage | null,
-    /** The feature read failed after its retries. */
-    featuresFailed: false,
-    /** A failed feature read is being retried. */
-    featuresRetrying: false,
-    /** When the mocked feature and usage answers were received. */
+    /** The usage read failed after its retries. */
+    usageFailed: false,
+    /** A failed usage read is being retried. */
+    usageRetrying: false,
+    /** When the mocked usage answer was received. */
     dataUpdatedAt: Date.now(),
     push: vi.fn(),
     toast: vi.fn(),
@@ -54,13 +53,10 @@ vi.mock("@tanstack/react-query", async () => {
     ...actual,
     useQuery: (options: { queryKey: readonly unknown[] }) => {
       const key = options.queryKey;
-      if (key[0] === "workspace-features") {
-        if (h.featuresFailed) {
-          return { data: undefined, isPending: false, isError: true, isFetching: h.featuresRetrying, dataUpdatedAt: 0 };
-        }
-        return { data: { features: h.features }, isPending: false, dataUpdatedAt: h.dataUpdatedAt };
-      }
       if (key[key.length - 1] === "usage") {
+        if (h.usageFailed) {
+          return { data: undefined, isPending: false, isError: true, isFetching: h.usageRetrying, dataUpdatedAt: 0 };
+        }
         return { data: h.usage, isPending: false, dataUpdatedAt: h.dataUpdatedAt };
       }
       return { data: undefined, isPending: true };
@@ -101,11 +97,10 @@ beforeEach(() => {
   h.trial = { kind: "none" };
   h.workspace = { id: "ws-1", name: "Acme Labs" };
   h.role = "owner";
-  h.features = { private_projects: "available" };
   h.usage = null;
   h.dataUpdatedAt = Date.now();
-  h.featuresFailed = false;
-  h.featuresRetrying = false;
+  h.usageFailed = false;
+  h.usageRetrying = false;
   h.push.mockReset();
   h.toast.mockReset();
   h.chat.setState({ isOpen: false, floatingChatEnabled: true });
@@ -205,7 +200,6 @@ describe("WorkspaceTrialNotices", () => {
 
   it("waits for the end to settle before telling a manager what changed", () => {
     h.trial = { ...ended, settled: false } as WorkspaceTrialView;
-    h.features = { private_projects: "locked" };
     const { unmount } = renderWithI18n(<WorkspaceTrialNotices />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     unmount();
@@ -220,7 +214,6 @@ describe("WorkspaceTrialNotices", () => {
 
   it("tells a manager what changed, listing only restrictions in force", () => {
     h.trial = ended;
-    h.features = { private_projects: "locked" };
     h.usage = {
       action: "enforce",
       used: 1284,
@@ -238,7 +231,6 @@ describe("WorkspaceTrialNotices", () => {
     const dialog = screen.getByRole("dialog", { name: "Your Business trial has ended" });
     expect(dialog).toHaveTextContent("Acme Labs is now on Free. Nothing was deleted.");
     expect(dialog).toHaveTextContent("Members, projects, and settings you already have stay as they are.");
-    expect(dialog).toHaveTextContent("Private projects stay private.");
     expect(dialog).toHaveTextContent("Autopilots get 200 runs a month; 1,284 used this month.");
 
     fireEvent.click(screen.getByRole("button", { name: "Continue on Free" }));
@@ -247,7 +239,25 @@ describe("WorkspaceTrialNotices", () => {
 
   it("opens on Cloud's confirmation even when a detail read failed", () => {
     h.trial = ended;
-    h.featuresFailed = true;
+    h.usageFailed = true;
+    renderWithI18n(<WorkspaceTrialNotices />);
+
+    const dialog = screen.getByRole("dialog", { name: "Your Business trial has ended" });
+    expect(dialog).toHaveTextContent("Members, projects, and settings you already have stay as they are.");
+    expect(dialog).not.toHaveTextContent("Autopilots");
+  });
+
+  it("stays open while a failed detail read is retried", () => {
+    h.trial = ended;
+    h.usageFailed = true;
+    const { rerender } = renderWithI18n(<WorkspaceTrialNotices />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    h.usageRetrying = true;
+    rerender(<WorkspaceTrialNotices />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    h.usageFailed = false;
     h.usage = {
       action: "enforce",
       used: 12,
@@ -260,27 +270,8 @@ describe("WorkspaceTrialNotices", () => {
       reset_at: null,
       blocked_counts: null,
     };
-    renderWithI18n(<WorkspaceTrialNotices />);
-
-    const dialog = screen.getByRole("dialog", { name: "Your Business trial has ended" });
-    expect(dialog).toHaveTextContent("Autopilots get 200 runs a month; 12 used this month.");
-    expect(dialog).not.toHaveTextContent("Private projects");
-  });
-
-  it("stays open while a failed detail read is retried", () => {
-    h.trial = ended;
-    h.featuresFailed = true;
-    const { rerender } = renderWithI18n(<WorkspaceTrialNotices />);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-
-    h.featuresRetrying = true;
     rerender(<WorkspaceTrialNotices />);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-
-    h.featuresFailed = false;
-    h.features = { private_projects: "locked" };
-    rerender(<WorkspaceTrialNotices />);
-    expect(screen.getByRole("dialog")).toHaveTextContent("Private projects stay private.");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Autopilots get 200 runs a month; 12 used this month.");
   });
 
   it("claims no restriction while limits are only observed", () => {
@@ -300,7 +291,6 @@ describe("WorkspaceTrialNotices", () => {
     renderWithI18n(<WorkspaceTrialNotices />);
 
     const dialog = screen.getByRole("dialog");
-    expect(dialog).not.toHaveTextContent("Private projects");
     expect(dialog).not.toHaveTextContent("Automations");
   });
 

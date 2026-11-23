@@ -1,21 +1,14 @@
-import type { IssueAssigneeType } from "../../types";
+import type { IssueAssigneeType, IssueCreatorType } from "../../types";
 
-export type WorkspaceIssueActorKind = "all" | "members" | "agents";
+/** Whether a workspace or project surface lists every issue or only the ones
+ *  assigned to agents. */
+export type WorkspaceIssueActorKind = "all" | "agents";
 
 export type IssueScope =
   | { type: "workspace"; actorKind?: WorkspaceIssueActorKind }
-  | {
-      type: "my";
-      relation: "all" | "assigned" | "created" | "involved";
-      userId: string;
-    }
   | { type: "project"; projectId: string; actorKind?: WorkspaceIssueActorKind }
-  | {
-      type: "actor";
-      actorType: Extract<IssueAssigneeType, "member" | "agent">;
-      actorId: string;
-      relation: "assigned" | "created";
-    }
+  | { type: "actor"; relation: "assigned"; actorType: IssueAssigneeType; actorId: string }
+  | { type: "actor"; relation: "created"; actorType: IssueCreatorType; actorId: string }
   | { type: "team"; teamId: string };
 
 /**
@@ -27,30 +20,14 @@ export type IssueScope =
 export function assigneeTypesForActorKind(
   actorKind: WorkspaceIssueActorKind | undefined,
 ): IssueAssigneeType[] | undefined {
-  switch (actorKind) {
-    case "members":
-      return ["member"];
-    case "agents":
-      return ["agent", "squad"];
-    default:
-      return undefined;
-  }
+  return actorKind === "agents" ? ["agent"] : undefined;
 }
 
 /** Saved-view scope_variant → tab. Unknown/absent variants mean "all". */
 export function actorKindForViewVariant(
   variant: string | null | undefined,
 ): WorkspaceIssueActorKind {
-  return variant === "members" || variant === "agents" ? variant : "all";
-}
-
-/** My-view scope_variant → my-scope relation. Unknown/absent means "all". */
-export function myRelationForViewVariant(
-  variant: string | null | undefined,
-): Extract<IssueScope, { type: "my" }>["relation"] {
-  return variant === "assigned" || variant === "created" || variant === "involved"
-    ? variant
-    : "all";
+  return variant === "agents" ? "agents" : "all";
 }
 
 export class UnsupportedIssueScopeError extends Error {
@@ -64,13 +41,11 @@ export function issueScopeKey(scope: IssueScope): string {
   switch (scope.type) {
     case "workspace":
       return `workspace:${scope.actorKind ?? "all"}`;
-    case "my":
-      return `my:${scope.userId}:${scope.relation}`;
     case "project":
       // The unrestricted tab keeps the historical key so existing persisted
-      // display state survives; Members/Agents get their own key (and thus
-      // their own per-tab display state), matching the workspace tabs.
-      return scope.actorKind === "members" || scope.actorKind === "agents"
+      // display state survives; the Agents tab gets its own key (and thus
+      // its own per-tab display state), matching the workspace tabs.
+      return scope.actorKind === "agents"
         ? `project:${scope.projectId}:${scope.actorKind}`
         : `project:${scope.projectId}`;
     case "actor":

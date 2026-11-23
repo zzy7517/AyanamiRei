@@ -1,4 +1,5 @@
 import { useAuthStore } from "@multica/core/auth";
+import { api } from "@multica/core/api";
 import { toast } from "sonner";
 import type { DaemonTranslator } from "../components/daemon-i18n";
 
@@ -23,7 +24,9 @@ export async function reauthenticateDaemon(
   t: DaemonTranslator,
 ): Promise<void> {
   const user = useAuthStore.getState().user;
-  const token = localStorage.getItem("multica_token");
+  // Read from the API client, which holds whatever credential the app is
+  // presenting: a pre-shared token from desktop.json is never in localStorage.
+  const token = api.getToken();
   if (!user || !token) {
     // No usable session at all — the standard recovery is the login page.
     useAuthStore.getState().logout();

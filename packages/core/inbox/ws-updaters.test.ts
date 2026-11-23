@@ -28,7 +28,7 @@ function makeItem(
     recipient_id: "user-1",
     actor_type: null,
     actor_id: null,
-    type: "mentioned",
+    type: "new_comment",
     severity: "info",
     issue_id: issueId,
     title: `item ${id}`,

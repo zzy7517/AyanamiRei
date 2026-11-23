@@ -310,7 +310,6 @@
     "runtime_group_online": "{{online}}/{{total}} オンライン",
     "duplicate_copy_suffix": " (コピー)",
     "skill_attach_failed_toast": "エージェントは作成されましたが、スキルを追加できませんでした: {{error}}",
-    "squad_join_failed_toast": "エージェント \"{{name}}\" は作成されましたが、スクワッドに参加できませんでした: {{error}}。メンバーから手動で追加できます。",
     "instructions": {
       "label": "指示",
       "editor_placeholder": "このエージェントが何をすべきか、何に集中すべきか、何を避けるべきかを記述してください..."
@@ -909,7 +908,6 @@
   },
   "creation_studio": {
     "title": "エージェントを作成",
-    "squad_title": "このスクワッド用のエージェントを作成",
     "duplicate_title": "{{name}} を複製",
     "step_ai": "会話で作成",
     "modes": {
@@ -967,7 +965,6 @@
     "duplicate_env_notice": "指示、スキル、コマンド引数がコピーされます。環境変数、MCP サーバー、マシンローカルのランタイム設定はコピーされません。",
     "duplicate_runtime_reset_notice": "元のランタイムが利用できないため、このコピーは別のランタイムで実行されます。モデル・思考レベル・速度は選択したランタイムでのみ有効なため、クリアされました。",
     "create_agent": "エージェントを作成",
-    "create_and_add": "作成してスクワッドに追加",
     "creating": "エージェントを作成中…",
     "create_failed": "エージェントを作成できませんでした。",
     "name_conflict": "同じ名前のエージェントがすでに存在します。",
@@ -1000,12 +997,9 @@
       "loading": "仕上げています…",
       "title": "{{name}} の準備ができました",
       "runs_on": "{{runtime}} で実行",
-      "joined_squad": "スクワッド {{squad}} に追加しました",
       "next": "次にすること",
       "assign_title": "最初のタスクを割り当てる",
       "mention_title": "イシューでメンションする",
-      "squad_title": "スクワッドに追加",
-      "open_squad_title": "{{squad}} を開く",
       "open_agent": "エージェントを開く",
       "back_to_list": "エージェント一覧に戻る"
     },

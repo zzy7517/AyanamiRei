@@ -297,7 +297,6 @@
     },
     "failure": {
       "permission_revoked": "发起人已无权运行此智能体",
-      "access_lost": "所关注的内容已移入私有项目",
       "dispatch_failed": "智能体无法运行"
     },
     "kind": {

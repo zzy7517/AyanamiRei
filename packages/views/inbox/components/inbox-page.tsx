@@ -1035,7 +1035,7 @@ export function InboxPage() {
     ) : null;
 
   const detailContent = detailItem?.issue_id ? (
-    // Key by issue_id (not inbox-item id): a new comment/reaction generates a
+    // Key by issue_id (not inbox-item id): a new comment generates a
     // new inbox notification for the same issue, and the dedup helper picks the
     // newest one — keying on its id would remount IssueDetail on every event,
     // wiping the comment composer draft and resetting scroll position.
@@ -1108,10 +1108,6 @@ export function InboxPage() {
           item={detailItem}
           onOpenRecovery={showAutopilotQuotaRecoveryPrompt}
         />
-      ) : detailItem.type === "project_owner_joined" && detailItem.details?.joined_by ? (
-        <div className="mt-4 text-body leading-relaxed text-foreground">
-          {t(($) => $.detail.project_owner_joined_body, { name: detailItem.details.joined_by })}
-        </div>
       ) : detailItem.body ? (
         <div className="mt-4 whitespace-pre-wrap text-body leading-relaxed text-foreground">
           {detailItem.body}
@@ -1132,7 +1128,7 @@ export function InboxPage() {
         </div>
       )}
       <div className="mt-4 flex gap-2">
-        {(detailItem.type === "doc_comment" || detailItem.type === "doc_mentioned") &&
+        {detailItem.type === "doc_comment" &&
           detailItem.details?.doc_id && (
             <Button
               size="sm"
@@ -1151,16 +1147,6 @@ export function InboxPage() {
               {t(($) => $.detail.open_doc)}
             </Button>
           )}
-        {detailItem.type === "project_owner_joined" && detailItem.details?.project_id && (
-          <Button
-            size="sm"
-            variant="outline"
-            render={<AppLink href={wsPaths.projectDetail(detailItem.details.project_id)} />}
-            nativeButton={false}
-          >
-            {t(($) => $.detail.open_project)}
-          </Button>
-        )}
         {detailItem.type === "quick_create_failed" &&
           detailItem.details?.source_context_id &&
           detailItem.details?.task_id && (

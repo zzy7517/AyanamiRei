@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bot, Users } from "@multica/ui/icons";
+import { Bot } from "@multica/ui/icons";
 import { cn } from "@multica/ui/lib/utils";
 import {
   AVATAR_SIZE_PX,
@@ -17,7 +17,6 @@ interface ActorAvatarProps {
   avatarUrl?: string | null;
   isAgent?: boolean;
   isSystem?: boolean;
-  isSquad?: boolean;
   size?: AvatarSize;
   className?: string;
 }
@@ -28,7 +27,6 @@ function ActorAvatar({
   avatarUrl,
   isAgent,
   isSystem,
-  isSquad,
   size = DEFAULT_AVATAR_SIZE,
   className,
 }: ActorAvatarProps) {
@@ -46,7 +44,7 @@ function ActorAvatar({
     setImgError(false);
   }, [avatarUrl]);
 
-  // Every actor — member, agent, squad, or system — takes the same shape:
+  // Every actor — member, agent, or system — takes the same shape:
   // `--avatar-radius`, a circle unless a theme sets it. This is the single
   // source of truth for avatar shape; the upload editors mirror it
   // (packages/views/common/avatar-upload-control.tsx, avatar-crop-dialog.tsx).
@@ -54,7 +52,7 @@ function ActorAvatar({
     <div
       data-slot="avatar"
       data-mc="avatar"
-      data-type={isSystem ? "system" : isAgent ? "agent" : isSquad ? "squad" : "member"}
+      data-type={isSystem ? "system" : isAgent ? "agent" : "member"}
       className={cn(
         "inline-flex shrink-0 items-center justify-center font-medium overflow-hidden",
         // The system mark draws a round tile; filling the box with the tile
@@ -90,8 +88,6 @@ function ActorAvatar({
         <MulticaIcon shape="circle" size={AVATAR_SIZE_PX[size]} style={{ width: "100%", height: "100%" }} />
       ) : isAgent ? (
         <Bot style={{ width: scaled(0.55), height: scaled(0.55) }} />
-      ) : isSquad ? (
-        <Users style={{ width: scaled(0.55), height: scaled(0.55) }} />
       ) : (
         initials
       )}

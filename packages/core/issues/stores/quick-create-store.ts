@@ -6,10 +6,8 @@ import { createWorkspaceAwareStorage, registerForWorkspaceRehydration } from "..
 import { defaultStorage } from "../../platform/storage";
 import { registerDraftCleanup } from "../../drafts/cleanup-registry";
 
-export type QuickCreateActorType = "agent" | "squad";
-
-// Per-workspace memory of the last actor (agent or squad) the user picked in
-// the Quick Create modal. Defaulted on next open so frequent users skip the
+// Per-workspace memory of the last agent the user picked in the Quick
+// Create modal. Defaulted on next open so frequent users skip the
 // picker entirely. Persisted with the workspace-aware StateStorage so
 // switching workspaces shows the right default automatically. Per-user
 // scoping comes for free from localStorage being browser-profile-local —
@@ -24,19 +22,13 @@ export type QuickCreateActorType = "agent" | "squad";
 // seeds that survive both have the user's intent behind them: the project
 // page they opened the modal from, and their own unfinished draft.
 //
-// lastActorType + lastActorId replace the prior `lastAgentId` field once
-// squads became selectable. Users who had a persisted agent preference
-// land back on whatever the picker shows first; a one-time re-pick is
-// preferable to the type-tag ambiguity of overloading a single UUID.
-//
 // The in-progress agent prompt no longer lives here — it moved into the
 // unified issue-create draft's `agent` slot (draft-store) so it shares one
 // lifecycle with the manual draft (MUL-5181). This store keeps only the
 // last-successful actor and the shared keep-open toggle.
 interface QuickCreateState {
-  lastActorType: QuickCreateActorType | null;
-  lastActorId: string | null;
-  setLastActor: (type: QuickCreateActorType | null, id: string | null) => void;
+  lastAgentId: string | null;
+  setLastAgent: (id: string | null) => void;
   keepOpen: boolean;
   setKeepOpen: (v: boolean) => void;
 }
@@ -44,9 +36,8 @@ interface QuickCreateState {
 export const useQuickCreateStore = create<QuickCreateState>()(
   persist(
     (set) => ({
-      lastActorType: null,
-      lastActorId: null,
-      setLastActor: (type, id) => set({ lastActorType: type, lastActorId: id }),
+      lastAgentId: null,
+      setLastAgent: (id) => set({ lastAgentId: id }),
       keepOpen: false,
       setKeepOpen: (v) => set({ keepOpen: v }),
     }),
@@ -66,8 +57,7 @@ registerDraftCleanup({
   // login on the same tab. (The prompt draft lives in draft-store now.)
   resetInMemory: () =>
     useQuickCreateStore.setState({
-      lastActorType: null,
-      lastActorId: null,
+      lastAgentId: null,
       keepOpen: false,
     }),
 });

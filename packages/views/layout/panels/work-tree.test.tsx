@@ -189,13 +189,6 @@ describe("ProjectsSection", () => {
     expect(iconSlot?.querySelector("svg")).not.toBeNull();
   });
 
-  it("marks a private project with a lock inside its link", () => {
-    renderSection([{ ...project("p1", "Desktop"), visibility: "private" }, { ...project("p2", "Mobile"), visibility: "workspace" }]);
-    const lock = screen.getByRole("img", { name: "Visible to project members only" });
-    expect(lock.closest("a")).toHaveTextContent("Desktop");
-    expect(screen.getAllByRole("img", { name: "Visible to project members only" })).toHaveLength(1);
-  });
-
   it("expands a project in place, keeping its count", () => {
     renderSection(PROJECTS, { showCount: true });
     expect(screen.getAllByText("3")).toHaveLength(3);

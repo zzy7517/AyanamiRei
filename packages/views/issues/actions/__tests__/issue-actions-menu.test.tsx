@@ -53,11 +53,9 @@ vi.mock("@multica/core/workspace/queries", () => ({
   }),
   agentListOptions: () => ({
     queryKey: ["workspaces", "ws-1", "agents"],
-    queryFn: () => Promise.resolve([]),
-  }),
-  squadListOptions: () => ({
-    queryKey: ["workspaces", "ws-1", "squads"],
-    queryFn: () => Promise.resolve([]),
+    queryFn: () => Promise.resolve([
+      { id: "agent-1", name: "Lambda", owner_id: "user-1", archived_at: null, runtime_id: "runtime-1" },
+    ]),
   }),
 }));
 
@@ -331,18 +329,22 @@ describe("IssueActionsDropdown", () => {
     fireEvent.click(screen.getByTestId("trigger"));
     fireEvent.click(await screen.findByText("Assignee"));
 
-    // The search box and the "Members" group come from the shared assignee
+    // The search box and the "Agents" group come from the shared assignee
     // picker, so the submenu offers what every other assignee entry point does.
     expect(
       await screen.findByPlaceholderText("Assign to..."),
     ).toBeInTheDocument();
-    expect(await screen.findByText("Members")).toBeInTheDocument();
-    fireEvent.click(await screen.findByText("Test User"));
+    expect(await screen.findByText("Agents")).toBeInTheDocument();
+    fireEvent.click(await screen.findByText("Lambda"));
 
-    expect(updateIssueMock).toHaveBeenCalledWith(
-      { id: "issue-1", assignee_type: "member", assignee_id: "user-1" },
-      expect.anything(),
-    );
+    // Handing the issue to an agent starts a run, so the pick confirms first.
+    expect(mockOpenModal).toHaveBeenCalledWith("issue-run-confirm", {
+      issueIds: ["issue-1"],
+      mode: "assign",
+      assigneeType: "agent",
+      assigneeId: "agent-1",
+    });
+    expect(updateIssueMock).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByText("Status")).not.toBeInTheDocument());
   });
 
@@ -642,18 +644,21 @@ describe("IssueActionsContextMenu", () => {
     fireEvent.contextMenu(screen.getByTestId("row"));
     await user.click(await screen.findByText("Assignee"));
     const search = await screen.findByPlaceholderText("Assign to...");
-    await screen.findByText("Test User");
+    await screen.findByText("Lambda");
     await waitFor(() => expect(search).toHaveFocus());
 
     // The menu's typeahead would otherwise swallow these keys.
-    await user.keyboard("test");
-    expect(search).toHaveValue("test");
+    await user.keyboard("lamb");
+    expect(search).toHaveValue("lamb");
     await user.keyboard("{Enter}");
 
-    expect(updateIssueMock).toHaveBeenCalledWith(
-      { id: "issue-1", assignee_type: "member", assignee_id: "user-1" },
-      expect.anything(),
-    );
+    expect(mockOpenModal).toHaveBeenCalledWith("issue-run-confirm", {
+      issueIds: ["issue-1"],
+      mode: "assign",
+      assigneeType: "agent",
+      assigneeId: "agent-1",
+    });
+    expect(updateIssueMock).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByText("Rename issue")).not.toBeInTheDocument());
   });
 });
@@ -816,14 +821,14 @@ describe("Sidebar variant (MUL-8425)", () => {
     screen.getAllByRole("menuitem").map((item) => item.textContent?.trim());
 
   it("names the issue and keeps the triage and navigation entries, with current values", async () => {
-    openSidebarMenu({ ...mockIssue, assignee_type: "member", assignee_id: "user-1" } as Issue);
+    openSidebarMenu({ ...mockIssue, assignee_type: "agent", assignee_id: "agent-1" } as Issue);
 
     expect(await screen.findByText("TES-1")).toBeInTheDocument();
     expect(screen.getByText("Example")).toBeInTheDocument();
     expect(menuLabels()).toEqual([
       "StatusTodo",
       "PriorityMedium",
-      "AssigneeTest User",
+      "AssigneeLambda",
       "Open in new tab",
       "Pin to sidebar",
       "Mark as unread",

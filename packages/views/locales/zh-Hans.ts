@@ -10,7 +10,6 @@ import zhHansOnboarding from "./zh-Hans/onboarding.json";
 import zhHansInvite from "./zh-Hans/invite.json";
 import zhHansLabels from "./zh-Hans/labels.json";
 import zhHansMembers from "./zh-Hans/members.json";
-import zhHansMyIssues from "./zh-Hans/my-issues.json";
 import zhHansSearch from "./zh-Hans/search.json";
 import zhHansInbox from "./zh-Hans/inbox.json";
 import zhHansWorkspace from "./zh-Hans/workspace.json";
@@ -23,8 +22,8 @@ import zhHansRuntimes from "./zh-Hans/runtimes.json";
 import zhHansLayout from "./zh-Hans/layout.json";
 import zhHansUsage from "./zh-Hans/usage.json";
 import zhHansUi from "./zh-Hans/ui.json";
-import zhHansSquads from "./zh-Hans/squads.json";
 import zhHansBilling from "./zh-Hans/billing.json";
+import zhHansTerminal from "./zh-Hans/terminal.json";
 
 const resources: LocaleResources = {
   docs: zhHansDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: zhHansInvite,
   labels: zhHansLabels,
   members: zhHansMembers,
-  "my-issues": zhHansMyIssues,
   search: zhHansSearch,
   inbox: zhHansInbox,
   workspace: zhHansWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: zhHansLayout,
   usage: zhHansUsage,
   ui: zhHansUi,
-  squads: zhHansSquads,
   billing: zhHansBilling,
+  terminal: zhHansTerminal,
 };
 
 export default resources;

@@ -104,6 +104,22 @@
     "archive_action": "Archiver le projet",
     "restore_action": "Restaurer le projet"
   },
+  "scope": {
+    "add": "Ajouter un projet",
+    "project_label": "Projet",
+    "branch_label": "Branche",
+    "project_required": "Choisissez un projet.",
+    "branch_required": "Saisissez une branche.",
+    "duplicate": "Cette paire projet et branche figure déjà dans la liste.",
+    "limit": "Jusqu'à {{max}} paires.",
+    "remove": "Retirer",
+    "move_up": "Monter",
+    "move_down": "Descendre",
+    "section_title": "Projets + branches",
+    "save": "Enregistrer",
+    "create_failed": "La tâche a été créée sans ses worktrees : {{reason}}",
+    "create_failed_unknown": "La tâche a été créée sans ses worktrees. Ajoutez-les depuis la page de la tâche."
+  },
   "resources": {
     "section_header": "Ressources",
     "repos_group": "Dépôts",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "Impossible de mettre à jour la branche",
     "ref_error_commit": "Ceci est un commit, pas une branche. Pour une révision précise, utilisez multica repo checkout --ref.",
     "ref_default_label": "Branche par défaut",
-    "ref_running_note": "Les exécutions déjà en cours ne sont pas affectées."
+    "ref_running_note": "Les exécutions déjà en cours ne sont pas affectées.",
+    "local_remote_add": "Ajouter un dossier sur un autre ordinateur...",
+    "local_remote_machine_label": "Ordinateur",
+    "local_remote_path_label": "Chemin"
   },
   "delete_dialog": {
     "offline_error": "Vous êtes hors ligne. Reconnectez-vous, puis réessayez la suppression.",
@@ -220,29 +239,6 @@
       "issue_pricing": "Tableau comparatif des tarifs",
       "issue_blog": "Paginer la liste du blog"
     }
-  },
-  "access": {
-    "agent_notice": "Les agents suivent les droits d’accès de leur propriétaire.",
-    "label": "Accès",
-    "title": "Accès à {{title}}",
-    "description": "Définit qui peut voir ce projet, ses tâches, commentaires et pièces jointes.",
-    "workspace": "Tout l’espace de travail",
-    "private": "Membres du projet uniquement",
-    "members_count": "Membres du projet · {{count}}",
-    "add": "Ajouter un membre",
-    "search": "Rechercher un nom ou un e-mail...",
-    "no_members": "Aucun membre correspondant",
-    "no_selected": "Aucun membre du projet",
-    "members_only_notice": "Seules les personnes de cette liste ont accès. Les owner et admin de l’espace de travail doivent aussi y être ajoutés.",
-    "manager": "Gère l’accès",
-    "you": "Vous",
-    "remove": "Retirer {{name}}",
-    "failed": "Impossible d’enregistrer les accès.",
-    "load_failed": "Impossible de charger les membres.",
-    "publish_title": "Rendre ce projet visible à tout l’espace de travail ?",
-    "publish_description": "Tous les membres pourront voir ce projet, ses tâches, commentaires et pièces jointes.",
-    "done": "Terminé",
-    "retry": "Réessayer"
   },
   "archive": {
     "badge": "Archivé",

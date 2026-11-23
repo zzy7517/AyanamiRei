@@ -180,6 +180,20 @@ Supprimez le fichier et redémarrez pour revenir à la configuration Cloud par d
 Desktop ne peut se connecter qu'à des adresses joignables à la fois depuis le navigateur et depuis la machine d'exécution. Si une instance auto-hébergée distante n'utilise pas HTTPS ou ne fait pas passer le WebSocket par son proxy, Desktop ne peut pas établir de connexion ; consultez le [démarrage rapide en auto-hébergement](/self-host-quickstart#remote-access) pour la configuration complète.
 </Callout>
 
+### Se connecter sans page de connexion
+
+Pour une instance que vous êtes seul à utiliser, ajoutez `authToken` pour passer la page de connexion :
+
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "https://api.example.com",
+  "authToken": "<le MULTICA_AUTH_TOKEN du serveur>"
+}
+```
+
+Indiquez la même valeur que le `MULTICA_AUTH_TOKEN` du serveur, et définissez aussi `MULTICA_AUTH_TOKEN_EMAIL` côté serveur ; voir [Jeton pré-partagé](/environment-variables#jeton-pré-partagé). Desktop ouvre alors directement l'espace de travail. Si le serveur refuse le jeton, Desktop affiche la page de connexion avec un message : corrigez le fichier puis redémarrez, ou connectez-vous par e-mail ou Google comme d'habitude. Sans `authToken`, rien ne change.
+
 ### Windows : vérifier le nom et l'encodage du fichier
 
 Deux façons courantes d'écrire le fichier sous Windows produisent un fichier que Desktop ne peut pas lire :

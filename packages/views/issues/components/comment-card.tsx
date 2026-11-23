@@ -1,10 +1,10 @@
 "use client";
 
 import { Fragment, memo, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { CheckCircle2, ChevronRight, CornerUpLeft, ListChevronsDownUp, Copy, Link2, Loader2, MessageSquare, MessageSquarePlus, MoreHorizontal, Pencil, Plus, RotateCcw, SmilePlus, Trash2 } from "@multica/ui/icons";
+import { CheckCircle2, ChevronRight, CornerUpLeft, ListChevronsDownUp, Copy, Link2, Loader2, MessageSquare, MessageSquarePlus, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "@multica/ui/icons";
 import { toast } from "sonner";
 import { Card } from "@multica/ui/components/ui/card";
-import { Button, buttonVariants } from "@multica/ui/components/ui/button";
+import { Button } from "@multica/ui/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,8 +27,6 @@ import { MenuActionGroups, useContextMenuScope } from "../../common/context-menu
 import { dropdownPrimitives } from "../../common/menu-primitives";
 import type { RowActionItem } from "../../common/row-actions-menu";
 import { DeferredTooltip } from "../../common/deferred-tooltip";
-import { ReactionBar } from "@multica/ui/components/common/reaction-bar";
-import { QuickEmojiPicker } from "@multica/ui/components/common/quick-emoji-picker";
 import { cn } from "@multica/ui/lib/utils";
 import { copyText } from "@multica/ui/lib/clipboard";
 import { useActorName } from "@multica/core/workspace/hooks";
@@ -143,7 +141,6 @@ interface CommentCardProps {
   onReplyAccepted?: (commentId: string) => void;
   onEdit: (commentId: string, content: string, attachmentIds: string[], suppressAgentIds?: string[], contentBase?: string) => Promise<void>;
   onDelete: (commentId: string) => void;
-  onToggleReaction: (commentId: string, emoji: string) => void;
   onCreateSubIssue?: (commentId: string, prompt?: string) => void;
   /** Resolve/unresolve any comment in this thread (commentId = the target row). */
   onResolveToggle?: (commentId: string, resolved: boolean) => void;
@@ -639,25 +636,21 @@ function CommentRevisionConflict({
  */
 function useCommentMenuGroups({
   entry,
-  editing,
   canEdit,
   canDelete,
   resolve,
   onStartEdit,
   onReply,
-  onAddReaction,
   onCopyLink,
   onCreateSubIssue,
   onDelete,
 }: {
   entry: TimelineEntry;
-  editing: boolean;
   canEdit: boolean;
   canDelete: boolean;
   resolve?: Pick<RowActionItem, "icon" | "label" | "onSelect">;
   onStartEdit: () => void;
   onReply?: () => void;
-  onAddReaction: () => void;
   onCopyLink?: (commentId: string) => void;
   onCreateSubIssue?: (commentId: string, prompt?: string) => void;
   onDelete: () => void;
@@ -666,9 +659,6 @@ function useCommentMenuGroups({
   const respond: RowActionItem[] = [];
   if (onReply) {
     respond.push({ key: "reply", icon: <CornerUpLeft className="h-3.5 w-3.5" />, label: t(($) => $.comment.reply_action), onSelect: onReply });
-  }
-  if (!editing) {
-    respond.push({ key: "react", icon: <SmilePlus className="h-3.5 w-3.5" />, label: t(($) => $.comment.add_reaction), onSelect: onAddReaction });
   }
   if (canEdit) {
     respond.push({ key: "edit", icon: <Pencil className="h-3.5 w-3.5" />, label: t(($) => $.comment.edit_action), onSelect: onStartEdit });
@@ -760,7 +750,6 @@ function CommentRow({
   hasReplies = false,
   onEdit,
   onDelete,
-  onToggleReaction,
   onCreateSubIssue,
   onResolveToggle,
   onCopyLink,
@@ -781,7 +770,6 @@ function CommentRow({
   isHighlighted?: boolean;
   onEdit: (commentId: string, content: string, attachmentIds: string[], suppressAgentIds?: string[], contentBase?: string) => Promise<void>;
   onDelete: (commentId: string) => void;
-  onToggleReaction: (commentId: string, emoji: string) => void;
   onCreateSubIssue?: (commentId: string, prompt?: string) => void;
   onResolveToggle?: (commentId: string, resolved: boolean) => void;
   onCopyLink?: (commentId: string) => void;
@@ -805,11 +793,9 @@ function CommentRow({
   // Right-click on the comment opens its ⋯ menu at the cursor; links, images
   // and selected text inside it keep their own menu.
   const rowMenu = useRowMenu();
-  const [reactionOpen, setReactionOpen] = useState(false);
   const afterClose = useAfterMenuClose();
   const menuGroups = useCommentMenuGroups({
     entry,
-    editing: edit.editing,
     canEdit: canEditEntry,
     canDelete: canDeleteEntry,
     resolve: onResolveToggle && (isResolution
@@ -817,14 +803,11 @@ function CommentRow({
       : { icon: <CheckCircle2 className="h-3.5 w-3.5" />, label: t(($) => $.comment.resolve.resolve_with_comment_action), onSelect: () => onResolveToggle(entry.id, true) }),
     onStartEdit: edit.startEdit,
     onReply: onFocusReply && afterClose.schedule(onFocusReply),
-    onAddReaction: afterClose.schedule(() => setReactionOpen(true)),
     onCopyLink,
     onCreateSubIssue,
     onDelete: () => setConfirmDelete(true),
   });
   const scopeRef = useCommentScope(entry, edit.editing ? null : menuGroups, onCreateSubIssue);
-
-  const reactions = entry.reactions ?? [];
 
   // A deleted reply renders nothing at all. Its row is kept only so the
   // replies to it keep a direct parent (#8296), and the thread renders those
@@ -892,14 +875,6 @@ function CommentRow({
         )}
 
         <div data-comment-actions className="ml-auto flex shrink-0 items-center gap-0.5">
-          {!edit.editing && <QuickEmojiPicker
-            onSelect={(emoji) => onToggleReaction(entry.id, emoji)}
-            ariaLabel={t(($) => $.comment.add_reaction)}
-            align="end"
-            open={reactionOpen}
-            onOpenChange={setReactionOpen}
-            className={buttonVariants({ variant: "ghost", size: "icon-sm", className: commentActionClassName })}
-          />}
           <DropdownMenu open={rowMenu.menu.open} onOpenChange={rowMenu.onOpenChange}>
             <DeferredTooltip
               content={t(($) => $.comment.more_actions)}
@@ -991,7 +966,6 @@ function CommentRow({
               <CommentTriggerChips
                 recipients={edit.recipients}
                 blocked={edit.triggerPreview.blocked}
-                hasAllMembersMention={edit.triggerPreview.hasAllMembersMention}
                 draftContent={edit.content}
                 onActionChange={edit.setRecipientAction}
               />
@@ -1042,14 +1016,6 @@ function CommentRow({
         </>
       )}
       <div className="pl-12 pr-4 max-md:pl-3 max-md:pr-3">{runMetadata}</div>
-      {!edit.editing && <ReactionBar
-        reactions={reactions}
-        showPicker={false}
-        currentUserId={currentUserId}
-        onToggle={(emoji) => onToggleReaction(entry.id, emoji)}
-        getActorName={getActorName}
-        className="mt-1.5 pl-12 pr-4 max-md:pl-3 max-md:pr-3"
-      />}
     </div>
   );
 }
@@ -1171,7 +1137,6 @@ function CommentCardImpl({
   onReplyAccepted,
   onEdit,
   onDelete,
-  onToggleReaction,
   onCreateSubIssue,
   onResolveToggle,
   onCopyLink,
@@ -1221,7 +1186,6 @@ function CommentCardImpl({
   const canDeleteEntry = !receipts.some(isSupplementInFlight) && (isOwn || canModerate);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const rowMenu = useRowMenu();
-  const [reactionOpen, setReactionOpen] = useState(false);
   const afterClose = useAfterMenuClose();
   const replyBoxRef = useRef<ReplyInputHandle>(null);
   const revealReplyBox = () => {
@@ -1234,7 +1198,6 @@ function CommentCardImpl({
   };
   const menuGroups = useCommentMenuGroups({
     entry,
-    editing: edit.editing,
     canEdit: canEditEntry,
     canDelete: canDeleteEntry,
     resolve: onResolveToggle && (entry.resolved_at
@@ -1242,7 +1205,6 @@ function CommentCardImpl({
       : { icon: <CheckCircle2 className="h-3.5 w-3.5" />, label: t(($) => $.comment.resolve.resolve_thread_action), onSelect: () => onResolveToggle(entry.id, true) }),
     onStartEdit: edit.startEdit,
     onReply: currentUserId ? afterClose.schedule(focusReply) : undefined,
-    onAddReaction: afterClose.schedule(() => setReactionOpen(true)),
     onCopyLink,
     onCreateSubIssue,
     onDelete: () => setConfirmDelete(true),
@@ -1287,7 +1249,7 @@ function CommentCardImpl({
       replyTo={row.replyTo && <ReplyToQuote entry={row.replyTo} onJump={onJumpToComment} />}
       commentProps={row.reply ? {
         issueId, entry: row.reply, replies: [], currentUserId, canModerate, onReply, onEdit, onDelete,
-        onToggleReaction, onCreateSubIssue, onResolveToggle, onCopyLink, highlightedCommentId, enteringRunIds,
+        onCreateSubIssue, onResolveToggle, onCopyLink, highlightedCommentId, enteringRunIds,
       } : undefined} />
   ) : renderReply(row, managedAnchor);
 
@@ -1317,7 +1279,6 @@ function CommentCardImpl({
             hasReplies={repliedToIds.has(reply.id)}
             onEdit={onEdit}
             onDelete={onDelete}
-            onToggleReaction={onToggleReaction}
             onCreateSubIssue={onCreateSubIssue}
             onResolveToggle={onResolveToggle}
             onCopyLink={onCopyLink}
@@ -1332,7 +1293,6 @@ function CommentCardImpl({
   const repliedToIds = new Set(allNestedReplies.map((reply) => reply.parent_id));
   const deleted = isDeletedComment(entry);
   const contentPreview = (entry.content ?? "").replace(/\n/g, " ").slice(0, 80);
-  const reactions = entry.reactions ?? [];
 
   const isHighlighted = highlightedCommentId === entry.id;
   const toggleLabel = open ? t(($) => $.comment.collapse_thread) : t(($) => $.comment.expand_thread);
@@ -1486,14 +1446,6 @@ function CommentCardImpl({
 
               <div data-comment-actions className="ml-auto flex shrink-0 items-center gap-0.5">
                 {open && !deleted && <>
-                  {!edit.editing && <QuickEmojiPicker
-                    onSelect={(emoji) => onToggleReaction(entry.id, emoji)}
-                    ariaLabel={t(($) => $.comment.add_reaction)}
-                    align="end"
-                    open={reactionOpen}
-                    onOpenChange={setReactionOpen}
-                    className={buttonVariants({ variant: "ghost", size: "icon-sm", className: commentActionClassName })}
-                  />}
                   <DropdownMenu open={rowMenu.menu.open} onOpenChange={rowMenu.onOpenChange}>
                     <DeferredTooltip
                       content={t(($) => $.comment.more_actions)}
@@ -1608,7 +1560,6 @@ function CommentCardImpl({
                     <CommentTriggerChips
                       recipients={edit.recipients}
                       blocked={edit.triggerPreview.blocked}
-                      hasAllMembersMention={edit.triggerPreview.hasAllMembersMention}
                       draftContent={edit.content}
                       onActionChange={edit.setRecipientAction}
                     />
@@ -1659,14 +1610,6 @@ function CommentCardImpl({
               </>
             )}
             <div className="pl-8 max-md:pl-0">{renderRuns(entry.id)}</div>
-            {!edit.editing && <ReactionBar
-              reactions={reactions}
-              showPicker={false}
-              currentUserId={currentUserId}
-              onToggle={(emoji) => onToggleReaction(entry.id, emoji)}
-              getActorName={getActorName}
-              className="mt-1.5 pl-8 max-md:pl-0"
-            />}
           </div>
         )}
         </div>

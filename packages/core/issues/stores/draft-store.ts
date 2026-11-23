@@ -7,7 +7,6 @@ import type {
   IssuePropertyValues,
 } from "../../types";
 import type { CreateMode } from "./create-mode-store";
-import type { QuickCreateActorType } from "./quick-create-store";
 import { createWorkspaceAwareStorage, registerForWorkspaceRehydration } from "../../platform/workspace-storage";
 import { defaultStorage } from "../../platform/storage";
 import { registerDraftCleanup } from "../../drafts/cleanup-registry";
@@ -21,7 +20,7 @@ import { normalizeStoredUploads, type DraftUpload } from "../../drafts/draft-upl
 //   manual  — the manual form's own state: title, description, status, start
 //             date, assignee, labels, custom properties.
 //   agent   — the agent form's own state: the free-text prompt and the picked
-//             actor (agent or squad).
+//             agent.
 //   activeMode — which form the draft is currently being edited in.
 //
 // Before this split, `switchToAgent` concatenated title + description into the
@@ -64,8 +63,7 @@ export interface IssueCreateManual {
 
 export interface IssueCreateAgent {
   prompt: string;
-  actorType?: QuickCreateActorType;
-  actorId?: string;
+  agentId?: string;
 }
 
 export interface IssueCreateDraft {
@@ -95,8 +93,7 @@ const emptyManual = (): IssueCreateManual => ({
 
 const emptyAgent = (): IssueCreateAgent => ({
   prompt: "",
-  actorType: undefined,
-  actorId: undefined,
+  agentId: undefined,
 });
 
 interface IssueDraftStore {
@@ -139,6 +136,21 @@ interface IssueDraftStore {
   hasDraft: () => boolean;
 }
 
+/** An assignee that does not name an agent cannot be submitted; read it as none. */
+function agentAssigneeType(type: unknown): IssueAssigneeType | undefined {
+  return type === "agent" ? "agent" : undefined;
+}
+
+function withSubmittableAssignee<M extends Partial<IssueCreateManual>>(manual: M): M {
+  const assigneeType = agentAssigneeType(manual.assigneeType);
+  return {
+    ...manual,
+    assigneeType,
+    assigneeId: assigneeType ? manual.assigneeId : undefined,
+    assigneePick: manual.assigneePick?.type === "agent" ? manual.assigneePick : undefined,
+  };
+}
+
 function isLegacyFlatDraft(d: Record<string, unknown>): boolean {
   return (
     !("manual" in d) &&
@@ -166,7 +178,7 @@ function migrateDraft(raw: unknown): IssueCreateDraft {
         // as `uploaded` placeholders (and drops stale `uploading` ones).
         attachments: normalizeStoredUploads(d.attachments),
       },
-      manual: {
+      manual: withSubmittableAssignee({
         ...emptyManual(),
         title: (d.title as string) ?? "",
         description: (d.description as string) ?? "",
@@ -179,7 +191,7 @@ function migrateDraft(raw: unknown): IssueCreateDraft {
           d.propertyValues && typeof d.propertyValues === "object"
             ? (d.propertyValues as IssuePropertyValues)
             : {},
-      },
+      }),
       agent: emptyAgent(),
       activeMode: "manual",
     };
@@ -194,7 +206,10 @@ function migrateDraft(raw: unknown): IssueCreateDraft {
       // drops `uploading` placeholders (bytes are gone).
       attachments: normalizeStoredUploads(sharedRaw.attachments),
     },
-    manual: { ...emptyManual(), ...((d.manual as Partial<IssueCreateManual>) ?? {}) },
+    manual: {
+      ...emptyManual(),
+      ...withSubmittableAssignee((d.manual as Partial<IssueCreateManual>) ?? {}),
+    },
     agent: { ...emptyAgent(), ...((d.agent as Partial<IssueCreateAgent>) ?? {}) },
     activeMode: d.activeMode === "agent" ? "agent" : "manual",
   };
@@ -369,10 +384,11 @@ export const useIssueDraftStore = create<IssueDraftStore>()(
         const persisted = (persistedState ?? {}) as Partial<IssueDraftStore> & {
           draft?: unknown;
         };
+        const lastAssigneeType = agentAssigneeType(persisted.lastAssigneeType);
         return {
           ...currentState,
-          lastAssigneeType: persisted.lastAssigneeType,
-          lastAssigneeId: persisted.lastAssigneeId,
+          lastAssigneeType,
+          lastAssigneeId: lastAssigneeType ? persisted.lastAssigneeId : undefined,
           draft: migrateDraft(persisted.draft),
           // A rehydrate replaces the draft (fresh load or workspace switch), so
           // the in-memory continuation snapshot no longer describes it.

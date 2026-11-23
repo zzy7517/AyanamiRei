@@ -9,11 +9,6 @@ import { renderWithI18n } from "../../test/i18n";
 // (`#comment-<id>`), not just the comment body text. The URL is built by
 // `useIssueActions.copyCommentLink`; this suite pins that the card routes each
 // row's own id to the handler and hides the item when no handler is wired.
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("@multica/core/api", () => ({
   api: { uploadFile: vi.fn() },
   dispatchReasonCode: () => undefined,
@@ -66,7 +61,6 @@ function comment(id: string, parentId: string | null): TimelineEntry {
     content: `body ${id}`,
     parent_id: parentId,
     comment_type: "comment",
-    reactions: [],
     attachments: [],
     created_at: "2026-09-11T07:00:00Z",
     updated_at: "2026-09-11T07:00:00Z",
@@ -90,7 +84,6 @@ function renderThread(
         onReply={vi.fn().mockResolvedValue(true)}
         onEdit={vi.fn().mockResolvedValue(undefined)}
         onDelete={vi.fn()}
-        onToggleReaction={vi.fn()}
         onCopyLink={onCopyLink}
       />
     </QueryClientProvider>,

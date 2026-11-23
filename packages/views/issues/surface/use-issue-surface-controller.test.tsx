@@ -166,7 +166,6 @@ describe("useIssueSurfaceController", () => {
   let listIssueTableFacets: ReturnType<typeof vi.fn>;
   let listSubscribedIssueIds: ReturnType<typeof vi.fn<() => Promise<string[]>>>;
   let listAgents: ReturnType<typeof vi.fn<() => Promise<Agent[]>>>;
-  let listInvolvedSquadIds: ReturnType<typeof vi.fn<() => Promise<string[]>>>;
   // Every row the current fixture holds, kept outside the mocked list endpoint
   // so the working-agents facet stand-in can read it without registering a
   // call that Table-isolation tests assert never happens.
@@ -194,7 +193,6 @@ describe("useIssueSurfaceController", () => {
     listIssueUnread = vi.fn(() => Promise.resolve([]));
     listSubscribedIssueIds = vi.fn(() => never<string[]>());
     listAgents = vi.fn(() => Promise.resolve([] satisfies Agent[]));
-    listInvolvedSquadIds = vi.fn(() => Promise.resolve([]));
     setApiInstance({
       // The board pages by category, so every surface stub answers the catalog
       // read. Empty is the real shape for a workspace with no custom statuses:
@@ -211,7 +209,6 @@ describe("useIssueSurfaceController", () => {
       listIssueUnread,
       getChildIssueProgress: vi.fn(() => never()),
       listAgents,
-      listInvolvedSquadIds,
       listSubscribedIssueIds,
     } as unknown as ApiClient);
     pruneIssueSurfaceViewStates([]);
@@ -304,7 +301,7 @@ describe("useIssueSurfaceController", () => {
     const store = getIssueSurfaceViewStore("workspace");
     store.getState().toggleStatusFilter("done");
     store.getState().setFilterNegated("status", true);
-    store.getState().toggleRelationFilter("assigned");
+    store.getState().toggleRelationFilter("created");
     store.getState().toggleRelationFilter("my_agents");
     // "Is not" with nothing selected never reaches the server.
     store.getState().setFilterNegated("label", true);
@@ -321,30 +318,11 @@ describe("useIssueSurfaceController", () => {
     await waitFor(() => expect(listIssueTableRows).toHaveBeenCalled());
     expect(result.current.tableQuerySpec.filters).toMatchObject({
       statuses: ["done"],
-      relations: ["assigned", "my_agents"],
+      relations: ["created", "my_agents"],
       negate: ["statuses"],
     });
     expect(result.current.visibleStatuses).not.toContain("done");
     expect(result.current.visibleStatuses).toContain("todo");
-  });
-
-  it("ignores a persisted relation filter on a surface already scoped to me", async () => {
-    const store = getIssueSurfaceViewStore("my:user-1:assigned");
-    store.getState().toggleRelationFilter("created");
-    store.getState().setFilterNegated("relation", true);
-
-    const { result } = renderHook(
-      () =>
-        useIssueSurfaceController({
-          scope: { type: "my", relation: "assigned", userId: "user-1" },
-          modes: ["board", "list"],
-        }),
-      { wrapper: makeWrapper(qc, "my:user-1:assigned") },
-    );
-
-    await waitFor(() => expect(listIssueTableRows).toHaveBeenCalled());
-    expect(result.current.tableQuerySpec.filters.relations).toBeUndefined();
-    expect(result.current.tableQuerySpec.filters.negate).toBeUndefined();
   });
 
   // Off by default: an untouched surface sends no project-status key at all.
@@ -485,24 +463,6 @@ describe("useIssueSurfaceController", () => {
     expect(legacyListIssues).not.toHaveBeenCalled();
   });
 
-  it("maps my assigned scope to the unified personal query contract", async () => {
-    const { result } = renderHook(
-      () =>
-        useIssueSurfaceController({
-          scope: { type: "my", relation: "assigned", userId: "user-1" },
-          modes: ["board", "list", "swimlane"],
-        }),
-      { wrapper: makeWrapper(qc, "my:user-1:assigned") },
-    );
-
-    await waitFor(() => expect(listIssueTableRows).toHaveBeenCalled());
-    expect(result.current.scopeKey).toBe("my:user-1:assigned");
-    expect(result.current.tableQuerySpec.scope).toEqual({
-      kind: "my",
-      relation: "assigned",
-    });
-  });
-
   it("keeps actor scopes keyed by actor in the unified query shape", async () => {
     const { result } = renderHook(
       () =>
@@ -532,16 +492,6 @@ describe("useIssueSurfaceController", () => {
       surfaceKey: "project:p1",
       scope: { type: "project" as const, projectId: "p1" },
       expected: { project_id: "p1", status: "todo" },
-    },
-    {
-      name: "my assigned",
-      surfaceKey: "my:user-1:assigned",
-      scope: { type: "my" as const, relation: "assigned" as const, userId: "user-1" },
-      expected: {
-        assignee_type: "member",
-        assignee_id: "user-1",
-        status: "todo",
-      },
     },
     {
       name: "actor assigned",
@@ -576,16 +526,16 @@ describe("useIssueSurfaceController", () => {
   });
 
   it("clears surface selection when the view mode changes within the same scope", async () => {
-    const store = getIssueSurfaceViewStore("my:user-1:assigned");
+    const store = getIssueSurfaceViewStore("workspace");
     store.getState().setViewMode("list");
 
     const { result } = renderHook(
       () =>
         useIssueSurfaceController({
-          scope: { type: "my", relation: "assigned", userId: "user-1" },
+          scope: { type: "workspace" },
           modes: ["board", "list", "swimlane"],
         }),
-      { wrapper: makeWrapper(qc, "my:user-1:assigned") },
+      { wrapper: makeWrapper(qc, "workspace") },
     );
 
     act(() => {
@@ -1087,49 +1037,8 @@ describe("useIssueSurfaceController", () => {
     );
     expect(result.current.tableQuerySpec.filters.assignees).toBeUndefined();
     expect(result.current.tableQuerySpec.filters.working_only).toBeUndefined();
-    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined, undefined);
+    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined);
     expect(listIssues).not.toHaveBeenCalled();
-  });
-
-  it("uses the active My Issues relation for the Table working-agent filter", async () => {
-    const store = getIssueSurfaceViewStore("my:user-1:assigned");
-    store.getState().setViewMode("table");
-    store.getState().toggleAgentRunningFilter();
-    const getWorkspaceWorkingAgents = vi.fn(() =>
-      Promise.resolve([] satisfies WorkspaceWorkingAgent[]),
-    );
-    setApiInstance({
-      // The board pages by category, so every surface stub answers the catalog
-      // read. Empty is the real shape for a workspace with no custom statuses:
-      // a built-in key IS its own category. (MUL-6243)
-      listIssueStatuses: async () => ({ statuses: [], categories: [], total: 0 }),
-      listIssues,
-      listGroupedIssues: vi.fn(() => never()),
-      listProjects: vi.fn(() => never()),
-      getAgentTaskSnapshot: vi.fn(() => Promise.resolve([])),
-      getWorkspaceWorkingAgents,
-      getChildIssueProgress: vi.fn(() => never()),
-    } as unknown as ApiClient);
-
-    const { result } = renderHook(
-      () =>
-        useIssueSurfaceController({
-          scope: { type: "my", relation: "assigned", userId: "user-1" },
-          modes: ["table"],
-        }),
-      { wrapper: makeWrapper(qc, "my:user-1:assigned") },
-    );
-
-    await waitFor(() =>
-      expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith(
-        "issue",
-        "assigned",
-        undefined,
-      ),
-    );
-    await waitFor(() =>
-      expect(result.current.tableQuerySpec.filters.working_issue_ids).toEqual([]),
-    );
   });
 
   it.each(["board", "list", "swimlane"] as const)(
@@ -1163,7 +1072,7 @@ describe("useIssueSurfaceController", () => {
       );
       expect(result.current.tableQuerySpec.filters.assignees).toBeUndefined();
       expect(result.current.tableQuerySpec.filters.working_only).toBeUndefined();
-      expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined, undefined);
+      expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined);
       expect(getAgentTaskSnapshot).not.toHaveBeenCalled();
     },
   );
@@ -1173,11 +1082,10 @@ describe("useIssueSurfaceController", () => {
     store.getState().setViewMode("list");
     store.getState().toggleAssigneeFilter({ type: "agent", id: "agent-1" });
     store.getState().toggleAssigneeFilter({ type: "agent", id: "agent-2" });
-    store.getState().toggleAssigneeFilter({ type: "member", id: "member-1" });
     store.getState().toggleNoAssignee();
     store.getState().toggleAgentRunningFilter();
     mockWorkingAgents([
-      makeWorkingAgent("agent-2", ["member-assigned-running-issue"]),
+      makeWorkingAgent("agent-2", ["agent-assigned-running-issue"]),
       makeWorkingAgent("agent-3", ["unassigned-running-issue"]),
     ]);
 
@@ -1194,10 +1102,9 @@ describe("useIssueSurfaceController", () => {
       expect(result.current.tableQuerySpec.filters.assignees).toEqual([
         { type: "agent", id: "agent-1" },
         { type: "agent", id: "agent-2" },
-        { type: "member", id: "member-1" },
       ]);
       expect(result.current.tableQuerySpec.filters.working_issue_ids).toEqual([
-        "member-assigned-running-issue",
+        "agent-assigned-running-issue",
         "unassigned-running-issue",
       ]);
     });
@@ -1716,7 +1623,7 @@ describe("useIssueSurfaceController", () => {
     expect(listIssueTableRows).toHaveBeenCalledWith(expect.objectContaining({
       query: expect.objectContaining({ filters: expect.objectContaining({ working_issue_ids: ["todo-1"] }) }),
     }));
-    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined, undefined);
+    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined);
     act(() => store.getState().toggleAgentRunningFilter());
     act(() => store.getState().toggleAgentRunningFilter());
     expect(getWorkspaceWorkingAgents).toHaveBeenCalledTimes(1);
@@ -2089,43 +1996,6 @@ describe("useIssueSurfaceController", () => {
       expect(result.current.filteredGanttIssues.map((issue) => issue.id)).toEqual(["gantt-open"]);
     });
 
-    it("holds loading while the squads behind \"my agents\" load, then keeps only the viewer's", async () => {
-      const squadRow = (id: string, squad: string) =>
-        makeIssue({
-          id,
-          status: "in_progress",
-          assignee_type: "squad",
-          assignee_id: squad,
-          start_date: "2026-01-01",
-          due_date: "2026-01-05",
-        });
-      let finish!: (ids: string[]) => void;
-      listInvolvedSquadIds.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
-      mockGanttIssues([squadRow("my-squad-row", "squad-1"), squadRow("their-squad-row", "squad-2")]);
-      const store = getIssueSurfaceViewStore("project:p1");
-      act(() => {
-        store.getState().setViewMode("gantt");
-        store.getState().toggleRelationFilter("my_agents");
-      });
-      const { result } = renderHook(
-        () => useIssueSurfaceController({ scope: { type: "project", projectId: "p1" }, modes: ["gantt"] }),
-        { wrapper: makeWrapper(qc, "project:p1") },
-      );
-
-      await waitFor(() => expect(result.current.ganttIssues).toHaveLength(2));
-      await waitFor(() => expect(listInvolvedSquadIds).toHaveBeenCalled());
-      expect(result.current.isLoading).toBe(true);
-
-      await act(async () => finish(["squad-1"]));
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.filteredGanttIssues.map((issue) => issue.id)).toEqual(["my-squad-row"]);
-
-      act(() => store.getState().setFilterNegated("relation", true));
-      await waitFor(() =>
-        expect(result.current.filteredGanttIssues.map((issue) => issue.id)).toEqual(["their-squad-row"]),
-      );
-    });
-
     it("offers a retry when the agents behind \"my agents\" fail", async () => {
       listAgents.mockRejectedValueOnce(new Error("offline"));
       listSubscribedIssueIds.mockResolvedValue([]);
@@ -2152,7 +2022,7 @@ describe("useIssueSurfaceController", () => {
       { wrapper: makeWrapper(qc) },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined, undefined);
+    expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined);
     expect(result.current.workingAgents).toBeUndefined();
     await act(async () => finish([makeWorkingAgent("agent-1", ["gantt-open"])]));
     await waitFor(() => expect(result.current.workingAgents).toEqual([{ id: "agent-1", running_task_count: 1 }]));
@@ -2244,11 +2114,7 @@ describe("useIssueSurfaceController", () => {
 
     await waitFor(() => expect(result.current.ganttIssues).toHaveLength(3));
     await waitFor(() =>
-      expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith(
-        "issue",
-        undefined,
-        undefined,
-      ),
+      expect(getWorkspaceWorkingAgents).toHaveBeenCalledWith("issue", undefined),
     );
 
     expect(result.current.tableQuerySpec.filters.working_issue_ids).toEqual(

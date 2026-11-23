@@ -117,23 +117,23 @@ describe("sidebar project prefs", () => {
 
     act(() => result.current.update({ projectSettings: { showCount: false } }));
     await waitFor(() => expect(result.current.prefs.projectSettings.showCount).toBe(false));
-    act(() => result.current.update({ issueSettings: { assignee: "me" } }));
-    await waitFor(() => expect(result.current.prefs.issueSettings.assignee).toBe("me"));
+    act(() => result.current.update({ issueSettings: { assignee: "my_agents" } }));
+    await waitFor(() => expect(result.current.prefs.issueSettings.assignee).toBe("my_agents"));
     expect(putIssueViewPreference).toHaveBeenCalledTimes(1);
 
     await act(async () => pending[0]!());
     await waitFor(() => expect(putIssueViewPreference).toHaveBeenCalledTimes(2));
     expect(putIssueViewPreference.mock.calls[1]![0].prefs).toMatchObject({
       projects: { showCount: false },
-      issues: { assignee: "me" },
+      issues: { assignee: "my_agents" },
     });
     expect(getIssueViewPreference).toHaveBeenCalledTimes(1);
-    expect(result.current.prefs.issueSettings.assignee).toBe("me");
+    expect(result.current.prefs.issueSettings.assignee).toBe("my_agents");
 
     await act(async () => pending[1]!());
     await waitFor(() => expect(getIssueViewPreference).toHaveBeenCalledTimes(2));
-    expect(server.prefs).toMatchObject({ projects: { showCount: false }, issues: { assignee: "me" } });
-    expect(result.current.prefs.issueSettings.assignee).toBe("me");
+    expect(server.prefs).toMatchObject({ projects: { showCount: false }, issues: { assignee: "my_agents" } });
+    expect(result.current.prefs.issueSettings.assignee).toBe("my_agents");
     expect(result.current.prefs.projectSettings.showCount).toBe(false);
   });
 

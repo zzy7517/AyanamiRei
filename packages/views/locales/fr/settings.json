@@ -125,7 +125,7 @@
     "field_name_placeholder": "Relecture de code",
     "field_target": "S'exécute en tant que",
     "no_target": "Aucun agent (commentaire uniquement)",
-    "no_target_hint": "Publie un message sans mentionner personne.",
+    "no_target_hint": "Publie un message sans mentionner d'agent.",
     "field_prompt": "Invite",
     "field_prompt_placeholder": "Relire le code lié à cette tâche. Se concentrer sur la justesse et les cas limites.",
     "prompt_hint": "Envoyée telle quelle. L'agent voit déjà la tâche.",
@@ -433,7 +433,7 @@
       },
       "unsubscribeArchiveInboxItem": {
         "label": "Se désabonner et archiver",
-        "description": "Se désabonner de la tâche de la notification ouverte et l'archiver. Disponible sur les tâches qui ne sont ni à vous ni à vos agents."
+        "description": "Se désabonner de la tâche de la notification ouverte et l'archiver. Disponible sur les tâches qui ne sont pas à vos agents."
       },
       "snoozeInboxItem": {
         "label": "Reporter la notification",
@@ -463,10 +463,6 @@
         "label": "Aller aux discussions",
         "description": "Ouvrir les discussions de l'espace de travail."
       },
-      "goMyIssues": {
-        "label": "Aller à Mes tâches",
-        "description": "Ouvrir les tâches qui vous sont assignées."
-      },
       "goIssues": {
         "label": "Aller aux tâches",
         "description": "Ouvrir la liste des tâches."
@@ -482,10 +478,6 @@
       "goAgents": {
         "label": "Aller aux agents",
         "description": "Ouvrir la liste des agents."
-      },
-      "goSquads": {
-        "label": "Aller aux squads",
-        "description": "Ouvrir la liste des squads."
       },
       "goUsage": {
         "label": "Aller aux statistiques",
@@ -854,7 +846,7 @@
     },
     "others_issues": {
       "label": "Tâches des autres",
-      "description": "Tâches assignées à quelqu'un d'autre ou à son agent que vous suivez parce que vous les avez créées, commentées ou y avez été mentionné. Les mises à jour clés incluent les @mentions, les réponses dans les fils auxquels vous avez participé et — lorsque Changements de statut est activé — les statuts qui nécessitent votre attention (En relecture, Bloqué, Terminé).",
+      "description": "Tâches assignées à quelqu'un d'autre ou à son agent que vous suivez parce que vous les avez créées ou commentées. Les mises à jour clés incluent les réponses dans les fils auxquels vous avez participé et — lorsque Changements de statut est activé — les statuts qui nécessitent votre attention (En relecture, Bloqué, Terminé).",
       "key_updates": "Mises à jour clés",
       "all": "Toute l'activité"
     },
@@ -910,14 +902,6 @@
       "comments": {
         "label": "Commentaires",
         "description": "Nouveaux commentaires sur les tâches que vous suivez"
-      },
-      "mentions": {
-        "label": "Mentions",
-        "description": "Quand quelqu'un vous @mentionne, y compris via @all et @squad"
-      },
-      "reactions": {
-        "label": "Réactions",
-        "description": "Quand quelqu'un réagit à une tâche que vous avez créée ou à un commentaire que vous avez écrit"
       },
       "updates": {
         "label": "Priorité et date d'échéance",
@@ -1663,40 +1647,15 @@
       "member": {
         "label": "Membre",
         "description": "Créer des tâches et y travailler"
-      },
-      "guest": {
-        "label": "Invité",
-        "description": "Consulte et commente les projets partagés avec lui. Ne peut pas lancer d'agents."
       }
     },
-    "share_links_create_title": "Créer un lien de partage",
-    "share_links_create_button": "Générer",
-    "share_links_creating": "Génération...",
-    "share_link_uses": "{{used}} / {{max}} utilisations",
-    "share_link_expires": "Expire {{date}}",
-    "share_link_copy_tooltip": "Copier le lien",
-    "share_link_revoke_tooltip": "Révoquer le lien",
-    "toast_share_link_created": "Lien de partage créé",
-    "toast_share_link_failed": "Échec de la création du lien de partage",
-    "toast_share_link_revoked": "Lien de partage révoqué",
-    "toast_share_link_revoke_failed": "Échec de la révocation du lien de partage",
-    "toast_share_link_copied": "Lien copié",
-    "toast_share_link_copy_failed": "Échec de la copie du lien",
-    "expiry_24h": "24 heures",
-    "expiry_7d": "7 jours",
-    "expiry_30d": "30 jours",
-    "expiry_never": "Jamais",
     "members_label": "Membres",
     "pending_label": "Invitations en attente",
-    "share_links_label": "Liens de partage",
-    "share_links_description": "Toute personne disposant du lien peut rejoindre avec le rôle choisi, jusqu'à expiration ou révocation.",
     "search_placeholder": "Rechercher un nom ou un e-mail",
     "no_results": "Aucun membre ne correspond à cette recherche.",
     "no_invitations": "Aucune invitation en attente.",
-    "no_share_links": "Aucun lien de partage pour l'instant.",
     "email_label": "E-mail",
     "role_label": "Rôle",
-    "expiry_label": "Expire après",
     "you": "Vous",
     "joined": "Membre depuis le {{date}}",
     "member_actions": "Actions pour {{name}}",
@@ -1717,31 +1676,6 @@
     "toast_invite_check_unavailable": "Impossible de vérifier les membres et invitations existants. Réessayez dans un instant.",
     "member_limit_full_description_billing": "L'abonnement de l'espace de travail demande votre attention. Rétablissez-le dans Facturation pour ajouter des membres, ou retirez d'abord un membre.",
     "open_billing": "Ouvrir Facturation",
-    "guest_free_tag": "Gratuit · sans siège",
-    "guest_projects_label": "Projets accessibles",
-    "guest_projects_add": "Ajouter un projet…",
-    "guest_projects_remove": "Retirer {{project}}",
-    "guest_projects_hint": "Les invités ne voient ni les autres projets, ni les agents, automatisations ou réglages.",
-    "invite_guest_button": "Inviter l'invité",
-    "all_label": "Tous",
-    "guests_label": "Invités",
-    "guest_count": "Invités : {{count}}",
-    "list_separator": ", ",
-    "takes_seat": "Occupe 1 siège",
-    "frees_seat": "Libère un siège",
-    "make_member": "Passer en membre",
-    "make_member_title": "Passer {{name}} en membre ?",
-    "make_member_description": "{{name}} verra tout l'espace de travail et pourra lancer des agents. Cela occupe 1 siège.",
-    "make_member_seat_description": "{{name}} verra tout l'espace de travail et pourra lancer des agents. Tous les sièges achetés sont occupés : un siège de plus sera acheté.",
-    "purchase_seat_and_make_member": "Acheter un siège et passer en membre",
-    "making_member": "Passage en membre…",
-    "make_guest_title": "Passer {{name}} en invité ?",
-    "make_guest_description": "{{name}} ne verra que les projets ci-dessous et libère un siège. Ses agents, automatisations et accès aux runtimes sont retirés.",
-    "make_guest_button": "Passer en invité",
-    "manage_projects": "Gérer les projets accessibles",
-    "manage_projects_title": "Projets accessibles à {{name}}",
-    "save_projects": "Enregistrer",
-    "toast_projects_updated": "Projets mis à jour",
     "revoke_invitation_confirm": "Révoquer l'invitation",
     "remove_member_confirm": "Retirer le membre"
   },
@@ -1774,7 +1708,13 @@
   "code": {
     "hosting_title": "Hébergement du code",
     "pr_linking_title": "Pull requests et tâches",
-    "github_actions": "Actions GitHub"
+    "github_actions": "Actions GitHub",
+    "task_trees_title": "Worktrees",
+    "task_tree_retention": {
+      "label": "Conserver les worktrees des tâches terminées pendant",
+      "unit": "jours",
+      "description": "Ensuite, les worktrees sont retirés de la machine. Les branches sont conservées."
+    }
   },
   "channels": {
     "breadcrumb": "Fil d'Ariane",
@@ -2132,26 +2072,5 @@
       "retry_failed": "Impossible de transcrire cet enregistrement",
       "show_more": "Afficher plus"
     }
-  },
-  "private_projects": {
-    "title": "Projets privés",
-    "description": "Seuls les membres d’un projet privé peuvent l’ouvrir. En tant que propriétaire de l’espace de travail, vous voyez qui fait partie de chacun et pouvez vous y ajouter quand vous devez intervenir.",
-    "empty": "Cet espace de travail n’a aucun projet privé.",
-    "load_failed": "Impossible de charger les projets privés.",
-    "retry": "Réessayer",
-    "no_members": "Aucun membre",
-    "lead_name": "{{name}} (responsable)",
-    "more_members": "+{{count}} autres",
-    "archived": "Archivé",
-    "member": "Vous êtes membre",
-    "open": "Ouvrir",
-    "join": "Rejoindre",
-    "join_title": "Rejoindre « {{title}} » ?",
-    "join_description": "Vous serez ajouté à la liste des membres de ce projet et verrez ses tâches, commentaires et pièces jointes. Ses membres actuels seront prévenus.",
-    "join_description_empty": "Ce projet n’a aucun membre. Vous en serez le seul membre et verrez ses tâches, commentaires et pièces jointes.",
-    "join_confirm": "Rejoindre le projet",
-    "cancel": "Annuler",
-    "toast_joined": "Vous avez rejoint {{title}}",
-    "toast_failed": "Impossible de rejoindre le projet."
   }
 }

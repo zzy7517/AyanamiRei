@@ -10,8 +10,8 @@ import { baselineFromQuery, type IssueViewBaseline } from "./baseline";
 export type FilteredBuiltinViewKey = "my_work" | "working" | "subscribed";
 
 const QUERIES: Record<FilteredBuiltinViewKey, Record<string, unknown>> = {
-  // Assigned to the viewer or to an agent they own.
-  my_work: { relationFilters: ["assigned", "my_agents"] },
+  // Assigned to an agent the viewer owns.
+  my_work: { relationFilters: ["my_agents"] },
   // An agent is running on it.
   working: { agentRunningFilter: true },
   subscribed: { relationFilters: ["subscribed"] },

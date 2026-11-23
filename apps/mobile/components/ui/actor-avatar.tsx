@@ -29,12 +29,9 @@ import { THEME } from "@/lib/theme";
 
 // `system` actors are server-side automation (state changes triggered by the
 // platform itself, not a member or an agent). InboxItem.actor_type carries
-// this third value (packages/core/types/inbox.ts:28). `squad` is a third
-// assignee polymorph (packages/core/types/issue.ts IssueAssigneeType) — when
-// a squad has an avatar_url we render it; otherwise fall back to a generic
-// group glyph so squad-assigned issues from web never render blank.
+// this third value (packages/core/types/inbox.ts:28).
 interface Props {
-  type: "member" | "agent" | "system" | "squad" | null | undefined;
+  type: "member" | "agent" | "system" | null | undefined;
   id: string | null | undefined;
   /** Timeline-provided identity for actors no longer in the live directory. */
   name?: string;
@@ -97,16 +94,6 @@ function BareAvatar({
       ? THEME.dark.mutedForeground
       : THEME.light.mutedForeground;
 
-  // Squad gets a soft-square tile (matches web actor-avatar.tsx:42 which uses
-  // rounded-md) so a group never reads as a single person at a glance.
-  // Everyone else stays round.
-  const radius = type === "squad" ? Math.round(size * 0.22) : size / 2;
-
-  // URL lookup runs BEFORE the squad/system icon fallbacks so a squad with
-  // an avatar_url renders its image instead of the generic group glyph.
-  // Squad.avatar_url exists (packages/core/types/squad.ts) and useActorLookup
-  // already returns it — the previous early-return for type==="squad" meant
-  // that value was silently dropped.
   // Only treat a URL as renderable if it actually looks like one — RN <Image>
   // can crash native-side on malformed sources (empty string, plain "foo",
   // etc.). Cheap regex; falsy / bad input falls through to the icon fallback.
@@ -128,7 +115,7 @@ function BareAvatar({
   if (emoji) {
     return (
       <View
-        style={{ width: size, height: size, borderRadius: radius }}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
         className="items-center justify-center bg-muted"
       >
         <Text
@@ -146,7 +133,7 @@ function BareAvatar({
       <Image
         source={{ uri: url }}
         accessibilityLabel={displayName}
-        style={{ width: size, height: size, borderRadius: radius }}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
         className="bg-muted"
       />
     );
@@ -155,7 +142,7 @@ function BareAvatar({
   if (type === "system") {
     return (
       <View
-        style={{ width: size, height: size, borderRadius: radius }}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
         className="items-center justify-center bg-muted"
       >
         <Ionicons name="cog" size={Math.round(size * 0.55)} color={iconColor} />
@@ -163,21 +150,10 @@ function BareAvatar({
     );
   }
 
-  if (type === "squad") {
-    return (
-      <View
-        style={{ width: size, height: size, borderRadius: radius }}
-        className="items-center justify-center bg-muted"
-      >
-        <Ionicons name="people" size={Math.round(size * 0.55)} color={iconColor} />
-      </View>
-    );
-  }
-
   const isAgent = type === "agent";
   return (
     <View
-      style={{ width: size, height: size, borderRadius: radius }}
+      style={{ width: size, height: size, borderRadius: size / 2 }}
       className={cn(
         "items-center justify-center",
         isAgent ? "bg-brand/15" : "bg-muted",

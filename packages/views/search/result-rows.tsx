@@ -202,7 +202,7 @@ export function ActorRow({
   showStatusDot,
 }: {
   value: string;
-  actorType: "member" | "agent" | "squad";
+  actorType: "member" | "agent";
   actorId: string;
   name: string;
   query: string;

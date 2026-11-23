@@ -1,6 +1,6 @@
 ---
 title: Comments
-description: Add information, reply to discussions, and @-mention members or agents on an issue, keeping a complete collaboration record.
+description: Add information, reply to discussions, and @-mention agents on an issue, keeping a complete collaboration record.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -44,7 +44,7 @@ Use the usual send button to post all the annotations as one reply, with a blank
 
 The selection toolbar on an issue description offers **Add to comment** instead: the annotations go into a new-comment draft, and sending it starts a new thread. Annotations on a comment still go into that thread's reply draft.
 
-For comment annotations, the first one you save fixes the reply target, including nested replies. Quotes from other messages in the same thread join that draft, and everything is posted as one comment. Mentions inside a quote don't notify or trigger anyone; mentions you write yourself follow the normal rules.
+For comment annotations, the first one you save fixes the reply target, including nested replies. Quotes from other messages in the same thread join that draft, and everything is posted as one comment. Mentions inside a quote don't start a run; mentions you write yourself follow the normal rules.
 
 <Accordions>
 <Accordion title="Editing, removing, and shortcuts" id="annotation-editing">
@@ -96,12 +96,9 @@ Type `@` and pick a target from the list:
 
 | Target | Effect |
 |---|---|
-| **Member** | Gets a mention notification in the inbox; an @ in a comment does not create a subscription. |
 | **Agent** | Creates a run for that agent; agents have no inbox. |
-| **Squad** | Triggers the squad leader; squad members are not notified. |
 | **Issue** | Inserts a link to another issue — no notification, no agent trigger. |
 | **Project** | Inserts a link to a project — no notification, no agent trigger. |
-| **@all** | Notifies every workspace member; the mention itself starts no agent. A worker agent's comment still returns to the assigned squad leader, or the guest squad leader in its delegation thread, unless an agent or squad is explicitly mentioned. |
 
 Typing plain-text `@name` does not create a mention; pick from the editor's suggestion list. Typing a valid issue key converts it into an issue link automatically.
 
@@ -111,11 +108,7 @@ Typing plain-text `@name` does not create a mention; pick from the editor's sugg
 
 ## Subscriptions and the inbox
 
-Members who comment subscribe to the issue automatically, and later activity and @-mentions land in the [inbox](/inbox); you can also subscribe or unsubscribe manually at the top right of the issue. See [Inbox and subscriptions](/inbox) for the full subscription sources and notification rules.
-
-## Reactions
-
-Add an emoji reaction to a comment to show you've read it, agree, or give quick feedback. Reactions do not trigger agents and do not change issue status.
+Members who comment subscribe to the issue automatically, and later activity lands in the [inbox](/inbox); you can also subscribe or unsubscribe manually at the top right of the issue. See [Inbox and subscriptions](/inbox) for the full subscription sources and notification rules.
 
 ## Edit and delete
 

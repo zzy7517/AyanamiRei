@@ -180,6 +180,20 @@ $json = @'
 Desktop 只能連線瀏覽器和執行電腦都能訪問的地址。遠端自託管例項未使用 HTTPS 或未代理 WebSocket 時，Desktop 無法建立連線；完整配置見[自託管快速上手](/self-host-quickstart#remote-access)。
 </Callout>
 
+### 免登入直接進入
+
+如果這個部署只有你自己使用，加上 `authToken` 即可略過登入頁：
+
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "https://api.example.com",
+  "authToken": "<伺服器的 MULTICA_AUTH_TOKEN>"
+}
+```
+
+填入與伺服器 `MULTICA_AUTH_TOKEN` 相同的值，並在伺服器設定 `MULTICA_AUTH_TOKEN_EMAIL`；參閱[預共享權杖](/environment-variables#預共享權杖)。此後 Desktop 會直接進入工作區。伺服器拒絕該權杖時，Desktop 會顯示登入頁並給出提示：修正檔案後重新啟動，或照常使用信箱或 Google 登入。未設定 `authToken` 時，行為不變。
+
 ### Windows：檢查檔名和編碼
 
 Windows 上兩種常見的寫檔案方式會生成 Desktop 讀不了的檔案：

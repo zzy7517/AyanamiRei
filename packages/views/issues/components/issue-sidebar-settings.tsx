@@ -51,6 +51,7 @@ export function useIssueSidebarSectionLabels(): Record<IssueSidebarSection, stri
   const { t } = useT("issues");
   return {
     properties: t(($) => $.detail.section_properties),
+    trees: t(($) => $.trees.section_title),
     quick_actions: t(($) => $.detail.section_quick_actions),
     wakeups: t(($) => $.wakeups.title),
     plugins: t(($) => $.plugins.panels),

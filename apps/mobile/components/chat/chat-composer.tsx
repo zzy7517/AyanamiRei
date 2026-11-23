@@ -13,10 +13,10 @@
  *     (`allowSendWhileSending`), typed content swaps Stop for Send, which
  *     asks to add the message to the running reply, plus a Queue action
  *     for the next turn. Mirrors web's ChatInput action slot.
- *   - **Mention picker mode=chat**: chat is user ↔ single agent so
- *     @member / @agent / @squad / @all are noise + would notify the
- *     wrong people. Picker route honors `?mode=chat` and surfaces only
- *     Issues (useful for "reference this ticket for context").
+ *   - **Mention picker mode=chat**: chat is user ↔ single agent, so an
+ *     @agent mention there is noise. Picker route honors `?mode=chat`
+ *     and surfaces only Issues (useful for "reference this ticket for
+ *     context").
  *   - **No reply target**: chat is a flat conversation; passes no
  *     reply chip.
  *   - **No upload context**: chat attachments are session-scoped; the

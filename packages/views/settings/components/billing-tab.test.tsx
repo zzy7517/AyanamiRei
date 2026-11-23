@@ -2578,7 +2578,7 @@ describe("BillingTab", () => {
       return endsAt;
     }
 
-    it("shows where the trial stands and what each Business feature keeps", () => {
+    it("shows where the trial stands", () => {
       const endsAt = setTrial("active", Date.now() - 4.5 * DAY);
       renderWithI18n(<BillingTab />);
 
@@ -2590,10 +2590,6 @@ describe("BillingTab", () => {
         ),
       ).toBeInTheDocument();
       expect(screen.getAllByText("Day 5 of 14").length).toBeGreaterThan(0);
-      expect(screen.getByText("Private projects")).toBeInTheDocument();
-      expect(
-        screen.getByText("Stay private after the trial. Their access lists become read-only."),
-      ).toBeInTheDocument();
       // A trialling manager subscribes through the same plan cards.
       expect(screen.getByRole("button", { name: "Upgrade to Business" })).toBeInTheDocument();
     });

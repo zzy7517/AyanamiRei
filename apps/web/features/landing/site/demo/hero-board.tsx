@@ -13,7 +13,6 @@ import {
   Calendar,
   ChevronDown,
   ChevronRight,
-  CircleUser,
   Columns3,
   CornerDownRight,
   Filter,
@@ -349,7 +348,6 @@ function WorkPanel({ workflow, focus, status, peeked }: { workflow: Workflow; fo
       </div>
       <div className="min-h-0 flex-1 overflow-hidden px-2 pb-4">
         <PanelSection label={app.views}>
-          <PanelRow icon={CircleUser} label={app.myIssues} />
           <PanelRow icon={Bot} label={app.myAgents} />
           <PanelRow icon={ListTodo} label={app.allIssues} />
           <PanelRow label={app.allViews} count={3} />

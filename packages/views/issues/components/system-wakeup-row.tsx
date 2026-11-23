@@ -47,7 +47,6 @@ export function SystemWakeupRow({
   const blocked = {
     "": null,
     backlog: t(($) => $.wakeups.system.blocked_backlog),
-    member_assignee: t(($) => $.wakeups.system.blocked_member),
     no_assignee: t(($) => $.wakeups.system.blocked_none),
   }[rule.blocked];
   const paused = rule.paused_reason
@@ -55,15 +54,12 @@ export function SystemWakeupRow({
         reason: text.pausedReason({ paused_reason: rule.paused_reason, max_fires: null, fire_count: 0 }) ?? "",
       })
     : null;
-  const target =
-    rule.target?.type === "member"
-      ? t(($) => $.wakeups.system.notify_member, { name: rule.target.name })
-      : t(($) => $.wakeups.system.wake_assignee, { name: rule.target?.name ?? "" });
+  const target = t(($) => $.wakeups.system.wake_assignee, { name: rule.target?.name ?? "" });
   const summary =
     paused ??
     (!rule.enabled
       ? t(($) => $.wakeups.system.turned_off)
-      : rule.blocked && rule.blocked !== "member_assignee"
+      : rule.blocked
         ? blocked
         : [target, t(($) => $.wakeups.system.remaining, { count: rule.remaining })].join(" · "));
   const save = (input: { enabled: boolean; instruction: string }) =>

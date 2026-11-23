@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useStore } from "zustand";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Bot,
   ChevronDown,
-  CircleUser,
   Copy,
   Globe,
   Layers,
@@ -45,7 +42,6 @@ import { cn } from "@multica/ui/lib/utils";
 import type { CreateIssueViewRequest, IssueView } from "@multica/core/api/schemas";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useWorkspacePaths } from "@multica/core/paths";
-import { useIsGuest } from "@multica/core/permissions";
 import { useActiveIssueView } from "@multica/core/issue-views/use-active-view";
 import type { IssueViewScope } from "@multica/core/issue-views/queries";
 import {
@@ -64,10 +60,6 @@ import {
 } from "@multica/core/issue-views/definition";
 import { useIssueViewRenameStore } from "@multica/core/issue-views/rename-store";
 import { useIssueViewEditStore } from "@multica/core/issue-views/edit-store";
-import {
-  myIssuesViewStore,
-  type MyIssuesScope,
-} from "@multica/core/issues/stores/my-issues-view-store";
 import {
   useIssuesScope,
   useIssuesScopeStore,
@@ -90,7 +82,6 @@ import { useViewBaseline } from "../issues/surface/view-baseline-context";
 import { WorkspaceAgentWorkingChip } from "../issues/components/workspace-agent-working-chip";
 import type { IssueSurfaceController } from "../issues/surface/use-issue-surface-controller";
 import { useT } from "../i18n";
-import { useMyIssuesScope } from "../my-issues/use-my-issues-scope";
 import { DeleteViewDialog } from "./delete-view-dialog";
 import { BUILTIN_VIEW_ICON, useBuiltinViewLabel } from "./builtin-views";
 import { useIssueViewActions } from "./use-view-actions";
@@ -99,23 +90,15 @@ import { ViewNameInput } from "./view-name-input";
 /** The page a header sits on; a saved view opened there replaces its title. */
 export type IssueViewHeaderBase =
   | { kind: "workspace" }
-  | { kind: "my" }
   | { kind: "project"; project: Project };
 
-const ASSIGNEE_TYPES: IssuesScope[] = ["all", "members", "agents"];
+const ASSIGNEE_TYPES: IssuesScope[] = ["all", "agents"];
 const PROJECT_HIDDEN_FIELDS: NegatableFilterDimension[] = ["project"];
-const MY_RELATIONS: Exclude<MyIssuesScope, "agents">[] = ["assigned", "created", "all"];
-const MY_SAVE_VARIANT: Record<MyIssuesScope, NonNullable<CreateIssueViewRequest["scope_variant"]>> = {
-  all: "any",
-  assigned: "assigned",
-  created: "created",
-  agents: "involved",
-};
 
 function viewScopeOf(base: IssueViewHeaderBase): IssueViewScope {
   return base.kind === "project"
     ? { scope_type: "project", scope_id: base.project.id }
-    : { scope_type: base.kind };
+    : { scope_type: "workspace" };
 }
 
 /**
@@ -145,8 +128,6 @@ export function IssueViewHeader({
 }) {
   const { t } = useT("issues");
   const wsId = useWorkspaceId();
-  // A guest (MUL-9420) cannot create issues.
-  const guest = useIsGuest(wsId);
   const paths = useWorkspacePaths();
   const viewScope = viewScopeOf(base);
   const { activeView, setActive, missing } = useActiveIssueView(wsId, viewScope);
@@ -167,9 +148,7 @@ export function IssueViewHeader({
   const assigneeType = useIssuesScope(scopePage);
   const setAssigneeTypeForPage = useIssuesScopeStore((s) => s.setScope);
   const setAssigneeType = (next: IssuesScope) => setAssigneeTypeForPage(scopePage, next);
-  const myScope = useMyIssuesScope();
   const builtinLabel = useBuiltinViewLabel();
-  const setMyScope = useStore(myIssuesViewStore, (s) => s.setScope);
 
   const storeApi = useViewStoreApi();
   const state = useViewStore((s) => s);
@@ -179,22 +158,8 @@ export function IssueViewHeader({
   const toggleAgentRunningFilter = useViewStore((s) => s.toggleAgentRunningFilter);
 
   const builtinKey: BuiltinViewKey | null = base.kind === "workspace" ? "all_issues" : null;
-  const baseName =
-    base.kind === "project"
-      ? base.project.title
-      : base.kind === "my"
-        ? myScope === "agents"
-          ? t(($) => $.views.builtin.my_agents)
-          : t(($) => $.views.builtin.my_issues)
-        : builtinLabel("all_issues");
-  const baseIcon =
-    base.kind === "project" ? (
-      <ProjectIcon project={base.project} size="sm" />
-    ) : base.kind === "my" ? (
-      myScope === "agents" ? <Bot className="size-4" /> : <CircleUser className="size-4" />
-    ) : (
-      <ListTodo className="size-4" />
-    );
+  const baseName = base.kind === "project" ? base.project.title : builtinLabel("all_issues");
+  const baseIcon = base.kind === "project" ? <ProjectIcon project={base.project} size="sm" /> : <ListTodo className="size-4" />;
 
   const modified = activeView ? isIssueViewModified(activeView, state) : null;
   const dirty = activeView
@@ -229,11 +194,9 @@ export function IssueViewHeader({
 
   const scopeVariant: CreateIssueViewRequest["scope_variant"] = activeView
     ? ((activeView.scope_variant ?? null) as CreateIssueViewRequest["scope_variant"])
-    : base.kind === "my"
-      ? MY_SAVE_VARIANT[myScope]
-      : assigneeType === "all"
-        ? null
-        : assigneeType;
+    : assigneeType === "all"
+      ? null
+      : assigneeType;
 
   const reset = () => {
     if (activeView) {
@@ -253,55 +216,22 @@ export function IssueViewHeader({
     });
 
   const assigneeTypeLabel = (value: IssuesScope) =>
-    t(($) => $.save_view[value === "all" ? "variant_all" : value === "members" ? "variant_members" : "variant_agents"]);
-  const myRelationLabel = (value: string) =>
-    t(($) =>
-      $.save_view[
-        value === "assigned"
-          ? "variant_my_assigned"
-          : value === "created"
-            ? "variant_my_created"
-            : value === "involved"
-              ? "variant_my_involved"
-              : "variant_my_any"
-      ],
-    );
+    t(($) => $.save_view[value === "all" ? "variant_all" : "variant_agents"]);
 
   // The surface's scope axis heads the filter menu: who the issues are
-  // assigned to, or how they relate to me. A saved view fixes it, so there it
-  // is a read-only row.
+  // assigned to. A saved view fixes it, so there it is a read-only row.
   let scopeSection: ReactNode = null;
   let scopeCounts = false;
   if (activeView) {
-    const variant = activeView.scope_variant;
-    const fixedScope =
-      base.kind === "my"
-        ? { label: t(($) => $.save_view.scope_label_my), value: myRelationLabel(variant ?? "any") }
-        : actorKindForViewVariant(variant) !== "all"
-          ? {
-              label: t(($) => $.save_view.scope_label_workspace),
-              value: assigneeTypeLabel(actorKindForViewVariant(variant)),
-            }
-          : null;
-    if (fixedScope) {
-      scopeCounts = base.kind !== "my";
+    const actorKind = actorKindForViewVariant(activeView.scope_variant);
+    if (actorKind !== "all") {
+      scopeCounts = true;
       scopeSection = (
         <DropdownMenuItem disabled title={t(($) => $.views.set_by_view)}>
           <Users className="size-3.5" />
-          <span className="flex-1">{fixedScope.label}</span>
-          <span className="ml-3 text-caption font-medium text-muted-foreground">{fixedScope.value}</span>
+          <span className="flex-1">{t(($) => $.save_view.scope_label_workspace)}</span>
+          <span className="ml-3 text-caption font-medium text-muted-foreground">{assigneeTypeLabel(actorKind)}</span>
         </DropdownMenuItem>
-      );
-    }
-  } else if (base.kind === "my") {
-    if (myScope !== "agents") {
-      scopeSection = (
-        <ScopeSub
-          label={t(($) => $.save_view.scope_label_my)}
-          value={myScope}
-          options={MY_RELATIONS.map((value) => ({ value, label: myRelationLabel(value === "all" ? "any" : value) }))}
-          onChange={setMyScope}
-        />
       );
     }
   } else {
@@ -317,13 +247,8 @@ export function IssueViewHeader({
     );
   }
 
-  // "My issues" is already a relation to me; a second one there is noise.
-  const showRelation = base.kind !== "my";
   const viewBaseline = useViewBaseline() ?? undefined;
-  const { chips: allFilterChips } = useFilterChips(dateFilter, setDateFilter, viewBaseline);
-  const filterChips = showRelation
-    ? allFilterChips
-    : allFilterChips.filter((chip) => chip.key !== "relation");
+  const { chips: filterChips } = useFilterChips(dateFilter, setDateFilter, viewBaseline);
   // In advanced mode the trigger names the mode and counts its conditions.
   const advancedFilter = useViewStore((s) => s.advancedFilter);
   const advancedMode = advancedFilter !== null;
@@ -353,7 +278,6 @@ export function IssueViewHeader({
   const filterMenuProps = {
     viewBaseline,
     leadingSections: scopeSection,
-    showRelation,
     hiddenFields: base.kind === "project" ? PROJECT_HIDDEN_FIELDS : undefined,
     modifiedKeys,
     summaryTitle: activeViewName ?? baseName,
@@ -434,7 +358,7 @@ export function IssueViewHeader({
                         {t(($) => $.views.copy_link)}
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
-                    {canManage && activeView.scope_type !== "my" && (
+                    {canManage && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
@@ -481,15 +405,7 @@ export function IssueViewHeader({
                   <>
                     {baseMenu ?? (
                       <DropdownMenuItem
-                        onClick={() =>
-                          actions.copyLink(
-                            base.kind === "my" && myScope === "agents"
-                              ? paths.myAgents()
-                              : base.kind === "my"
-                                ? paths.myIssues()
-                                : paths.issues(),
-                          )
-                        }
+                        onClick={() => actions.copyLink(paths.issues())}
                       >
                         <Link2 className="size-3.5" />
                         {t(($) => $.views.copy_link)}
@@ -576,7 +492,7 @@ export function IssueViewHeader({
             onTableFacetChange={controller.setActiveTableFacet}
             iconOnly
           />
-          {!hideCreate && !guest && (
+          {!hideCreate && (
             <IconButton
               label={t(($) => $.views.new_issue)}
               shortcut={<ActionShortcutKeycaps action="createIssue" />}

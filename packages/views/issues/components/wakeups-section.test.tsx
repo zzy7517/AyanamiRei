@@ -444,16 +444,6 @@ describe("v2 sidebar", () => {
     await waitFor(() => expect(updateSystem).toHaveBeenCalledWith({ rule: "child_done", enabled: true, instruction: "" }));
   });
 
-  it("says a member assignee is notified instead of woken", () => {
-    systemRules = [{
-      id: "rule", revision: 1, default_instruction: "Advance the next stage.", customized: false, paused_reason: null,
-      rule: "child_done", workspace_default: true, enabled: true, instruction: "", staged: false, stage: null, total: 3, remaining: 2,
-      waiting: [], target: { type: "member", id: "u", name: "Jiayuan" }, blocked: "member_assignee",
-    }];
-    renderWithI18n(<WakeupsSection issueId="issue" />);
-    expect(screen.getByRole("button", { name: /When all sub-issues finish/ })).toHaveTextContent("Notify Jiayuan in their inbox · 2 to go");
-  });
-
   it("shows the default instruction and saves one for this issue", async () => {
     systemRules = [{
       id: "rule", revision: 1, default_instruction: "Advance the next stage.", customized: false, paused_reason: null,

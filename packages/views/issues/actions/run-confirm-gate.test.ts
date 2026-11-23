@@ -91,12 +91,6 @@ describe("runConfirmIntent — assign", () => {
       runConfirmIntent(issue({ status: "later" }), { assignee_type: "agent", assignee_id: "a-2" }, COLD),
     ).not.toBeNull();
   });
-
-  it("applies directly for a member assignee", () => {
-    expect(
-      runConfirmIntent(issue({ status: "todo" }), { assignee_type: "member", assignee_id: "u-1" }, CATALOG),
-    ).toBeNull();
-  });
 });
 
 describe("runConfirmIntent — promote", () => {

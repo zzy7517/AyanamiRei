@@ -1,5 +1,5 @@
 // The assignee picker lists only actors the current user can actually pick:
-// agents they may invoke that have a runtime, and squads whose leader is one.
+// agents they may invoke that have a runtime.
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { I18nProvider } from "@multica/core/i18n/react";
@@ -19,16 +19,9 @@ const AGENTS = [
   // Shared but no runtime: hidden.
   { id: "agent-unbound", name: "Unbound", owner_id: "user-2", permission_mode: "public_to", invocation_targets: WORKSPACE_GRANT, runtime_id: null, archived_at: null, visibility: "workspace" },
 ];
-const SQUADS = [
-  { id: "squad-ok", name: "Runnable Squad", archived_at: null, leader_id: "agent-shared" },
-  { id: "squad-stuck", name: "Stuck Squad", archived_at: null, leader_id: "agent-unbound" },
-  // Leader has a runtime but is someone else's private agent: the server
-  // rejects the pick, so it's hidden too.
-  { id: "squad-private", name: "Private Squad", archived_at: null, leader_id: "agent-theirs" },
-];
 const PICKS = [
   ...Array.from({ length: 9 }, () => ({ type: "agent" as const, id: "agent-theirs" })),
-  ...Array.from({ length: 8 }, () => ({ type: "squad" as const, id: "squad-stuck" })),
+  ...Array.from({ length: 8 }, () => ({ type: "agent" as const, id: "agent-unbound" })),
   { type: "agent" as const, id: "agent-shared" },
 ];
 
@@ -36,7 +29,6 @@ vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
     if (queryKey[0] === "members") return { data: MEMBERS };
     if (queryKey[0] === "agents") return { data: AGENTS };
-    if (queryKey[0] === "squads") return { data: SQUADS };
     return { data: [] };
   },
 }));
@@ -63,7 +55,6 @@ vi.mock("@multica/core/workspace/hooks", () => ({
 vi.mock("@multica/core/workspace/queries", () => ({
   memberListOptions: () => ({ queryKey: ["members"] }),
   agentListOptions: () => ({ queryKey: ["agents"] }),
-  squadListOptions: () => ({ queryKey: ["squads"] }),
 }));
 vi.mock("../../../common/actor-avatar", () => ({
   ActorAvatar: () => <span data-testid="actor-avatar" />,
@@ -77,7 +68,7 @@ function rowsIn(label: string): string[] {
 }
 
 describe("AssigneePicker unpickable actors", () => {
-  it("hides agents and squads the user cannot assign, including from Recent", async () => {
+  it("hides agents the user cannot assign, including from Recent", async () => {
     useAssigneePicksStore.setState({ byScope: { "user-1:workspace-1": PICKS } });
     render(
       <I18nProvider locale="en" resources={{ en: { issues: enIssues } }}>
@@ -93,11 +84,8 @@ describe("AssigneePicker unpickable actors", () => {
 
     await screen.findByText("Agents");
     expect(rowsIn("Agents")).toEqual(["Shared", "Mine"]);
-    expect(rowsIn("Squads")).toEqual(["Runnable Squad"]);
     expect(rowsIn("Recent")).toEqual(["Shared"]);
     expect(screen.queryByText("Theirs")).toBeNull();
     expect(screen.queryByText("Unbound")).toBeNull();
-    expect(screen.queryByText("Stuck Squad")).toBeNull();
-    expect(screen.queryByText("Private Squad")).toBeNull();
   });
 });

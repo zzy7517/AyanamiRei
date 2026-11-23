@@ -11,7 +11,6 @@ import { cn } from "@multica/ui/lib/utils";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
 import { useModalStore } from "@multica/core/modals";
-import { useIsGuest } from "@multica/core/permissions";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceWakeupSummariesOptions } from "@multica/core/issues/wakeups";
 import {
@@ -34,7 +33,6 @@ import type { IssueViewScope } from "@multica/core/issue-views/queries";
 import {
   actorKindForViewVariant,
   issueScopeKey,
-  myRelationForViewVariant,
   type IssueScope,
 } from "@multica/core/issues/surface/scope";
 import type { Issue } from "@multica/core/types";
@@ -63,8 +61,6 @@ import {
 export interface IssueSurfaceRenderContext {
   controller: IssueSurfaceController;
   issues: Issue[];
-  /** Whether the viewer may create issues here; false for a guest (MUL-9420). */
-  canCreate: boolean;
 }
 
 interface IssueSurfaceComponentProps extends IssueSurfaceProps {
@@ -106,15 +102,13 @@ export function IssueSurface({
   contentClassName,
 }: IssueSurfaceComponentProps) {
   const wsId = useWorkspaceId();
-  // Saved views exist on workspace / my / project surfaces only.
+  // Saved views exist on the workspace and project surfaces only.
   const viewScope: IssueViewScope | null =
     scope.type === "workspace"
       ? { scope_type: "workspace" }
-      : scope.type === "my"
-        ? { scope_type: "my" }
-        : scope.type === "project"
-          ? { scope_type: "project", scope_id: scope.projectId }
-          : null;
+      : scope.type === "project"
+        ? { scope_type: "project", scope_id: scope.projectId }
+        : null;
   const { activeView } = useActiveIssueView(wsId, viewScope);
 
   // An open saved view swaps the surface onto its own view-preference key:
@@ -128,16 +122,13 @@ export function IssueSurface({
     : null;
   // While a view is open, the scope axis the view captured belongs to the
   // VIEW, not to whichever tab the user stood on: workspace/project views
-  // carry an assignee-type variant, my views a relation variant. The user's
-  // own tab state is never touched — it is exactly where they left it when
-  // the view closes (or vanishes). A variant-free view resolves to the
-  // unrestricted axis value.
+  // carry an assignee-type variant. The user's own tab state is never
+  // touched — it is exactly where they left it when the view closes (or
+  // vanishes). A variant-free view resolves to the unrestricted axis value.
   const effectiveScope: IssueScope =
     activeView && (scope.type === "workspace" || scope.type === "project")
       ? { ...scope, actorKind: actorKindForViewVariant(activeView.scope_variant) }
-      : activeView && scope.type === "my"
-        ? { ...scope, relation: myRelationForViewVariant(activeView.scope_variant) }
-        : scope;
+      : scope;
   const viewBaseline = filteredBuiltinBaseline(activeView);
   const store = useMemo(() => {
     // First-open seeding happens HERE, at store-creation time for this key:
@@ -248,9 +239,6 @@ function IssueSurfaceContent({
   contentClassName,
 }: Omit<IssueSurfaceComponentProps, "surfaceKey">) {
   const workspaceId = useWorkspaceId();
-  // A guest (MUL-9420) cannot create issues anywhere, sub-issues included.
-  const guest = useIsGuest(workspaceId);
-  const canCreate = allowCreate && !guest;
   // One polling owner for the whole surface; individual cards only select cache data.
   useQuery({ ...workspaceWakeupSummariesOptions(workspaceId), refetchInterval: 10_000 });
   const { t } = useT("projects");
@@ -289,10 +277,7 @@ function IssueSurfaceContent({
         : controller.swimlaneIssues,
     [clientFilter, controller.swimlaneIssues],
   );
-  const renderContext = useMemo(
-    () => ({ controller, issues, canCreate }),
-    [controller, issues, canCreate],
-  );
+  const renderContext = useMemo(() => ({ controller, issues }), [controller, issues]);
   const openCreateIssue = useCallback(
     (defaults?: IssueCreateDefaults) => {
       controller.openCreateIssue(defaults);
@@ -355,7 +340,7 @@ function IssueSurfaceContent({
               title={t(($) => $.detail.empty_issues_title)}
               description={t(($) => $.detail.empty_issues_hint)}
               actions={
-                canCreate && <>
+                allowCreate && <>
                   <Button size="sm" onClick={() => controller.openCreateIssue()}>
                     <Plus aria-hidden="true" />
                     {t(($) => $.detail.empty_issues_new_button)}
@@ -387,7 +372,7 @@ function IssueSurfaceContent({
                 childProgressMap={controller.childProgressMap}
                 projectMap={controller.projectMap}
                 projectId={controller.projectId}
-                onCreateIssue={canCreate ? openCreateIssue : undefined}
+                onCreateIssue={allowCreate ? openCreateIssue : undefined}
                 statusPagination={controller.statusPagination}
                 groupBranches={controller.groupBranches}
               />
@@ -400,7 +385,7 @@ function IssueSurfaceContent({
                 projectMap={controller.projectMap}
                 projectId={controller.projectId}
                 onMoveIssue={controller.moveIssue}
-                onCreateIssue={canCreate ? openCreateIssue : undefined}
+                onCreateIssue={allowCreate ? openCreateIssue : undefined}
                 statusPagination={controller.statusPagination!}
               />
             )}
@@ -411,7 +396,7 @@ function IssueSurfaceContent({
                 search={controller.tableSearch}
                 onSearchChange={controller.setTableSearch}
                 onLoadedIssuesChange={handleTableLoadedIssuesChange}
-                onCreateIssue={guest ? undefined : openCreateIssue}
+                onCreateIssue={allowCreate ? openCreateIssue : undefined}
                 exportIssues={controller.exportTableIssues}
                 resolveExportLookups={controller.resolveTableExportLookups}
               />
@@ -429,7 +414,7 @@ function IssueSurfaceContent({
                 childProgressMap={controller.childProgressMap}
                 projectMap={controller.projectMap}
                 projectId={controller.projectId}
-                onCreateIssue={canCreate ? openCreateIssue : undefined}
+                onCreateIssue={allowCreate ? openCreateIssue : undefined}
                 groupBranches={controller.groupBranches}
               />
             )}

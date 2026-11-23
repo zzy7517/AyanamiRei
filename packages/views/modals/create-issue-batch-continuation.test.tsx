@@ -173,7 +173,6 @@ vi.mock("@multica/core/api", async () => {
         { id: "agent-x", name: "Agent X", owner_id: "user-1", runtime_id: "runtime-1", archived_at: null },
       ],
       listMembers: async () => [{ user_id: "user-1", role: "admin" }],
-      listSquads: async () => [],
       listRuntimes: async () => [{ id: "runtime-1", metadata: { cli_version: "1.2.3" } }],
       listProjects: async () => ({ projects: [] }),
       uploadFile: vi.fn(),
@@ -411,7 +410,7 @@ const emptyDraft = (): IssueCreateDraft => ({
     labelIds: [],
     propertyValues: {},
   },
-  agent: { prompt: "", actorType: undefined, actorId: undefined },
+  agent: { prompt: "", agentId: undefined },
   activeMode: "manual",
 });
 
@@ -443,7 +442,7 @@ beforeEach(() => {
     lastAssigneeType: undefined,
     lastAssigneeId: undefined,
   });
-  useQuickCreateStore.setState({ keepOpen: false, lastActorType: null, lastActorId: null });
+  useQuickCreateStore.setState({ keepOpen: false, lastAgentId: null });
   mockListProperties.mockResolvedValue({ properties: [] });
   const createdIssue = {
     id: "issue-1",

@@ -38,9 +38,7 @@
       "card4_actor_name": "Review Agent",
       "card4_body": "Проверил черновик от понедельника — оставил 4 заметки по тону. Жду новый вариант.",
       "card5_actor_name": "Coding Agent",
-      "card5_body_prefix": "Выкатил функцию экспорта, которую ",
-      "card5_body_suffix": " отметил(а). Ссылка на превью в PR.",
-      "card5_mention_you": "@you",
+      "card5_body": "Выкатил функцию экспорта, которую вы отметили. Ссылка на превью в PR.",
       "card5_timestamp": "только что"
     }
   },

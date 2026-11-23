@@ -121,6 +121,15 @@ SMTP takes priority over Resend whenever `SMTP_HOST` is non-empty.
 
 For the exact allowlist evaluation order, see [Sign-in and signup](/auth-setup#signup-restrictions).
 
+### Pre-shared token
+
+A fixed secret that signs a client in as one account, with no verification code and no Google. [Desktop](/desktop-app#sign-in-without-the-login-page) sends it when its config file sets `authToken`; the CLI and daemon accept it in the `token` field of their profile config.
+
+| Variable | Default | Description |
+|---|---|---|
+| `MULTICA_AUTH_TOKEN` | empty | Secret accepted wherever a personal access token is: `/api/**` and the WebSocket endpoints. Off when unset |
+| `MULTICA_AUTH_TOKEN_EMAIL` | empty | Email of the account the token belongs to. Required when `MULTICA_AUTH_TOKEN` is set; until it is, the server logs an error and refuses the token. An account that does not exist yet is created at startup with its first workspace |
+
 ## Attachment storage
 
 When `S3_BUCKET` is unset, Multica uses local disk.
@@ -202,7 +211,7 @@ The auth rate limits require `REDIS_URL`; without it, the startup log notes that
 
 Without `GITHUB_APP_ID` and the private key, PRs still link, mirror, and move issues on merge normally, but cards show no CI or mergeability status, and the "pick from GitHub" repository entry is disabled.
 
-For setup steps, see [GitHub integration](/github-integration#self-hosting-setup), [Lark bot](/lark-bot-integration#self-hosting-setup), [Slack bot](/slack-bot-integration#self-hosting-setup), and [Telegram bot](/telegram-bot-integration#self-hosting-setup).
+For setup steps, see [GitHub integration](/github-integration#self-hosting-setup).
 
 ## Server-side LLM
 

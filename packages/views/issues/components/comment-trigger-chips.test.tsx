@@ -61,12 +61,6 @@ describe("CommentTriggerChips", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("describes @all semantics without promising any recipients", () => {
-    renderWithI18n(<CommentTriggerChips recipients={[]} hasAllMembersMention onActionChange={vi.fn()} />);
-    expect(screen.getByText("Member broadcast · @all does not start agents")).toBeInTheDocument();
-    expect(screen.queryByText(/notif/i)).not.toBeInTheDocument();
-  });
-
   it.each(["single", "stacked"])("resolves an uploaded avatar against the API origin in a %s preview", (variant) => {
     // URL edge cases belong to core/workspace/avatar-url.test.ts; this guards
     // the trigger preview's wiring to the real avatar and URL resolver.
@@ -84,12 +78,6 @@ describe("CommentTriggerChips", () => {
       "src",
       "https://api.example.test/uploads/agent-custom-avatar.png",
     );
-  });
-
-  it("keeps explicit agent triggers visible alongside @all semantics", () => {
-    renderWithI18n(<CommentTriggerChips recipients={[entry(bob, idle)]} hasAllMembersMention onActionChange={vi.fn()} />);
-    expect(screen.getByText("Member broadcast · @all does not start agents")).toBeInTheDocument();
-    expect(screen.getByText("Will start when sent")).toBeInTheDocument();
   });
 
   it("offers an idle recipient only to start or skip — never to add to a run", async () => {
@@ -203,9 +191,9 @@ describe("CommentTriggerChips", () => {
         recipients={[]}
         blocked={[
           { target_type: "agent", target_id: "deadbeef-0001", status: "blocked", reason_code: "invocation_not_allowed" },
-          { target_type: "squad", target_id: "cafef00d-0002", status: "blocked", reason_code: "runtime_offline" },
+          { target_type: "agent", target_id: "cafef00d-0002", status: "blocked", reason_code: "runtime_offline" },
         ]}
-        draftContent="[@Go](mention://agent/deadbeef-0001) [@Ops](mention://squad/cafef00d-0002)"
+        draftContent="[@Go](mention://agent/deadbeef-0001) [@Ops](mention://agent/cafef00d-0002)"
         onActionChange={vi.fn()}
       />,
     );

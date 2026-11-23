@@ -7,24 +7,19 @@ import type { Editor } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { useAuthStore } from "@multica/core/auth";
 import { useCurrentWorkspace } from "@multica/core/paths";
-import { canAssignAgentToIssue, useIsGuest } from "@multica/core/permissions";
+import { canAssignAgentToIssue } from "@multica/core/permissions";
 import { isDeletedComment } from "@multica/core/issues/comment-deletion";
 import { parseMentions } from "@multica/core/issues/comment-trigger-outcomes";
 import { issueDetailOptions, issueKeys } from "@multica/core/issues/queries";
 import { buildQuickActionBody, quickActionListOptions } from "@multica/core/quick-actions";
-import type { Agent, AgentSkillSummary, AgentTask, Issue, MemberWithUser, Squad, TimelineEntry } from "@multica/core/types";
-import {
-  agentListOptions,
-  memberListOptions,
-  squadListOptions,
-} from "@multica/core/workspace/queries";
+import type { Agent, AgentSkillSummary, AgentTask, Issue, MemberWithUser, TimelineEntry } from "@multica/core/types";
+import { agentListOptions, memberListOptions } from "@multica/core/workspace/queries";
 import { useT } from "../../i18n";
 import { commentTriggerPreviewSignature, type UseCommentTriggerPreviewResult } from "./use-comment-trigger-preview";
 
 export interface IssueSlashSkillContext {
   issue?: Pick<Issue, "assignee_type" | "assignee_id">;
   agents: Agent[];
-  squads: Squad[];
   members: MemberWithUser[];
   userId: string | null;
   parentId?: string;
@@ -54,7 +49,6 @@ function resolveThreadSlashTargetIds(
   parentId: string,
   timeline: TimelineEntry[] | undefined,
   tasks: AgentTask[] | undefined,
-  squadsById: Map<string, Squad>,
 ): string[] | undefined {
   if (!timeline) return undefined;
   const comments = new Map(
@@ -67,13 +61,9 @@ function resolveThreadSlashTargetIds(
   const root = threadRoot(parent, comments);
   if (root?.actor_type === "member") {
     const explicit = parseMentions(root.content ?? "").find(
-      (mention) => mention.type === "agent" || mention.type === "squad",
+      (mention) => mention.type === "agent",
     );
-    if (explicit) {
-      if (explicit.type === "agent") return [explicit.id];
-      const squad = squadsById.get(explicit.id);
-      return squad && !squad.archived_at ? [squad.leader_id] : [];
-    }
+    if (explicit) return [explicit.id];
     const ownerIds = (tasks ?? [])
       .filter((task) =>
         task.trigger_comment_id === root.id || task.coalesced_comment_ids?.includes(root.id))
@@ -93,46 +83,32 @@ function resolveThreadSlashTargetIds(
 /** Reads target mentions from the live document; no Markdown/debounce round-trip. */
 export function resolveIssueSlashSkills(
   doc: Node,
-  { issue, agents, squads, members, userId, parentId, targetMissing, timeline, tasks }: IssueSlashSkillContext,
+  { issue, agents, members, userId, parentId, targetMissing, timeline, tasks }: IssueSlashSkillContext,
 ): AgentSkillSummary[] {
   if (targetMissing) return [];
   const agentsById = new Map(agents.map((agent) => [agent.id, agent]));
-  const squadsById = new Map(squads.map((squad) => [squad.id, squad]));
   const targetIds: string[] = [];
   let hasExplicitTarget = false;
-  let hasMemberOrAllMention = false;
 
   doc.descendants((node) => {
     if (node.type.name !== "mention") return;
     const { type, id } = node.attrs as { type?: string; id?: string };
     if (!id) return;
-    if (type === "member" || type === "all") hasMemberOrAllMention = true;
     if (type === "agent") {
       hasExplicitTarget = true;
       targetIds.push(id);
-    } else if (type === "squad") {
-      hasExplicitTarget = true;
-      const squad = squadsById.get(id);
-      if (squad && !squad.archived_at) targetIds.push(squad.leader_id);
     }
   });
 
-  // Explicit agent/squad mentions win over member/all; without one, those
-  // mentions suppress every implicit route just as comment creation does.
+  // An explicit agent mention wins over every implicit route.
   if (!hasExplicitTarget) {
-    if (hasMemberOrAllMention) return [];
     const threadTargets = parentId
-      ? resolveThreadSlashTargetIds(parentId, timeline, tasks, squadsById)
+      ? resolveThreadSlashTargetIds(parentId, timeline, tasks)
       : undefined;
     if (threadTargets) {
       targetIds.push(...threadTargets);
-    } else if (issue?.assignee_id) {
-      if (issue.assignee_type === "agent") {
-        targetIds.push(issue.assignee_id);
-      } else if (issue.assignee_type === "squad") {
-        const squad = squadsById.get(issue.assignee_id);
-        if (squad && !squad.archived_at) targetIds.push(squad.leader_id);
-      }
+    } else if (issue?.assignee_type === "agent" && issue.assignee_id) {
+      targetIds.push(issue.assignee_id);
     }
   }
 
@@ -191,12 +167,10 @@ export function useQuickActionMenu(
   const queryClient = useQueryClient();
   const workspace = useCurrentWorkspace();
   const wsId = workspace?.id ?? "";
-  // Quick actions run agents, which a guest (MUL-9420) cannot.
-  const guest = useIsGuest(wsId);
-  const hasIssueContext = enabled && wsId !== "" && !!issueId && !guest;
+  const hasIssueContext = enabled && wsId !== "" && !!issueId;
   const { data } = useQuery({
     ...quickActionListOptions(wsId),
-    enabled: enabled && wsId !== "" && !guest,
+    enabled: enabled && wsId !== "",
   });
   const { data: issue } = useQuery({
     ...issueDetailOptions(wsId, issueId ?? ""),
@@ -205,11 +179,6 @@ export function useQuickActionMenu(
   });
   const { data: agents } = useQuery({
     ...agentListOptions(wsId),
-    enabled: hasIssueContext,
-    refetchOnMount: false,
-  });
-  const { data: squads } = useQuery({
-    ...squadListOptions(wsId),
     enabled: hasIssueContext,
     refetchOnMount: false,
   });
@@ -266,7 +235,6 @@ export function useQuickActionMenu(
     return resolveIssueSlashSkills(editor.state.doc, {
       issue,
       agents: agents ?? [],
-      squads: squads ?? [],
       members: members ?? [],
       userId: useAuthStore.getState().user?.id ?? null,
       parentId,
@@ -274,7 +242,7 @@ export function useQuickActionMenu(
       timeline,
       tasks,
     });
-  }, [hasIssueContext, issue, agents, squads, members, queryClient, issueId, parentId, targetMissing, hasCurrentPreview, previewAgents]);
+  }, [hasIssueContext, issue, agents, members, queryClient, issueId, parentId, targetMissing, hasCurrentPreview, previewAgents]);
 
   return useMemo(
     () => ({ getQuickActions, getQuickActionContent, getSkills }),

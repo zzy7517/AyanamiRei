@@ -13,23 +13,20 @@
  * Chat) rides in the query string, so it is parsed too — the URL is the single
  * source of truth for what a tab has open, including which item.
  */
-import { isMyAgentsSearch } from "./paths";
 import { pageForSegment, type WorkspacePageKey } from "./route-icons";
 
-export type TabActorType = "agent" | "member" | "squad";
+export type TabActorType = "agent" | "member";
 
 export type TabSubject =
   /** A collection or tool page with no specific resource. */
   | { kind: "page"; page: WorkspacePageKey }
-  /** My agents' work: the My issues route's `?scope=agents`. */
-  | { kind: "myAgents" }
   /** A single issue detail. */
   | { kind: "issue"; id: string }
   /** A single project detail. */
   | { kind: "project"; id: string }
   /** A single autopilot detail. */
   | { kind: "autopilot"; id: string }
-  /** An agent / member / squad detail (has an avatar identity). */
+  /** An agent / member detail (has an avatar identity). */
   | { kind: "actor"; actorType: TabActorType; id: string }
   /** A single skill detail. */
   | { kind: "skill"; id: string }
@@ -83,8 +80,6 @@ export function parseTabSubject(url: string): TabSubject {
   switch (segment) {
     case "issues":
       return id ? { kind: "issue", id } : { kind: "page", page: "issues" };
-    case "my-issues":
-      return isMyAgentsSearch(query) ? { kind: "myAgents" } : { kind: "page", page: "myIssues" };
     case "views":
       return { kind: "page", page: "views" };
     case "projects":
@@ -99,10 +94,6 @@ export function parseTabSubject(url: string): TabSubject {
     case "members":
       // No members collection route exists; only `/members/:id`.
       return id ? { kind: "actor", actorType: "member", id } : { kind: "unknown" };
-    case "squads":
-      return id
-        ? { kind: "actor", actorType: "squad", id }
-        : { kind: "page", page: "squads" };
     case "usage":
       return { kind: "page", page: "usage" };
     case "inbox":
@@ -153,8 +144,6 @@ export function tabSubjectKey(subject: TabSubject): string {
   switch (subject.kind) {
     case "page":
       return `page:${subject.page}`;
-    case "myAgents":
-      return "my-agents";
     case "issue":
       return `issue:${subject.id}`;
     case "project":

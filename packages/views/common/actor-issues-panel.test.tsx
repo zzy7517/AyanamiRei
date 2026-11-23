@@ -59,7 +59,7 @@ describe("ActorIssuesPanel toolbar alignment", () => {
   it("reads the shared page gutter instead of spelling its own", () => {
     const { container } = render(
       <I18nProvider locale="en" resources={TEST_RESOURCES}>
-        <ActorIssuesPanel actorType="agent" actorId="agent-1" />
+        <ActorIssuesPanel agentId="agent-1" />
       </I18nProvider>,
     );
 

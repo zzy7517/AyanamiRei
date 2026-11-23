@@ -27,7 +27,6 @@ const url = vi.hoisted(() => {
 const data = vi.hoisted(() => ({
   members: [] as Array<Record<string, unknown>>,
   invitations: [] as Array<Record<string, unknown>>,
-  shareLinks: [] as Array<Record<string, unknown>>,
   summary: null as Record<string, unknown> | null,
   memberLimit: null as Record<string, unknown> | null,
   invitationsLoaded: true,
@@ -44,7 +43,6 @@ vi.mock("@tanstack/react-query", () => ({
         ? { data: data.invitations, isSuccess: true }
         : { data: undefined, isSuccess: false };
     }
-    if (key.includes("share-links")) return { data: data.shareLinks };
     if (key.includes("members")) return { data: data.members, isSuccess: true };
     if (key.includes("projects")) return { data: [] };
     return { data: data.summary };
@@ -140,7 +138,6 @@ beforeEach(() => {
       expires_at: "2025-03-08T00:00:00Z",
     },
   ];
-  data.shareLinks = [];
   data.summary = null;
   data.memberLimit = null;
   data.invitationsLoaded = true;
@@ -195,11 +192,6 @@ describe("MembersTab", () => {
     expect(url.get()).toBe("tab=members&section=invitations");
 
     // A search result or back/forward changes the URL without remounting.
-    act(() => url.set("tab=members&section=links"));
-    expect(screen.getByRole("tab", { name: /Share links\s*0/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
     act(() => url.set("tab=members"));
     expect(screen.getByRole("tab", { name: /Members\s*3/ })).toHaveAttribute(
       "aria-selected",
@@ -208,13 +200,13 @@ describe("MembersTab", () => {
   });
 
   it("opens the tab a deep link names", () => {
-    url.set("tab=members&section=links");
+    url.set("tab=members&section=invitations");
     renderWithI18n(<MembersTab />);
-    expect(screen.getByRole("tab", { name: /Share links\s*0/ })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: /Pending invitations\s*1/ })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    expect(screen.getByText("No share links yet.")).toBeInTheDocument();
+    expect(screen.getByText("linus@acme.dev")).toBeInTheDocument();
   });
 
   it("invites from a dialog and closes it once the invitation is sent", async () => {
@@ -471,7 +463,7 @@ describe("MembersTab", () => {
     });
   });
 
-  it("gives members a read-only view without invite or share-link controls", () => {
+  it("gives members a read-only view without invite controls", () => {
     data.members = [
       member("user-1", "Ada Lovelace", "member"),
       member("user-2", "Grace Hopper", "owner"),
@@ -480,7 +472,6 @@ describe("MembersTab", () => {
 
     expect(screen.getByRole("note")).toHaveTextContent("Ask Grace Hopper");
     expect(screen.queryByRole("button", { name: "Invite member" })).toBeNull();
-    expect(screen.queryByRole("tab", { name: /Share links/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Actions for/ })).toBeNull();
   });
 });

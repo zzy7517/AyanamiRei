@@ -1,25 +1,16 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import type { Agent, Squad, Workspace } from "../types";
+import type { Agent, Workspace } from "../types";
 
 export const workspaceKeys = {
   all: (wsId: string) => ["workspaces", wsId] as const,
   list: () => ["workspaces", "list"] as const,
   members: (wsId: string) => ["workspaces", wsId, "members"] as const,
   invitations: (wsId: string) => ["workspaces", wsId, "invitations"] as const,
-  shareLinks: (wsId: string) => ["workspaces", wsId, "share-links"] as const,
   myInvitations: () => ["invitations", "mine"] as const,
   agents: (wsId: string) => ["workspaces", wsId, "agents"] as const,
   agent: (wsId: string, agentId: string) =>
     ["workspaces", wsId, "agents", "detail", agentId] as const,
-  squads: (wsId: string) => ["workspaces", wsId, "squads"] as const,
-  /** Under `squads` so membership changes refetch it. */
-  involvedSquads: (wsId: string) => ["workspaces", wsId, "squads", "involved"] as const,
-  // Per-squad member status. Lives under the workspace key tree so
-  // workspace switches naturally drop the cache, and so a broad
-  // `["workspaces", wsId, "squads"]` invalidation covers it.
-  squadMemberStatus: (wsId: string, squadId: string) =>
-    ["workspaces", wsId, "squads", squadId, "members-status"] as const,
   skills: (wsId: string) => ["workspaces", wsId, "skills"] as const,
   mcpServers: (wsId: string) => ["workspaces", wsId, "mcp-servers"] as const,
 };
@@ -98,40 +89,6 @@ export function cacheAgentResponse(
   });
 }
 
-export function squadListOptions(wsId: string) {
-  return queryOptions<Squad[]>({
-    queryKey: workspaceKeys.squads(wsId),
-    queryFn: () => api.listSquads(),
-    enabled: !!wsId,
-  });
-}
-
-/**
- * The squads behind the viewer's "my agents" relation, for evaluating it on
- * rows the client filters itself.
- */
-export function involvedSquadIdsOptions(wsId: string) {
-  return queryOptions({
-    queryKey: workspaceKeys.involvedSquads(wsId),
-    queryFn: () => api.listInvolvedSquadIds(),
-    enabled: !!wsId,
-  });
-}
-
-// Per-squad members status snapshot. The freshness signal is the WS task /
-// agent / runtime invalidation wired in use-realtime-sync (which broadly
-// invalidates `["workspaces", wsId, "squads"]`); the staleTime is a
-// tab-focus safety net.
-export function squadMemberStatusOptions(wsId: string, squadId: string) {
-  return queryOptions({
-    queryKey: workspaceKeys.squadMemberStatus(wsId, squadId),
-    queryFn: () => api.getSquadMemberStatus(squadId),
-    enabled: !!wsId && !!squadId,
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: true,
-  });
-}
-
 export function skillListOptions(wsId: string) {
   return queryOptions({
     queryKey: workspaceKeys.skills(wsId),
@@ -203,14 +160,6 @@ export function invitationListOptions(wsId: string) {
   return queryOptions({
     queryKey: workspaceKeys.invitations(wsId),
     queryFn: () => api.listWorkspaceInvitations(wsId),
-  });
-}
-
-export function shareLinkListOptions(wsId: string, enabled = true) {
-  return queryOptions({
-    queryKey: workspaceKeys.shareLinks(wsId),
-    queryFn: () => api.listShareLinks(wsId),
-    enabled: enabled && !!wsId,
   });
 }
 

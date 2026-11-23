@@ -10,7 +10,6 @@ import ruOnboarding from "./ru/onboarding.json";
 import ruInvite from "./ru/invite.json";
 import ruLabels from "./ru/labels.json";
 import ruMembers from "./ru/members.json";
-import ruMyIssues from "./ru/my-issues.json";
 import ruSearch from "./ru/search.json";
 import ruInbox from "./ru/inbox.json";
 import ruWorkspace from "./ru/workspace.json";
@@ -23,8 +22,8 @@ import ruRuntimes from "./ru/runtimes.json";
 import ruLayout from "./ru/layout.json";
 import ruUsage from "./ru/usage.json";
 import ruUi from "./ru/ui.json";
-import ruSquads from "./ru/squads.json";
 import ruBilling from "./ru/billing.json";
+import ruTerminal from "./ru/terminal.json";
 
 const resources: LocaleResources = {
   docs: ruDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: ruInvite,
   labels: ruLabels,
   members: ruMembers,
-  "my-issues": ruMyIssues,
   search: ruSearch,
   inbox: ruInbox,
   workspace: ruWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: ruLayout,
   usage: ruUsage,
   ui: ruUi,
-  squads: ruSquads,
   billing: ruBilling,
+  terminal: ruTerminal,
 };
 
 export default resources;

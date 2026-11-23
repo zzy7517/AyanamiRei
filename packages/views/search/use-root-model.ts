@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type { CommandBarContext } from "@multica/core/command-bar";
 import { useFeatureEnabled } from "@multica/core/config";
-import { DOCS_V1_FLAG } from "@multica/core/feature-flags";
+import { DOCS_V1_FLAG, TERMINAL_V1_FLAG } from "@multica/core/feature-flags";
 import { WORKSPACE_PAGES, type WorkspacePageKey } from "@multica/core/paths";
 import { partitionAggregatedSearchResults } from "@multica/core/search/cancelled-rank";
 import type { SearchDocResult, SearchIssueResult, SearchProjectResult } from "@multica/core/types";
@@ -22,7 +22,7 @@ import { useDocSearch } from "./use-doc-search";
 // The palette's Pages group is generated from WORKSPACE_PAGES, the same
 // registry the sidebar nav and the desktop tab bar read. It used to be a
 // hand-written list, which silently went stale every time a page was added:
-// Chat, Autopilot, Squads and Analytics shipped in the sidebar but were
+// Chat, Autopilot and Analytics shipped in the sidebar but were
 // unreachable from the palette (MUL-6272). Deriving the list means a new
 // workspace page is in the palette the moment it is in the registry.
 //
@@ -36,18 +36,17 @@ import { useDocSearch } from "./use-doc-search";
 const PAGE_KEYWORDS: Record<WorkspacePageKey, string[]> = {
   inbox: ["inbox", "notifications", "收件箱", "通知"],
   chat: ["chat", "messages", "conversation", "聊天", "消息", "对话"],
-  myIssues: ["my", "issues", "assigned", "mine", "我的", "任务"],
   issues: ["issues", "tasks", "bugs", "任务"],
   views: ["views", "saved", "filters", "视图", "筛选"],
   projects: ["projects", "kanban", "项目"],
   autopilots: ["autopilot", "autopilots", "automation", "schedule", "cron", "webhook", "自动化", "定时"],
   agents: ["agents", "bots", "ai", "智能体"],
-  squads: ["squads", "teams", "小队", "团队"],
   usage: ["usage", "analytics", "stats", "metrics", "统计", "分析", "用量"],
   runtimes: ["runtimes", "environments", "machines", "运行时"],
   docs: ["docs", "knowledge", "知识库"],
   skills: ["skills", "library", "技能"],
   settings: ["settings", "config", "preferences", "设置", "配置"],
+  terminal: ["terminal", "shell", "console", "command line", "终端", "命令行"],
 };
 
 const NAV_PAGE_KEYS = Object.keys(WORKSPACE_PAGES) as WorkspacePageKey[];
@@ -60,7 +59,6 @@ export interface NavPage {
 
 export type BestMatch =
   | { type: "agent"; entry: AgentEntry; score: number }
-  | { type: "squad"; entry: ObjectHits["squads"][number]["item"]; score: number }
   | { type: "member"; member: ObjectHits["members"][number]["item"]; score: number }
   | { type: "project"; project: SearchProjectResult; score: number };
 
@@ -191,18 +189,21 @@ export function useRootModel(
   const searching = active && scope !== "commands" && scope !== "people" ? text : "";
   const server = useServerSearch(searching, { projects: scope === "all" });
   const docsEnabled = useFeatureEnabled(DOCS_V1_FLAG, false);
+  const terminalEnabled = useFeatureEnabled(TERMINAL_V1_FLAG, false);
   const docSearch = useDocSearch(searching, scope === "all" && docsEnabled);
   const objects = useObjectSearch(scope === "issues" || scope === "commands" ? "" : q, active);
   const recent = useRecentItems(active && !rawQuery.trim());
 
   const navPages = useMemo<NavPage[]>(
     () =>
-      NAV_PAGE_KEYS.filter((key) => key !== "docs" || docsEnabled).map((key) => ({
+      NAV_PAGE_KEYS.filter(
+        (key) => (key !== "docs" || docsEnabled) && (key !== "terminal" || terminalEnabled),
+      ).map((key) => ({
         key,
         label: tNav(($) => $.nav[WORKSPACE_PAGES[key].navKey]),
         keywords: PAGE_KEYWORDS[key],
       })),
-    [docsEnabled, tNav],
+    [docsEnabled, terminalEnabled, tNav],
   );
 
   return useMemo<RootModel>(() => {
@@ -269,7 +270,6 @@ export function useRootModel(
     const people = scope === "all" || scope === "people";
     const visibleObjects: ObjectHits = {
       agents: people ? objects.agents : [],
-      squads: people ? objects.squads : [],
       members: people ? objects.members : [],
       views: scope === "all" ? objects.views : [],
       autopilots: scope === "all" ? objects.autopilots : [],
@@ -296,8 +296,6 @@ export function useRootModel(
       const candidates: BestMatch[] = [];
       const agent = visibleObjects.agents[0];
       if (agent) candidates.push({ type: "agent", entry: agent.item, score: agent.score });
-      const squad = visibleObjects.squads[0];
-      if (squad) candidates.push({ type: "squad", entry: squad.item, score: squad.score });
       const member = visibleObjects.members[0];
       if (member) candidates.push({ type: "member", member: member.item, score: member.score });
       if (!stale) {
@@ -310,7 +308,6 @@ export function useRootModel(
 
     const objectCount =
       visibleObjects.agents.length +
-      visibleObjects.squads.length +
       visibleObjects.members.length +
       visibleObjects.views.length +
       visibleObjects.autopilots.length +

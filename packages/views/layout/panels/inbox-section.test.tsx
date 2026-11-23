@@ -287,7 +287,7 @@ describe("InboxSection", () => {
   });
 
   it("says when the filters hide everything, and clears them from there", () => {
-    useInboxFilterStore.getState().toggleFilterValue("ws-1", "type", "mentions");
+    useInboxFilterStore.getState().toggleFilterValue("ws-1", "type", "assign");
     renderSection([item({ id: "n1", issue_id: "issue-a", title: "Commented" })]);
 
     expect(rows()).toHaveLength(0);

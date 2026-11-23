@@ -295,11 +295,11 @@ it.each(["click", "url"])("keeps the archived detail mounted through refetch and
 
 it("keeps an older archived notification open through auto-read when the lookup carries its type filter", async () => {
   searchParams = new URLSearchParams("view=archived");
-  useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "mention");
+  useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "comment");
   const gate = deferred<void>();
   let rows = [
     item({ id: "newer-change", type: "status_changed", archived: true, read: false, issue_label_ids: [] }),
-    item({ id: "older-mention", type: "mentioned", archived: true, issue_label_ids: [], created_at: "2026-06-15T07:00:00Z" }),
+    item({ id: "older-comment", type: "new_comment", archived: true, issue_label_ids: [], created_at: "2026-06-15T07:00:00Z" }),
   ];
   const listArchivedInboxPage = vi.fn(async (filters: InboxFilters) =>
     page(filterInboxItems(rows, { ...EMPTY_INBOX_FILTERS, ...filters })));
@@ -310,9 +310,9 @@ it("keeps an older archived notification open through auto-read when the lookup 
   });
   setApiInstance({ listArchivedInboxPage, markInboxRead, getInboxUnreadSummary: async () => [] } as unknown as ApiClient);
   renderPage();
-  fireEvent.click(await screen.findByText("older-mention"));
+  fireEvent.click(await screen.findByText("older-comment"));
   expect(await screen.findByTestId("detail")).toHaveTextContent("issue-a");
-  await waitFor(() => expect(markInboxRead).toHaveBeenCalledWith("older-mention"));
+  await waitFor(() => expect(markInboxRead).toHaveBeenCalledWith("older-comment"));
   await act(async () => gate.resolve());
   await waitFor(() => expect(listArchivedInboxPage.mock.calls.length).toBeGreaterThanOrEqual(3));
   await waitFor(() => expect(qc.isFetching()).toBe(0));
@@ -322,7 +322,7 @@ it("keeps an older archived notification open through auto-read when the lookup 
 
 it("asks the lookup with the view's filters except unread, and clears a filtered-out deep link instead of redirecting", async () => {
   searchParams = new URLSearchParams("view=archived&issue=issue-a");
-  useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "mention");
+  useInboxFilterStore.getState().toggleFilterValue("workspace-1", "type", "assign");
   const rows = [item({ id: "comment-only", archived: true, issue_label_ids: [] })];
   const listArchivedInboxPage = vi.fn(async (filters: InboxFilters, options: { groupId?: string }) => {
     const matches = filterInboxItems(rows, { ...EMPTY_INBOX_FILTERS, ...filters });
@@ -333,7 +333,7 @@ it("asks the lookup with the view's filters except unread, and clears a filtered
 
   await waitFor(() => expect(replace).toHaveBeenLastCalledWith("/acme/inbox?view=archived"));
   const lookups = listArchivedInboxPage.mock.calls.filter(([, options]) => options.groupId === "issue-a");
-  expect(lookups[0]![0]).toMatchObject({ types: ["mention"], unreadOnly: false });
+  expect(lookups[0]![0]).toMatchObject({ types: ["assign"], unreadOnly: false });
   expect(lookups.at(-1)![0]).toMatchObject({ types: [], unreadOnly: false });
   expect(replace).not.toHaveBeenCalledWith(expect.stringContaining("/issues/"));
 });

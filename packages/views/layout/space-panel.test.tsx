@@ -10,12 +10,7 @@ const navigation = vi.hoisted(() => ({ pathname: "/acme/issues" }));
 vi.mock("@multica/core/paths", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@multica/core/paths")>()),
   useCurrentWorkspace: () => null,
-}));
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
-vi.mock("../navigation", () => ({
+}));vi.mock("../navigation", () => ({
   useNavigation: () => ({ pathname: navigation.pathname }),
 }));
 vi.mock("./panels/work-panel", () => ({

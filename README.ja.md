@@ -72,7 +72,6 @@ Multica は、こうしたエージェントとチームメイトを 1 つのワ
 
 - **[使い慣れたエージェント CLI](#ランタイム) →** Claude Code、Codex、Cursor、Copilot、Kimi、OpenCode など。
 - **[チームメイトとしてのエージェント](https://multica.ai/docs/ja/agents) →** それぞれに名前、プロバイダー、ランタイムを与えると、ほかのメンバーと同じようにボードに現れます。
-- **[スクワッド](https://multica.ai/docs/ja/squads) →** エージェントと人を 1 つのチームにまとめ、リーダーが仕事を振り分けます。
 - **[スキル](https://multica.ai/docs/ja/skills) →** 解決した問題を、すべてのエージェントが再利用できるプレイブックにします。
 - **[自分のランタイム](https://multica.ai/docs/ja/daemon-runtimes) →** エージェントはあなたのマシンで動きます。ノートパソコンやクラウドマシン上のデーモンで実行され、コードが外に出ることはありません。
 
@@ -111,9 +110,8 @@ Multica は、こうしたエージェントとチームメイトを 1 つのワ
 - **[すべてをセルフホスト](SELF_HOSTING.md) →** Docker Compose または Helm で、自前のインフラ上に構築できます。
 - **[お使いの Git ホスト](https://multica.ai/docs/ja/vcs-integration) →** GitHub、GitLab、Gitea、Forgejo に対応しています。セルフホスト版も使えます。
 - **[ワークスペース](https://multica.ai/docs/ja/workspaces) →** エージェント、タスク、設定をチームごとに分けられます。
-- **[ロール](https://multica.ai/docs/ja/members-roles)と[アクセススコープ](https://multica.ai/docs/ja/agents#権限と-access) →** ゲストに特定のプロジェクトを共有し、ワークスペースのロールや各エージェントを実行できる人を設定できます。
+- **[ロール](https://multica.ai/docs/ja/members-roles)と[アクセススコープ](https://multica.ai/docs/ja/agents#権限と-access) →** ワークスペースのロールや各エージェントを実行できる人を設定できます。
 - **[セキュリティモデル](https://multica.ai/docs/ja/security-model) →** エージェントが何にアクセスでき、何にアクセスできないか。
-- **[Slack、Feishu/Lark、DingTalk、WeCom、Telegram、WeChat](https://multica.ai/docs/ja/channels) →** チームが普段やり取りしている場所から、エージェントに作業を頼み、その進み具合を追えます。WeChat は接続用 QR コードをスキャンしたアカウントからの DM のみ受け付けます。Feishu/Lark の新しい接続は、現在は中国本土の Feishu でのみ利用できます。DingTalk、WeCom、Telegram は[コミュニティによるメンテナンス](https://multica.ai/docs/ja/community-maintained)です。
 - **Web、[デスクトップ](https://multica.ai/docs/ja/desktop-app)、[モバイル](https://multica.ai/docs/ja/mobile-app) →** macOS、Windows、Linux、iPhone、iPad で同じワークスペースを使えます。iOS アプリは現在ソースからビルドする形で、まだ App Store では提供していません。
 - **[CLI と API](https://multica.ai/docs/ja/cli) →** すべての機能をスクリプトから操作できます。エージェントも、あなたと同じ CLI で Multica を操作します。
 
@@ -210,7 +208,7 @@ Multica はモデルを同梱していません。インストールと認証を
 | エージェントを作成して設定したい | [エージェント](https://multica.ai/docs/ja/agents) · [エージェントの作成](https://multica.ai/docs/ja/agents-create) · [スキル](https://multica.ai/docs/ja/skills) |
 | エージェントに仕事を渡したい | [エージェントに仕事を任せる](https://multica.ai/docs/ja/triggering-agents) · [タスクの割り当て](https://multica.ai/docs/ja/assigning-issues) · [メンション](https://multica.ai/docs/ja/mentioning-agents) |
 | 自分のマシンを接続したい | [デーモンとランタイム](https://multica.ai/docs/ja/daemon-runtimes) · [AI コーディングツールのインストール](https://multica.ai/docs/ja/install-agent-runtime) |
-| Git やチャットのツールを接続したい | [GitHub](https://multica.ai/docs/ja/github-integration) · [セルフホストの Git](https://multica.ai/docs/ja/vcs-integration) · [チャネル](https://multica.ai/docs/ja/channels) |
+| Git を接続したい | [GitHub](https://multica.ai/docs/ja/github-integration) · [セルフホストの Git](https://multica.ai/docs/ja/vcs-integration) |
 | 自分のインフラストラクチャで動かしたい | [セルフホスト](SELF_HOSTING.md) · [セキュリティモデル](https://multica.ai/docs/ja/security-model) · [環境変数](https://multica.ai/docs/ja/environment-variables) |
 | スクリプトから操作したい | [CLI リファレンス](https://multica.ai/docs/ja/cli) · [CLI とデーモンのガイド](CLI_AND_DAEMON.md) · [認証トークン](https://multica.ai/docs/ja/auth-tokens) |
 | Codex、Claude Code、Cursor から Multica を操作したい | [Multica CLI skill](https://github.com/multica-ai/multica-cli) |

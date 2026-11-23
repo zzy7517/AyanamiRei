@@ -1,6 +1,6 @@
 {
   "a11y": {
-    "mention_someone": "提及某人",
+    "mention": "提及 AI 代理或任務",
     "bullet_list": "無序列表",
     "checklist": "清單",
     "code_block": "程式碼塊",

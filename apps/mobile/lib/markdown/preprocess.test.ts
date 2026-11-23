@@ -6,6 +6,28 @@ const UUID = "019f49e2-5b07-7970-beef-c0d537fb8c1d";
 const ABS_URL = `https://multica-app.copilothub.ai/api/attachments/${UUID}/download`;
 const REL_URL = `/api/attachments/${UUID}/download`;
 
+describe("preprocessMobileMarkdown — mention links", () => {
+  it("shows a link to a member or to @all as its own text, without the link", () => {
+    const out = preprocessMobileMarkdown(
+      "Hi [@Ada](mention://member/11111111-1111-4111-8111-111111111111), [@all](mention://all/all), [@Bot](mention://agent/22222222-2222-4222-8222-222222222222) and [MUL-42](mention://issue/33333333-3333-4333-8333-333333333333).",
+    );
+
+    expect(out).toBe(
+      "Hi @Ada, @all, [@Bot](mention://agent/22222222-2222-4222-8222-222222222222) and [MUL-42](mention://issue/33333333-3333-4333-8333-333333333333).",
+    );
+  });
+
+  it("shows a legacy member shortcode as its label", () => {
+    const out = preprocessMobileMarkdown(
+      'Hi [@ id="11111111-1111-4111-8111-111111111111" label="Ada"] and [@Bot](mention://agent/22222222-2222-4222-8222-222222222222).',
+    );
+
+    expect(out).toBe(
+      "Hi @Ada and [@Bot](mention://agent/22222222-2222-4222-8222-222222222222).",
+    );
+  });
+});
+
 describe("preprocessMobileMarkdown — !file file cards", () => {
   it("keeps channel images visible while hiding their provenance marker", () => {
     const image = `![](${REL_URL})`;

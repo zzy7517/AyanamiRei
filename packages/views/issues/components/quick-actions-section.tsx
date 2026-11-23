@@ -232,7 +232,7 @@ function QuickActionRow({
         <span className="min-w-0 flex-1 truncate">{action.name}</span>
         {action.target_name ? (
           <ActorAvatar
-            actorType={action.assignee_type === "squad" ? "squad" : "agent"}
+            actorType="agent"
             actorId={action.assignee_id}
             size="xs"
             className="shrink-0"
@@ -310,7 +310,7 @@ export function QuickActionsMenu({
               <span className="min-w-0 flex-1 truncate">{action.name}</span>
               {action.target_name ? (
                 <ActorAvatar
-                  actorType={action.assignee_type === "squad" ? "squad" : "agent"}
+                  actorType="agent"
                   actorId={action.assignee_id}
                   size="xs"
                   className="ml-4 shrink-0"

@@ -10,11 +10,6 @@ import { renderWithI18n } from "../../test/i18n";
 // REPLY renders nothing — the replies it held already render in its place; a
 // tombstoned ROOT keeps a placeholder, since it heads the thread. The cache
 // rules live in packages/core/issues/comment-deletion.test.ts.
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("@multica/core/api", () => ({
   api: { uploadFile: vi.fn() },
   dispatchReasonCode: () => undefined,
@@ -70,7 +65,6 @@ function comment(id: string, parentId: string | null, extra: Partial<TimelineEnt
     content: `body ${id}`,
     parent_id: parentId,
     comment_type: "comment",
-    reactions: [],
     attachments: [],
     created_at: `2026-09-11T07:0${id.length}:00Z`,
     updated_at: "2026-09-11T07:00:00Z",
@@ -94,7 +88,6 @@ function renderThread(root: TimelineEntry, replies: TimelineEntry[]) {
         onReply={vi.fn().mockResolvedValue(true)}
         onEdit={vi.fn().mockResolvedValue(undefined)}
         onDelete={vi.fn()}
-        onToggleReaction={vi.fn()}
       />
     </QueryClientProvider>,
   );

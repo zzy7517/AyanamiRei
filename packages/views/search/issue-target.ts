@@ -85,12 +85,12 @@ export function useIssueTargetWriter(target: IssueTarget) {
   );
 
   const assign = useCallback(
-    (assigneeType: "member" | "agent" | "squad" | null, assigneeId: string | null) => {
+    (assigneeType: "agent" | null, assigneeId: string | null) => {
       const updates: Partial<UpdateIssueRequest> = {
         assignee_type: assigneeType,
         assignee_id: assigneeId,
       };
-      if (target.kind === "batch" && (assigneeType === "agent" || assigneeType === "squad") && assigneeId) {
+      if (target.kind === "batch" && assigneeType === "agent" && assigneeId) {
         // Same rule as the batch toolbar: assigning agent work across a
         // selection previews the run fan-out, unless everything is parked in
         // Backlog and nothing would start.

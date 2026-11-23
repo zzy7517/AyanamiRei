@@ -34,6 +34,7 @@ export type RouteIconName =
   | "Server"
   | "BookOpenText"
   | "Settings"
+  | "Terminal"
   | "File"
   | "FileText"
   | "FileImage"
@@ -47,35 +48,33 @@ export type RouteIconName =
 export type NavLabelKey =
   | "inbox"
   | "chat"
-  | "my_issues"
   | "issues"
   | "projects"
   | "views"
   | "autopilots"
   | "agents"
-  | "squads"
   | "usage"
   | "runtimes"
   | "docs"
   | "skills"
-  | "settings";
+  | "settings"
+  | "terminal";
 
 /** Stable identifier for each workspace navigation page. */
 export type WorkspacePageKey =
   | "inbox"
   | "chat"
-  | "myIssues"
   | "issues"
   | "projects"
   | "views"
   | "autopilots"
   | "agents"
-  | "squads"
   | "usage"
   | "runtimes"
   | "docs"
   | "skills"
-  | "settings";
+  | "settings"
+  | "terminal";
 
 export interface WorkspacePage {
   /** Route segment at index 1 of `/{slug}/{segment}/...`. */
@@ -93,18 +92,17 @@ export interface WorkspacePage {
 export const WORKSPACE_PAGES: Record<WorkspacePageKey, WorkspacePage> = {
   inbox: { segment: "inbox", icon: "Inbox", navKey: "inbox" },
   chat: { segment: "chat", icon: "MessageSquare", navKey: "chat" },
-  myIssues: { segment: "my-issues", icon: "CircleUser", navKey: "my_issues" },
   issues: { segment: "issues", icon: "ListTodo", navKey: "issues" },
   projects: { segment: "projects", icon: "FolderKanban", navKey: "projects" },
   views: { segment: "views", icon: "Layers", navKey: "views" },
   autopilots: { segment: "autopilots", icon: "Zap", navKey: "autopilots" },
   agents: { segment: "agents", icon: "Bot", navKey: "agents" },
-  squads: { segment: "squads", icon: "Users", navKey: "squads" },
   usage: { segment: "usage", icon: "BarChart3", navKey: "usage" },
   runtimes: { segment: "runtimes", icon: "Monitor", navKey: "runtimes" },
   docs: { segment: "docs", icon: "FileText", navKey: "docs" },
   skills: { segment: "skills", icon: "BookOpenText", navKey: "skills" },
   settings: { segment: "settings", icon: "Settings", navKey: "settings" },
+  terminal: { segment: "terminal", icon: "Terminal", navKey: "terminal" },
 };
 
 /** Reverse lookup: route segment → page key. */

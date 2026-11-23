@@ -13,7 +13,6 @@ export function commentToTimelineEntry(c: Comment): TimelineEntry {
     updated_at: c.updated_at,
     revision: c.revision,
     comment_type: c.type,
-    reactions: c.reactions ?? [],
     attachments: c.attachments ?? [],
     resolved_at: c.resolved_at,
     resolved_by_type: c.resolved_by_type,

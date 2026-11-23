@@ -23,8 +23,8 @@
  *    (v3.21.0+) handles table cell <p> wrapping and custom mention tokenizers
  *    natively, eliminating the need for the HTML detour.
  *
- * 3. PREPROCESSING is minimal: only legacy mention shortcode migration and
- *    URL linkification (preprocessMarkdown). No HTML conversion.
+ * 3. PREPROCESSING is minimal: URL linkification and file cards
+ *    (preprocessMarkdown). No HTML conversion.
  *
  * Tech: Tiptap v3 (ProseMirror wrapper), @tiptap/markdown for
  * bidirectional Markdown ↔ ProseMirror JSON conversion.
@@ -201,8 +201,6 @@ interface ContentEditorBaseProps {
   /** Chat can surface current/recent issue/project suggestions. Other editors use default mention behavior. */
   mentionMode?: "default" | "context";
   mentionContextItems?: MentionItem[];
-  /** Leave guests out of the @ list, for places guests cannot open (docs). */
-  mentionHideGuests?: boolean;
   /** Enable the `/` command picker. Defaults false. */
   enableSlashCommands?: boolean;
   /**
@@ -413,7 +411,6 @@ const ContentEditor = forwardRef<ContentEditorRef, ContentEditorProps>(
       disableMentions = false,
       mentionMode = "default",
       mentionContextItems,
-      mentionHideGuests = false,
       enableSlashCommands = false,
       slashCommandMode = "skill",
       showBlockHandles = false,
@@ -669,7 +666,6 @@ const ContentEditor = forwardRef<ContentEditorRef, ContentEditorProps>(
         disableMentions,
         mentionMode,
         getMentionContextItems: () => mentionContextItemsRef.current,
-        mentionHideGuests,
         enableSlashCommands,
         slashCommandMode,
         quickActionMenu: {

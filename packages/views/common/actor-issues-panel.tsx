@@ -26,8 +26,6 @@ import { useT } from "../i18n";
 import { CollectionNoMatches, CollectionPageState } from "../layout/collection-page";
 import { PAGE_GUTTER } from "../layout/page-header";
 
-export type TaskActorType = "member" | "agent";
-
 const SCOPE_VALUES: ActorIssuesScope[] = ["assigned", "created"];
 
 function ActorIssuesHeader({
@@ -113,26 +111,17 @@ function ActorIssuesHeader({
   );
 }
 
-export function ActorIssuesPanel({
-  actorType,
-  actorId,
-}: {
-  actorType: TaskActorType;
-  actorId: string;
-}) {
+export function ActorIssuesPanel({ agentId }: { agentId: string }) {
   const { t } = useT("issues");
   const scope = useStore(actorIssuesViewStore, (s) => s.scope);
   const setScope = useStore(actorIssuesViewStore, (s) => s.setScope);
   const [search, setSearch] = useState("");
   const surfaceScope = useMemo(
     () =>
-      ({
-        type: "actor" as const,
-        actorType,
-        actorId,
-        relation: scope,
-      }),
-    [actorId, actorType, scope],
+      scope === "assigned"
+        ? { type: "actor" as const, relation: "assigned" as const, actorType: "agent" as const, actorId: agentId }
+        : { type: "actor" as const, relation: "created" as const, actorType: "agent" as const, actorId: agentId },
+    [agentId, scope],
   );
 
   return (

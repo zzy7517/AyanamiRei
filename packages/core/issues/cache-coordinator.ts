@@ -9,7 +9,7 @@ import {
   issueKeys,
   type IssueFlatFilter,
   type IssueSortParam,
-  type MyIssuesFilter,
+  type IssueListFilter,
 } from "./queries";
 import { inboxKeys, type ArchivedInboxCache } from "../inbox/queries";
 import { patchInboxIssueProjection } from "../inbox/ws-updaters";
@@ -76,19 +76,16 @@ export interface IssueCacheChangeResult {
  *  shape check upstream keeps grouped/flat caches under the same prefixes out
  *  of this path. */
 function listContractFromKey(key: QueryKey): {
-  scope: string | undefined;
-  filter: MyIssuesFilter;
+  filter: IssueListFilter;
   sort: IssueSortParam;
 } {
   if (key[2] === "my") {
     return {
-      scope: typeof key[3] === "string" ? key[3] : undefined,
-      filter: (key[4] ?? {}) as MyIssuesFilter,
+      filter: (key[4] ?? {}) as IssueListFilter,
       sort: (key[5] ?? {}) as IssueSortParam,
     };
   }
   return {
-    scope: undefined,
     filter: {},
     sort: (key[3] ?? {}) as IssueSortParam,
   };
@@ -171,12 +168,10 @@ export function issueArrayEntries(
 }
 
 function flatContractFromKey(key: QueryKey): {
-  scope: string | undefined;
   filter: IssueFlatFilter;
   sort: IssueSortParam;
 } {
   return {
-    scope: typeof key[3] === "string" ? key[3] : undefined,
     filter: (key[4] ?? {}) as IssueFlatFilter,
     sort: (key[5] ?? {}) as IssueSortParam,
   };
@@ -244,10 +239,10 @@ function flatWindowNeedsReconcile(
   base: Issue | undefined,
   changed: IssueChangedDims,
 ) {
-  const { scope, filter, sort } = flatContractFromKey(key);
+  const { filter, sort } = flatContractFromKey(key);
   const anyIssueFieldChanged = patchChangesAnyIssueField(patch, base);
 
-  if (listFilterDependsOn(scope, filter, changed)) return true;
+  if (listFilterDependsOn(filter, changed)) return true;
   if (filter.q && patchFieldChanged(patch, base, "title")) return true;
   if (changed.status && (filter.statuses?.length ?? 0) > 0) return true;
   if (
@@ -336,10 +331,10 @@ export function applyIssueChange(
   let prevIssue: Issue | undefined = baseIssue;
 
   for (const [key, data] of bucketedListEntries(qc, wsId)) {
-    const { scope, filter, sort } = listContractFromKey(key);
+    const { filter, sort } = listContractFromKey(key);
     const loc = findIssueLocation(data, id);
     if (loc && !acceptCurrent(loc.issue)) continue;
-    const filterTouched = listFilterDependsOn(scope, filter, changed);
+    const filterTouched = listFilterDependsOn(filter, changed);
 
     // "Updated date" sort: every persisted edit advances updated_at, but the
     // optimistic patch carries no server timestamp and a loaded card keeps its
@@ -369,11 +364,7 @@ export function applyIssueChange(
       if (patchNeedsInvalidation(patch)) staleKeys.push(key);
       let next: ListIssuesCache;
       if (filterTouched) {
-        const membership = issueMatchesListFilter(
-          { ...loc.issue, ...patch },
-          scope,
-          filter,
-        );
+        const membership = issueMatchesListFilter({ ...loc.issue, ...patch }, filter);
         if (membership === false) {
           next = removeIssueFromBuckets(data, id);
         } else {
@@ -395,13 +386,9 @@ export function applyIssueChange(
     // the loaded window — needs a reconcile; anything else is a no-op.
     if (!filterTouched && !changed.status) continue;
     const wasMember = baseIssue
-      ? issueMatchesListFilter(baseIssue, scope, filter)
+      ? issueMatchesListFilter(baseIssue, filter)
       : "unknown";
-    const isMember = issueMatchesListFilter(
-      { ...baseIssue, ...patch },
-      scope,
-      filter,
-    );
+    const isMember = issueMatchesListFilter({ ...baseIssue, ...patch }, filter);
     // Neither before nor after the change does this issue belong to the
     // list — its pages and counts are untouched.
     if (wasMember === false && isMember === false) continue;
@@ -699,9 +686,9 @@ function queryKeyHasSort(key: QueryKey, field: string): boolean {
  * `comment:created` (MUL-5009) and the property/metadata WS events, all of
  * which advance the issue's `updated_at` server-side but bypass the
  * coordinator's field-diff path. Covers status boards, flat tables, AND
- * assignee-grouped boards (workspace + My Issues); only `updated_at`-sorted
- * keys are touched. The refetch is authoritative (server order + tie-breaks),
- * which also surfaces a touched card sitting beyond the loaded window.
+ * assignee-grouped boards; only `updated_at`-sorted keys are touched. The
+ * refetch is authoritative (server order + tie-breaks), which also surfaces
+ * a touched card sitting beyond the loaded window.
  */
 export function invalidateUpdatedAtSortedIssueLists(
   qc: QueryClient,

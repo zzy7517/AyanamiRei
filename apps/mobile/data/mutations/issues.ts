@@ -522,8 +522,7 @@ function statusCategoryPatch(status: IssueStatus | undefined): Partial<Issue> {
  * project_id / etc). Predictable fields merge optimistically into the detail
  * cache; description stays authoritative because the server resolves it
  * against description_base and hidden channel-media markers. Settle invalidates
- * the my-issues list so a status change re-buckets the SectionList in
- * (tabs)/my-issues.tsx automatically.
+ * the issue lists so a status change re-buckets them automatically.
  *
  * Mobile cache is flat `Issue[]` (not bucketed `byStatus`), so we DON'T mirror
  * web's `patchIssueInBuckets` rebalancing — settling via `invalidate` is
@@ -670,13 +669,13 @@ export function useDetachLabel(issueId: string) {
 }
 
 /**
- * Issue creation mutation. No optimistic insert — the my-issues list is
- * status-bucketed + scope-filtered (assigned/created/agents), so optimism
- * needs to decide which bucket + scope the row lands in, with rollback.
- * Invalidation is simpler and the hosted server returns in <300ms.
+ * Issue creation mutation. No optimistic insert — the issue lists are
+ * status-bucketed, so optimism needs to decide which bucket the row lands
+ * in, with rollback. Invalidation is simpler and the hosted server returns
+ * in <300ms.
  *
  * Invalidates:
- *  - issueKeys.myAll(wsId)        my-issues list (all three scopes)
+ *  - issueKeys.myAll(wsId)        the viewer's own list
  *  - inboxKeys.all(wsId)          inbox (assignment notification if any) —
  *                                 prefix-matches the inbox list key
  */

@@ -18,7 +18,6 @@ import { useT } from "../../i18n";
 
 const TURING = { name: "Turing", initials: "T", avatarUrl: formatAvatarEmoji("🧩"), isAgent: true };
 const KEPLER = { name: "Kepler", initials: "K", avatarUrl: formatAvatarEmoji("🔭"), isAgent: true };
-const MIA = { name: "Mia", initials: "M" };
 const MACHINE = "studio-mbp";
 const HARNESS = "Claude Code";
 const MODEL = "Sonnet 4.5";
@@ -152,13 +151,6 @@ function AssignArt() {
             </span>
           </div>
         ))}
-        <div className="px-2.5 pt-1.5 pb-0.5 text-micro text-muted-foreground">
-          {tIssues(($) => $.pickers.assignee.members_group)}
-        </div>
-        <div className="mx-1 flex items-center gap-2 px-1.5 py-1">
-          <ActorAvatar {...MIA} size="xs" />
-          <span className="truncate font-medium">{MIA.name}</span>
-        </div>
       </IntroArtCard>
     </div>
   );

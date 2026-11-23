@@ -5,15 +5,12 @@ import {
   ArrowUp,
   ChevronLeft,
   ChevronRight,
-  CircleUser,
   FolderKanban,
   Inbox,
   ListTodo,
   MessageSquare,
   MoreHorizontal,
   Pin,
-  Plus,
-  Search,
   Settings,
   SlidersHorizontal,
   type IconComponent,
@@ -30,11 +27,10 @@ import { Avatar, BACKEND, LEO, MIA, QA, SAM, Working, ZoomCanvas, type Actor } f
  * follow the app's own copy; data is fictional.
  */
 
-type TabKey = "inbox" | "my-issues" | "chat" | "more";
+type TabKey = "inbox" | "chat" | "more";
 
 const TABS: { key: TabKey; label: string; icon: IconComponent }[] = [
   { key: "inbox", label: "Inbox", icon: Inbox },
-  { key: "my-issues", label: "My Issues", icon: CircleUser },
   { key: "chat", label: "Chat", icon: MessageSquare },
   { key: "more", label: "More", icon: MoreHorizontal },
 ];
@@ -148,60 +144,6 @@ export function InboxScreen() {
           </div>
         ))}
       </div>
-    </>
-  );
-}
-
-const MY_ISSUES: { group: string; status: "in_progress" | "in_review" | "todo"; items: { id: string; title: string; priority: "urgent" | "high" | "medium" | "low" }[] }[] = [
-  {
-    group: "In Progress",
-    status: "in_progress",
-    items: [
-      { id: "ACM-152", title: "Redesign settings", priority: "high" },
-      { id: "ACM-148", title: "Fix flaky auth tests", priority: "urgent" },
-    ],
-  },
-  { group: "In Review", status: "in_review", items: [{ id: "ACM-147", title: "Add an audit log", priority: "medium" }] },
-  {
-    group: "Todo",
-    status: "todo",
-    items: [
-      { id: "ACM-153", title: "Rate-limit the API", priority: "high" },
-      { id: "ACM-154", title: "Triage bug reports", priority: "low" },
-    ],
-  },
-];
-
-export function MyIssuesScreen() {
-  return (
-    <>
-      <LargeTitle title="My Issues">
-        <Search className="size-[18px]" />
-        <Plus className="size-5" />
-      </LargeTitle>
-      <div className="flex shrink-0 gap-1.5 px-4 pb-2.5 text-[12px]">
-        {["Assigned", "Created", "Agents"].map((tab, index) => (
-          <span key={tab} className={cn("rounded-full px-2.5 py-1", index === 0 ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>
-            {tab}
-          </span>
-        ))}
-      </div>
-      {MY_ISSUES.map((group) => (
-        <div key={group.group}>
-          <p className="flex items-center gap-1.5 bg-muted/50 px-4 py-1.5 text-[11px] font-medium text-muted-foreground">
-            <StatusIcon status={group.status} className="size-3" />
-            {group.group}
-            <span className="tabular-nums">{group.items.length}</span>
-          </p>
-          {group.items.map((item) => (
-            <div key={item.id} className="flex h-11 items-center gap-2 border-b border-border px-4 text-[13px]">
-              <PriorityIcon priority={item.priority} />
-              <span className="w-12 shrink-0 text-[11px] text-muted-foreground tabular-nums">{item.id}</span>
-              <span className="min-w-0 flex-1 truncate">{item.title}</span>
-            </div>
-          ))}
-        </div>
-      ))}
     </>
   );
 }
@@ -455,14 +397,6 @@ export function InboxTabVisual() {
   return (
     <TabPhone tab="inbox">
       <InboxScreen />
-    </TabPhone>
-  );
-}
-
-export function MyIssuesTabVisual() {
-  return (
-    <TabPhone tab="my-issues">
-      <MyIssuesScreen />
     </TabPhone>
   );
 }

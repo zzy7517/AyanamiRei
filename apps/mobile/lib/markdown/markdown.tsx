@@ -22,8 +22,7 @@
  * Pipeline:
  *
  *   content
- *     ↓ preprocessMobileMarkdown    legacy mention shortcodes + file
- *                                   cards + HTML strip with `<br>` →
+ *     ↓ preprocessMobileMarkdown    file cards + HTML strip with `<br>` →
  *                                   "  \n" (canonical CommonMark hard
  *                                   break)
  *     ↓ splitMarkdown               marked.lexer → segments[]
@@ -31,11 +30,9 @@
  *
  * Mention chip note: mobile renders `mention://` links via enriched's
  * default link styling (brand-colored, underlined), matching web's
- * fallback behavior when no `renderMention` is provided
- * (`packages/ui/markdown/Markdown.tsx:173-178`). The avatar pill
- * variant only ever existed on web in specific contexts that supplied
- * a custom renderer — mobile doesn't lose anything that exists by
- * default elsewhere.
+ * fallback behavior when no `renderMention` is provided. The avatar
+ * pill variant only exists on web, in contexts that supply a custom
+ * renderer.
  */
 import { useCallback, useMemo } from "react";
 import { Linking, View } from "react-native";
@@ -143,11 +140,8 @@ export function Markdown({
       //
       //   mention://issue/<uuid>   → navigate to that issue detail
       //   mention://project/<uuid> → navigate to that project detail
-      //   mention://member/<uuid>  → no-op (no member profile screen yet)
       //   mention://agent/<uuid>   → no-op (no agent profile screen yet)
-      //   mention://squad/<uuid>   → no-op (no squad profile screen yet)
-      //   mention://all/all        → no-op (semantic only — "everyone")
-      //   anything malformed       → no-op
+      //   anything else            → no-op
       if (url.startsWith("mention://")) {
         const rest = url.slice("mention://".length);
         const slash = rest.indexOf("/");

@@ -13,7 +13,6 @@
     "recent": "Reciente",
     "workspaces": "Espacios de trabajo",
     "agents": "Agentes",
-    "squads": "Squads",
     "autopilots": "Automatizaciones",
     "chats": "Chats",
     "skills": "Skills",
@@ -153,7 +152,6 @@
     "project": "Proyecto",
     "agent": "Agente",
     "autopilot": "Automatización",
-    "squad": "Squad",
     "member": "Miembro"
   },
   "footer": {

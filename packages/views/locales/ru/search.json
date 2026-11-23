@@ -10,7 +10,6 @@
     "commands": "Команды",
     "members": "Участники",
     "agents": "Агенты",
-    "squads": "Отряды",
     "projects": "Проекты",
     "issues": "Задачи",
     "autopilots": "Автопилоты",
@@ -156,7 +155,6 @@
     "project": "Проект",
     "agent": "Агент",
     "autopilot": "Автопилот",
-    "squad": "Отряд",
     "member": "Участник"
   },
   "footer": {

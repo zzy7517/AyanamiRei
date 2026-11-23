@@ -5,6 +5,7 @@ import { useSidebar } from "@multica/ui/components/ui/sidebar";
 import {
   getShortcut,
   isEditableShortcutTarget,
+  isRawKeyboardShortcutTarget,
   shortcutMatchesEvent,
   SHORTCUT_ACTION_BY_ID,
   useShortcutStore,
@@ -13,8 +14,7 @@ import {
 import { useChatStore } from "@multica/core/chat";
 import { useSearchStore } from "@multica/core/command-bar";
 import { useModalStore } from "@multica/core/modals";
-import { useCurrentWorkspace, useWorkspacePaths } from "@multica/core/paths";
-import { useIsGuest } from "@multica/core/permissions";
+import { useWorkspacePaths } from "@multica/core/paths";
 import { isImeComposing } from "@multica/core/utils";
 import { isFloatingChatRouteSuppressed } from "../chat/floating-chat-visibility";
 import { useAppShell } from "./app-shell-context";
@@ -31,12 +31,10 @@ const GLOBAL_ACTIONS: readonly ShortcutActionId[] = [
   "goForward",
   "goInbox",
   "goChat",
-  "goMyIssues",
   "goIssues",
   "goProjects",
   "goAutopilots",
   "goAgents",
-  "goSquads",
   "goUsage",
   "goRuntimes",
   "goSkills",
@@ -53,8 +51,6 @@ export function GlobalShortcuts() {
   const toggleNav = useAppShell()?.toggleNav ?? toggleSidebar;
   const navigation = useNavigation();
   const workspacePaths = useWorkspacePaths();
-  // A guest (MUL-9420) cannot create issues, so its `C` stays unclaimed.
-  const guest = useIsGuest(useCurrentWorkspace()?.id);
 
   // Subscribe so changing a binding in Settings immediately refreshes the
   // listener closure; getShortcut remains useful to non-React call sites.
@@ -65,12 +61,10 @@ export function GlobalShortcuts() {
     const destinations: Partial<Record<ShortcutActionId, string>> = {
       goInbox: workspacePaths.inbox(),
       goChat: chatPath,
-      goMyIssues: workspacePaths.myIssues(),
       goIssues: workspacePaths.issues(),
       goProjects: workspacePaths.projects(),
       goAutopilots: workspacePaths.autopilots(),
       goAgents: workspacePaths.agents(),
-      goSquads: workspacePaths.squads(),
       goUsage: workspacePaths.usage(),
       goRuntimes: workspacePaths.runtimes(),
       goSkills: workspacePaths.skills(),
@@ -91,6 +85,9 @@ export function GlobalShortcuts() {
       // Respect their preventDefault instead of double-triggering a product
       // action after the focused control already consumed the same chord.
       if (shouldIgnoreGlobalShortcutEvent(event)) return;
+      // A terminal reads the whole keyboard. Its keys belong to the program on
+      // screen, including the chords that stay live inside text fields.
+      if (isRawKeyboardShortcutTarget(event.target)) return;
 
       const actionId = GLOBAL_ACTIONS.find((candidate) => {
         const action = SHORTCUT_ACTION_BY_ID[candidate];
@@ -100,7 +97,6 @@ export function GlobalShortcuts() {
         if ((candidate === "toggleChat" || candidate === "newChat") && !canUseFloatingChat()) {
           return false;
         }
-        if (candidate === "createIssue" && guest) return false;
         return shortcutMatchesEvent(getShortcut(candidate), event);
       });
       if (!actionId) return;
@@ -149,7 +145,7 @@ export function GlobalShortcuts() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [guest, navigation, overrides, toggleNav, workspacePaths]);
+  }, [navigation, overrides, toggleNav, workspacePaths]);
 
   return null;
 }

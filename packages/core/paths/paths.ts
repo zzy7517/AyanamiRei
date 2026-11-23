@@ -44,19 +44,6 @@ export function issueRouteRef(issue: { id: string; identifier: string | null | u
  */
 export const AGENT_FOCUS_CONVERSATION_STARTERS = "conversation_starters";
 
-/**
- * My agents' work is the My issues route with `?scope=agents`. It is URL
- * vocabulary rather than stored state so every tab and window keeps its own
- * — a Cmd-click opens it beside My issues, and one tab's switch leaves the
- * others alone.
- */
-const MY_AGENTS_SCOPE = "agents";
-
-/** Whether a My issues URL's search params open My agents' work. */
-export function isMyAgentsSearch(searchParams: URLSearchParams): boolean {
-  return searchParams.get("scope") === MY_AGENTS_SCOPE;
-}
-
 function workspaceScoped(slug: string) {
   const ws = `/${encode(slug)}`;
   return {
@@ -92,16 +79,12 @@ function workspaceScoped(slug: string) {
     agentConversationStarters: (id: string) =>
       `${ws}/agents/${encode(id)}?view=general&focus=${AGENT_FOCUS_CONVERSATION_STARTERS}`,
     memberDetail: (id: string) => `${ws}/members/${encode(id)}`,
-    squads: () => `${ws}/squads`,
-    squadDetail: (id: string) => `${ws}/squads/${encode(id)}`,
     inbox: () => `${ws}/inbox`,
     chat: () => `${ws}/chat`,
     chatWithAgent: (agentId: string) =>
       `${ws}/chat?agent=${encode(agentId)}`,
     chatSession: (sessionId: string) =>
       `${ws}/chat?session=${encode(sessionId)}`,
-    myIssues: () => `${ws}/my-issues`,
-    myAgents: () => `${ws}/my-issues?scope=${MY_AGENTS_SCOPE}`,
     views: () => `${ws}/views`,
     runtimes: () => `${ws}/runtimes`,
     runtimeDetail: (id: string) => `${ws}/runtimes/${encode(id)}`,
@@ -115,6 +98,16 @@ function workspaceScoped(slug: string) {
     skillDetail: (id: string) => `${ws}/skills/${encode(id)}`,
     settings: () => `${ws}/settings`,
     attachmentPreview: (id: string) => `${ws}/attachments/${encode(id)}/preview`,
+    terminal: () => `${ws}/terminal`,
+    // The terminal page for a directory. `terminalId` names one that is
+    // already running, which the page rejoins instead of opening a shell.
+    terminalIn: (cwd: string, terminalId?: string) =>
+      `${ws}/terminal?cwd=${encode(cwd)}${terminalId ? `&t=${encode(terminalId)}` : ""}`,
+    // The terminal page for an agent session in a tree of a task, both by
+    // UUID. `terminalId` names a session that is already running, which the
+    // page rejoins instead of starting the agent again.
+    terminalAgent: (issueId: string, treeId: string, terminalId?: string) =>
+      `${ws}/terminal?issue=${encode(issueId)}&tree=${encode(treeId)}${terminalId ? `&t=${encode(terminalId)}` : ""}`,
   };
 }
 

@@ -1,5 +1,6 @@
 import { LoginPage } from "@multica/views/auth";
 import { DragStrip } from "@multica/views/platform";
+import { useT } from "@multica/views/i18n";
 import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 
 function requireRuntimeAppUrl(): string {
@@ -12,8 +13,15 @@ function requireRuntimeAppUrl(): string {
   return runtimeConfig.config.appUrl;
 }
 
-export function DesktopLoginPage() {
+export function DesktopLoginPage({
+  preSharedTokenRejected = false,
+}: {
+  /** The server refused the pre-shared token from desktop.json, which is why
+   *  this page is showing. */
+  preSharedTokenRejected?: boolean;
+} = {}) {
   const webUrl = requireRuntimeAppUrl();
+  const { t } = useT("auth");
   const handleGoogleLogin = () => {
     // Open web login page in the default browser with platform=desktop flag.
     // The web callback will redirect back via multica:// deep link with the token.
@@ -32,6 +40,9 @@ export function DesktopLoginPage() {
           // Initial workspace navigation happens in routes.tsx via IndexRedirect.
         }}
         onGoogleLogin={handleGoogleLogin}
+        expiredMessage={
+          preSharedTokenRejected ? t(($) => $.desktop.token_rejected) : undefined
+        }
       />
     </div>
   );

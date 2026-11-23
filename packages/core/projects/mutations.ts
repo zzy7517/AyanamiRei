@@ -4,7 +4,6 @@ import { projectKeys } from "./queries";
 import { issueKeys } from "../issues/queries";
 import { autopilotKeys } from "../autopilots/queries";
 import { useWorkspaceId } from "../hooks";
-import { refreshFeaturesOnLockedError } from "../billing/paid-features";
 import { useRecentContextStore } from "../chat/recent-context-store";
 import { clearIssueSurfaceViewState } from "../issues/stores/surface-view-store";
 import { issueScopeKey } from "../issues/surface/scope";
@@ -15,7 +14,6 @@ export function useCreateProject() {
   const wsId = useWorkspaceId();
   return useMutation({
     mutationFn: (data: CreateProjectRequest) => api.createProject(data),
-    onError: (err) => refreshFeaturesOnLockedError(qc, wsId, err),
     onSuccess: (newProject) => {
       qc.setQueryData<ListProjectsResponse>(projectKeys.list(wsId), (old) =>
         old && !old.projects.some((p) => p.id === newProject.id)
@@ -47,10 +45,9 @@ export function useUpdateProject() {
       );
       return { prevList, prevDetail, id };
     },
-    onError: (err, _vars, ctx) => {
+    onError: (_err, _vars, ctx) => {
       if (ctx?.prevList) qc.setQueryData(projectKeys.list(wsId), ctx.prevList);
       if (ctx?.prevDetail) qc.setQueryData(projectKeys.detail(wsId, ctx.id), ctx.prevDetail);
-      refreshFeaturesOnLockedError(qc, wsId, err);
     },
     onSettled: (_data, _err, vars) => {
       qc.invalidateQueries({ queryKey: projectKeys.detail(wsId, vars.id) });
@@ -146,21 +143,6 @@ export function useRestoreProject() {
     onSettled: (_data, _err, id) => {
       qc.invalidateQueries({ queryKey: projectKeys.detail(wsId, id) });
       qc.invalidateQueries({ queryKey: projectKeys.list(wsId) });
-    },
-  });
-}
-
-// A workspace owner adding themselves to a private project they could not see.
-// Everything keyed on project visibility may have changed for them, the same
-// as when someone else adds them.
-export function useJoinPrivateProject() {
-  const qc = useQueryClient();
-  const wsId = useWorkspaceId();
-  return useMutation({
-    mutationFn: (id: string) => api.joinPrivateProject(id),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: projectKeys.all(wsId) });
-      qc.invalidateQueries({ queryKey: issueKeys.all(wsId) });
     },
   });
 }

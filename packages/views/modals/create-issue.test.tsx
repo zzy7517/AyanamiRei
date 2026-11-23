@@ -8,19 +8,21 @@ import {
   type ReactNode,
 } from "react";
 import { describe, it, expect, vi, beforeEach, onTestFinished } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { configStore } from "@multica/core/config";
 import type { Issue } from "@multica/core/types";
 import { I18nProvider } from "@multica/core/i18n/react";
 import enCommon from "../locales/en/common.json";
 import enModals from "../locales/en/modals.json";
 import enEditor from "../locales/en/editor.json";
 import enIssues from "../locales/en/issues.json";
+import enProjects from "../locales/en/projects.json";
 
 const TEST_RESOURCES = {
   // `editor` carries the shared upload-gate copy ("Uploading...").
-  en: { common: enCommon, modals: enModals, editor: enEditor, issues: enIssues },
+  en: { common: enCommon, modals: enModals, editor: enEditor, issues: enIssues, projects: enProjects },
 };
 
 function I18nWrapper({ children }: { children: ReactNode }) {
@@ -68,6 +70,7 @@ const mockToastError = vi.hoisted(() => vi.fn());
 // `api.uploadFile(file, ctx, signal)` (MUL-5181 L2). Tests drive uploads by
 // mocking that call; it resolves a plain server Attachment row.
 const mockApiUploadFile = vi.hoisted(() => vi.fn());
+const mockReplaceIssueProjectScope = vi.hoisted(() => vi.fn());
 
 const sourceContextPanelData = () => ({
   anchor_comment_id: "comment-source",
@@ -146,23 +149,22 @@ const emptyIssueDraft = () => ({
     description: "",
     status: "todo" as string,
     startDate: null as string | null,
-    assigneeType: undefined as "agent" | "squad" | "member" | undefined,
+    assigneeType: undefined as "agent" | undefined,
     assigneeId: undefined as string | undefined,
-    assigneePick: undefined as { type: "agent" | "squad" | "member"; id: string } | undefined,
+    assigneePick: undefined as { type: "agent"; id: string } | undefined,
     labelIds: [] as string[],
     propertyValues: {} as Record<string, string | number | boolean | string[]>,
   },
   agent: {
     prompt: "",
-    actorType: undefined as "agent" | "squad" | undefined,
-    actorId: undefined as string | undefined,
+    agentId: undefined as string | undefined,
   },
   activeMode: "manual" as "manual" | "agent",
 });
 
 const mockDraftStore = {
   draft: emptyIssueDraft(),
-  lastAssigneeType: undefined as "agent" | "squad" | "member" | undefined,
+  lastAssigneeType: undefined as "agent" | undefined,
   lastAssigneeId: undefined as string | undefined,
   // The keep-open reset's snapshot. Mirrors the store: the batch reset records
   // the draft it produced, so a later change is a user edit while an untouched
@@ -267,8 +269,8 @@ vi.mock("@multica/core/workspace/hooks", () => ({
   useActorName: () => ({ getActorName: () => "Agent" }),
 }));
 
-// CreateRunHint now renders an ActorAvatar for agent/squad assignees. This
-// suite is about the create form, not the avatar (whose own workspace/presence/
+// CreateRunHint renders an ActorAvatar for agent assignees. This suite is
+// about the create form, not the avatar (whose own workspace/presence/
 // navigation hook tree is exercised elsewhere), so stub it inert.
 vi.mock("../common/actor-avatar", () => ({
   ActorAvatar: () => null,
@@ -361,10 +363,14 @@ vi.mock("@multica/core/api", async () => {
       listProperties: mockListProperties,
       setIssueProperty: mockSetIssueProperty,
       uploadFile: mockApiUploadFile,
+      replaceIssueProjectScope: mockReplaceIssueProjectScope,
     },
     ApiError,
     parseWithFallback,
     DuplicateIssueErrorBodySchema,
+    // The real one reads the real `ApiError`; this reads the class above.
+    clientErrorMessage: (err: unknown) =>
+      err instanceof ApiError && err.status >= 400 && err.status < 500 ? err.message || undefined : undefined,
   };
 });
 
@@ -494,7 +500,7 @@ vi.mock("../issues/components", () => ({
     assigneePickerProps.recordPicks = recordPicks;
     return (
       <div data-testid="assignee-picker">
-        <button type="button" onClick={() => onUpdate({ assignee_type: "member", assignee_id: "alice" })}>pick alice</button>
+        <button type="button" onClick={() => onUpdate({ assignee_type: "agent", assignee_id: "alice" })}>pick alice</button>
         <button type="button" onClick={() => onUpdate({ assignee_type: "agent", assignee_id: "bot" })}>pick bot</button>
       </div>
     );
@@ -924,20 +930,20 @@ describe("CreateIssueModal", () => {
 
   it("does not record a remembered default assignee", async () => {
     const user = userEvent.setup();
-    mockDraftStore.draft.manual.assigneeType = "member";
+    mockDraftStore.draft.manual.assigneeType = "agent";
     mockDraftStore.draft.manual.assigneeId = "alice";
     renderModal(<CreateIssueModal onClose={vi.fn()} />);
 
     await user.type(screen.getByPlaceholderText("Issue title"), "Default assignee");
     await user.click(screen.getByRole("button", { name: "Create issue" }));
 
-    await waitFor(() => expect(mockSetLastAssignee).toHaveBeenCalledWith("member", "alice"));
+    await waitFor(() => expect(mockSetLastAssignee).toHaveBeenCalledWith("agent", "alice"));
     expect(mockRecordAssigneePick).not.toHaveBeenCalled();
   });
 
   it("does not record re-picking the prefilled assignee", async () => {
     const user = userEvent.setup();
-    mockDraftStore.draft.manual.assigneeType = "member";
+    mockDraftStore.draft.manual.assigneeType = "agent";
     mockDraftStore.draft.manual.assigneeId = "alice";
     renderModal(<CreateIssueModal onClose={vi.fn()} />);
 
@@ -945,13 +951,13 @@ describe("CreateIssueModal", () => {
     await user.type(screen.getByPlaceholderText("Issue title"), "Same assignee");
     await user.click(screen.getByRole("button", { name: "Create issue" }));
 
-    await waitFor(() => expect(mockSetLastAssignee).toHaveBeenCalledWith("member", "alice"));
+    await waitFor(() => expect(mockSetLastAssignee).toHaveBeenCalledWith("agent", "alice"));
     expect(mockRecordAssigneePick).not.toHaveBeenCalled();
   });
 
   it("records a pick made while an earlier create was in flight with that later create", async () => {
     const user = userEvent.setup();
-    mockDraftStore.draft.manual.assigneeType = "member";
+    mockDraftStore.draft.manual.assigneeType = "agent";
     mockDraftStore.draft.manual.assigneeId = "alice";
     let resolveCreate!: (v: unknown) => void;
     mockCreateIssue.mockImplementationOnce(
@@ -1002,9 +1008,9 @@ describe("CreateIssueModal", () => {
 
   it("does not credit an earlier hand pick to a prefilled assignee", async () => {
     const user = userEvent.setup();
-    mockDraftStore.draft.manual.assigneeType = "member";
+    mockDraftStore.draft.manual.assigneeType = "agent";
     mockDraftStore.draft.manual.assigneeId = "alice";
-    mockDraftStore.draft.manual.assigneePick = { type: "member", id: "alice" };
+    mockDraftStore.draft.manual.assigneePick = { type: "agent", id: "alice" };
     renderModal(<CreateIssueModal onClose={vi.fn()} data={{ assignee_type: "agent", assignee_id: "bot" }} />);
 
     // Re-picking the prefilled assignee writes it into the draft.
@@ -1128,7 +1134,7 @@ describe("CreateIssueModal", () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     mockQuickCreateStore.keepOpen = true;
-    mockDraftStore.draft.manual.assigneeType = "member";
+    mockDraftStore.draft.manual.assigneeType = "agent";
     mockDraftStore.draft.manual.assigneeId = "alice";
 
     const modal = renderModal(<CreateIssueModal onClose={onClose} data={{
@@ -1145,7 +1151,7 @@ describe("CreateIssueModal", () => {
         description: "Description to clear",
         status: "in_progress",
         priority: "none",
-        assignee_type: "member",
+        assignee_type: "agent",
         assignee_id: "alice",
         start_date: undefined,
         due_date: undefined,
@@ -1163,7 +1169,7 @@ describe("CreateIssueModal", () => {
       title: "",
       description: "",
       status: "in_progress",
-      assigneeType: "member",
+      assigneeType: "agent",
       assigneeId: "alice",
       startDate: null,
       labelIds: [],
@@ -1182,7 +1188,7 @@ describe("CreateIssueModal", () => {
     expect(mockCreateIssue).toHaveBeenNthCalledWith(2, expect.objectContaining({
       title: "Second follow-up issue",
       status: "in_progress",
-      assignee_type: "member",
+      assignee_type: "agent",
       assignee_id: "alice",
       parent_issue_id: "parent-1",
       stage: 2,
@@ -1320,8 +1326,8 @@ describe("CreateIssueModal", () => {
         ...mockDraftStore.draft.manual,
         title: "Keep this draft",
         description: "Keep this body",
-        assigneeType: "member",
-        assigneeId: "user-1",
+        assigneeType: "agent",
+        assigneeId: "agent-1",
         propertyValues: {
           "property-stale": "old value",
           "property-tier": "option-enterprise",
@@ -1404,8 +1410,8 @@ describe("CreateIssueModal", () => {
       expect(submittedIssue(1)).toMatchObject({
         title: "Keep this draft",
         description: "Keep this body",
-        assignee_type: "member",
-        assignee_id: "user-1",
+        assignee_type: "agent",
+        assignee_id: "agent-1",
         status: "todo",
         priority: "high",
         properties: remainingProperties,
@@ -1681,12 +1687,12 @@ describe("CreateIssueModal", () => {
     });
   });
 
-  // Manual → agent must seed the agent actor from the picked squad. Without
-  // this the agent panel silently falls back to the persisted actor / first
-  // visible agent and the user loses the squad they just chose in manual.
-  it("seeds the agent actor from the picked squad when switching to agent mode", async () => {
-    mockDraftStore.draft.manual.assigneeType = "squad";
-    mockDraftStore.draft.manual.assigneeId = "squad-1";
+  // Manual → agent must seed the agent from the picked assignee. Without this
+  // the agent panel silently falls back to the remembered agent / first visible
+  // agent and the user loses the agent they just chose in manual.
+  it("seeds the agent from the picked agent assignee when switching to agent mode", async () => {
+    mockDraftStore.draft.manual.assigneeType = "agent";
+    mockDraftStore.draft.manual.assigneeId = "agent-1";
     const user = userEvent.setup();
     const onSwitchMode = vi.fn();
 
@@ -1703,12 +1709,9 @@ describe("CreateIssueModal", () => {
     await user.click(screen.getByRole("button", { name: /Switch to Agent/i }));
 
     expect(onSwitchMode).toHaveBeenCalledTimes(1);
-    // Prompt assist-init + squad actor land in the unified agent draft.
+    // Prompt assist-init + the agent land in the unified agent draft.
     expect(mockSetAgent).toHaveBeenCalledWith({ prompt: "Refactor auth" });
-    expect(mockSetAgent).toHaveBeenCalledWith({
-      actorType: "squad",
-      actorId: "squad-1",
-    });
+    expect(mockSetAgent).toHaveBeenCalledWith({ agentId: "agent-1" });
     // Actor rides the store, not the carry; no parent here → carry is null.
     expect(onSwitchMode.mock.calls[0]?.[0]).toBeNull();
   });
@@ -2467,6 +2470,140 @@ describe("CreateIssueModal", () => {
       expect(footer?.className).toContain("sm:flex");
       expect(create.parentElement).toBe(footer);
       expect(create.className).toContain("justify-self-end");
+    });
+  });
+
+  // A task's "project + branch" pairs are chosen while the task is written and
+  // saved once it exists, which is the only moment the server can take them.
+  describe("project + branch pairs", () => {
+    beforeEach(() => {
+      configStore.getState().setFeatureFlags({});
+    });
+
+    const enable = () => configStore.getState().setFeatureFlags({ task_sessions_v1: true });
+    const pairs = () => screen.findByRole("group", { name: "Projects + branches" });
+
+    /** The dialog with the flag on, a title, and one pair: `proj-1` and `main`. */
+    async function withPair(user: ReturnType<typeof userEvent.setup>, onClose: () => void) {
+      enable();
+      renderModal(<CreateIssueModal onClose={onClose} />);
+      fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
+      const group = await pairs();
+      await user.click(within(group).getByRole("button", { name: "Add project" }));
+      await user.click(within(group).getByRole("button", { name: "Project" }));
+      await user.type(within(group).getByRole("textbox", { name: "Branch" }), "main");
+      return group;
+    }
+
+    it("are not offered while the flag is off", async () => {
+      renderModal(<CreateIssueModal onClose={vi.fn()} />);
+
+      expect(screen.queryByRole("group", { name: "Projects + branches" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Add project" })).toBeNull();
+    });
+
+    it("are saved on the new task, and the dialog closes once they are", async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      let saved!: () => void;
+      mockReplaceIssueProjectScope.mockImplementation(
+        () => new Promise<void>((resolve) => { saved = resolve; }),
+      );
+      await withPair(user, onClose);
+
+      await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+      await waitFor(() =>
+        expect(mockReplaceIssueProjectScope).toHaveBeenCalledWith("issue-123", {
+          items: [{ project_id: "proj-1", base_branch: "main" }],
+        }),
+      );
+      expect(mockCreateIssue).toHaveBeenCalledTimes(1);
+      expect(onClose).not.toHaveBeenCalled();
+
+      await act(async () => saved());
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("keep the task, and say why, when the server refuses them", async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      mockReplaceIssueProjectScope.mockRejectedValue(
+        new ApiError("The machine is not connected.", 409, "Conflict"),
+      );
+      await withPair(user, onClose);
+
+      await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+      await waitFor(() =>
+        expect(mockToastError).toHaveBeenCalledWith(
+          "The task was created without its worktrees: The machine is not connected.",
+        ),
+      );
+      // The task is created all the same, and the dialog ends as after any creation.
+      expect(mockToastCustom).toHaveBeenCalledTimes(1);
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it("say only that the pairs were not saved when the failure gives no reason", async () => {
+      const user = userEvent.setup();
+      mockReplaceIssueProjectScope.mockRejectedValue(new Error("Failed to fetch"));
+      await withPair(user, vi.fn());
+
+      await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+      await waitFor(() =>
+        expect(mockToastError).toHaveBeenCalledWith(
+          "The task was created without its worktrees. Add them on the task page.",
+        ),
+      );
+    });
+
+    it("hold the task back while a pair is incomplete, with the editor saying what it lacks", async () => {
+      const user = userEvent.setup();
+      enable();
+      renderModal(<CreateIssueModal onClose={vi.fn()} />);
+      fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
+      const group = await pairs();
+      await user.click(within(group).getByRole("button", { name: "Add project" }));
+      await user.click(within(group).getByRole("button", { name: "Project" }));
+
+      expect(within(group).getByText("Enter a branch.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Create issue" })).toBeDisabled();
+
+      fireEvent.keyDown(screen.getByPlaceholderText("Issue title"), { key: "Enter", metaKey: true });
+      expect(mockCreateIssue).not.toHaveBeenCalled();
+    });
+
+    it("are not needed: a row added and left empty is not a pair", async () => {
+      const user = userEvent.setup();
+      enable();
+      renderModal(<CreateIssueModal onClose={vi.fn()} />);
+      fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
+      const group = await pairs();
+      await user.click(within(group).getByRole("button", { name: "Add project" }));
+
+      await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+      await waitFor(() => expect(mockCreateIssue).toHaveBeenCalledTimes(1));
+      expect(mockReplaceIssueProjectScope).not.toHaveBeenCalled();
+    });
+
+    it("are cleared with the form for the next task", async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      mockReplaceIssueProjectScope.mockResolvedValue({ items: [] });
+      // The dialog reads the setting when it renders, as it does where the
+      // checkbox sets it.
+      mockQuickCreateStore.keepOpen = true;
+      await withPair(user, onClose);
+
+      await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+      await waitFor(() => expect(mockReplaceIssueProjectScope).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.queryByRole("textbox", { name: "Branch" })).toBeNull());
+      expect(screen.getByRole("button", { name: "Add project" })).toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
     });
   });
 });

@@ -5,7 +5,7 @@
 // Regression: the "Unassigned" row is pinned as the picker's first row, which
 // also makes it the first `data-picker-item`. PropertyPicker used to reset the
 // highlight to index 0 on every keystroke, so typing a name and pressing Enter
-// unassigned the issue instead of assigning it to the person being searched
+// unassigned the issue instead of assigning it to the agent being searched
 // for. The empty row is now excluded from the search-result Enter default while
 // staying reachable by arrow key.
 import { describe, expect, it, vi } from "vitest";
@@ -15,14 +15,13 @@ import { I18nProvider } from "@multica/core/i18n/react";
 import enIssues from "../../../locales/en/issues.json";
 import { AssigneePicker } from "./assignee-picker";
 
-const MEMBERS = [
-  { user_id: "user-1", name: "Ada Lovelace", role: "member" },
-  { user_id: "user-2", name: "Grace Hopper", role: "member" },
-];
+const MEMBERS = [{ user_id: "user-1", name: "Ada Lovelace", role: "member" }];
+const AGENTS = [{ id: "agent-2", name: "Grace Hopper", owner_id: "user-1", archived_at: null }];
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
     if (queryKey[0] === "members") return { data: MEMBERS };
+    if (queryKey[0] === "agents") return { data: AGENTS };
     return { data: [] };
   },
 }));
@@ -39,7 +38,6 @@ vi.mock("@multica/core/workspace/hooks", () => ({
 vi.mock("@multica/core/workspace/queries", () => ({
   memberListOptions: () => ({ queryKey: ["members"] }),
   agentListOptions: () => ({ queryKey: ["agents"] }),
-  squadListOptions: () => ({ queryKey: ["squads"] }),
 }));
 vi.mock("../../../common/actor-avatar", () => ({
   ActorAvatar: () => <span data-testid="actor-avatar" />,
@@ -73,8 +71,8 @@ describe("AssigneePicker search keyboard defaults", () => {
     await user.keyboard("{Enter}");
 
     expect(onUpdate).toHaveBeenCalledWith({
-      assignee_type: "member",
-      assignee_id: "user-2",
+      assignee_type: "agent",
+      assignee_id: "agent-2",
     });
   });
 

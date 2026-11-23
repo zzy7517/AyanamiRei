@@ -1,3 +1,5 @@
+import type { IssueAssigneeType } from "./issue";
+
 export interface IssueWakeup {
   id: string;
   issue_id: string;
@@ -49,7 +51,7 @@ export type WakeupPausedReason = "max_fires" | "loop" | "rate";
 /** Structured predicates the platform evaluates (see WakeupCondition in Go). */
 export type WakeupCondition =
   | { type: "issue_field"; field: "status"; value: string }
-  | { type: "issue_field"; field: "assignee"; assignee_type: "member" | "agent" | "squad"; assignee_id: string }
+  | { type: "issue_field"; field: "assignee"; assignee_type: IssueAssigneeType; assignee_id: string }
   | { type: "issue_field"; field: "label"; label_id: string }
   | { type: "issue_field"; field: "property"; property_id: string; value: unknown }
   | { type: "children_done"; stage?: number | null }
@@ -121,9 +123,9 @@ export interface SystemWakeup {
   total: number;
   remaining: number;
   waiting: string[];
-  target: { type: "agent" | "squad" | "member"; id: string; name: string } | null;
-  /** Why no run would start now; a member assignee gets an inbox notification. */
-  blocked: "" | "backlog" | "member_assignee" | "no_assignee";
+  target: { type: "agent"; id: string; name: string } | null;
+  /** Why no run would start now. */
+  blocked: "" | "backlog" | "no_assignee";
   /** The workspace-wide setting, which applies until the issue sets its own. */
   workspace_default: boolean;
 }

@@ -50,9 +50,9 @@ describe("archived inbox API", () => {
       statuses: { in_review: 2 }, priorities: {}, actors: { system: 0 }, unreadCount: 1,
       types: {}, projects: {}, assignees: {}, labels: {},
     });
-    respond({ statuses: {}, priorities: {}, actors: {}, types: { mention: 1 }, projects: { none: 2 }, assignees: {}, labels: { l: 1 }, unread_count: 0 });
+    respond({ statuses: {}, priorities: {}, actors: {}, types: { comment: 1 }, projects: { none: 2 }, assignees: {}, labels: { l: 1 }, unread_count: 0 });
     await expect(api.getArchivedInboxFacets(EMPTY_INBOX_FILTERS)).resolves.toMatchObject({
-      types: { mention: 1 }, projects: { none: 2 }, labels: { l: 1 },
+      types: { comment: 1 }, projects: { none: 2 }, labels: { l: 1 },
     });
     for (const body of [{}, { statuses: {}, priorities: {}, actors: {}, unread_count: -1 }]) {
       respond(body);

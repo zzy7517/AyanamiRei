@@ -80,7 +80,6 @@ export function buildTimelineEntries() {
     parent_id: index === 0 ? null : rootCommentId,
     content: commentBody(index),
     resolved_at: null,
-    reactions: [],
     attachments: [],
     source_task_id: null,
   }));

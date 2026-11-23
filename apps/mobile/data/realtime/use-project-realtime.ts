@@ -14,10 +14,10 @@
  *                       on a 404 page.
  *   - issue:updated/created/deleted → patch the related-issues cache so
  *                       the list under the project stays in sync.
- *                       Listing-level hooks (use-my-issues-realtime) only
- *                       patch `issueKeys.myAll(wsId)`; this cache lives
- *                       under `issueKeys.list(wsId)` with a "byProject"
- *                       suffix and isn't covered by them.
+ *                       Listing-level hooks (use-issues-realtime,
+ *                       use-my-list-realtime) only patch their own keys;
+ *                       this cache lives under `issueKeys.list(wsId)` with a
+ *                       "byProject" suffix and isn't covered by them.
  *   - reconnect       → invalidate detail + resources + related-issues
  *                       (we may have missed events while disconnected).
  *

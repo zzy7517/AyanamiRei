@@ -87,7 +87,7 @@
       "billing_interval": "付款週期",
       "period_end": "當前週期結束時間",
       "change_plan": "更換套餐",
-      "business_adds": "Business 增加私有專案、按成員授權、團隊應用帳號，以及更高的自動化額度。",
+      "business_adds": "Business 增加按成員授權、團隊應用帳號，以及更高的自動化額度。",
       "plan_change_hold": "套餐變更",
       "plan_change_confirming": "正在切換到 {{plan}}，等待 Stripe 確認。確認之前不能更換套餐或增加席位。",
       "plan_change_unresolved": "切換到 {{plan}} 的結果沒有確認。請聯絡支援處理；處理完成之前不能更換套餐或增加席位。",
@@ -111,7 +111,7 @@
         "pro_storage": "每人 10 GB 附件儲存",
         "pro_dashboard": "90 天分析歷史記錄",
         "business_everything": "Pro 的全部功能",
-        "business_access": "私有專案和按成員授權",
+        "business_access": "按成員授權",
         "business_apps": "團隊應用帳號和審批規則",
         "business_autopilots": "自動化每人每月 3,000 次",
         "business_reports": "按成員的用量和成本報表"
@@ -297,7 +297,7 @@
     },
     "welcome": {
       "title_other": "歡迎！你的工作區可以免費試用 {{count}} 天 Business",
-      "body": "私有專案等 Business 功能都可以使用。不需要綁卡，到期自動切換到 Free。",
+      "body": "Business 功能都可以使用。不需要綁卡，到期自動切換到 Free。",
       "action": "看看有什麼",
       "close": "關閉"
     },
@@ -306,7 +306,6 @@
       "description": "{{workspace}} 已切換到 Free。沒有任何資料被刪除。",
       "description_without_name": "工作區已切換到 Free。沒有任何資料被刪除。",
       "kept": "已有的成員、專案和設定都保留。",
-      "private_projects": "私有專案保持私有，存取名單在升級前唯讀。",
       "autopilot": "自動化每月 {{limit}} 次，本月已用 {{used}} 次。",
       "autopilot_paused": "自動化每月 {{limit}} 次，本月已用 {{used}} 次，自動化已暫停到 {{date}}。",
       "keep_free": "繼續使用 Free",
@@ -325,18 +324,6 @@
       "ended_description": "試用已於 {{date}} 結束。在下方選擇方案即可恢復 Business 功能。",
       "choose_plan": "選擇方案",
       "ended_description_member": "試用已於 {{date}} 結束。如需恢復 Business 功能，請聯絡工作區管理員升級。"
-    },
-    "features": {
-      "title": "試用中的 Business 功能",
-      "description": "試用結束後，任何項目都不會被刪除或關閉——現有設定會以唯讀模式維持啟用，但無法新增。",
-      "private_projects": {
-        "name": "私有專案",
-        "after": "到期後保持私有，存取名單唯讀。"
-      },
-      "guests": {
-        "name": "訪客",
-        "after": "到期後既有訪客保留存取權限，邀請新訪客需要 Pro 或 Business。"
-      }
     }
   },
   "storage_limit": {

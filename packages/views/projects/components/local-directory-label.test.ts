@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import { describe, it, expect } from "vitest";
-import { localDirectoryLabel } from "./local-directory-label";
+import {
+  localDirectoryLabel,
+  localDirectoryNameOfPath,
+} from "./local-directory-label";
 
 // Canonical priority matrix for the display name of a local_directory row.
 // The component suite (project-resources-local-directory.test.tsx) keeps the wiring
@@ -50,5 +53,21 @@ describe("localDirectoryLabel", () => {
         resource_ref: ref({ label: "Game Client" }),
       }),
     ).toBe("Renamed Client");
+  });
+});
+
+// Canonical matrix for the name of a typed path, whichever machine it is on.
+describe("localDirectoryNameOfPath", () => {
+  it.each([
+    ["/srv/repos/game-client", "game-client"],
+    ["/srv/repos/game-client/", "game-client"],
+    ["C:\\work\\game-client", "game-client"],
+    ["C:\\work\\game-client\\", "game-client"],
+  ])("names %s by its last segment", (path, name) => {
+    expect(localDirectoryNameOfPath(path)).toBe(name);
+  });
+
+  it("has no name for a root, which has no segment", () => {
+    expect(localDirectoryNameOfPath("/")).toBeUndefined();
   });
 });

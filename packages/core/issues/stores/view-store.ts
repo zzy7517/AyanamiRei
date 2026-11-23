@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { IssueStatus, IssuePriority, ProjectStatus, PropertyFilterValue } from "../../types";
+import type { IssueAssigneeType, IssueCreatorType, IssueStatus, IssuePriority, ProjectStatus, PropertyFilterValue } from "../../types";
 import { PROJECT_STATUS_ORDER } from "../../projects/config";
 import { createWorkspaceAwareStorage, registerForWorkspaceRehydration } from "../../platform/workspace-storage";
 import { defaultStorage } from "../../platform/storage";
@@ -139,8 +139,15 @@ export interface CardProperties {
   pullRequests: boolean;
 }
 
+/** An agent as an assignee filter value. */
+export interface AssigneeFilterValue {
+  type: IssueAssigneeType;
+  id: string;
+}
+
+/** A person or an agent as a creator filter value. */
 export interface ActorFilterValue {
-  type: "member" | "agent" | "squad";
+  type: IssueCreatorType;
   id: string;
 }
 
@@ -149,7 +156,7 @@ export interface ActorFilterValue {
 export interface FilterSnapshot {
   statusFilters: IssueStatus[];
   priorityFilters: IssuePriority[];
-  assigneeFilters: ActorFilterValue[];
+  assigneeFilters: AssigneeFilterValue[];
   includeNoAssignee: boolean;
   creatorFilters: ActorFilterValue[];
   projectFilters: string[];
@@ -312,7 +319,7 @@ export interface IssueViewState {
   grouping: IssueGrouping;
   statusFilters: IssueStatus[];
   priorityFilters: IssuePriority[];
-  assigneeFilters: ActorFilterValue[];
+  assigneeFilters: AssigneeFilterValue[];
   includeNoAssignee: boolean;
   creatorFilters: ActorFilterValue[];
   projectFilters: string[];
@@ -405,7 +412,7 @@ export interface IssueViewState {
   setGrouping: (grouping: IssueGrouping) => void;
   toggleStatusFilter: (status: IssueStatus) => void;
   togglePriorityFilter: (priority: IssuePriority) => void;
-  toggleAssigneeFilter: (value: ActorFilterValue) => void;
+  toggleAssigneeFilter: (value: AssigneeFilterValue) => void;
   toggleNoAssignee: () => void;
   toggleCreatorFilter: (value: ActorFilterValue) => void;
   toggleProjectFilter: (projectId: string) => void;
@@ -869,8 +876,8 @@ export const viewStorePersistOptions = (name: string) => ({
 
 /**
  * Reusable persist `merge` for view-state stores. Generic over T so the same
- * deep-merge for `cardProperties` works for both the issues view store and
- * the my-issues view store (which extends IssueViewState).
+ * deep-merge for `cardProperties` works for every view-state store, each of
+ * which extends IssueViewState.
  */
 export function mergeViewStatePersisted<T extends IssueViewState>(
   persisted: unknown,

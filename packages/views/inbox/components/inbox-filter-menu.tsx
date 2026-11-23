@@ -269,7 +269,6 @@ export function InboxFilterMenu({
       initials={getActorInitials(option.type, option.id)}
       avatarUrl={getActorAvatarUrl(option.type, option.id)}
       isAgent={option.type === "agent"}
-      isSquad={option.type === "squad"}
       isSystem={option.type === "system"}
     />
   );
@@ -403,10 +402,11 @@ export function InboxFilterMenu({
           <>
             {operator("assignee")}
             <ActorSubContent
+              kind="assignee"
               counts={counts.assignees}
               selected={effectiveFilters.assignees.flatMap((key) => {
                 const { type, id } = inboxActorKeyParts(key);
-                return type === "member" || type === "agent" || type === "squad" ? [{ type, id }] : [];
+                return type === "agent" ? [{ type, id }] : [];
               })}
               onToggle={(actor) => toggle("assignee", `${actor.type}:${actor.id}`)}
               showNoAssignee

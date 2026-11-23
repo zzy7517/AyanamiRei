@@ -3,7 +3,7 @@ import { createAuthStore } from "../auth";
 import { setCurrentWorkspace } from "../platform/workspace-storage";
 import { configStore } from "../config";
 import type { StorageAdapter, User } from "../types";
-import { ApiClient, ApiError, CHAT_DRAFT_RESTORE_CAPABILITY, WORKSPACE_GUESTS_CAPABILITY, clientErrorMessage } from "./client";
+import { ApiClient, ApiError, CHAT_DRAFT_RESTORE_CAPABILITY, clientErrorMessage } from "./client";
 import { setApiRequestObserver } from "./request-observer";
 import { EMPTY_PLUGIN_PACKAGE_LIST, EMPTY_PLUGIN_PREVIEW, EMPTY_PLUGIN_SURFACE_LAUNCH } from "./schemas";
 
@@ -836,26 +836,16 @@ describe("ApiClient workspace working agents", () => {
 
     const client = new ApiClient("https://api.example.test");
     await expect(
-      client.getWorkspaceWorkingAgents("issue", "assigned"),
-    ).resolves.toEqual(payload);
-    await expect(
       client.getWorkspaceWorkingAgents("issue"),
     ).resolves.toEqual(payload);
     await expect(client.getWorkspaceWorkingAgents()).resolves.toEqual(payload);
     await expect(
-      client.getWorkspaceWorkingAgents("issue", undefined, "parent-1"),
-    ).resolves.toEqual(payload);
-    // The server rejects parent alongside scope, so a My Issues relation wins
-    // and the parent is dropped rather than sent into a 400.
-    await expect(
-      client.getWorkspaceWorkingAgents("issue", "assigned", "parent-1"),
+      client.getWorkspaceWorkingAgents("issue", "parent-1"),
     ).resolves.toEqual(payload);
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      "https://api.example.test/api/working-agents?type=issue&scope=mine&relation=assigned",
       "https://api.example.test/api/working-agents?type=issue",
       "https://api.example.test/api/working-agents",
       "https://api.example.test/api/working-agents?type=issue&parent=parent-1",
-      "https://api.example.test/api/working-agents?type=issue&scope=mine&relation=assigned",
     ]);
   });
 });
@@ -1560,7 +1550,6 @@ describe("ApiClient", () => {
           content: "hello",
           type: "comment",
           parent_id: null,
-          reactions: [],
           attachments: [],
           created_at: "2026-06-05T00:00:00Z",
           updated_at: "2026-06-05T00:00:00Z",
@@ -1578,7 +1567,6 @@ describe("ApiClient", () => {
           content: "updated",
           type: "comment",
           parent_id: null,
-          reactions: [],
           attachments: [],
           created_at: "2026-06-05T00:00:00Z",
           updated_at: "2026-06-05T00:01:00Z",
@@ -3578,38 +3566,6 @@ describe("ApiClient issue environments", () => {
   });
 });
 
-describe("created-by filter compatibility", () => {
-  it.each([false, true])("retries literal creator filtering on an old server (POST=%s)", async (post) => {
-    const fetchMock = vi.fn().mockImplementation(async () => new Response(JSON.stringify({ issues: [], total: 0 }), { status: 200 }));
-    vi.stubGlobal("fetch", fetchMock);
-    const client = new ApiClient("https://api.example.test");
-    await client.listIssues({ created_by_user_id: "me", ...(post ? { ids: ["issue"] } : {}) });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    if (post) {
-      expect(JSON.parse(fetchMock.mock.calls[1]![1].body)).toMatchObject({ creator_id: "me" });
-    } else {
-      expect(new URL(fetchMock.mock.calls[1]![0]).searchParams.get("creator_id")).toBe("me");
-    }
-  });
-  it("accepts a server acknowledgment without narrowing agent-created results", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ issues: [], total: 0, created_by_user_id: "me" }), { status: 200 }));
-    vi.stubGlobal("fetch", fetchMock);
-    await new ApiClient("https://api.example.test").listIssues({ created_by_user_id: "me" });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(new URL(fetchMock.mock.calls[0]![0]).searchParams.get("created_by_user_id")).toBe("me");
-  });
-});
-
-
-describe("grouped created-by compatibility", () => {
-  it("retries a legacy server with literal creator_id", async () => {
-    const fetchMock = vi.fn(async (_url: string) => Response.json({ groups: [] }));
-    vi.stubGlobal("fetch", fetchMock);
-    await new ApiClient("https://api.example.test").listGroupedIssues({ group_by: "assignee", created_by_user_id: "me" });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(new URL(fetchMock.mock.calls[1]![0]).searchParams.get("creator_id")).toBe("me");
-  });
-});
 
 describe("ApiClient request observer", () => {
   afterEach(() => setApiRequestObserver(null));
@@ -3652,27 +3608,5 @@ describe("ApiClient request observer", () => {
     const events = observe();
     await expect(new ApiClient("https://api.example.test").listMembers("ws-1")).rejects.toThrow();
     expect(events[1]).toMatchObject({ phase: "end", status: null, error: "TypeError: Failed to fetch" });
-  });
-});
-
-// The server hides guest rows from member and invitation lists unless the
-// caller declares it can render the guest role; drop the header and the
-// members page silently loses every guest.
-describe("workspace guest lists", () => {
-  afterEach(() => vi.unstubAllGlobals());
-
-  it.each([
-    ["listMembers", (c: ApiClient) => c.listMembers("ws-1")],
-    ["listWorkspaceInvitations", (c: ApiClient) => c.listWorkspaceInvitations("ws-1")],
-  ])("%s advertises the guest capability", async (_name, call) => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response("[]", {
-      status: 200, headers: { "Content-Type": "application/json" },
-    }));
-    vi.stubGlobal("fetch", fetchMock);
-
-    await call(new ApiClient("https://api.example.test"));
-
-    const init = fetchMock.mock.calls[0]?.[1] as { headers: Record<string, string> };
-    expect(init.headers["X-Client-Capabilities"]).toBe(WORKSPACE_GUESTS_CAPABILITY);
   });
 });

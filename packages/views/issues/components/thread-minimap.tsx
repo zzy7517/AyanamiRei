@@ -380,7 +380,7 @@ export function ThreadMinimap({
   const visibleIds = useVisibleAnchorIds(railAnchorIds, scrollContainerEl);
 
   // Flattened previews, cached per comment by content so an unrelated timeline
-  // update (reaction, new reply elsewhere) doesn't re-flatten every comment.
+  // update (a new reply elsewhere) doesn't re-flatten every comment.
   // Section items have no comment body; their titles come from props.
   const prevPreviewsRef = useRef<Map<string, { content: string | undefined; preview: { title: string; body: string } }>>(new Map());
   const previews = useMemo(() => {

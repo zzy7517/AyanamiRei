@@ -186,6 +186,17 @@ La valeur minimale est `60s` ; toute valeur plus courte est ramenée à ce minim
 
 Redémarrez le service API après l'avoir modifiée. La valeur s'applique aux sessions émises ou réémises ensuite. Comme les sessions sont glissantes, une session existante adopte la nouvelle durée de vie lors de sa prochaine réémission.
 
+## Jeton pré-partagé
+
+`MULTICA_AUTH_TOKEN` est un secret fixe qui connecte un client à un seul compte, sans code de vérification ni Google. Desktop l'envoie lorsque `~/.multica/desktop.json` définit `authToken` ([Desktop](/desktop-app#se-connecter-sans-page-de-connexion)) ; le CLI et le daemon l'acceptent dans le champ `token` de la configuration de leur profil.
+
+| Variable | Effet |
+|---|---|
+| `MULTICA_AUTH_TOKEN` | Secret accepté partout où l'est un jeton d'accès personnel : `/api/**` et les points d'accès WebSocket. Désactivé si non défini |
+| `MULTICA_AUTH_TOKEN_EMAIL` | Adresse e-mail du compte auquel appartient le jeton. Obligatoire quand le jeton est défini ; sans elle, le serveur journalise une erreur et refuse le jeton |
+
+Si l'adresse e-mail ne correspond encore à aucun compte, le démarrage le crée dans l'état d'une inscription terminée (e-mail vérifié, configuration initiale terminée) et lui donne le premier espace de travail que reçoit la première inscription. Si le compte existe, il est utilisé tel quel. Les restrictions d'inscription ci-dessus ne s'appliquent pas à ce compte, et `/api` reste fermé à toute requête sans identifiant. Redémarrez le service API après avoir modifié l'une ou l'autre variable.
+
 ## Étapes suivantes
 
 - [Variables d'environnement](/environment-variables) — la référence complète des variables.

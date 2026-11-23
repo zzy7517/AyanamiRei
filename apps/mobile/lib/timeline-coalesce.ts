@@ -13,9 +13,6 @@
  *       (b) the gap is ≤ 2 minutes,
  *     merge it: bump `coalesced_count` and replace the previous entry's body
  *     with the newer one (preserves the newest timestamp/actor).
- *   - `squad_leader_evaluated` NEVER coalesces — each entry carries unique
- *     audit data (outcome + reason) and merging would drop the second
- *     evaluation's context. Matches web.
  *   - Comments never coalesce (each is its own entry).
  *
  * Returns a new array; the input is not mutated.
@@ -24,7 +21,6 @@ import type { TimelineEntry } from "@multica/core/types";
 
 const COALESCE_MS = 2 * 60 * 1000;
 const NO_TIME_LIMIT_ACTIONS = new Set(["task_completed", "task_failed"]);
-const NEVER_COALESCE_ACTIONS = new Set(["squad_leader_evaluated"]);
 
 export function coalesceTimeline(
   entries: TimelineEntry[],
@@ -34,7 +30,6 @@ export function coalesceTimeline(
     if (entry.type === "activity") {
       const prev = out[out.length - 1];
       if (
-        !NEVER_COALESCE_ACTIONS.has(entry.action ?? "") &&
         prev?.type === "activity" &&
         prev.action === entry.action &&
         prev.actor_type === entry.actor_type &&

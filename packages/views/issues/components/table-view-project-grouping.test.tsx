@@ -186,7 +186,6 @@ describe("Table grouped by project", () => {
       listProperties: async () => ({ properties: [] }),
       listMembers: async () => [],
       listAgents: async () => [],
-      listSquads: async () => [],
       listIssueStatuses: async () => ({ statuses: [] }),
       listProjects: async () => ({
         projects: [

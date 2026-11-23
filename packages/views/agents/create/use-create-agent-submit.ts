@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { buildCreateAgentRequest, type AgentDraft } from "@multica/core/agents";
 import { api, ApiError } from "@multica/core/api";
 import { useWorkspaceId } from "@multica/core/hooks";
@@ -14,7 +13,6 @@ import {
   workspaceKeys,
 } from "@multica/core/workspace/queries";
 import { useNavigation } from "../../navigation";
-import { withSquadParam } from "./squad-param";
 import { useT } from "../../i18n";
 import { usePaidFeatureErrorMessage } from "../../billing";
 
@@ -39,16 +37,13 @@ export function classifyAgentCreateError(
  * Commits the draft and leaves the creation flow.
  *
  * Deliberately not optimistic: the flow navigates away on success, so the agent
- * has to exist before the destination renders. A failed squad join is reported
- * as a warning instead of failing the create — the agent is already committed
- * at that point and a retry would duplicate it.
+ * has to exist before the destination renders.
  */
 export function useCreateAgentSubmit(options: {
   draft: AgentDraft;
   runtimeId: string | null;
   /** Provider of `runtimeId`, so settings it cannot run are not submitted. */
   runtimeProvider?: string;
-  squadId: string | null;
   /** Creation-source attribution for the `agent_created` analytics event. */
   template?: string;
   duplicateSource?: Agent | null;
@@ -70,7 +65,6 @@ export function useCreateAgentSubmit(options: {
     draft,
     runtimeId,
     runtimeProvider,
-    squadId,
     template,
     duplicateSource,
     onCreated,
@@ -93,30 +87,6 @@ export function useCreateAgentSubmit(options: {
       );
       if (!agent.id) throw new Error(t(($) => $.creation_studio.create_failed));
 
-      if (squadId) {
-        try {
-          await api.addSquadMember(squadId, {
-            member_type: "agent",
-            member_id: agent.id,
-          });
-          await Promise.all([
-            qc.invalidateQueries({
-              queryKey: [...workspaceKeys.squads(wsId), squadId, "members"],
-            }),
-            qc.invalidateQueries({
-              queryKey: [...workspaceKeys.squads(wsId), squadId],
-            }),
-          ]);
-        } catch (error) {
-          toast.warning(
-            t(($) => $.create_dialog.squad_join_failed_toast, {
-              name: agent.name || draft.name.trim(),
-              error: error instanceof Error ? error.message : "unknown error",
-            }),
-          );
-        }
-      }
-
       await onCreated?.(agent);
       cacheAgentResponse(qc, wsId, agent);
       // The create response is authoritative enough to open immediately.
@@ -125,7 +95,7 @@ export function useCreateAgentSubmit(options: {
       void qc.invalidateQueries({ queryKey: workspaceKeys.agents(wsId) });
       // Replace, not push: back from the done step must not reopen a form
       // whose agent already exists.
-      navigation.replace(withSquadParam(paths.newAgentDone(agent.id), squadId));
+      navigation.replace(paths.newAgentDone(agent.id));
     } catch (error) {
       const nextErrors = classifyAgentCreateError(
         error,

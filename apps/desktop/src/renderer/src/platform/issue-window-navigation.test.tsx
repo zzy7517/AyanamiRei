@@ -174,7 +174,7 @@ describe("IssueWindowNavigationProvider adapter push/replace", () => {
 
 /**
  * MUL-6784 — an issue window is a MemoryRouter over the packaged file:// page,
- * so `window.location` knows nothing about the route. A report or share link
+ * so `window.location` knows nothing about the route. A report or copied link
  * built from this adapter must still name the comment the user was reading.
  */
 describe("IssueWindowNavigationProvider current location", () => {

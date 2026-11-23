@@ -19,7 +19,7 @@ export default function IssueAssigneePickerRoute() {
   const wsId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const { data: issue } = useQuery(issueDetailOptions(wsId, id));
   const updateIssue = useUpdateIssue(id);
-  const query = useNativeSearchBar(t("picker.search_people"), { autoFocus: true });
+  const query = useNativeSearchBar(t("picker.search_agents"), { autoFocus: true });
 
   const value =
     issue?.assignee_type && issue?.assignee_id

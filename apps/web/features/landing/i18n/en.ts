@@ -346,7 +346,7 @@ export function createEnDict(): LandingDict {
           "The Issue sidebar lists sub-Issues, so you can check and open them while reading.",
           "Give a workspace a text icon of one or two characters and a color, without uploading an image.",
           "Runtime pages show how much of your Claude Code and Codex plan limits is used and when they reset.",
-          "New in the CLI: read your Inbox, assign autopilots to squads, and see why an Issue change started no run.",
+          "New in the CLI: read your Inbox and see why an Issue change started no run.",
         ],
         improvements: [
           "Long Issues scroll and search more smoothly, and toggling the sidebar or opening one from the Inbox is faster.",
@@ -359,7 +359,6 @@ export function createEnDict(): LandingDict {
         fixes: [
           "Cursor keeps each agent's MCP sign-ins across tasks, and shows a sign-in entry when one is missing.",
           "Retries run on the agent's current runtime and no longer resume the old session after a runtime change.",
-          "Squad leaders still follow up when members mention people, and @squad mentions no longer notify every member.",
           "Webhook action filters match GitLab merge request, pipeline, and job events, and separate deliveries no longer merge into one Issue.",
           "Desktop stable updates arrive only once every platform's build is ready, failed updates recover, and Windows arm64 no longer downgrades.",
           "Custom runtimes stay on the machine you chose instead of being copied to everyone's machines.",
@@ -394,7 +393,7 @@ export function createEnDict(): LandingDict {
           "New in the CLI: manage saved views, link or unlink PRs, filter webhook events, bulk update Issues, and archive projects.",
         ],
         improvements: [
-          "You're notified about Issues agents create for you, a comment mentioning you notifies once, and reactions can be muted.",
+          "You're notified about Issues agents create for you, and a comment mentioning you notifies once.",
           "When you complete or cancel an Issue, your notifications for it leave your Inbox.",
           "Built-in views become My work, Working, Subscribed, and Snoozed, and Projects has a No project row.",
           "Open views from Cmd+K, every sidebar view shows a count, and desktop has New issue and Search in the rail.",
@@ -443,7 +442,7 @@ export function createEnDict(): LandingDict {
         ],
         improvements: [
           "Setting up a project's workflow, repositories, local folders, and sub-Issue wakeup defaults takes fewer steps.",
-          "Creating skills, managing labels, and inviting people are simpler, and squads can be edited in place.",
+          "Creating skills, managing labels, and inviting people are simpler.",
           "Messaging channels belong to agents and connect with one click, and GitHub authorization brings you back with the repository selected.",
           "Agent filters share one meaning of \"my agents\", add Idle, and Issues show who actually requested an agent's work.",
           "Execution logs show command input line by line, and the runtime usage page keeps its time range.",
@@ -484,7 +483,6 @@ export function createEnDict(): LandingDict {
           "Copy a link that always opens the latest version of a deliverable.",
           "Turn on Include sub-issues in the execution log to see runs and cost across all sub-Issues.",
           "Filter the Inbox the same way as Issues.",
-          "Hand a workflow step to a squad.",
           "Multica is available in Russian.",
           "Run a personal agent on Muse app with the new museapp backend.",
           "Qoder can use the workspace's GitHub App to access repositories.",
@@ -513,7 +511,7 @@ export function createEnDict(): LandingDict {
           "Search boxes in filter submenus accept typing again.",
           "multica daemon start reports success only once the daemon is healthy.",
           "Channel binding pages such as Lark and Slack no longer clash with workspace URLs.",
-          "Smaller fixes to the sidebar, squad pickers, autopilot run history, and the CLI.",
+          "Smaller fixes to the sidebar, autopilot run history, and the CLI.",
         ],
       },
       {
@@ -530,14 +528,14 @@ export function createEnDict(): LandingDict {
           "When creating a sub-Issue, you can copy fields from its parent Issue.",
           "Open ? → What's new to see the highlights of each release.",
           "Multica is available in Spanish (Spain). Switch the language in Settings or from the account menu.",
-          "Qoder Cloud Agents can connect IM integrations, receive chat attachments and send files back to the chat, and be picked as a squad leader in quick create.",
+          "Qoder Cloud Agents can connect IM integrations, receive chat attachments and send files back to the chat.",
           "Agents can read saved views with view list and view issues, using the same filters and paging as the app.",
           "Plugins can read a task's messages with GET /v1/tasks/{task_id}/messages and fetch only new ones by seq.",
           "Slack history and task context include the channel ID, the channel name when available, and a link to the original thread.",
           "issue list in the CLI can filter by a range of update times.",
         ],
         improvements: [
-          "Empty pages for agents, projects, skills, squads, runtimes, autopilots, and wakeups explain what they are for and how to get started.",
+          "Empty pages for agents, projects, skills, runtimes, autopilots, and wakeups explain what they are for and how to get started.",
           "Inbox and Chat lists remember their own widths, and Inbox rows are more compact.",
           "Opening an Issue from anywhere marks all of its Inbox notifications as read, and Inbox rows show what needs action ahead of newer updates.",
           "Restore to inbox is now in the Issue's more actions menu.",
@@ -586,7 +584,7 @@ export function createEnDict(): LandingDict {
           "Time inputs let Ctrl, Cmd, and Alt shortcuts through.",
           "Copying when the clipboard is unavailable keeps your text selection.",
           "After a desktop restart, background Issue tabs show their title and status.",
-          "When a wakeup or follow-up run starts from an outdated workflow step, agents and squad leaders are told and leave the status as is.",
+          "When a wakeup or follow-up run starts from an outdated workflow step, agents are told and leave the status as is.",
           "An Issue that fails to load shows a retry instead of saying it was deleted, and the sidebar's project status list can be retried.",
           "Retrying chats after switching workspaces no longer mixes data between workspaces.",
           "Hover or focus a cut-off project name or Issue title in the sidebar to see it in full.",
@@ -636,7 +634,7 @@ export function createEnDict(): LandingDict {
           "Codex models from the new catalog no longer start their own subagents.",
           "Custom runtime configurations can be deleted again.",
           "Hermes shows the real reason a run failed.",
-          "Quick create assigns the agent or squad you picked.",
+          "Quick create assigns the agent you picked.",
           "Clearing an advanced filter value no longer breaks the list.",
           "The Auto nav item no longer shows a red dot you can't clear.",
           "Devin lists models when you use an API key.",
@@ -785,7 +783,6 @@ export function createEnDict(): LandingDict {
           "Hermes finds and applies the right reasoning effort for non-default models.",
           "Kimi errors show what went wrong instead of [object Object].",
           "A stuck task that fails for good leaves a failure note on the Issue.",
-          "A squad leader that is woken up keeps its leader role.",
           "On Windows, startup no longer opens a flood of Git sign-in windows.",
           "On Windows, WeCom media streams without extra downloads or leftover temporary files.",
           "On mobile, reconnecting keeps your place instead of resetting navigation.",
@@ -831,7 +828,7 @@ export function createEnDict(): LandingDict {
           "Issue reference cards show more context, and Shift+click opens a side preview.",
           "With Muse Code 1.4.10 or later installed and signed in, agents can run tasks on it and resume sessions.",
           "On macOS and Linux, Cursor 2026.10.14 or later accepts new guidance mid-run, except in local folders.",
-          "Quick actions can post a preset comment without picking an agent or squad.",
+          "Quick actions can post a preset comment without picking an agent.",
           "The Inbox can show only Issues that no agent is working on.",
           "Rename an Issue straight from its actions menu in lists and boards.",
         ],
@@ -1054,7 +1051,6 @@ export function createEnDict(): LandingDict {
           "The Windows installer runs on PowerShell 5.1.",
           "Confirmation dialogs in French no longer scroll sideways.",
           "An Autopilot keeps a record of the Issues it creates.",
-          "A guest squad leader wakes up and picks the work up.",
           "You can tell where a WeCom reply was lost on its way back.",
         ],
       },
@@ -1199,7 +1195,6 @@ export function createEnDict(): LandingDict {
           "A retry, or checking out the same repository again, keeps what the earlier attempt left behind.",
           "Reopening the Inbox no longer misses notifications that arrived while you were away.",
           "A reply in a Lark group keeps the original message and mentions who asked.",
-          "A worker's reply still reaches the Squad leader after the task is claimed.",
           "Older Autopilot triggers run again instead of being skipped.",
           "Usage says when token counts are partial, instead of showing them as complete.",
           "An Antigravity run reports what it used and cost.",
@@ -1318,7 +1313,6 @@ export function createEnDict(): LandingDict {
           "Deleting a runtime takes effect right away, with no stale connection left behind.",
         ],
         fixes: [
-          "Replying to a squad leader stays with that leader, keeping the briefing, folder, and session.",
           "Long Issue identifiers no longer cover the title in lists and tables.",
           "Sign-in, error, and not-found pages follow the language you picked.",
           "Signing in still works after you switch languages part way through.",
@@ -1381,7 +1375,7 @@ export function createEnDict(): LandingDict {
         improvements: [
           "Issue lists open faster in large workspaces.",
           "Agents start faster when a lot of Skills are available to them.",
-          "Onboarding, Squads, the editor, statuses, and priorities read naturally in every language.",
+          "Onboarding, the editor, statuses, and priorities read naturally in every language.",
           "Agent output shows full file paths again, with nothing hidden by mistake.",
           "Self-hosted servers do less background work against the database.",
           "A self-hosted server keeps answering even when a connection stalls.",
@@ -1449,7 +1443,7 @@ export function createEnDict(): LandingDict {
           "Local task folders now have readable names, so your files are easy to find.",
         ],
         fixes: [
-          "Autopilots can hand work to your private agents and Squads again.",
+          "Autopilots can hand work to your private agents again.",
           "An Autopilot keeps its Project when you edit its other settings.",
           "Chat follows the newest output as it streams, and scrolling up no longer snaps you back.",
           "Private runtimes are no longer visible to other members.",
@@ -1625,11 +1619,10 @@ export function createEnDict(): LandingDict {
         version: "0.4.27",
         date: "2026-08-17",
         title:
-          "Workspace MCP servers, share-link invites, and a rebuilt transcript",
+          "Workspace MCP servers and a rebuilt transcript",
         changes: [],
         features: [
           "You can now set up MCP servers once for a workspace and hand them to individual agents.",
-          "You can now create a share link that lets someone join your workspace directly.",
           "The transcript now reads as steps, with a two-lane timeline and an outcome summary.",
           "Files sent in Slack now arrive in the conversation as attachments.",
           "You can now add Multica to your phone's home screen and open it like an app.",
@@ -1841,7 +1834,6 @@ export function createEnDict(): LandingDict {
           "An agent with nothing to deliver no longer replies with a placeholder sentence.",
           "Your own chat messages now show up reliably in other windows and devices.",
           "Runs you stopped now count toward run time and task totals.",
-          "An ordinary agent is no longer mistaken for a squad leader.",
           "CodeBuddy now starts with the MCP servers you configured.",
           "Remote MCP servers are no longer silently ignored on some runtimes.",
           "An OpenCode run that produced nothing no longer reports success.",
@@ -1946,7 +1938,6 @@ export function createEnDict(): LandingDict {
           "Clearing a field is now the first row of every picker.",
           "A wide Autopilot runbook no longer pushes the settings panel out of the dialog.",
           "The Discord link in the Chinese sidebar is no longer truncated.",
-          "Assigning an Issue to a squad no longer produces errors.",
         ],
       },
       {
@@ -2283,7 +2274,6 @@ export function createEnDict(): LandingDict {
           "Choose which fields appear when you create an issue, now from Settings.",
           "The issues page now clearly shows how many agents are working right now.",
           "Your machine's agent service now remembers the startup options you set.",
-          "Squad leader follow-ups on the same issue pick up where they left off.",
           "Starting your machine's agent service without signing in now tells you what to do instead of hanging.",
         ],
         fixes: [
@@ -2447,7 +2437,7 @@ export function createEnDict(): LandingDict {
           "Mention a busy agent across several separate comment threads and each thread now gets its own answer.",
         ],
         improvements: [
-          "Agent, squad, and workspace avatars are now round everywhere, matching your member avatar.",
+          "Agent and workspace avatars are now round everywhere, matching your member avatar.",
           "Changing the status of several sub-issues at once now applies right away, without a needless confirm step.",
           "A chat message you send while an agent is still replying is now picked up by its next reply, never missed.",
           "The background service on your machine keeps its own log small, so it can no longer fill up your disk.",
@@ -2485,11 +2475,10 @@ export function createEnDict(): LandingDict {
       {
         version: "0.3.41",
         date: "2026-07-08",
-        title: "Machine names, member-owned squads, and CLI issue ordering",
+        title: "Machine names and CLI issue ordering",
         changes: [],
         features: [
           "You can now give your machines their own names, and the runtime picker for creating an agent is searchable and grouped by machine.",
-          "Any member can now create and manage their own squads, not just workspace admins.",
           "An agent's owner can now connect and manage its Lark bot directly, without needing to be an admin.",
           "You can now reorder issues from the command line and set an exact position.",
         ],
@@ -2531,7 +2520,7 @@ export function createEnDict(): LandingDict {
       {
         version: "0.3.39",
         date: "2026-07-06",
-        title: "Qoder and Trae CLI as custom runtime bases, plus squad and stability fixes",
+        title: "Qoder and Trae CLI as custom runtime bases, plus stability fixes",
         changes: [],
         features: [
           "You can now build custom runtime profiles on top of Qoder, including for Qoder CN users.",
@@ -2541,9 +2530,7 @@ export function createEnDict(): LandingDict {
           "The runtime provider page and public docs now show the full lineup of built-in runtimes, including Qoder and Trae CLI, across every localized site.",
         ],
         fixes: [
-          "Multi-stage squad flows no longer stall at the first stage when the squad leader is private and a sub-Issue is closed by an agent.",
-          "A parent Issue's staged sub-task-done note no longer wrongly claims an intermediate stage is the final one — the leader is offered both options and picks.",
-          "Several agents can now share a local repo checkout while a squad leader wraps up — the leader no longer holds the checkout lock.",
+          "Several agents can now share a local repo checkout while another agent wraps up — it no longer holds the checkout lock.",
           "Multi-hour agent tasks — long research, training, or codegen runs — are no longer killed by the server while your daemon is still alive.",
           "Search no longer hangs on self-hosted setups — even large workspaces return results quickly on the first try.",
           "The Issue and comment editor no longer freezes when you paste a long stacktrace or an unusual long string.",
@@ -2575,9 +2562,8 @@ export function createEnDict(): LandingDict {
           "Autopilot 'create issue' runs stay visible on the runs list even when the runtime is offline.",
           "Slack alert cards (Grafana, incoming webhooks) whose real message body lives in the attachment are now read from the attachment instead of the short fallback line.",
           "Codex agent tasks see the daemon's Codex model catalog inside the task home again. (Community-reported.)",
-          "Legacy `/squads/…` and `/usage` web routes redirect to their current equivalents instead of 404-ing.",
+          "Legacy `/usage` web routes redirect to their current equivalent instead of 404-ing.",
           "The desktop app's Save dialog uses the real attachment filename instead of defaulting to `download.txt`. (Community contribution.)",
-          "Squad coordination: a private squad leader now wakes correctly when the worker agent it dispatched posts its completion comment via the HTTP API — the leader → worker → leader loop no longer stalls after the first hop.",
           "Tasks no longer hard-fail on hosts whose Claude CLI predates `--effort` — the daemon drops the effort flag with a warning and runs the task plainly.",
         ],
       },
@@ -2597,7 +2583,6 @@ export function createEnDict(): LandingDict {
           "The chat live timeline no longer remounts on every streamed task message, so long agent runs stay smooth.",
         ],
         fixes: [
-          "A child Issue closing inside the same squad now wakes the parent's squad leader, so the parent no longer stalls in in_progress.",
           "Daemon-managed agent CLI calls fail closed when they lose their task token, so agent writes stop landing as the workspace owner. (Community-reported.)",
           "Slack alert cards (Grafana, webhooks) whose body lives only in attachments, blocks, or rich_text are recovered on chat history reads.",
           "Inline base64 images (QR codes, screenshots, charts) render in Markdown and read-only Issue comments.",
@@ -2653,7 +2638,7 @@ export function createEnDict(): LandingDict {
           "The Agents page is now usable on mobile.",
         ],
         improvements: [
-          "Comment routing was rewritten end-to-end so parent-chain mentions, agent-authored replies, and squad-leader fallback all flow through one well-tested cascade.",
+          "Comment routing was rewritten end-to-end so parent-chain mentions and agent-authored replies flow through one well-tested cascade.",
           "Locale bundles dropped 117 dead `_one` plural keys, with a parity test guarding against regressions.",
           "The built-in runtime list now points at CodeBuddy instead of the removed Gemini runtime.",
           "Self-host preflight accepts newer Docker Compose CLI plugin versions while still rejecting Docker Compose v1.",
@@ -2701,7 +2686,6 @@ export function createEnDict(): LandingDict {
         ],
         fixes: [
           "Tab now reliably indents selected list items in the Issue editor and keeps focus in place.",
-          "Squad leaders boot with the full squad briefing when you @-mention them in a comment, and replies that inherit the parent mention no longer trigger them again.",
           "Code-block selections in Issues stay put while the page re-renders.",
           "Assigning an Issue directly to an agent opens the handoff note instantly instead of waiting on a check.",
           "The workspace switcher's unread dot now matches what you actually see in your inbox.",
@@ -2794,7 +2778,6 @@ export function createEnDict(): LandingDict {
         changes: [],
         features: [
           "Lark conversations now reply inside the original topic when a message starts from a topic, keeping team discussions easier to follow",
-          "Squad leaders can see member skills in the roster, making delegation more precise",
           "Discord is now available from the website footer, help menu, README, and a dismissible in-app sidebar card",
         ],
         improvements: [
@@ -2873,7 +2856,7 @@ export function createEnDict(): LandingDict {
           "Project rows, comment previews, and comment composers are more consistent and easier to use",
         ],
         fixes: [
-          "Reply and edit previews now show the right agents or squads before a comment is saved",
+          "Reply and edit previews now show the right agents before a comment is saved",
           "Plain Issue IDs in comments now stay as text unless they are intentionally linked",
           "Google sign-in from command line login now returns to the command line correctly after browser authentication",
           "Chat file uploads wait until an active agent is ready, avoiding failed uploads during loading",
@@ -2887,10 +2870,10 @@ export function createEnDict(): LandingDict {
         title: "Faster Lists, Easier Runtime Setup, and Safer Issue Editing",
         changes: [],
         features: [
-          "Agents, autopilots, projects, runtimes, skills, and squads now use a faster, more consistent list experience with clearer rows, filters, selections, and actions",
+          "Agents, autopilots, projects, runtimes, and skills now use a faster, more consistent list experience with clearer rows, filters, selections, and actions",
           "The command line can now manage workspace repositories, so local agents can pick up project repo context more easily",
           "Cursor and OpenClaw are easier to set up: Cursor connection settings can be managed for you, and OpenClaw can connect through an existing gateway",
-          "When editing a comment, you can preview and control which agents or squads will run before saving",
+          "When editing a comment, you can preview and control which agents will run before saving",
         ],
         improvements: [
           "Desktop recovery prompts now include more page context, making stuck-window reports easier to understand",
@@ -2950,7 +2933,7 @@ export function createEnDict(): LandingDict {
         title: "Safer Comment Triggers, Reliable Agents, and Attachments",
         changes: [],
         features: [
-          "Comment boxes now show which agents or squads will start work before you send, with controls to avoid accidental runs",
+          "Comment boxes now show which agents will start work before you send, with controls to avoid accidental runs",
           "Run transcripts now include timestamps, making agent progress and handoffs easier to review",
           "Autopilot detail pages now show who created each autopilot",
           "Claude Fable 5 is now available in Multica's supported model and pricing list",
@@ -3001,7 +2984,7 @@ export function createEnDict(): LandingDict {
           "Swimlane filters now apply correctly",
           "Mobile workspace switching now shows workspace logos reliably and uses clearer English copy",
           "Desktop update and transcript dialogs no longer act on windows or pages that have already closed",
-          "Runtime deletion now cleans archived squads and pauses autopilots as part of the same teardown",
+          "Runtime deletion now pauses autopilots as part of the same teardown",
           "Daemon runs now surface self-restart failures, stop local agents when terminal tasks are ended from the server, and clean stale branches during repository maintenance",
           "Self-hosted WebSocket connections work correctly behind proxies that set X-Forwarded-Host",
           "Project list headers keep their compact blurred styling",
@@ -3103,7 +3086,6 @@ export function createEnDict(): LandingDict {
           "Project Issue filters now apply the agents-working filter consistently across list, board, and timeline views",
         ],
         fixes: [
-          "Users without access can no longer trigger private squad leaders through indirect Issue or comment paths",
           "Project progress counters and reopened agent work now refresh more reliably",
           "Desktop and web recover better from blank workspace states, no-access pages, renderer errors, and renderer crashes",
           "Images and file cards keep rendering when names contain Markdown characters",
@@ -3120,7 +3102,6 @@ export function createEnDict(): LandingDict {
         changes: [],
         features: [
           "The CLI can now search Skills and list pull requests linked to an Issue, making release checks and automation audits easier from the terminal",
-          "Teams can change squad member roles from the CLI without opening the app",
           "Agent lists can be filtered by runtime machine, so teams can quickly find the agents tied to a device or local service",
           "SMTP relays now support secure SMTPS connections on port 465",
           "OpenCode runtimes can use MCP settings saved on an agent",
@@ -3152,7 +3133,7 @@ export function createEnDict(): LandingDict {
           "OpenClaw runtimes can use the MCP setup saved on an agent, and Claude Opus 4.8 is available in model selection and usage estimates",
         ],
         improvements: [
-          "Detail pages now share clearer breadcrumb headers, making Issues, projects, runtimes, skills, agents, and squads feel more consistent",
+          "Detail pages now share clearer breadcrumb headers, making Issues, projects, runtimes, skills, and agents feel more consistent",
           "Resumed agent tasks spend less time re-reading comments they already have, so follow-up work returns to the right discussion faster",
           "Issue mention guidance and CLI command snippets are easier to read and safer to copy",
         ],
@@ -3202,7 +3183,7 @@ export function createEnDict(): LandingDict {
         improvements: [
           "Chinese product copy is more consistent across navigation, settings, search, and runtime screens",
           "The frontend codebase received accessibility and React cleanup across common screens, and mobile checks now run only when mobile code changes",
-          "CLI list output is cleaner for automated readers, and squad lists now show member counts when available",
+          "CLI list output is cleaner for automated readers",
         ],
         fixes: [
           "Swimlane lanes no longer appear empty when nested Issues load beyond the first page",
@@ -3244,14 +3225,14 @@ export function createEnDict(): LandingDict {
         title: "Multica for iOS, Helm Self-Hosting & Smoother Collaboration",
         changes: [],
         features: [
-          "Multica for iOS is now available as our first official usable mobile client, covering login, workspaces, inbox, Issues, projects, chat, comments, reactions, presence, and live updates; it is not on the App Store yet, so users need to build and install it manually",
+          "Multica for iOS is now available as our first official usable mobile client, covering login, workspaces, inbox, Issues, projects, chat, comments, presence, and live updates; it is not on the App Store yet, so users need to build and install it manually",
           "Self-hosted teams can now deploy Multica to Kubernetes with a Helm chart, while Docker-based installs keep clearer port and URL controls",
           "Project resource pickers now include repository search, and workspace repository settings can store descriptions that help agents understand each codebase",
           "Runtime usage now recognizes DeepSeek, Kimi K2.6, Zhipu GLM, and long-context Claude Opus model costs more accurately",
           "The public site now supports use-case pages and a clearer path to Docs, Changelog, and getting started",
         ],
         improvements: [
-          "Squad avatars and board cards now show richer hover details, clearer member information, and better live status handling",
+          "Board cards now show richer hover details and better live status handling",
           "Desktop tabs better preserve position in long Issues and chats when switching views, with navigation that avoids duplicate history entries",
           "Code and rich-text content are easier to read, with literal command text preserved and editor styling split into focused areas",
           "Repository descriptions now travel with the workspace context given to agents, so assigned work can include more useful project background",
@@ -3288,7 +3269,6 @@ export function createEnDict(): LandingDict {
           "Online local runtimes no longer offer a delete action that immediately reappears because the local service is still running",
           "Pi responses no longer leak raw tool-call markup into visible assistant messages or Issue comments",
           "SVG uploads and inline file previews use safer handling by default",
-          "Squad leaders get clearer protection against accidentally triggering the same agent twice",
           "Self-hosted setups no longer expose the database port by default, and cloud runtime deletion sends the correct request details",
           "Desktop update settings, mobile skill pages, and assignee pickers now fit better across languages and small screens",
         ],
@@ -3325,7 +3305,7 @@ export function createEnDict(): LandingDict {
         title: "Smarter Autopilots, Agent Controls & Desktop Reliability",
         changes: [],
         features: [
-          "Autopilots can assign new work through squads and place created Issues directly into a selected Project",
+          "Autopilots can place created Issues directly into a selected Project",
           "Agent settings now include per-agent thinking controls for Claude and Codex, with an inspector picker that updates instantly",
           "Desktop tabs can be pinned so important workspace pages stay parked while new links open in fresh tabs",
           "User profiles can add requester context, giving coding agents better background for assigned Issues",
@@ -3336,7 +3316,6 @@ export function createEnDict(): LandingDict {
           "Runtime pages are quieter, and desktop keeps the local machine visible after stopping the local service",
           "Issue breadcrumbs show the Project segment when an Issue belongs to a Project",
           "HTML previews and attachment previews have roomier, more predictable layouts",
-          "Squad pages show fuller loading states and use a clearer archive confirmation dialog",
           "Agents now receive parent and sub-issue handoff guidance before running assigned work",
         ],
         fixes: [
@@ -3363,7 +3342,6 @@ export function createEnDict(): LandingDict {
         ],
         improvements: [
           "The onboarding flow now asks one focused question at a time and can guide runtime setup with fewer manual steps",
-          "My Issues now includes squad-assigned work and labels the team-related tab more clearly",
           "Agent execution logs can be sorted in either direction when reviewing a run",
         ],
         fixes: [
@@ -3396,7 +3374,6 @@ export function createEnDict(): LandingDict {
         fixes: [
           "Autopilot-created issues can repeat reliably and are attributed to the right assignee agent",
           "Runtime setup now prefers the local machine by default and uses cleaner labels in machine lists",
-          "Squad pages scroll correctly and show which members are already working",
           "Desktop zoom shortcuts work again across the common keyboard combinations",
           "Auth, dependency, and local-service updates improve the safety of hosted and self-hosted deployments",
         ],
@@ -3404,20 +3381,18 @@ export function createEnDict(): LandingDict {
       {
         version: "0.3.1",
         date: "2026-05-15",
-        title: "Faster Navigation, Background Updates & More Reliable Squads",
+        title: "Faster Navigation & Background Updates",
         changes: [],
         features: [
           "Member and agent detail pages now show related tasks so teams can review who is working on what",
           "The desktop app downloads updates in the background so a new version is ready when you are",
           "Self-hosted deployments can send email through SMTP as an alternative to Resend",
-          "Create Squad has a clearer setup flow with member selection that works better for team coordination",
         ],
         improvements: [
           "Page transitions are faster, with issue pages prepared ahead of time and smoother loading states",
           "Long issue activity blocks collapse so comments and conclusions are easier to scan",
-          "Agents and Squads remember the Mine/All view when you return to the list",
+          "Agents remember the Mine/All view when you return to the list",
           "Repository setup accepts more SSH URL formats across settings, projects, and quick create",
-          "Squad handoffs are more dependable when agents have multiple roles or delegate to a specific member",
         ],
         fixes: [
           "Self-hosted local file cards render and preview correctly",
@@ -3430,23 +3405,19 @@ export function createEnDict(): LandingDict {
       {
         version: "0.3.0",
         date: "2026-05-14",
-        title: "Squads & Attachment Previews",
+        title: "Attachment Previews",
         changes: [],
         features: [
-          "Squads let teams assign work to a group, with a leader agent coordinating the next step",
           "Attachments can be previewed in place for PDFs, audio, video, markdown, code, logs, and plain text",
-          "Chinese names can be found by pinyin across mentions, assignees, subscribers, agents, projects, and squads",
+          "Chinese names can be found by pinyin across mentions, assignees, subscribers, agents, and projects",
         ],
         improvements: [
-          "Squad pages now include member management, faster agent creation from a squad, clearer row actions, and a wider detail layout",
-          "Quick-create and picker flows are easier to search and now include squad-aware routing",
+          "Quick-create and picker flows are easier to search",
           "Usage charts can switch between cost and token views, with the same timezone controls used by runtimes",
-          "Workspace operators get command-line controls for managing squads and stopping a runaway issue run",
+          "Workspace operators get command-line controls for stopping a runaway issue run",
           "Shared interface labels are translated more consistently in English and Chinese",
         ],
         fixes: [
-          "Squad leaders stay quiet when a human already routed the conversation to someone specific",
-          "Mentioning a squad now wakes the right leader while preserving private-agent access rules",
           "Issue lists stay fresher after deletes and follow-up comments no longer trigger stale Done replies",
           "Attachment previews keep working for files added while writing or editing issues and comments",
         ],
@@ -4154,7 +4125,7 @@ export function createEnDict(): LandingDict {
           "Multiple agents can now run concurrently on the same issue",
           "Board view: Done column shows total count with infinite scroll",
           "ReadonlyContent component for lightweight Markdown display in comments",
-          "Optimistic UI updates for reactions and mutations with rollback",
+          "Optimistic UI updates for mutations with rollback",
           "WebSocket-driven cache invalidation replaces polling and refetch-on-focus",
           "Browser session persists during CLI login flow",
           "Daemon reuses existing worktrees by updating to latest remote",
@@ -4246,7 +4217,7 @@ export function createEnDict(): LandingDict {
         changes: [
           "Trigger agents via @mention in comments",
           "Stream live agent output to issue detail page",
-          "Rich text editor \u2014 mentions, link paste, emoji reactions, collapsible threads",
+          "Rich text editor \u2014 mentions, link paste, collapsible threads",
           "File upload with S3 + CloudFront signed URLs and attachment tracking",
           "Agent-driven repo checkout with bare clone cache for task isolation",
           "Batch operations for issue list view",

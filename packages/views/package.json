@@ -32,7 +32,6 @@
     "./autopilots/components": "./autopilots/components/index.ts",
     "./modals/registry": "./modals/registry.tsx",
     "./modals/create-issue": "./modals/create-issue.tsx",
-    "./my-issues": "./my-issues/index.ts",
     "./skills": "./skills/index.ts",
     "./agents": "./agents/index.ts",
     "./agents/agent-detail-page": "./agents/components/agent-detail-page.tsx",
@@ -52,8 +51,6 @@
     "./settings/components/wecom-mark": "./settings/components/wecom-mark.tsx",
     "./billing": "./billing/index.ts",
     "./dashboard": "./dashboard/index.ts",
-    "./squads": "./squads/index.ts",
-    "./squads/components": "./squads/components/index.ts",
     "./workspace/workspace-avatar": "./workspace/workspace-avatar.tsx",
     "./workspace/no-access-page": "./workspace/no-access-page.tsx",
     "./workspace/use-workspace-seen": "./workspace/use-workspace-seen.ts",
@@ -90,7 +87,8 @@
     "./locales/es": "./locales/es.ts",
     "./locales/ru": "./locales/ru.ts",
     "./locales/*": "./locales/*",
-    "./docs": "./docs/index.ts"
+    "./docs": "./docs/index.ts",
+    "./terminal": "./terminal/index.ts"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
@@ -127,6 +125,8 @@
     "@tiptap/starter-kit": "3.31.3",
     "@tiptap/suggestion": "3.31.3",
     "@tiptap/y-tiptap": "^3.3.1",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0",
     "cmdk": "catalog:",
     "hast-util-to-html": "^9.0.5",
     "katex": "catalog:",

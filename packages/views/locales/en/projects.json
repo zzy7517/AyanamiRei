@@ -104,6 +104,22 @@
     "archive_action": "Archive project",
     "restore_action": "Restore project"
   },
+  "scope": {
+    "add": "Add project",
+    "project_label": "Project",
+    "branch_label": "Branch",
+    "project_required": "Choose a project.",
+    "branch_required": "Enter a branch.",
+    "duplicate": "This project and branch are already in the list.",
+    "limit": "Up to {{max}} pairs.",
+    "remove": "Remove",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "section_title": "Projects + branches",
+    "save": "Save",
+    "create_failed": "The task was created without its worktrees: {{reason}}",
+    "create_failed_unknown": "The task was created without its worktrees. Add them on the task page."
+  },
   "resources": {
     "section_header": "Resources",
     "repos_group": "Repositories",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "Couldn't update the branch",
     "ref_error_commit": "That's a commit, not a branch. For a specific revision, use --ref with multica repo checkout.",
     "ref_default_label": "Default branch",
-    "ref_running_note": "Runs already in progress aren't affected."
+    "ref_running_note": "Runs already in progress aren't affected.",
+    "local_remote_add": "Add folder on another computer...",
+    "local_remote_machine_label": "Computer",
+    "local_remote_path_label": "Path"
   },
   "delete_dialog": {
     "offline_error": "You're offline. Reconnect and try deleting again.",
@@ -220,29 +239,6 @@
       "issue_pricing": "Pricing comparison table",
       "issue_blog": "Paginate the blog list"
     }
-  },
-  "access": {
-    "agent_notice": "Agents follow their owner's access.",
-    "label": "Access",
-    "title": "Access to {{title}}",
-    "description": "Controls who can see this project and its issues, comments, and attachments.",
-    "workspace": "Entire workspace",
-    "private": "Project members only",
-    "members_count": "Project members · {{count}}",
-    "add": "Add workspace member",
-    "search": "Search name or email...",
-    "no_members": "No matching members",
-    "no_selected": "No project members",
-    "members_only_notice": "Only the people listed here have access. Workspace owners and admins have to be added too.",
-    "manager": "Manages access",
-    "you": "You",
-    "remove": "Remove {{name}}",
-    "failed": "Could not save access changes.",
-    "load_failed": "Could not load project members.",
-    "publish_title": "Make this project visible to the workspace?",
-    "publish_description": "All workspace members will be able to see this project and its issues, comments, and attachments.",
-    "done": "Done",
-    "retry": "Retry"
   },
   "archive": {
     "badge": "Archived",

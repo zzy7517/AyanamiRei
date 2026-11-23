@@ -104,6 +104,22 @@
     "archive_action": "Archivar proyecto",
     "restore_action": "Restaurar proyecto"
   },
+  "scope": {
+    "add": "Añadir proyecto",
+    "project_label": "Proyecto",
+    "branch_label": "Rama",
+    "project_required": "Elige un proyecto.",
+    "branch_required": "Introduce una rama.",
+    "duplicate": "Este proyecto y rama ya están en la lista.",
+    "limit": "Hasta {{max}} pares.",
+    "remove": "Quitar",
+    "move_up": "Subir",
+    "move_down": "Bajar",
+    "section_title": "Proyectos + ramas",
+    "save": "Guardar",
+    "create_failed": "La tarea se creó sin sus worktrees: {{reason}}",
+    "create_failed_unknown": "La tarea se creó sin sus worktrees. Añádelos desde la página de la tarea."
+  },
   "resources": {
     "section_header": "Recursos",
     "repos_group": "Repositorios",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "No se ha podido actualizar la rama",
     "ref_error_commit": "Eso es un commit, no una rama. Para una revisión concreta, usa --ref con multica repo checkout.",
     "ref_default_label": "Rama por defecto",
-    "ref_running_note": "Las ejecuciones ya en curso no se ven afectadas."
+    "ref_running_note": "Las ejecuciones ya en curso no se ven afectadas.",
+    "local_remote_add": "Añadir carpeta en otro ordenador...",
+    "local_remote_machine_label": "Ordenador",
+    "local_remote_path_label": "Ruta"
   },
   "delete_dialog": {
     "offline_error": "Estás sin conexión. Vuelve a conectarte e intenta eliminar de nuevo.",
@@ -220,29 +239,6 @@
       "issue_pricing": "Tabla comparativa de precios",
       "issue_blog": "Paginar la lista del blog"
     }
-  },
-  "access": {
-    "agent_notice": "Los agentes tienen el mismo acceso que su propietario.",
-    "label": "Acceso",
-    "title": "Acceso a {{title}}",
-    "description": "Define quién puede ver este proyecto, sus tareas, comentarios y archivos adjuntos.",
-    "workspace": "Todo el espacio de trabajo",
-    "private": "Solo miembros del proyecto",
-    "members_count": "Miembros del proyecto · {{count}}",
-    "add": "Añadir miembro",
-    "search": "Buscar nombre o correo...",
-    "no_members": "No hay miembros coincidentes",
-    "no_selected": "No hay miembros del proyecto",
-    "members_only_notice": "Solo las personas de esta lista tienen acceso. Los owner y admin del espacio de trabajo también deben añadirse.",
-    "manager": "Gestiona el acceso",
-    "you": "Tú",
-    "remove": "Quitar a {{name}}",
-    "failed": "No se pudieron guardar los permisos.",
-    "load_failed": "No se pudieron cargar los miembros.",
-    "publish_title": "¿Hacer visible el proyecto a todo el espacio de trabajo?",
-    "publish_description": "Todos los miembros podrán ver este proyecto, sus tareas, comentarios y archivos adjuntos.",
-    "done": "Listo",
-    "retry": "Reintentar"
   },
   "archive": {
     "badge": "Archivado",

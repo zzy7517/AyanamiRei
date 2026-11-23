@@ -93,7 +93,7 @@ router → middleware → handler → service → sqlc query → PostgreSQL
 - `internal/service/` 負責跨查詢的業務流程和事務；
 - `pkg/db/queries/` 儲存手寫 SQL；
 - `pkg/db/generated/` 由 sqlc 生成，不能直接編輯；
-- `internal/integrations/` 處理 GitHub、Slack、飛書等外部事件；
+- `internal/integrations/` 處理 GitHub 等外部事件；
 - `internal/storage/` 處理本地或 S3 附件。
 
 PostgreSQL 是業務資料的權威來源。Redis 是可選元件，用於跨實例實時事件、快取或臨時協調；沒有配置時，單實例開發環境使用程序內實現。
@@ -123,7 +123,7 @@ provider 適配層統一了不同 AI 程式設計工具的啟動、流式事件�
 
 業務查詢必須限定 `workspace_id`，請求進入工作區路由前會檢查成員身份。`X-Workspace-ID` 選擇當前工作區，但不能替代權限檢查。
 
-任務的負責人是多態關係，可以指向成員、AI 代理或小隊。新增查詢、快取 key 或實時事件時，都要保留工作區與負責人類型，不能只按資源 ID 假設全局唯一上下文。
+任務的負責人只能是 AI 代理。任務上的其他角色（例如建立者和訂閱者）可以是成員或 AI 代理。新增查詢、快取 key 或實時事件時，都要保留工作區與角色類型，不能只按資源 ID 假設全局唯一上下文。
 
 ## 接下來
 

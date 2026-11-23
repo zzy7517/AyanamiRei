@@ -1,7 +1,7 @@
 /**
  * Workspace-wide Issues page. Mirrors web `packages/views/issues/components/
  * issues-page.tsx:32-94`: fetch every issue in the workspace, expose
- * `all / members / agents` scope tabs, group by status, allow status +
+ * `all / agents` scope tabs, group by status, allow status +
  * priority filtering.
  *
  * Scope is a **client-side** filter on `assignee_type` — matches web
@@ -9,12 +9,7 @@
  * scoped (no scope param on the wire), so `issueKeys.list(wsId)` and
  * `useIssuesRealtime` need no changes.
  *
- * Differences vs My Issues (`(tabs)/my-issues.tsx`):
- *   - Workspace-wide list (all issues), not user-scoped.
- *   - Three scopes are `all / members / agents` (assignee_type pre-filter),
- *     not `assigned / created / agents` (per-user predicates).
- *   - Independent filter store (`useIssuesViewStore`) so workspace-level
- *     filters don't bleed into the per-user view.
+ * Its filter store (`useIssuesViewStore`) is the workspace Issues page's own.
  *
  * Filters beyond status/priority (assignee / project / label / creator)
  * are deferred — power-user features with non-trivial picker cost; ship
@@ -58,7 +53,7 @@ import { THEME } from "@/lib/theme";
 // either, and on SE3 (375pt) "(123)" appended to each label pushes the
 // row past the safe width when filter icon shares the row. Per-status
 // counts still appear on the SectionList headers below.
-const SCOPES: IssuesScope[] = ["all", "members", "agents"];
+const SCOPES: IssuesScope[] = ["all", "agents"];
 
 export default function IssuesPage() {
   const wsId = useWorkspaceStore((s) => s.currentWorkspaceId);
@@ -74,7 +69,7 @@ export default function IssuesPage() {
     if (!wsSlug) return;
     router.push({
       pathname: "/[workspace]/issues-filter",
-      params: { workspace: wsSlug, scope: "all" },
+      params: { workspace: wsSlug },
     });
   };
 
@@ -95,13 +90,8 @@ export default function IssuesPage() {
   // status/priority filtering so chip filters operate on the visible slice.
   const scopedIssues = useMemo(() => {
     const allIssues = data ?? [];
-    if (scope === "members") {
-      return allIssues.filter((i) => i.assignee_type === "member");
-    }
     if (scope === "agents") {
-      return allIssues.filter(
-        (i) => i.assignee_type === "agent" || i.assignee_type === "squad",
-      );
+      return allIssues.filter((i) => i.assignee_type === "agent");
     }
     return allIssues;
   }, [data, scope]);
@@ -197,9 +187,7 @@ export default function IssuesPage() {
 }
 
 /**
- * Outline icon button matching the pill height. Identical to the helper in
- * `(tabs)/my-issues.tsx` for the same reason ScopeToolbar is duplicated:
- * two callers don't justify a shared primitive yet.
+ * Outline icon button matching the pill height.
  */
 function FilterButton({
   onPress,
@@ -239,9 +227,6 @@ function FilterButton({
  * Toolbar row mirroring web `IssuesHeader`
  * (`packages/views/issues/components/issues-header.tsx:516-543`): left-aligned
  * scope pill group + right-side Filter icon (red dot on active filters).
- * Identical to the equivalent in `(tabs)/my-issues.tsx` — kept duplicated
- * because the threshold for a shared `components/ui/` primitive is 3 callers,
- * and two callers don't justify the abstraction yet.
  */
 function ScopeToolbar<S extends string>({
   scopes,

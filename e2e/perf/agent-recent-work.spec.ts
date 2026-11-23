@@ -68,15 +68,12 @@ function responseFor(path: string): unknown {
       id: userId, user_id: userId, workspace_id: wsId, role: "owner", name: "Demo User",
       email: "demo@example.test", avatar_url: null, joined_at: at,
     }];
-    case "/api/chat/sessions": case "/api/runtimes": case "/api/squads":
+    case "/api/chat/sessions": case "/api/runtimes":
     case "/api/agent-task-snapshot": case "/api/invitations": case "/api/inbox":
     case "/api/inbox/unread-summary": case "/api/pins": case "/api/assignee-frequency":
     case "/api/skills": case "/api/autopilots": case "/api/agent-run-counts":
       return [];
     case "/api/chat/pending-tasks/has-any": return { has_pending: false };
-  }
-  if (new RegExp(`^/api/workspaces/${wsId}/(lark|slack|dingtalk|wecom|telegram)/installations$`).test(path)) {
-    return { installations: [], configured: false };
   }
   const issue = /^\/api\/issues\/PERF-(\d+)$/.exec(path);
   if (issue) return {

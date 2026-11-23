@@ -186,6 +186,17 @@ The minimum is `60s`; anything shorter is clamped up to it and logs a warning at
 
 Restart the API service after changing it. The value applies to sessions issued or re-issued afterwards. Because sessions slide, an existing session picks up the new lifetime the next time it is re-issued.
 
+## Pre-shared token
+
+`MULTICA_AUTH_TOKEN` is a fixed secret that signs a client in as one account, with no verification code and no Google. Desktop sends it when `~/.multica/desktop.json` sets `authToken` ([Desktop app](/desktop-app#sign-in-without-the-login-page)); the CLI and daemon accept it in the `token` field of their profile config.
+
+| Variable | Effect |
+|---|---|
+| `MULTICA_AUTH_TOKEN` | Secret accepted wherever a personal access token is: `/api/**` and the WebSocket endpoints. Off when unset |
+| `MULTICA_AUTH_TOKEN_EMAIL` | Email of the account the token belongs to. Required when the token is set; until it is, the server logs an error and refuses the token |
+
+When the email names no account yet, startup creates it the way a finished signup would (email verified, onboarding complete) and gives it the first workspace the first signup gets. When the account exists, it is used as it is. The signup restrictions above do not apply to this account, and `/api` stays closed to every request that carries no credential. Restart the API service after changing either variable.
+
 ## Next steps
 
 - [Environment variables](/environment-variables) — the full variable reference.

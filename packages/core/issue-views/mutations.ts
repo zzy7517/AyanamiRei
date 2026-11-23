@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { IssueView } from "../api/schemas";
 import type { CreateIssueViewRequest } from "../api/schemas";
-import { issueViewKeys } from "./queries";
+import { issueViewKeys, type IssueViewScope } from "./queries";
 
 /** Create is a confirmed flow (dialog + toast) — no optimism, await then
  *  invalidate so every surface's selector refetches. */
@@ -18,7 +18,7 @@ export function useCreateIssueView(wsId: string) {
       if (created) {
         queryClient.setQueryData<IssueView[]>(
           issueViewKeys.list(wsId, {
-            scope_type: created.scope_type as "workspace" | "my" | "project",
+            scope_type: created.scope_type as IssueViewScope["scope_type"],
             scope_id: created.scope_id,
           }),
           (old) =>

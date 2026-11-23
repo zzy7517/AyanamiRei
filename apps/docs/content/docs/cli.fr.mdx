@@ -413,7 +413,7 @@ multica autopilot trigger-update <autopilot-id> <trigger-id> --clear-event-filte
 | `inbox` | Lire et gérer vos notifications : lister, marquer comme lues, archiver, reporter |
 | `label`, `property` | Gérer les étiquettes et les propriétés personnalisées de l'espace de travail |
 | `view` | Lire les vues enregistrées et lister les tâches qu'une vue affiche |
-| `agent`, `skill`, `squad` | Gérer les agents, les skills et les squads |
+| `agent`, `skill` | Gérer les agents et les skills |
 | `autopilot` | Gérer les automatisations, les déclencheurs et l'historique des exécutions |
 | `workspace` | Créer, consulter et changer d'espace de travail, et inviter des membres |
 | `repo` | Gérer les dépôts de l'espace de travail et les extraire localement |
@@ -425,7 +425,7 @@ multica autopilot trigger-update <autopilot-id> <trigger-id> --clear-event-filte
 | `config` | Consulter ou modifier la configuration locale du profil CLI actuel |
 | `update`, `version` | Mettre à jour le CLI ou afficher la version |
 
-`multica chat` lit **la session de messagerie externe qu'un agent traite actuellement** ; elle sert surtout aux agents des intégrations de messagerie et n'est pas une commande générale pour parcourir n'importe quelle discussion de l'espace de travail.
+`multica chat` lit **la session de chat qu'un agent traite actuellement** ; elle n'est pas une commande générale pour parcourir n'importe quelle discussion de l'espace de travail.
 
 ## ID et formats de sortie
 
@@ -493,7 +493,7 @@ Migration depuis l'ancien découpage CSV : remplacez `--attachment a,b` par `--a
 | | `update <id>` | Mettre à jour les champs d'une tâche | Mêmes champs que `create`, plus `--position`, `--no-start`, `--duplicate-of` |
 | | `batch update <id>...` | Appliquer une même modification à plusieurs tâches | `--ids-stdin`, `--status`, `--priority`, `--assignee` / `--assignee-id` / `--unassign`, `--project`, `--start-date`, `--due-date`, `--parent`, `--stage`, `--add-label`, `--remove-label`, `--clear-labels`, `--property`, `--unset-property`, `--no-start`, `--dry-run` |
 | | `delete <id>...` | Supprimer définitivement une ou plusieurs tâches | `--yes` ignore la confirmation ; accepte les identifiants de tâche ou UUID complets; `--dry-run` |
-| | `assign <id>` | Assigner ou désassigner | `--to` (correspondance approximative sur le nom parmi les membres, les agents et les squads), `--to-id`, `--unassign`, `--no-start` |
+| | `assign <id>` | Assigner ou désassigner | `--to` (correspondance approximative sur le nom parmi les agents), `--to-id`, `--unassign`, `--no-start` |
 | | `status <id> <status>` | Changer le statut | `--no-start`, `--duplicate-of` |
 | | `reorder <id>` | Déplacer au sein d'une colonne | |
 | | `search <query>` | Rechercher des tâches | `--limit`, `--include-closed`, `--project` |
@@ -513,12 +513,11 @@ Migration depuis l'ancien découpage CSV : remplacez `--attachment a,b` par `--a
 | | `usage <issue-id>` | Afficher la consommation de tokens agrégée | |
 | | `rerun-task <run-id>` | Relancer une exécution précise avec son agent et son contexte de déclenchement d’origine | `--issue`, `--fresh` |
 | | `cancel-task <task-id>` | Annuler une exécution en cours ou en file d'attente | `--issue` |
-| `project` | `get/create/update/delete` | Gérer les projets | `create` : `--title` (obligatoire), `--lead`, `--status`, `--icon`, `--start-date`, `--due-date`, `--repo` (répétable), `--visibility` (`workspace` ou `private`), `--member` (répétable, avec `--visibility private`) ; `update` : `--visibility`, `--member` (ajoute les membres, que le projet devienne privé ou le soit déjà) |
+| `project` | `get/create/update/delete` | Gérer les projets | `create` : `--title` (obligatoire), `--lead`, `--status`, `--icon`, `--start-date`, `--due-date`, `--repo` (répétable) |
 | | `list` | Lister et filtrer les projets | `--status`, `--priority`, `--lead`, `--search`, `--archived`, `--sort` (`name`, `priority`, `status`, `progress`, `start_date`, `due_date`, `created_at`, `last_activity_at`), `--direction` (`asc` / `desc`), `--limit` (1–200), `--offset` |
 | | `status <id> <status>` | Changer le statut d'un projet | |
 | | `archive/restore <id>` | Archiver ou restaurer un projet. Un projet archivé est masqué de `list`, n'accepte plus de nouvelles tâches et met en pause les automatisations qui y créent des tâches | `list --archived` liste uniquement les projets archivés |
 | | `resource list/add/update/remove` | Gérer les ressources d'un projet | `--type`, `--url`, `--default-branch-hint`, `--ref`, `--local-path`, `--daemon-id`, `--execution-mode` (`in_place` / `worktree` pour un répertoire local) |
-| | `member list/add/remove` | Lister, ajouter ou retirer les membres d'un projet privé. Seuls les `owner`/`admin` présents sur la liste et le gestionnaire de l'accès du projet peuvent ajouter ou retirer ; les agents ne peuvent pas modifier l'accès | `add <project-id> <member>...`, `remove <project-id> <member>` ; un membre est un nom, un e-mail ou un ID utilisateur |
 | `label` | `list/get/create/update/delete` | Gérer les étiquettes de l'espace de travail | `list` : `--resource-type` (`issue` ou `skill`), `--full-id` ; `create` : `--name`, `--color`, `--resource-type` (`issue` ou `skill`), `--description` |
 | `property` | `list/get/create/update/archive/unarchive` | Gérer les propriétés personnalisées de l'espace de travail | `create` : `--name`, `--type` (`text`, `number`, `select`, `multi_select`, `date`, `checkbox`, `url`, `actor`, `multi_actor`), `--option` (répétable, types select uniquement) ; `list` : `--include-archived` ; le type ne peut plus être modifié après la création |
 | `view` | `list/get/issues/create/update/duplicate/delete` | Lire les vues que vous pouvez ouvrir (les vôtres et celles partagées avec l'espace de travail) ; `issues` liste les tâches qu'une vue affiche, dans son ordre enregistré, avec tous ses filtres appliqués par le serveur. `create`, `update`, `duplicate` et `delete` enregistrent les vues au même format que l'application : elles apparaissent dans la barre latérale et restent modifiables dans l'application ; `update` ne change que ce que ses options nomment et refuse d'écraser une vue modifiée depuis sa lecture. Seul le propriétaire (et, pour une vue partagée, les propriétaires et administrateurs de l'espace de travail) peut modifier ou supprimer une vue. Pendant l'exécution d'un agent, les vues et les conditions « moi » sont celles du propriétaire du runtime | `<view>` accepte un ID, un préfixe d'ID ou le nom exact ; `list` : `--scope` (`workspace`, `my`, `project`), `--project`, `--full-id` ; `issues` : `--limit` (100 au maximum), `--cursor` (le `next_cursor` de la page précédente), `--today` (le jour de référence des filtres d'échéance relatifs ; aujourd'hui par défaut), `--fields` (JSON uniquement), `--full-id` ; `create` : `--name`, `--scope`, `--project`, `--scope-variant`, `--visibility` ; filtres de `create/update/duplicate` : `--status`, `--priority`, `--assignee`, `--creator`, `--label`, `--project-filter`, `--property "Name=Value"`, `--negate <filter>`, etc. ; affichage : `--view-mode`, `--grouping`, `--sort`, `--direction`, `--show-sub-issues`, etc. ; `--definition-file`, `--clear-filters`, `--dry-run` |
@@ -529,7 +528,7 @@ Migration depuis l'ancien découpage CSV : remplacez `--attachment a,b` par `--a
 | | `env get/set <agent-id>` | Lire et écrire les variables d'environnement personnalisées (propriétaire de l'agent ou owner/admin de l'espace de travail ; chaque lecture est enregistrée) | `set` : `--custom-env` / `--custom-env-file` / `--custom-env-stdin` ; remplace l'ensemble, et les clés dont la valeur est `****` gardent leur valeur |
 | | `skills list/set/add <agent-id>` | Gérer les skills rattachés | `--skill-ids` (`set` remplace toute la liste, `add` ajoute à la suite) |
 | | `mcp list/add/enable/disable/remove <agent-id>` | Assigner des serveurs MCP de l'espace de travail à cet agent | Récupérez l'ID du serveur avec `workspace mcp list`. Une entrée de la bibliothèque n'a aucun effet tant qu'elle n'est pas ajoutée ici ; `disable` cesse de l'envoyer sans supprimer l'assignation |
-| `autopilot` | `list/get/create/update/delete` | Gérer les automatisations | `create` : `--title`, `--mode` (obligatoires), exactement une option parmi `--agent` / `--squad` / `--squad-id` (obligatoire), `--description`, `--issue-title-template`, `--project`, `--subscriber` (répétable) |
+| `autopilot` | `list/get/create/update/delete` | Gérer les automatisations | `create` : `--title`, `--mode` (obligatoires), `--agent` (obligatoire), `--description`, `--issue-title-template`, `--project`, `--subscriber` (répétable) |
 | | `trigger <id>` | Déclencher une exécution manuellement | |
 | | `runs <id>` | Afficher l'historique des exécutions | |
 | | `trigger-add/trigger-update/trigger-delete/trigger-rotate-url` | Gérer les déclencheurs de planification et webhook | `trigger-add` : `--kind` (`schedule` ou `webhook`), `--cron`, `--timezone` (UTC par défaut), `--label` |
@@ -542,10 +541,7 @@ Migration depuis l'ancien découpage CSV : remplacez `--attachment a,b` par `--a
 | | `search <query>` | Rechercher des skills | |
 | | `files list/upsert/delete <skill-id>` | Gérer les fichiers d'un skill | |
 | | `label list/add/remove <skill-id>` | Gérer les étiquettes d'un skill | `add` / `remove` : `<label-id>` accepte un UUID complet ou un préfixe court |
-| `squad` | `list/get/create/update/delete` | Gérer les squads (`delete` archive) | |
-| | `member list/add/set-role/remove` | Gérer les membres d'un squad | |
-| | `activity <issue-id> <outcome>` | Enregistrer une évaluation du chef | |
-| `chat` | `history`, `thread [id]` | Lire la session de messagerie externe qu'un agent traite actuellement | `--limit`, `--before` |
+| `chat` | `history`, `thread [id]` | Lire la session de chat qu'un agent traite actuellement | `--limit`, `--before` |
 | | `wakeup create/list/get/update/cancel/finish/checkin` | Gérer le suivi dans l’exécution de chat en cours ; voir [Réveils de chat](#chat-wakeups) | `--title`, `--instruction` / `--instruction-file`, `--until-*`, `--at` / `--after`, `--every`, `--expires-in` / `--expires-at`; `checkin`: `--note` |
 | `inbox` | `list` | [Lister vos notifications](/inbox) sans les marquer comme lues ; `--archived` ou `--snoozed` liste celles-ci à la place | `--unread`, `--issue`, `--since`, `--project`, `--type`, `--output` (`table` ou `json`) ; `--archived` lit toutes les pages |
 | | `count` | Nombre de non-lus dans cet espace de travail et dans chacun de vos espaces ; une exécution d'agent ne voit que son propre espace | `--output` |

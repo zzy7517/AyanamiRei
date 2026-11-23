@@ -8,8 +8,8 @@
  * `agents` list) so the same filter logic — archived + canAssignAgentToIssue
  * + order — stays in one place.
  *
- * Layout mirrors `components/issue/my-issues-filter-sheet.tsx`: transparent
- * Modal + dimmed backdrop + centered card. Bottom-sheet anchoring would be
+ * Layout: transparent Modal + dimmed backdrop + centered card. Bottom-sheet
+ * anchoring would be
  * nicer but the current codebase doesn't pull in a bottom-sheet lib and
  * centered cards already work well on iOS.
  */

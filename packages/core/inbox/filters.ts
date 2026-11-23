@@ -15,7 +15,6 @@ import { isInboxItemSnoozed } from "./snooze";
  * (quick create, autopilot, kinds added later) is "system".
  */
 export type InboxTypeGroup =
-  | "mention"
   | "comment"
   | "assign"
   | "review"
@@ -24,7 +23,6 @@ export type InboxTypeGroup =
   | "system";
 
 export const INBOX_TYPE_GROUPS: readonly InboxTypeGroup[] = [
-  "mention",
   "comment",
   "assign",
   "review",
@@ -34,8 +32,6 @@ export const INBOX_TYPE_GROUPS: readonly InboxTypeGroup[] = [
 ];
 
 const TYPE_GROUP: Partial<Record<InboxItemType, InboxTypeGroup>> = {
-  mentioned: "mention",
-  doc_mentioned: "mention",
   new_comment: "comment",
   doc_comment: "comment",
   reaction_added: "comment",
@@ -115,7 +111,7 @@ export interface InboxFilters {
   readonly received: InboxReceivedFilter | null;
   readonly unreadOnly: boolean;
   // About its issue. Values use the issue filter's condition form: project
-  // and label ids, `member:<id>` style assignees, and "none" for unset.
+  // and label ids, `agent:<id>` style assignees, and "none" for unset.
   readonly statuses: readonly IssueStatus[];
   readonly priorities: readonly IssuePriority[];
   readonly projects: readonly string[];
@@ -535,8 +531,9 @@ function agentMatches(
  * Takes every notification, not the deduplicated list, because the
  * notification dimensions — type, sender, received — match ANY notification
  * of an issue, and the issue then renders as its newest matching one. Filter
- * by "mentions" and an issue mentioned yesterday and updated since shows the
- * mention, not the update: what you filter by is what you see. With no
+ * by "comments" and an issue that got a comment yesterday and was updated
+ * since shows the comment, not the update: what you filter by is what you
+ * see. With no
  * notification filter that is simply the newest row, as deduplication shows.
  *
  * The issue dimensions — status, priority, project, assignee, label, due

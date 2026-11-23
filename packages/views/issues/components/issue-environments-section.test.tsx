@@ -177,7 +177,7 @@ function task(overrides: Partial<AgentTask>): AgentTask {
 
 const lambda = { id: "agent-1", name: "Lambda", archived_at: null } as Agent;
 
-function renderSection(props: { assigneeType?: "agent" | "member" | null; assigneeId?: string | null } = {}) {
+function renderSection(props: { assigneeType?: "agent" | null; assigneeId?: string | null } = {}) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>

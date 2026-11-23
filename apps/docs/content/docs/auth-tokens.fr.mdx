@@ -94,6 +94,8 @@ Le serveur reconnaît également deux identifiants utilisés dans des scénarios
 
 Les installations Cloud, auto-hébergées et Desktop classiques n'ont jamais besoin de les créer manuellement. Le CLI et le daemon côté utilisateur utilisent toujours des PAT `mul_` ; ne construisez pas vous-même de jetons avec d'autres préfixes.
 
+L'administrateur d'une instance auto-hébergée peut aussi définir `MULTICA_AUTH_TOKEN` : un secret fixe que le serveur accepte partout où l'est un jeton d'accès personnel, pour que Desktop passe la page de connexion. Il reste désactivé tant qu'il n'est pas défini ; voir [Jeton pré-partagé](/auth-setup#jeton-pré-partagé).
+
 ## Étapes suivantes
 
 - [Utiliser le CLI](/cli) — `login`, `auth status` et configuration des profils.

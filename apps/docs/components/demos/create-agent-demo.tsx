@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ArrowRight, AtSign, Bot, Check, CircleCheck, ListPlus, Monitor, Sparkles, Users } from "@multica/ui/icons";
+import { ArrowRight, AtSign, Bot, Check, CircleCheck, ListPlus, Monitor, Sparkles } from "@multica/ui/icons";
 import { Button } from "@multica/ui/components/ui/button";
 import { cn } from "@multica/ui/lib/utils";
 import { CoachMark, DemoFrame, useDemoCopy, useDemoTimers, useStartWhenVisible } from "./demo-kit";
@@ -38,7 +38,7 @@ const copy = {
     instructions: [
       "You handle the team's day-to-day operations: weekly reports, event prep, customer feedback roundups.",
       "Read the description and comments first. If something is missing, ask in a comment instead of guessing.",
-      "Deliver in the issue comments, in short paragraphs and lists. Check with the assignee before spending money or publishing anything.",
+      "Deliver in the issue comments, in short paragraphs and lists. Check with a member before spending money or publishing anything.",
     ],
     skillsLabel: "Skills",
     skillsPlaceholder: "Add skills from workspace",
@@ -62,7 +62,6 @@ const copy = {
     nextLabel: "What next",
     assignTitle: "Assign its first task",
     mentionTitle: "Mention it in an issue",
-    squadTitle: "Add it to a squad",
     openAgent: "Open agent",
     backToList: "Back to agents",
     listTitle: "Agents",
@@ -111,7 +110,7 @@ const copy = {
     instructions: [
       "你负责团队的日常运营：整理周报、筹备活动、汇总客户反馈。",
       "收到任务先读完描述和评论；信息不够就在评论里问，不要自己猜。",
-      "结果写在任务评论里，用短段落和清单。要花钱或对外发布的事，先找负责人确认。",
+      "结果写在任务评论里，用短段落和清单。要花钱或对外发布的事，先找成员确认。",
     ],
     skillsLabel: "Skills",
     skillsPlaceholder: "从工作区添加 skill",
@@ -135,7 +134,6 @@ const copy = {
     nextLabel: "接下来",
     assignTitle: "指派第一个任务",
     mentionTitle: "在任务里 @ 它",
-    squadTitle: "加入小队",
     openAgent: "打开智能体",
     backToList: "返回智能体列表",
     listTitle: "智能体",
@@ -184,7 +182,7 @@ const copy = {
     instructions: [
       "チームの日常運用を担当します：週報の作成、イベントの準備、顧客フィードバックの取りまとめ。",
       "タスクを受けたら、まず説明とコメントを読みます。情報が足りなければ推測せず、コメントで質問します。",
-      "成果はタスクのコメントに、短い段落と箇条書きで書きます。費用が発生する作業や社外への公開は、先に担当者に確認します。",
+      "成果はタスクのコメントに、短い段落と箇条書きで書きます。費用が発生する作業や社外への公開は、先にメンバーに確認します。",
     ],
     skillsLabel: "スキル",
     skillsPlaceholder: "ワークスペースからスキルを追加",
@@ -208,7 +206,6 @@ const copy = {
     nextLabel: "次にすること",
     assignTitle: "最初のタスクを割り当てる",
     mentionTitle: "イシューでメンションする",
-    squadTitle: "スクワッドに追加",
     openAgent: "エージェントを開く",
     backToList: "エージェント一覧に戻る",
     listTitle: "エージェント",
@@ -257,7 +254,7 @@ const copy = {
     instructions: [
       "팀의 일상 운영을 맡습니다: 주간 보고 작성, 행사 준비, 고객 피드백 정리.",
       "태스크를 받으면 설명과 댓글부터 읽습니다. 정보가 부족하면 추측하지 말고 댓글로 물어봅니다.",
-      "결과는 태스크 댓글에 짧은 문단과 목록으로 남깁니다. 비용이 들거나 외부에 공개하는 일은 먼저 담당자에게 확인합니다.",
+      "결과는 태스크 댓글에 짧은 문단과 목록으로 남깁니다. 비용이 들거나 외부에 공개하는 일은 먼저 멤버에게 확인합니다.",
     ],
     skillsLabel: "스킬",
     skillsPlaceholder: "워크스페이스에서 스킬 추가",
@@ -281,7 +278,6 @@ const copy = {
     nextLabel: "다음 단계",
     assignTitle: "첫 작업 할당하기",
     mentionTitle: "이슈에서 멘션하기",
-    squadTitle: "스쿼드에 추가",
     openAgent: "에이전트 열기",
     backToList: "에이전트 목록으로",
     listTitle: "에이전트",
@@ -330,7 +326,7 @@ const copy = {
     instructions: [
       "Tu gères les opérations courantes de l'équipe : rapports hebdomadaires, préparation d'événements, synthèse des retours clients.",
       "Lis d'abord la description et les commentaires. S'il manque une information, pose la question en commentaire au lieu de deviner.",
-      "Livre le résultat dans les commentaires de la tâche, en paragraphes courts et en listes. Avant toute dépense ou publication externe, demande confirmation à la personne assignée.",
+      "Livre le résultat dans les commentaires de la tâche, en paragraphes courts et en listes. Avant toute dépense ou publication externe, demande confirmation à un membre.",
     ],
     skillsLabel: "Skills",
     skillsPlaceholder: "Ajouter des skills de l'espace de travail",
@@ -354,7 +350,6 @@ const copy = {
     nextLabel: "Et ensuite",
     assignTitle: "Lui confier une première tâche",
     mentionTitle: "Le mentionner dans un ticket",
-    squadTitle: "L'ajouter à une escouade",
     openAgent: "Ouvrir l'agent",
     backToList: "Retour aux agents",
     listTitle: "Agents",
@@ -645,7 +640,6 @@ function DoneStep({ t, onBack }: { t: Copy; onBack: () => void }) {
   const actions = [
     { icon: ListPlus, title: t.assignTitle, primary: true },
     { icon: AtSign, title: t.mentionTitle, primary: false },
-    { icon: Users, title: t.squadTitle, primary: false },
   ];
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-6 motion-safe:animate-in motion-safe:fade-in">

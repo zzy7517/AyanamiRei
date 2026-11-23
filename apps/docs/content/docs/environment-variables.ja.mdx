@@ -121,6 +121,15 @@ primary とレプリカの接続上限は独立しています。全 API プロ�
 
 allowlist の正確な判定順序は[ログインとサインアップ](/auth-setup#サインアップ制限)を参照してください。
 
+### 事前共有トークン
+
+認証コードも Google も使わずに、クライアントを 1 つのアカウントでログインさせる固定のシークレットです。[Desktop](/desktop-app#ログインなしで直接入る)は設定ファイルに `authToken` があるときにこれを送り、CLI とデーモンはプロファイル設定の `token` フィールドで受け付けます。
+
+| 変数 | デフォルト | 説明 |
+|---|---|---|
+| `MULTICA_AUTH_TOKEN` | 空 | 個人アクセストークンが使えるすべての場所で使えるシークレット: `/api/**` と WebSocket エンドポイント。未設定ならオフ |
+| `MULTICA_AUTH_TOKEN_EMAIL` | 空 | トークンが属するアカウントのメールアドレス。`MULTICA_AUTH_TOKEN` を設定した場合は必須で、なければサーバーはエラーを記録してトークンを拒否します。アカウントがまだ存在しない場合は、起動時に最初のワークスペースと合わせて作成します |
+
 ## 添付ファイルストレージ
 
 `S3_BUCKET` が未設定の場合、Multica はローカルディスクを使います。
@@ -202,7 +211,7 @@ allowlist の正確な判定順序は[ログインとサインアップ](/auth-s
 
 `GITHUB_APP_ID` と秘密鍵を設定しなくても、PR の関連付け・ミラー・マージ時のステータス変更は通常どおり動きますが、カードに CI とマージ可否のステータスが表示されず、「GitHub から選択」のリポジトリ入口も無効になります。
 
-設定手順は [GitHub 連携](/github-integration#セルフホスト設定)、[Lark Bot](/lark-bot-integration#セルフホスト設定)、[Slack Bot](/slack-bot-integration#セルフホスト設定)、[Telegram Bot](/telegram-bot-integration#管理とセルフホスティング)を参照してください。
+設定手順は [GitHub 連携](/github-integration#セルフホスト設定)を参照してください。
 
 ## サーバーサイド LLM
 

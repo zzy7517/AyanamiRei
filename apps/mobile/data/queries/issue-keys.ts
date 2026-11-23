@@ -9,22 +9,15 @@
  */
 import type { ListIssuesParams } from "@multica/core/types";
 
-export type MyIssuesScope = "assigned" | "created" | "agents";
-
-export type MyIssuesFilter = Pick<
-  ListIssuesParams,
-  "assignee_id" | "assignee_ids" | "creator_id" | "created_by_user_id" | "involves_user_id"
->;
+/** Server filters of the viewer's own list, `issueKeys.myList`. */
+export type MyIssueListFilter = Pick<ListIssuesParams, "creator_id">;
 
 export const issueKeys = {
   all: (wsId: string | null) => ["issues", wsId] as const,
   list: (wsId: string | null) => [...issueKeys.all(wsId), "list"] as const,
   myAll: (wsId: string | null) => [...issueKeys.all(wsId), "my"] as const,
-  myList: (
-    wsId: string | null,
-    scope: MyIssuesScope,
-    filter: MyIssuesFilter,
-  ) => [...issueKeys.myAll(wsId), scope, filter] as const,
+  myList: (wsId: string | null, filter: MyIssueListFilter) =>
+    [...issueKeys.myAll(wsId), filter] as const,
   detail: (wsId: string | null, id: string) =>
     [...issueKeys.all(wsId), "detail", id] as const,
   timeline: (wsId: string | null, id: string) =>

@@ -7,6 +7,7 @@ import type { Agent, CommentTriggerPreview, Issue, ListQuickActionsResponse, Mem
 import { quickActionKeys } from "@multica/core/quick-actions";
 import { issueKeys } from "@multica/core/issues/queries";
 import { workspaceKeys } from "@multica/core/workspace/queries";
+import enIssues from "../locales/en/issues.json";
 import { renderWithI18n } from "../test/i18n";
 import { NavigationProvider } from "../navigation/context";
 import { useQuickActionMenu } from "../issues/hooks/use-quick-action-menu";
@@ -19,15 +20,9 @@ const listQuickActions = vi.hoisted(() => vi.fn());
 const renderQuickAction = vi.hoisted(() => vi.fn());
 const getIssue = vi.hoisted(() => vi.fn());
 const listAgents = vi.hoisted(() => vi.fn());
-const listSquads = vi.hoisted(() => vi.fn());
 const listMembers = vi.hoisted(() => vi.fn());
 const previewCommentTriggers = vi.hoisted(() => vi.fn());
 const toastError = vi.hoisted(() => vi.fn());
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("sonner", () => ({ toast: { error: toastError } }));
 vi.mock("@multica/core/auth", () => ({
   useAuthStore: { getState: () => ({ user: { id: "user-1" } }) },
@@ -35,7 +30,7 @@ vi.mock("@multica/core/auth", () => ({
 
 vi.mock("@multica/core/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@multica/core/api")>();
-  return { ...actual, api: { ...actual.api, getBaseUrl: () => "https://api.example.test", listQuickActions, renderQuickAction, getIssue, listAgents, listSquads, listMembers, previewCommentTriggers } };
+  return { ...actual, api: { ...actual.api, getBaseUrl: () => "https://api.example.test", listQuickActions, renderQuickAction, getIssue, listAgents, listMembers, previewCommentTriggers } };
 });
 vi.mock("@multica/core/paths", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@multica/core/paths")>()),
@@ -80,7 +75,6 @@ beforeEach(() => {
   renderQuickAction.mockReset().mockResolvedValue("Rendered feedback");
   getIssue.mockReset().mockResolvedValue(makeIssue());
   listAgents.mockReset().mockResolvedValue([]);
-  listSquads.mockReset().mockResolvedValue([]);
   listMembers.mockReset().mockResolvedValue([
     { user_id: "user-1", role: "member", name: "User" } as MemberWithUser,
   ]);
@@ -210,12 +204,11 @@ describe("quick action menu query lifecycle", () => {
 
     const queries = client.getQueryCache().getAll();
     const observers = queries.flatMap((query) => query.observers);
-    expect(observers).toHaveLength(5);
+    expect(observers).toHaveLength(4);
     expect(observers.every((observer) => observer.options.enabled === false)).toBe(true);
     expect(listQuickActions).not.toHaveBeenCalled();
     expect(getIssue).not.toHaveBeenCalled();
     expect(listAgents).not.toHaveBeenCalled();
-    expect(listSquads).not.toHaveBeenCalled();
     expect(listMembers).not.toHaveBeenCalled();
     unmount();
   });
@@ -228,7 +221,6 @@ describe("quick action menu query lifecycle", () => {
     const keys = [
       issueKeys.detail("ws", "issue-1"),
       workspaceKeys.agents("ws"),
-      workspaceKeys.squads("ws"),
       workspaceKeys.members("ws"),
     ];
     for (const queryKey of keys) {
@@ -243,7 +235,7 @@ describe("quick action menu query lifecycle", () => {
 });
 
 describe("comment quick-action catalog updates in the real editor", () => {
-  it.each(["", "agent", "squad"])(
+  it.each(["", "agent"])(
     "inserts a cached %s action synchronously on Enter without a render request",
     async (targetType) => {
       const configured = {
@@ -281,9 +273,7 @@ describe("comment quick-action catalog updates in the real editor", () => {
     fireEvent.keyDown(dom, { key: "Enter" });
 
     expect(editor.getText()).toBe("/delayed");
-    expect(toastError).toHaveBeenCalledWith(
-      "This agent or squad can't be found — refresh the page and try again.",
-    );
+    expect(toastError).toHaveBeenCalledWith(enIssues.comment.trigger_blocked_target_unavailable);
     expect(renderQuickAction).not.toHaveBeenCalled();
   });
 
@@ -296,7 +286,7 @@ describe("comment quick-action catalog updates in the real editor", () => {
       ...action,
       name: "delayed-updated",
       prompt: "Updated feedback",
-      assignee_type: "squad",
+      assignee_type: "agent",
       assignee_id: "updated-target",
       target_name: "Current Team",
     };

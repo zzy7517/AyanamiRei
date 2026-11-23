@@ -27,6 +27,11 @@ import { useWindowOverlayStore } from "./stores/window-overlay-store";
 import { useOpenSettingsShortcut } from "./hooks/use-open-settings-shortcut";
 import { useTabSelectionShortcut } from "./hooks/use-tab-selection-shortcut";
 import { useDaemonIPCBridge } from "./platform/daemon-ipc-bridge";
+import {
+  createSessionStorage,
+  wasPreSharedTokenRejected,
+  type SessionStorage,
+} from "./platform/session-storage";
 import { syncDaemonOnLogin } from "./platform/daemon-login-sync";
 import { createDesktopLocaleAdapter } from "./platform/i18n-adapter";
 import { captureEvent } from "@multica/core/analytics";
@@ -101,10 +106,12 @@ function useCmdWCloseTab() {
   }, []);
 }
 
-function IssueWindowContent() {
+function IssueWindowContent({ session }: { session: SessionStorage }) {
+  const { preSharedToken } = session;
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
   const authStatus = useAuthStore((state) => state.status);
+  const sessionExpired = useAuthStore((state) => state.expired);
   const context = window.desktopAPI.windowContext ?? { kind: "main" as const };
 
   if (context.kind !== "issue") return null;
@@ -117,13 +124,24 @@ function IssueWindowContent() {
     );
   }
 
-  return user ? <IssueWindow context={context} /> : <DesktopLoginPage />;
+  return user ? (
+    <IssueWindow context={context} />
+  ) : (
+    <DesktopLoginPage
+      preSharedTokenRejected={wasPreSharedTokenRejected(
+        preSharedToken,
+        sessionExpired,
+      )}
+    />
+  );
 }
 
-function AppContent() {
+function AppContent({ session }: { session: SessionStorage }) {
+  const { storage, preSharedToken } = session;
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
   const authStatus = useAuthStore((s) => s.status);
+  const sessionExpired = useAuthStore((s) => s.expired);
   const qc = useQueryClient();
 
   // Deep-link login runs loginWithToken → syncToken → listWorkspaces →
@@ -184,7 +202,7 @@ function AppContent() {
   // inside syncDaemonOnLogin is load-bearing — see that module.
   useEffect(() => {
     if (!user || !runtimeConfig) return;
-    const token = localStorage.getItem("multica_token");
+    const token = storage.getItem("multica_token");
     if (!token) return;
     const userId = user.id;
     (async () => {
@@ -199,7 +217,7 @@ function AppContent() {
         console.error("Failed to sync daemon on login", err);
       }
     })();
-  }, [user, runtimeConfig]);
+  }, [user, runtimeConfig, storage]);
 
   // When a user who started the session with zero workspaces creates their
   // first one, restart the daemon so it picks up the new workspace
@@ -358,7 +376,16 @@ function AppContent() {
     );
   }
 
-  return user ? <DesktopShell /> : <DesktopLoginPage />;
+  return user ? (
+    <DesktopShell />
+  ) : (
+    <DesktopLoginPage
+      preSharedTokenRejected={wasPreSharedTokenRejected(
+        preSharedToken,
+        sessionExpired,
+      )}
+    />
+  );
 }
 
 function BlockingRuntimeConfigError({
@@ -455,6 +482,14 @@ export default function App() {
     [locale],
   );
 
+  const authToken = runtimeConfigResult.ok
+    ? runtimeConfigResult.config.authToken
+    : undefined;
+  const { storage, preSharedToken } = useMemo(
+    () => createSessionStorage(authToken),
+    [authToken],
+  );
+
   // Keep <html lang> in sync with the resolved locale (index.html hardcodes
   // "en"). Drives the lang-scoped Japanese CJK font override and a11y.
   // useLayoutEffect (not useEffect) so lang is committed before the first
@@ -500,6 +535,7 @@ export default function App() {
           locale={locale}
           resources={resources}
           localeAdapter={localeAdapter}
+          storage={storage}
         >
           <DesktopAuthSessionBridge />
           <NativeContextMenu />
@@ -512,9 +548,9 @@ export default function App() {
             />
           )}
           {windowContext.kind === "issue" ? (
-            <IssueWindowContent />
+            <IssueWindowContent session={{ storage, preSharedToken }} />
           ) : (
-            <AppContent />
+            <AppContent session={{ storage, preSharedToken }} />
           )}
           {/* Opt-in dev status bar; see "Dev Toolbar" in CONTRIBUTING.md. */}
           {import.meta.env.DEV &&

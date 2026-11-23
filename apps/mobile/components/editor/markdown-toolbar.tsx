@@ -56,7 +56,7 @@ export function MarkdownToolbar({
   return (
     <View className="flex-row items-center gap-1 px-2 py-1.5 border-t border-border bg-background">
       <ToolbarButton
-        accessibilityLabel={t("a11y.mention_someone")}
+        accessibilityLabel={t("a11y.mention")}
         onPress={onAt}
         disabled={disabled}
       >

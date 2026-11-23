@@ -115,7 +115,6 @@ export function formatWakeupActivity(
           : count === 1
             ? t(($) => $.activity.wakeup_child_done_all_single)
             : t(($) => $.activity.wakeup_child_done_all, { count });
-        // The squad's leader ran, but the entry names the assignee people see.
         const name =
           details.target_type && details.target_id
             ? getActorName(details.target_type, details.target_id)

@@ -24,8 +24,7 @@
     "section_issue": "Tâche",
     "type": "Type",
     "received": "Reçue",
-    "type_mention": "Mentions",
-    "type_comment": "Commentaires et réactions",
+    "type_comment": "Commentaires",
     "type_assign": "Assignations et abonnements",
     "type_review": "Demandes de relecture",
     "type_change": "Modifications de la tâche",
@@ -70,8 +69,6 @@
     "retry_with_context": "Réessayer avec le contexte",
     "edit_advanced": "Ouvrir le formulaire complet",
     "autopilot_quota_exceeded_body": "Cet espace de travail a atteint sa limite de {{limit}} exécutions d'autopilot pour la période en cours. Les exécutions suivantes ne démarreront pas avant la réinitialisation de l'allocation {{resetAt}}, ou avant que l'espace de travail change de forfait ou achète des exécutions.",
-    "project_owner_joined_body": "{{name}}, propriétaire de l’espace de travail, s’est ajouté à ce projet privé et peut désormais voir ses tâches, commentaires et pièces jointes.",
-    "open_project": "Ouvrir le projet",
     "autopilot_quota_upgrade": "Voir les options",
     "archive": "Archiver",
     "unarchive": "Désarchiver",
@@ -94,7 +91,6 @@
     "start_date_changed": "Date de début modifiée",
     "due_date_changed": "Date d'échéance modifiée",
     "new_comment": "Nouveau commentaire",
-    "mentioned": "Mentionné",
     "review_requested": "Relecture demandée",
     "task_completed": "Exécution terminée",
     "task_failed": "Exécution en échec",
@@ -106,14 +102,12 @@
     "quick_create_unconfirmed": "Création avec un agent non confirmée",
     "autopilot_paused": "Automatisation en pause",
     "children_done": "Sous-tâches terminées",
-    "project_owner_joined": "Le propriétaire a rejoint le projet",
     "autopilot_quota_exceeded": "Limite d'exécutions d'automatisation atteinte",
     "app_action_requested": "Confirmation requise",
     "app_action_reminder": "Confirmation bientôt expirée",
     "app_connect_requested": "Connecter une app",
     "app_action_result": "Résultat d'action d'app",
-    "doc_comment": "Nouveau commentaire sur un document",
-    "doc_mentioned": "Mentionné dans un document"
+    "doc_comment": "Nouveau commentaire sur un document"
   },
   "labels": {
     "set_status_to": "Statut défini sur",
@@ -140,7 +134,7 @@
     "deleted": "Notification supprimée",
     "unsubscribed_archived": "Désabonné et archivé",
     "unsubscribed_archived_subtree": "Désabonné de cette tâche et de ses sous-tâches",
-    "unsubscribed_hint": "Ses mises à jour n'arriveront plus dans votre boîte de réception. Les @mentions, si.",
+    "unsubscribed_hint": "Ses mises à jour n'arriveront plus dans votre boîte de réception.",
     "undo": "Annuler"
   },
   "kept": {
@@ -182,7 +176,7 @@
     "active_issue_description": "Cette action supprime définitivement les notifications actives de la boîte de réception pour cette tâche. Les notifications précédemment archivées, la tâche et ses exécutions sont conservées."
   },
   "unsubscribe": {
-    "title": "Se désabonner et archiver. Ses mises à jour ne vous parviendront plus ; les @mentions, si.",
+    "title": "Se désabonner et archiver. Ses mises à jour ne vous parviendront plus.",
     "this_issue": "Cette tâche uniquement",
     "subtree_one": "Cette tâche et sa {{count}} sous-tâche",
     "subtree_other": "Cette tâche et ses {{count}} sous-tâches",
@@ -205,7 +199,7 @@
     "picker_hour": "Heure",
     "picker_minute": "Minute",
     "picker_submit": "Reporter jusqu'à {{time}}",
-    "hint": "Revient plus tôt si vous êtes @mentionné, assigné, ou si une exécution échoue.",
+    "hint": "Revient plus tôt si vous êtes assigné ou si une exécution échoue.",
     "custom_invalid": "Choisissez une heure future, dans moins d'un an.",
     "back_at": "Revient {{time}}",
     "returned": "Report terminé",

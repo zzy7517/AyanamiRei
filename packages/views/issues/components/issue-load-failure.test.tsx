@@ -57,7 +57,7 @@ beforeEach(() => {
     if (["SYN-1", uuid, "OTHER-2"].some((id) => pathname === `/api/issues/${id}`)) {
       return primary(url);
     }
-    const body = /\/(members|agents|squads)$/.test(pathname)
+    const body = /\/(members|agents)$/.test(pathname)
       ? []
       : { issues: [], total: 0, members: [], agents: [], comments: [], tasks: [], entries: [], has_more: false };
     return Promise.resolve(response(200, body));
@@ -169,7 +169,7 @@ describe("primary issue read failures through the production API client", () => 
     render(surface(id));
     await screen.findAllByText("Synthetic issue");
     await act(async () => { await new Promise((r) => setTimeout(r, 80)); });
-    // Reactions are read off the primary detail, not a second request.
+    // The detail is read once; nothing on the page asks for it again.
     expect(primary).toHaveBeenCalledTimes(1);
     if (id === uuid) expect(replace).toHaveBeenCalledWith("/synthetic/issues/SYN-1#comment-synthetic");
   });

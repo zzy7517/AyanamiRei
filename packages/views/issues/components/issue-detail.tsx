@@ -26,7 +26,6 @@ import {
   ChevronRight,
   FileQuestion,
   Loader2,
-  Lock,
   Milestone,
   MoreHorizontal,
   PanelRight,
@@ -45,7 +44,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@multica/u
 import { Sheet, SheetContent } from "@multica/ui/components/ui/sheet";
 import { useIsMobile } from "@multica/ui/hooks/use-mobile";
 import { StorageLimitNotice } from "../../billing/storage-limit-notice";
-import { ContentEditor, ReadonlyContent, type ContentEditorRef, TitleEditor, type TitleEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useEditorUpload, PreviewSequenceProvider, collectPreviewSequence, ImageThumbnailsProvider } from "../../editor";
+import { ContentEditor, type ContentEditorRef, TitleEditor, type TitleEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useEditorUpload, PreviewSequenceProvider, collectPreviewSequence, ImageThumbnailsProvider } from "../../editor";
 import {
   WAKEUP_ACTIVITY_ACTIONS,
   WakeupActivityIcon,
@@ -80,7 +79,6 @@ import { InboxArchiveButton, InboxOpenBar } from "../../inbox/components/inbox-b
 import { InboxIssueActions } from "./inbox-issue-actions";
 import type { InboxUnsubscribeScope } from "@multica/core/inbox/mutations";
 import { PropRow } from "../../common/prop-row";
-import { useIsGuest } from "@multica/core/permissions";
 import { TimelineHandoff } from "../../workflows/timeline-handoff";
 import { PropertyIcon } from "../../common/property-icon";
 import type { Attachment, InboxItem, Issue, IssueProperty, IssueStatus, IssueStatusCategory, IssuePriority, TimelineEntry, UpdateIssueRequest } from "@multica/core/types";
@@ -188,11 +186,10 @@ import {
   useIssueSurfaceSelection,
 } from "../surface/selection-context";
 import { useIssueTimeline } from "../hooks/use-issue-timeline";
-import { useIssueReactions } from "../hooks/use-issue-reactions";
 import { useIssueSubscribers } from "../hooks/use-issue-subscribers";
 import { useMarkIssueReadWhileViewing } from "../hooks/use-mark-issue-read-while-viewing";
 import { useMarkIssueInboxReadWhileViewing } from "../hooks/use-mark-issue-inbox-read-while-viewing";
-import { ReactionBar } from "@multica/ui/components/common/reaction-bar";
+import { useMarkAgentReplySeenWhileViewing } from "../hooks/use-mark-agent-reply-seen-while-viewing";
 import { useLocale, useTimeAgo } from "../../i18n";
 import {
   useRestoredScrollOffset,
@@ -472,25 +469,6 @@ function formatActivity(
         ? t(($) => $.activity.task_failed_single)
         : t(($) => $.activity.task_failed, { count });
     }
-    case "squad_leader_evaluated": {
-      const reason = details.reason?.trim();
-      switch (details.outcome) {
-        case "action":
-          return reason
-            ? t(($) => $.activity.squad_leader_action_reason, { reason })
-            : t(($) => $.activity.squad_leader_action);
-        case "no_action":
-          return reason
-            ? t(($) => $.activity.squad_leader_no_action_reason, { reason })
-            : t(($) => $.activity.squad_leader_no_action);
-        case "failed":
-          return reason
-            ? t(($) => $.activity.squad_leader_failed_reason, { reason })
-            : t(($) => $.activity.squad_leader_failed);
-        default:
-          return t(($) => $.activity.squad_leader_evaluated);
-      }
-    }
     case "environment_controlled": {
       const name = details.label || details.name || "?";
       switch (details.action) {
@@ -579,9 +557,6 @@ const EMPTY_REPLIES: TimelineEntry[] = [];
 // its row and add-property entry are gated on `issue.parent_issue_id` at the
 // render site below — it stays in this list so seeding/visibility flow through
 // the same machinery as the other optional props.
-/** The sidebar sections a guest gets: read-only facts about the issue itself. */
-const GUEST_SIDEBAR_SECTIONS = new Set<IssueSidebarSection>(["properties", "parent", "deliverables"]);
-
 const OPTIONAL_PROP_KEYS = ["priority", "stage", "start_date", "due_date", "labels"] as const;
 type OptionalPropKey = (typeof OPTIONAL_PROP_KEYS)[number];
 
@@ -1327,6 +1302,12 @@ interface IssueDetailProps {
    * address back.
    */
   onDeliverableLinkDone?: () => void;
+  /**
+   * The task's trees, in a section of their own, given the issue's UUID. Only
+   * a host with a terminal route passes it (the desktop app): the section's
+   * actions open terminals. Without it the section is not offered.
+   */
+  trees?: (issueId: string) => ReactNode;
 }
 
 /**
@@ -1527,7 +1508,7 @@ export function IssueDetailSkeleton({
 
 // IssueDetail
 
-export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive, inboxItem, defaultSidebarOpen = true, layoutId = ISSUE_DETAIL_LAYOUT_ID, highlightCommentId: linkedCommentId, highlightRequestToken: linkedRequestToken, highlightRequestPending = false, onHighlightLanded, highlightAppRequestId, leadingAction, variant = "page", trailingActions, notice, readsInbox = true, skipInitialRefetch = false, openDeliverable, onDeliverableLinkDone }: IssueDetailProps) {
+export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive, inboxItem, defaultSidebarOpen = true, layoutId = ISSUE_DETAIL_LAYOUT_ID, highlightCommentId: linkedCommentId, highlightRequestToken: linkedRequestToken, highlightRequestPending = false, onHighlightLanded, highlightAppRequestId, leadingAction, variant = "page", trailingActions, notice, readsInbox = true, skipInitialRefetch = false, openDeliverable, onDeliverableLinkDone, trees }: IssueDetailProps) {
   const isPeek = variant === "peek";
   const { t } = useT("issues");
   const { t: tCommon } = useT("common");
@@ -1557,8 +1538,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
   const wsId = useWorkspaceId();
   const { data: members = [] } = useQuery(memberListOptions(wsId));
   const { data: agents = [] } = useQuery(agentListOptions(wsId));
-  // A guest (MUL-9420) reads and comments; it edits nothing and sees no runs.
-  const guest = useIsGuest(wsId);
   // Workspace owners and admins moderate any comment authored by anyone
   // (mirrors backend `comment.go:507-512`). Computed here so per-comment
   // rendering doesn't have to re-derive it for every row.
@@ -1866,6 +1845,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
   const issueReadState = useIssueReadState(wsId, id, issueQuery);
   useMarkIssueReadWhileViewing(wsId, issue?.id ?? "");
   useMarkIssueInboxReadWhileViewing(wsId, issue?.id ?? "", readsInbox);
+  useMarkAgentReplySeenWhileViewing(wsId, issue?.id ?? "");
   const descriptionSourceId = `description:${id}`;
   const descriptionAnnotations = useCommentAnnotations({
     issueId: id,
@@ -1937,14 +1917,14 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     }
   }, [issue, issueLoading, onDelete]);
 
-  // Custom hooks — encapsulate timeline, reactions, subscribers
+  // Custom hooks — encapsulate timeline, subscribers
   const {
     timeline, loading: timelineLoading, dataUpdatedAt: timelineUpdatedAt,
     submitComment, submitReply,
-    editComment, deleteComment, toggleResolveComment, toggleReaction: handleToggleReaction,
+    editComment, deleteComment, toggleResolveComment,
   } = useIssueTimeline(id, user?.id, activeDeliverableJump?.commentId);
 
-  const { data: commentTasks, isLoading: commentTasksLoading } = useQuery({ ...issueTasksOptions(id), enabled: !guest });
+  const { data: commentTasks, isLoading: commentTasksLoading } = useQuery(issueTasksOptions(id));
   // Only a landing on data already in hand is worth holding the chrome for;
   // while the timeline is still on its way, the chrome renders in the wait.
   useEffect(() => {
@@ -2008,7 +1988,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
   // the previous render via `prevThreadRepliesRef`: if a thread's flat list
   // is shallow-equal to the previous one, we reuse the previous array so
   // React.memo on CommentCard / ResolvedThreadBar can short-circuit. Without
-  // this, every WS event (including reactions, edits, AI streaming on an
+  // this, every WS event (including edits, AI streaming on an
   // unrelated thread) hands every card a brand-new prop reference and forces
   // every thread subtree to re-render in lockstep.
   const prevThreadRepliesRef = useRef<Map<string, TimelineEntry[]>>(new Map());
@@ -2048,12 +2028,10 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     // Coalesce consecutive activities from the same actor + action.
     // - task_completed / task_failed: no time limit (these repeat across runs)
     // - all other actions: within a 2-minute window
-    // - squad_leader_evaluated: never coalesce; outcome/reason are audit data
     const COALESCE_MS = 2 * 60 * 1000;
     const NO_TIME_LIMIT_ACTIONS = new Set(["task_completed", "task_failed", "wakeup_checkin"]);
     // Duplicate marks name a different issue on every row.
     const NEVER_COALESCE_ACTIONS = new Set([
-      "squad_leader_evaluated",
       "wakeup_created",
       "wakeup_triggered",
       "wakeup_timed_out",
@@ -2595,11 +2573,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
   }, [pendingRunJump, scrollContainerEl, flashJumpTarget]);
 
   const {
-    reactions: issueReactions,
-    toggleReaction: handleToggleIssueReaction,
-  } = useIssueReactions(id, user?.id);
-
-  const {
     subscribers, isSubscribed, subscriptionReason, subscriptionDelivery, subscriptionKnown,
     togglePending, subtreePending,
     toggleSubscribe: handleToggleSubscribe, toggleSubscriber, followAllActivity,
@@ -2799,7 +2772,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
       }
     }
 
-    // A deleted reply renders nothing, so the id a notification or share link
+    // A deleted reply renders nothing, so the id a notification or comment link
     // carries has no anchor to scroll to and no row to flash. Land on the
     // comment above where it was; the id itself stays this landing's identity
     // for the guards and the memento below.
@@ -3404,44 +3377,9 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     </div>
   );
 
-  const locked = (value: ReactNode) => (
-    <>
-      <div inert className="flex min-w-0 flex-1 items-center">{value}</div>
-      <Lock className="size-3 shrink-0 text-faint-foreground" aria-hidden="true" />
-    </>
-  );
-  const guestProperties = (
-    <div>
-      <IssueSidebarSectionHeader title={t(($) => $.detail.section_properties)} open={propertiesOpen} onOpenChange={setPropertiesOpen} />
-      {propertiesOpen && (
-        <>
-          <IssueSidebarPropertyGrid>
-            <PropRow interactive={false} label={t(($) => $.detail.prop_status)}>
-              {locked(<StatusPicker status={issue.status} onUpdate={handleUpdateField} align="start" projectId={issue.project_id} issue={issue} />)}
-            </PropRow>
-            <PropRow interactive={false} label={t(($) => $.detail.prop_assignee)}>
-              {locked(<AssigneePicker assigneeType={issue.assignee_type} assigneeId={issue.assignee_id} onUpdate={handleUpdateField} align="start" />)}
-            </PropRow>
-            <PropRow interactive={false} label={t(($) => $.detail.prop_priority)}>
-              {locked(<PriorityPicker priority={issue.priority} onUpdate={handleUpdateField} align="start" />)}
-            </PropRow>
-            <PropRow interactive={false} label={t(($) => $.detail.prop_project)}>
-              {locked(<IssueProjectPicker projectId={issue.project_id} onUpdate={handleUpdateField} issue={issue} />)}
-            </PropRow>
-            {attachedLabels.length > 0 && (
-              <PropRow interactive={false} label={t(($) => $.detail.prop_labels)}>
-                {locked(<LabelPicker issueId={issue.id} align="start" />)}
-              </PropRow>
-            )}
-          </IssueSidebarPropertyGrid>
-          <p className="px-4 pt-2 text-caption text-muted-foreground">{t(($) => $.detail.guest_readonly_note)}</p>
-        </>
-      )}
-    </div>
-  );
-
   const sidebarSections: Record<IssueSidebarSection, ReactNode> = {
-    properties: guest ? guestProperties : (
+    trees: trees?.(id),
+    properties: (
       <div>
         <IssueSidebarSectionHeader title={t(($) => $.detail.section_properties)} open={propertiesOpen} onOpenChange={setPropertiesOpen}  />
         {propertiesOpen && <IssueSidebarPropertyGrid>
@@ -3737,9 +3675,9 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
       sections={sidebarSections}
       available={ISSUE_SIDEBAR_SECTIONS.filter(
         (section) =>
-          guest
-            ? GUEST_SIDEBAR_SECTIONS.has(section)
-            : (section !== "pull_requests" || githubSettings.prSidebar) && (section !== "plugins" || pluginsEnabled),
+          (section !== "pull_requests" || githubSettings.prSidebar) &&
+          (section !== "plugins" || pluginsEnabled) &&
+          (section !== "trees" || !!trees),
       )}
       revealed={revealedWakeupsFor === id ? REVEALED_WAKEUPS : undefined}
       onRevealEnd={() => setRevealedWakeupsFor(null)}
@@ -3762,7 +3700,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
             issueId: id, replyScrollParent: scrollContainerEl, entry: reply, replies: timelineView.threadReplies.get(reply.id) ?? EMPTY_REPLIES,
             currentUserId: user?.id, canModerate: canModerateComments, onReply: submitReply,
             onReplyAccepted: scrollToTimelineBottom, onEdit: editComment, onDelete: deleteComment,
-            onToggleReaction: handleToggleReaction, onCreateSubIssue: guest ? undefined : openCommentSubIssue,
+            onCreateSubIssue: openCommentSubIssue,
             onResolveToggle: handleResolveToggle,
             onCopyLink: actions.copyCommentLink, onJumpToComment: jumpToComment,
             onCollapseResolved: reply.resolved_at ? () => toggleResolvedExpand(reply.id, false) : undefined,
@@ -3801,8 +3739,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
             onReplyAccepted={scrollToTimelineBottom}
             onEdit={editComment}
             onDelete={deleteComment}
-            onToggleReaction={handleToggleReaction}
-            onCreateSubIssue={guest ? undefined : openCommentSubIssue}
+            onCreateSubIssue={openCommentSubIssue}
             onResolveToggle={handleResolveToggle}
             onCopyLink={actions.copyCommentLink}
             onJumpToComment={jumpToComment}
@@ -3871,7 +3808,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
   // What the header names the issue: the identifier only in a peek, where the
   // title is right below it; identifier and title on the page.
   const headerLeafLabel = isPeek ? issue.identifier : `${issue.identifier} ${issue.title}`;
-  const inboxIssueActions = guest ? undefined : (
+  const inboxIssueActions = (
     <InboxIssueActions
       issue={issue}
       onUpdate={handleUpdateField}
@@ -3927,9 +3864,9 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
             {/* Live "agent is working" chip, leftmost in the right cluster so
                 it never overlaps the title (which truncates to make room).
                 It self-hides when no agent is active. */}
-            {!guest && <IssueAgentHeaderChip issueId={id} onJumpToRun={jumpToRun} />}
-            {!guest && <IssueWakeupHeaderChip issueId={id} onOpen={openWakeups} />}
-            {!guest && <IssueDetailActionsDropdown
+            <IssueAgentHeaderChip issueId={id} onJumpToRun={jumpToRun} />
+            <IssueWakeupHeaderChip issueId={id} onOpen={openWakeups} />
+            <IssueDetailActionsDropdown
               issue={issue}
               locateInSidebar={!isPeek}
               align="end"
@@ -3948,7 +3885,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                   <MoreHorizontal />
                 </IconButton>
               }
-            />}
+            />
             {isPeek ? (
               trailingActions
             ) : (
@@ -4018,8 +3955,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           />
           <div id={descriptionSectionId}>
           <div data-mc="issue-title">
-          {guest && <div className={cn("w-full leading-snug", titleSizeClass)}>{issue.title}</div>}
-          {!guest && titleLazy.active && (
+          {titleLazy.active && (
             <div className={titleLazy.ready ? undefined : "hidden"}>
               <TitleEditor
                 key={`title-${id}-${titleResetToken}`}
@@ -4050,7 +3986,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
               />
             </div>
           )}
-          {!guest && !titleLazy.ready && (
+          {!titleLazy.ready && (
             <div
               role="button"
               tabIndex={0}
@@ -4184,7 +4120,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           )}
 
           <div
-            {...(guest ? {} : descDropZoneProps)}
+            {...descDropZoneProps}
             {...descriptionAnnotations.captureProps}
             ref={descriptionAnnotations.cardRef}
             className="relative mt-5 rounded-lg"
@@ -4201,9 +4137,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           >
             {descriptionAnnotations.popup}
             <div data-comment-content={descriptionSourceId}>
-              {guest ? (
-                <ReadonlyContent content={issue.description ?? ""} attachments={descEditorAttachments} />
-              ) : (
               <ContentEditor
                 ref={descEditorRef}
                 key={id}
@@ -4246,7 +4179,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                 selectionAction={descriptionSelectionAction}
                 attachments={descEditorAttachments}
               />
-              )}
             </div>
             {descStorageRefusal && (
               <StorageLimitNotice
@@ -4257,19 +4189,11 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
             )}
 
             <div className="flex items-center gap-1 mt-3">
-              <ReactionBar
-                reactions={issueReactions}
-                currentUserId={user?.id}
-                onToggle={handleToggleIssueReaction}
-                getActorName={getActorName}
+              <FileUploadButton
+                size="sm"
+                multiple
+                onSelect={(file) => descEditorRef.current?.uploadFile(file)}
               />
-              {!guest && (
-                <FileUploadButton
-                  size="sm"
-                  multiple
-                  onSelect={(file) => descEditorRef.current?.uploadFile(file)}
-                />
-              )}
             </div>
             {descDragOver && <FileDropOverlay />}
           </div>
@@ -4277,7 +4201,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           </div>
 
           {/* Sub-issues — Linear-style */}
-          {childIssues.length === 0 && !guest && (
+          {childIssues.length === 0 && (
             <div className="mt-6">
               <button
                 type="button"
@@ -4319,8 +4243,8 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                   </div>
                   {/* issue.id, not the route param — the endpoint takes a
                       UUID and the route may carry a human-readable id. */}
-                  {!guest && <SubIssuesAgentWorkingChip parentIssueId={issue.id} />}
-                  {!guest && <input
+                  <SubIssuesAgentWorkingChip parentIssueId={issue.id} />
+                  <input
                     type="checkbox"
                     checked={allChildrenSelected}
                     ref={(el) => {
@@ -4334,10 +4258,10 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                         ? "opacity-100"
                         : "opacity-0 group-hover/sub-issues:opacity-100 focus-visible:opacity-100",
                     )}
-                  />}
+                  />
                   <div className="ml-auto flex items-center gap-0.5">
                     <SubIssueDisplayPopover workspaceProperties={activeWorkspaceProperties} />
-                    {!guest && <Tooltip>
+                    <Tooltip>
                       <TooltipTrigger
                         render={
                           <button
@@ -4351,7 +4275,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                         }
                       />
                       <TooltipContent side="bottom">{t(($) => $.detail.add_sub_issue_tooltip)}</TooltipContent>
-                    </Tooltip>}
+                    </Tooltip>
                   </div>
                 </div>
 

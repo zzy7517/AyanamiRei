@@ -17,7 +17,7 @@ Une tâche est l'unité de base de Multica pour organiser le travail : une fonct
 |---|---|
 | **Titre et description** | Objectif, contexte, exigences et critères d'acceptation. |
 | **Statut et priorité** | Où en est le travail et ce qu'il faut traiter en premier. |
-| **Assigné à** | Un membre de l'espace de travail, un agent ou un squad. |
+| **Assigné à** | Un agent. |
 | **Dates, étiquettes et propriétés personnalisées** | Planification, catégorisation et champs propres à votre équipe. |
 | **Projet et relations parent-enfant** | S'inscrit dans un ensemble de travail plus large, ou se découpe en sous-tâches. |
 | **Activité et journal d'exécution** | Commentaires, changements de statut, exécutions et résultats renvoyés par les agents. |
@@ -33,27 +33,21 @@ Chaque tâche porte un numéro, par exemple `MUL-123`. Les chiffres s'incrément
 
 ### Créer avec un agent
 
-Décrivez le travail, choisissez un agent ou un squad dans **Créé par** et cliquez sur **Créer**. La fenêtre se ferme aussitôt : l'agent travaille en arrière-plan, met la demande en forme de titre et de description, puis crée la tâche. Succès ou échec, une notification arrive dans votre boîte de réception. Celle d'un échec propose **Modifier en mode avancé**, qui reporte votre demande d'origine dans le formulaire manuel.
+Décrivez le travail, choisissez un agent dans **Créé par** et cliquez sur **Créer**. La fenêtre se ferme aussitôt : l'agent travaille en arrière-plan, met la demande en forme de titre et de description, puis crée la tâche. Succès ou échec, une notification arrive dans votre boîte de réception. Celle d'un échec propose **Modifier en mode avancé**, qui reporte votre demande d'origine dans le formulaire manuel.
 
 <IssueDraftDemo />
 
 - L'agent reprend fidèlement votre demande et n'ajoute ni exigence ni critère d'acceptation que vous n'avez pas formulés.
-- Si la demande nomme un assigné (« confie-la à Lei Li »), l'agent l'assigne. Sinon, l'assigné est ce que vous avez choisi dans **Créé par** : l'agent lui-même, ou le squad. Les nouvelles tâches démarrent en `todo` ; quand l'assigné est un agent, il commence donc à la traiter dès qu'elle existe.
+- Si la demande nomme un agent comme assigné (« confie-la à Lei Li »), l'agent l'assigne. Sinon, l'assigné est l'agent que vous avez choisi dans **Créé par**. Les nouvelles tâches démarrent en `todo` ; l'assigné commence donc à la traiter dès qu'elle existe.
 - Le projet, la priorité et la date d'échéance choisis dans la fenêtre sont repris tels quels ; l'agent n'en déduit pas d'autres du texte. Le projet est visible par défaut, la priorité et l'échéance sont dans le menu **⋯**. Les champs toujours affichés se règlent dans **Paramètres → Préférences → Champs affichés à la création de tâches**.
 - Avec **En créer un autre** activé, la fenêtre reste ouverte après chaque envoi pour enchaîner la demande suivante.
-- **Créé par** ne liste que les agents et squads que vous avez le droit d'assigner. Si la CLI multica du runtime de l'agent est trop ancienne, la fenêtre propose de mettre à jour le daemon ou de passer en création manuelle.
+- **Créé par** ne liste que les agents que vous avez le droit d'assigner. Si la CLI multica du runtime de l'agent est trop ancienne, la fenêtre propose de mettre à jour le daemon ou de passer en création manuelle.
 
 ## Choisir l'assigné
 
-| Assigné à | Effet |
-|---|---|
-| **Membre** | Ce membre prend en charge le suivi ; aucune exécution n'est créée. |
-| **Agent** | Une exécution est créée pour cet agent. |
-| **Squad** | Le chef du squad la reçoit et décide qui la traite. |
+Lorsqu'elle est assignée à un agent, la tâche est immédiatement mise en file d'attente, sauf si elle est en `backlog` ; si le runtime est hors ligne, l'exécution attend dans la file. Les agents archivés ne peuvent pas être assignés.
 
-Lorsqu'elle est assignée à un agent ou à un squad, la tâche est immédiatement mise en file d'attente, sauf si elle est en `backlog` ; si le runtime est hors ligne, l'exécution attend dans la file. Les agents et les squads archivés ne peuvent pas être assignés.
-
-L'assignation ne contourne pas l'**Accès** d'un agent ; lors d'une assignation à un squad, c'est l'Accès du chef qui est vérifié. Voir [Assigner des tâches aux agents](/assigning-issues).
+L'assignation ne contourne pas l'**Accès** d'un agent. Voir [Assigner des tâches aux agents](/assigning-issues).
 
 ## Statut
 
@@ -159,11 +153,11 @@ Une combinaison de filtres et d'affichage que vous utilisez souvent peut devenir
 | **Visible par moi seul** | Vous seul | Vous |
 | **Visible par les membres de l'espace de travail** | Les membres ayant le rôle `owner`, `admin` ou `member` | Vous, ainsi que les `owner` et `admin` de l'espace de travail |
 
-Les réglages d'affichage enregistrés dans une vue sont son **Affichage par défaut** : les membres la voient ainsi à la première ouverture, puis l'ajustent chacun pour soi sans gêner les autres. Une vue appartient à la page où elle a été créée : celle créée dans un projet reste dans ce projet, et celles créées sur la page **Mes tâches** sont toujours privées.
+Les réglages d'affichage enregistrés dans une vue sont son **Affichage par défaut** : les membres la voient ainsi à la première ouverture, puis l'ajustent chacun pour soi sans gêner les autres. Une vue appartient à la page où elle a été créée : celle créée dans un projet reste dans ce projet.
 
 Faites glisser les vues dans la barre pour les réordonner ; l'ordre et la visibilité réglés dans **Gérer les vues** ne concernent que vous. Un clic droit sur une vue permet de la modifier, de la supprimer ou de l'**Ajouter à la barre latérale**, ce qui la place dans la section **Vues** du panneau Travail.
 
-La section Vues propose aussi cinq vues intégrées : **Toutes les tâches** ; **Mon travail**, les tâches assignées à vous ou à vos agents ; **En cours d'exécution**, les tâches sur lesquelles un agent travaille ; et **Abonnements**, toutes les tâches que vous suivez. **Reportés** affiche les tâches que vous avez [reportées dans la boîte de réception](/inbox#reporter-une-tâche). Mon travail, En cours d'exécution et Abonnements sont Toutes les tâches sous une condition fixe : d'autres filtres peuvent les restreindre, mais cette condition ne peut être ni retirée ni élargie. Le bouton de réglages dans l'en-tête de la section Vues active ou désactive chaque vue intégrée.
+La section Vues propose aussi cinq vues intégrées : **Toutes les tâches** ; **Mon travail**, les tâches assignées à vos agents ; **En cours d'exécution**, les tâches sur lesquelles un agent travaille ; et **Abonnements**, toutes les tâches que vous suivez. **Reportés** affiche les tâches que vous avez [reportées dans la boîte de réception](/inbox#reporter-une-tâche). Mon travail, En cours d'exécution et Abonnements sont Toutes les tâches sous une condition fixe : d'autres filtres peuvent les restreindre, mais cette condition ne peut être ni retirée ni élargie. Le bouton de réglages dans l'en-tête de la section Vues active ou désactive chaque vue intégrée.
 
 ### Aperçu latéral
 
@@ -181,7 +175,7 @@ Si certaines tâches refusent une modification, les autres sont quand même mise
 
 - Si la sélection couvre plusieurs projets, le menu des statuts ne propose que ceux que tous les workflows concernés autorisent. Une tâche qui n'accepte pas la modification garde sa valeur, les autres sont mises à jour.
 - Un changement de statut groupé s'applique directement. Les tâches assignées à un agent qui quittent `backlog` démarrent normalement une exécution.
-- Une assignation groupée à un agent ou à un squad demande d'abord de confirmer les exécutions qui vont démarrer ; si toutes les tâches sélectionnées sont en `backlog`, elle s'applique directement.
+- Une assignation groupée à un agent demande d'abord de confirmer les exécutions qui vont démarrer ; si toutes les tâches sélectionnées sont en `backlog`, elle s'applique directement.
 
 ## Marquer comme doublon
 

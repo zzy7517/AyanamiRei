@@ -12,6 +12,8 @@ const OLD_ORDER = [
   "properties", "quick_actions", "wakeups", "plugins", "parent", "duplicates",
   "pull_requests", "environments", "deliverables", "apps", "execution_log", "details", "metadata",
 ];
+// The order persisted before the Trees section was introduced.
+const ORDER_WITHOUT_TREES = ISSUE_SIDEBAR_SECTIONS.filter((id) => id !== "trees");
 
 async function reloadPreferences() {
   const saved = localStorage.getItem(STORAGE_KEY)!;
@@ -37,7 +39,8 @@ describe("Sub-issues sidebar persisted preferences", () => {
     await useIssueSidebarSectionsStore.persist.rehydrate();
     const state = useIssueSidebarSectionsStore.getState();
     const order = [...selectIssueSidebarOrder(state)];
-    expect(order.filter((id) => id !== "sub_issues")).toEqual(savedOrder);
+    // Neither Trees nor Sub-issues was in an order saved before both existed.
+    expect(order.filter((id) => id !== "sub_issues" && id !== "trees")).toEqual(savedOrder);
     expect(order.indexOf("sub_issues")).toBe(order.indexOf("parent") + 1);
     expect(order.filter((id) => id === "sub_issues")).toHaveLength(1);
     expect(state.hidden).toEqual(["parent", "apps"]);
@@ -69,5 +72,18 @@ describe("Sub-issues sidebar persisted preferences", () => {
     await useIssueSidebarSectionsStore.persist.rehydrate();
     expect(selectIssueSidebarOrder(useIssueSidebarSectionsStore.getState())).toContain("sub_issues");
     expect(useIssueSidebarSectionsStore.getState().hidden).toEqual(["metadata"]);
+  });
+
+  it.each([
+    { name: "default", order: ORDER_WITHOUT_TREES },
+    { name: "customized", order: [...ORDER_WITHOUT_TREES].reverse() },
+  ])("places Trees after Properties in a $name order saved without it", async ({ order: savedOrder }) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { order: savedOrder }, version: 0 }));
+    await useIssueSidebarSectionsStore.persist.rehydrate();
+    const order = selectIssueSidebarOrder(useIssueSidebarSectionsStore.getState());
+    expect(order.filter((id) => id !== "trees")).toEqual(savedOrder);
+    expect(order.indexOf("trees")).toBe(order.indexOf("properties") + 1);
+    await reloadPreferences();
+    expect(selectIssueSidebarOrder(useIssueSidebarSectionsStore.getState())).toEqual(order);
   });
 });

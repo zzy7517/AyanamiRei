@@ -104,6 +104,22 @@
     "archive_action": "歸檔專案",
     "restore_action": "還原專案"
   },
+  "scope": {
+    "add": "新增專案",
+    "project_label": "專案",
+    "branch_label": "分支",
+    "project_required": "請選擇專案。",
+    "branch_required": "請輸入分支。",
+    "duplicate": "此專案與分支的組合已在清單中。",
+    "limit": "最多 {{max}} 組。",
+    "remove": "移除",
+    "move_up": "上移",
+    "move_down": "下移",
+    "section_title": "專案 + 分支",
+    "save": "儲存",
+    "create_failed": "任務已建立，但沒有設定 worktree：{{reason}}",
+    "create_failed_unknown": "任務已建立，但沒有設定 worktree。請在任務頁面新增。"
+  },
   "resources": {
     "section_header": "資源",
     "repos_group": "倉庫",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "分支更新失敗",
     "ref_error_commit": "這是 commit，不是分支。需要指定某個版本時，請用 multica repo checkout --ref。",
     "ref_default_label": "預設分支",
-    "ref_running_note": "已在進行中的執行不受影響。"
+    "ref_running_note": "已在進行中的執行不受影響。",
+    "local_remote_add": "在另一台電腦上新增資料夾...",
+    "local_remote_machine_label": "電腦",
+    "local_remote_path_label": "路徑"
   },
   "delete_dialog": {
     "offline_error": "目前處於離線狀態，請連線後重試刪除。",
@@ -220,29 +239,6 @@
       "issue_pricing": "定價頁對比表",
       "issue_blog": "部落格列表分頁"
     }
-  },
-  "access": {
-    "agent_notice": "AI 代理的權限跟隨其擁有者。",
-    "label": "存取權限",
-    "title": "{{title}}的存取權限",
-    "description": "控制誰能查看專案及其中的任務、評論和附件。",
-    "workspace": "整個工作區",
-    "private": "僅專案成員",
-    "members_count": "專案成員 · {{count}}",
-    "add": "新增工作區成員",
-    "search": "搜尋姓名或電子郵件...",
-    "no_members": "沒有相符的成員",
-    "no_selected": "尚無專案成員",
-    "members_only_notice": "只有名單裡的成員可以存取，工作區 owner 和 admin 也需要加入名單。",
-    "manager": "管理存取權限",
-    "you": "你",
-    "remove": "移除{{name}}",
-    "failed": "無法儲存存取權限。",
-    "load_failed": "無法載入專案成員。",
-    "publish_title": "讓整個工作區都能看到專案？",
-    "publish_description": "工作區所有成員都將能查看這個專案及其中的任務、評論和附件。",
-    "done": "完成",
-    "retry": "重試"
   },
   "archive": {
     "badge": "已歸檔",

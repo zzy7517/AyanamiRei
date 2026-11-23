@@ -15,7 +15,6 @@
     "./markdown": "./markdown/index.ts",
     "./markdown/*": "./markdown/*.tsx",
     "./markdown/linkify": "./markdown/linkify.ts",
-    "./markdown/mentions": "./markdown/mentions.ts",
     "./markdown/file-cards": "./markdown/file-cards.ts",
     "./markdown/issue-identifiers": "./markdown/issue-identifiers.ts",
     "./hooks/*": "./hooks/*.ts",

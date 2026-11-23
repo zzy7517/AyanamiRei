@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { Lock, UserMinus } from "@multica/ui/icons";
-import type { Agent, IssueAssigneeType, MemberWithUser, Squad, UpdateIssueRequest } from "@multica/core/types";
+import type { Agent, IssueAssigneeType, UpdateIssueRequest } from "@multica/core/types";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@multica/core/auth";
 import { isAgentRuntimeBound } from "@multica/core/agents";
 import { canAssignAgentToIssue } from "@multica/core/permissions";
 import { useActorName } from "@multica/core/workspace/hooks";
 import { useWorkspaceId } from "@multica/core/hooks";
-import { memberListOptions, agentListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { memberListOptions, agentListOptions } from "@multica/core/workspace/queries";
 import { useAssigneePicksStore, selectAssigneePicks, rankAssigneePicks } from "@multica/core/issues/stores/assignee-picks-store";
 import { ActorAvatar } from "../../../common/actor-avatar";
 import { DeferredPopup } from "../../../common/deferred-popup";
@@ -68,7 +68,7 @@ interface AssigneePickerProps {
 }
 
 /**
- * Mounting the real picker subscribes to members/agents/squads
+ * Mounting the real picker subscribes to members/agents
  * queries — multiplied per board card / list row that cost froze tab
  * switches. Uncontrolled callers that bring their own trigger content get a
  * deferred lookalike trigger instead; the picker mounts on first interaction.
@@ -226,84 +226,43 @@ function useAssigneeChoices(filter: string) {
   const wsId = useWorkspaceId();
   const { data: members = [] } = useQuery(memberListOptions(wsId));
   const { data: agents = [] } = useQuery(agentListOptions(wsId));
-  const { data: squads = [] } = useQuery(squadListOptions(wsId));
   const picks = useAssigneePicksStore(selectAssigneePicks(user?.id, wsId));
   const ranked = useMemo(() => rankAssigneePicks(picks), [picks]);
 
-  const currentMember = members.find((m) => m.user_id === user?.id);
-  const memberRole = currentMember?.role;
+  const memberRole = members.find((m) => m.user_id === user?.id)?.role;
 
-  const freqMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const entry of ranked) map.set(`${entry.type}:${entry.id}`, entry.count);
-    return map;
-  }, [ranked]);
-
-  const getFreq = (type: string, id: string) => freqMap.get(`${type}:${id}`) ?? 0;
+  const pickCounts = useMemo(() => new Map(ranked.map((entry) => [entry.id, entry.count])), [ranked]);
 
   // Only actors this user can pick are listed: agents they may invoke that
-  // have a runtime, and squads whose leader is such an agent (the server
-  // checks the leader's invoke permission). Anything else would be a row
-  // that can't be clicked, or a pick the server rejects.
-  const role =
-    memberRole === "owner" || memberRole === "admin" || memberRole === "member"
-      ? memberRole
-      : null;
+  // have a runtime. Anything else would be a row that can't be clicked, or a
+  // pick the server rejects.
+  const role = memberRole ?? null;
   const assignableAgents = agents.filter(
     (a) =>
       !a.archived_at &&
       isAgentRuntimeBound(a) &&
       canAssignAgentToIssue(a, { userId: user?.id ?? null, role }).allowed,
   );
-  const assignableAgentIds = new Set(assignableAgents.map((a) => a.id));
-  const assignableSquads = squads.filter(
-    (s) => !s.archived_at && assignableAgentIds.has(s.leader_id),
-  );
 
   const query = filter.trim().toLowerCase();
-  const filteredMembers = members
-    .filter((m) => m.name.toLowerCase().includes(query) || matchesPinyin(m.name, query))
-    .sort((a, b) => getFreq("member", b.user_id) - getFreq("member", a.user_id));
   const filteredAgents = assignableAgents
     .filter((a) => a.name.toLowerCase().includes(query) || matchesPinyin(a.name, query))
-    .sort((a, b) => getFreq("agent", b.id) - getFreq("agent", a.id));
-  const filteredSquads = assignableSquads
-    .filter((s) => s.name.toLowerCase().includes(query) || matchesPinyin(s.name, query))
-    .sort((a, b) => getFreq("squad", b.id) - getFreq("squad", a.id));
-  // Recent: the top 3 actors this user picked most often on this device in
-  // this workspace. Entries whose actor is gone or no longer pickable —
-  // member removed, agent/squad archived or hidden above — are skipped so the
-  // next one moves up. Hidden while searching so Enter still picks the first
-  // match.
-  const recent: RecentAssignee[] = [];
+    .sort((a, b) => (pickCounts.get(b.id) ?? 0) - (pickCounts.get(a.id) ?? 0));
+  // Recent: the top 3 agents this user picked most often on this device in
+  // this workspace. Entries whose agent is gone or no longer pickable —
+  // archived or hidden above — are skipped so the next one moves up. Hidden
+  // while searching so Enter still picks the first match.
+  const recent: Agent[] = [];
   if (!query) {
     for (const entry of ranked) {
       if (recent.length >= 3) break;
-      if (entry.type === "member") {
-        const member = members.find((m) => m.user_id === entry.id);
-        if (member) recent.push({ type: "member", member });
-      } else if (entry.type === "agent") {
-        const agent = assignableAgents.find((a) => a.id === entry.id);
-        if (agent) recent.push({ type: "agent", agent });
-      } else if (entry.type === "squad") {
-        const squad = assignableSquads.find((s) => s.id === entry.id);
-        if (squad) recent.push({ type: "squad", squad });
-      }
+      const agent = assignableAgents.find((a) => a.id === entry.id);
+      if (agent) recent.push(agent);
     }
   }
 
-  return {
-    recent,
-    filteredMembers,
-    filteredAgents,
-    filteredSquads,
-  };
+  return { recent, filteredAgents };
 }
-
-type RecentAssignee =
-  | { type: "member"; member: MemberWithUser }
-  | { type: "agent"; agent: Agent }
-  | { type: "squad"; squad: Squad };
 
 function AssigneeOptions({
   choices,
@@ -323,7 +282,7 @@ function AssigneeOptions({
   onPick: (updates: Partial<UpdateIssueRequest>) => void;
 }) {
   const { t } = useT("issues");
-  const { recent, filteredMembers, filteredAgents, filteredSquads } = choices;
+  const { recent, filteredAgents } = choices;
   const recordPick = useRecordAssigneePick();
 
   const isSelected = (type: string, id: string) =>
@@ -336,19 +295,8 @@ function AssigneeOptions({
     onPick({ assignee_type: type, assignee_id: id });
   };
 
-  // Shared by Recent and the per-type groups so selection and the private
-  // lock render identically wherever an actor shows up.
-  const renderMember = (m: MemberWithUser) => (
-    <PickerItem
-      key={m.user_id}
-      selected={isSelected("member", m.user_id)}
-      onClick={() => pickActor("member", m.user_id)}
-    >
-      <ActorAvatar actorType="member" actorId={m.user_id} size="sm" />
-      <span className="truncate">{m.name}</span>
-    </PickerItem>
-  );
-
+  // Shared by Recent and the agents group so selection and the private lock
+  // render identically wherever an agent shows up.
   const renderAgent = (a: Agent) => (
     <PickerItem
       key={a.id}
@@ -360,17 +308,6 @@ function AssigneeOptions({
       {a.visibility === "private" && (
         <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
       )}
-    </PickerItem>
-  );
-
-  const renderSquad = (s: Squad) => (
-    <PickerItem
-      key={s.id}
-      selected={isSelected("squad", s.id)}
-      onClick={() => pickActor("squad", s.id)}
-    >
-      <ActorAvatar actorType="squad" actorId={s.id} size="sm" />
-      <span className="truncate">{s.name}</span>
     </PickerItem>
   );
 
@@ -392,19 +329,7 @@ function AssigneeOptions({
           same actors still appear in their own groups below. */}
       {recent.length > 0 && (
         <PickerSection label={t(($) => $.pickers.assignee.recent_group)}>
-          {recent.map((r) =>
-            r.type === "member"
-              ? renderMember(r.member)
-              : r.type === "agent"
-                ? renderAgent(r.agent)
-                : renderSquad(r.squad),
-          )}
-        </PickerSection>
-      )}
-
-      {filteredMembers.length > 0 && (
-        <PickerSection label={t(($) => $.pickers.assignee.members_group)}>
-          {filteredMembers.map(renderMember)}
+          {recent.map(renderAgent)}
         </PickerSection>
       )}
 
@@ -414,18 +339,7 @@ function AssigneeOptions({
         </PickerSection>
       )}
 
-      {/* Squads — group ownership; assigning to a squad routes the issue to
-          its leader agent on the backend. */}
-      {filteredSquads.length > 0 && (
-        <PickerSection label={t(($) => $.pickers.assignee.squads_group)}>
-          {filteredSquads.map(renderSquad)}
-        </PickerSection>
-      )}
-
-      {filteredMembers.length === 0 &&
-        filteredAgents.length === 0 &&
-        filteredSquads.length === 0 &&
-        filter && <PickerEmpty />}
+      {filteredAgents.length === 0 && filter && <PickerEmpty />}
     </>
   );
 }

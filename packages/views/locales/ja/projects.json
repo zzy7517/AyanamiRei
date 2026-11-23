@@ -104,6 +104,22 @@
     "archive_action": "プロジェクトをアーカイブ",
     "restore_action": "プロジェクトを復元"
   },
+  "scope": {
+    "add": "プロジェクトを追加",
+    "project_label": "プロジェクト",
+    "branch_label": "ブランチ",
+    "project_required": "プロジェクトを選択してください。",
+    "branch_required": "ブランチを入力してください。",
+    "duplicate": "このプロジェクトとブランチの組み合わせはすでに登録されています。",
+    "limit": "追加できるのは最大 {{max}} 組です。",
+    "remove": "削除",
+    "move_up": "上へ移動",
+    "move_down": "下へ移動",
+    "section_title": "プロジェクト + ブランチ",
+    "save": "保存",
+    "create_failed": "タスクは作成されましたが、worktree は設定されませんでした: {{reason}}",
+    "create_failed_unknown": "タスクは作成されましたが、worktree は設定されませんでした。タスクページから追加してください。"
+  },
   "resources": {
     "section_header": "リソース",
     "repos_group": "リポジトリ",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "ブランチを更新できませんでした",
     "ref_error_commit": "これはコミットで、ブランチではありません。特定のリビジョンが必要なら multica repo checkout --ref を使ってください。",
     "ref_default_label": "デフォルトブランチ",
-    "ref_running_note": "すでに進行中の実行には影響しません。"
+    "ref_running_note": "すでに進行中の実行には影響しません。",
+    "local_remote_add": "別のコンピュータにフォルダを追加...",
+    "local_remote_machine_label": "コンピュータ",
+    "local_remote_path_label": "パス"
   },
   "delete_dialog": {
     "offline_error": "オフラインです。接続を回復してから、もう一度削除してください。",
@@ -220,29 +239,6 @@
       "issue_pricing": "料金ページの比較表",
       "issue_blog": "ブログ一覧のページ送り"
     }
-  },
-  "access": {
-    "agent_notice": "エージェントのアクセス権は所有者に従います。",
-    "label": "アクセス権",
-    "title": "{{title}}のアクセス権",
-    "description": "プロジェクトとそのタスク、コメント、添付ファイルの閲覧範囲を設定します。",
-    "workspace": "ワークスペース全体",
-    "private": "プロジェクトメンバーのみ",
-    "members_count": "プロジェクトメンバー · {{count}}",
-    "add": "ワークスペースメンバーを追加",
-    "search": "名前またはメールで検索...",
-    "no_members": "該当するメンバーはいません",
-    "no_selected": "メンバーはいません",
-    "members_only_notice": "アクセスできるのはこのリストのメンバーだけです。ワークスペースの owner と admin も追加が必要です。",
-    "manager": "アクセスを管理",
-    "you": "あなた",
-    "remove": "{{name}}を削除",
-    "failed": "アクセス権を保存できませんでした。",
-    "load_failed": "メンバーを読み込めませんでした。",
-    "publish_title": "ワークスペース全体に公開しますか？",
-    "publish_description": "すべてのワークスペースメンバーがこのプロジェクトとタスク、コメント、添付ファイルを閲覧できるようになります。",
-    "done": "完了",
-    "retry": "再試行"
   },
   "archive": {
     "badge": "アーカイブ済み",

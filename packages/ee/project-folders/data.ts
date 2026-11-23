@@ -17,7 +17,7 @@ export interface FiledProject {
 
 export interface ProjectFolderList {
   folders: ProjectFolder[];
-  /** Where each project the caller can see is filed. */
+  /** Where each project is filed. */
   filed: FiledProject[];
 }
 

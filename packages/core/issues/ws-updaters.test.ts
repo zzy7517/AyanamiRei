@@ -12,13 +12,9 @@ import {
   onIssueLabelsChanged,
   onIssueMetadataChanged,
   onIssuePropertiesChanged,
-  onIssueReactionAdded,
-  onIssueReactionRemoved,
   onIssueUpdated,
   patchIssueLabels,
   patchIssueProperties,
-  patchIssueReactions,
-  removeReactionFromList,
 } from "./ws-updaters";
 import { issueKeys } from "./queries";
 import { NO_PROJECT_SIDEBAR_SOURCE } from "./sidebar-list";
@@ -32,7 +28,6 @@ import type {
   AgentTask,
   Attachment,
   Issue,
-  IssueReaction,
   IssueLabelsResponse,
   IssueTableRowsResponse,
   IssueSubscriber,
@@ -522,80 +517,6 @@ describe("auxiliary issue activity ordering", () => {
   });
 });
 
-describe("issue reactions on the detail cache", () => {
-  const reaction: IssueReaction = {
-    id: "reaction-1",
-    issue_id: ISSUE_ID,
-    actor_type: "member",
-    actor_id: "user-1",
-    emoji: "+1",
-    created_at: "2025-01-01T00:00:00Z",
-  };
-  const detailKey = issueKeys.detail(WS_ID, ISSUE_ID);
-  let qc: QueryClient;
-
-  beforeEach(() => {
-    qc = new QueryClient();
-  });
-
-  it("adds a reaction without advancing the snapshot revision, and marks it stale", () => {
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 3 });
-
-    onIssueReactionAdded(qc, WS_ID, ISSUE_ID, reaction, 4);
-    onIssueReactionAdded(qc, WS_ID, ISSUE_ID, reaction, 4);
-
-    const detail = qc.getQueryData<Issue>(detailKey);
-    expect(detail?.reactions).toEqual([reaction]);
-    expect(detail?.revision).toBe(3);
-    expectInvalidated(qc, detailKey);
-  });
-
-  it("removes the actor's reaction for that emoji", () => {
-    const other = { ...reaction, id: "reaction-2", actor_id: "user-2" };
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 3, reactions: [reaction, other] });
-
-    onIssueReactionRemoved(qc, WS_ID, ISSUE_ID, reaction, 4);
-
-    expect(qc.getQueryData<Issue>(detailKey)?.reactions).toEqual([other]);
-  });
-
-  it("ignores events the cached snapshot already includes", () => {
-    const readded = { ...reaction, id: "reaction-3" };
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 5, reactions: [readded] });
-
-    onIssueReactionRemoved(qc, WS_ID, ISSUE_ID, reaction, 4);
-
-    expect(qc.getQueryData<Issue>(detailKey)?.reactions).toEqual([readded]);
-  });
-
-  it("ignores an event older than one already applied", () => {
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 3 });
-
-    onIssueReactionRemoved(qc, WS_ID, ISSUE_ID, reaction, 5);
-    onIssueReactionAdded(qc, WS_ID, ISSUE_ID, reaction, 4);
-
-    expect(qc.getQueryData<Issue>(detailKey)?.reactions).toBeUndefined();
-  });
-
-  it("patches and refetches the detail for an unversioned event", () => {
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 3 });
-
-    onIssueReactionAdded(qc, WS_ID, ISSUE_ID, reaction);
-
-    expect(qc.getQueryData<Issue>(detailKey)?.reactions).toEqual([reaction]);
-    expectInvalidated(qc, detailKey);
-  });
-
-  it("patches the detail directly for a local write without a revision", () => {
-    qc.setQueryData<Issue>(detailKey, { ...baseIssue, revision: 3, reactions: [reaction] });
-
-    patchIssueReactions(qc, WS_ID, ISSUE_ID, removeReactionFromList(reaction));
-
-    expect(qc.getQueryData<Issue>(detailKey)?.reactions).toEqual([]);
-    expect(qc.getQueryState(detailKey)?.isInvalidated).toBe(false);
-  });
-});
-
 describe("project progress invalidation", () => {
   let qc: QueryClient;
 
@@ -720,25 +641,25 @@ describe("onIssueUpdated — position move is surgical, not a list refetch", () 
 
     const my = qc.getQueryData<ListIssuesCache>(issueKeys.myAll(WS_ID));
     expect(my?.byStatus.unstarted?.issues.map((i) => i.id)).toEqual(["issue-2", "issue-1"]);
-    // Reconciled in place — no full-list refetch on My Issues (that was the
-    // remaining drag flicker on filtered boards).
+    // Reconciled in place — no full-list refetch (that was the remaining drag
+    // flicker on filtered boards).
     expect(qc.getQueryState(issueKeys.myAll(WS_ID))?.isInvalidated).toBe(false);
   });
 
   it("removes the card from an assignee-filtered list when the assignee changes (membership-aware, no blanket refetch)", () => {
     const assignedKey = issueKeys.myListSorted(
       WS_ID,
-      "assigned",
-      { assignee_id: "user-1" },
+      "agent:agent-1",
+      { assignee_id: "agent-1" },
       undefined,
     );
-    const mine: Issue = { ...issueA, assignee_type: "member", assignee_id: "user-1" };
+    const mine: Issue = { ...issueA, assignee_type: "agent", assignee_id: "agent-1" };
     qc.setQueryData<ListIssuesCache>(assignedKey, makeListCache(mine));
 
     onIssueUpdated(
       qc,
       WS_ID,
-      { ...mine, assignee_type: "member", assignee_id: "user-2" },
+      { ...mine, assignee_type: "agent", assignee_id: "agent-2" },
       { assigneeChanged: true },
     );
 
@@ -750,23 +671,21 @@ describe("onIssueUpdated — position move is surgical, not a list refetch", () 
     expect(qc.getQueryState(assignedKey)?.isInvalidated).toBe(false);
   });
 
-  it("flags union-scope (my:all) lists stale on an assignee change instead of guessing membership", () => {
-    const myAllListKey = issueKeys.myListSorted(WS_ID, "all", {}, undefined);
-    const mine: Issue = { ...issueA, assignee_type: "member", assignee_id: "user-1" };
-    qc.setQueryData<ListIssuesCache>(myAllListKey, makeListCache(mine));
+  it("keeps the card in an unfiltered list when the assignee changes, without a refetch", () => {
+    const allListKey = issueKeys.myListSorted(WS_ID, "all", {}, undefined);
+    const mine: Issue = { ...issueA, assignee_type: "agent", assignee_id: "agent-1" };
+    qc.setQueryData<ListIssuesCache>(allListKey, makeListCache(mine));
 
     onIssueUpdated(
       qc,
       WS_ID,
-      { ...mine, assignee_type: "member", assignee_id: "user-2" },
+      { ...mine, assignee_type: "agent", assignee_id: "agent-2" },
       { assigneeChanged: true },
     );
 
-    // Union membership (assigned ∪ created ∪ involved) is server knowledge:
-    // the card is patched in place and the list refetches to reconcile.
-    const list = qc.getQueryData<ListIssuesCache>(myAllListKey);
-    expect(list?.byStatus.unstarted?.issues[0]?.assignee_id).toBe("user-2");
-    expectInvalidated(qc, myAllListKey);
+    const list = qc.getQueryData<ListIssuesCache>(allListKey);
+    expect(list?.byStatus.unstarted?.issues[0]?.assignee_id).toBe("agent-2");
+    expect(qc.getQueryState(allListKey)?.isInvalidated).toBe(false);
   });
 
   it("moves the card out of the old project's list and flags the loaded target list (legacy diff fallback, no server flag)", () => {
@@ -1039,7 +958,7 @@ describe("onIssueDeleted", () => {
     });
   });
 
-  it("removes the deleted issue from workspace and my-issues list caches immediately", () => {
+  it("removes the deleted issue from workspace and scoped list caches immediately", () => {
     const myFilter = { assignee_id: AGENT_ID };
     qc.setQueryData<ListIssuesCache>(
       issueKeys.list(WS_ID),
@@ -1106,7 +1025,7 @@ describe("onIssueDeleted", () => {
     expectInvalidated(qc, issueKeys.childProgress(WS_ID));
   });
 
-  it("invalidates parent progress when the parent id only exists in a my-issues cache", () => {
+  it("invalidates parent progress when the parent id only exists in a scoped list cache", () => {
     const myFilter = { assignee_id: AGENT_ID };
     qc.setQueryData<ListIssuesCache>(
       issueKeys.myList(WS_ID, "assigned", myFilter),

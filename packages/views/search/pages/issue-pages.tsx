@@ -183,14 +183,14 @@ export function IssueAssigneePage({ target, query }: { target: IssueTarget; quer
   const { t: tIssues } = useT("issues");
   const palette = usePalette();
   const writer = useIssueTargetWriter(target);
-  const { agents, squads, members } = useActorDirectory(true);
+  const { agents } = useActorDirectory(true);
   const currentType = common(writer.issues, (issue) => issue.assignee_type);
   const currentId = common(writer.issues, (issue) => issue.assignee_id);
   const isCurrent = (type: string, id: string) => currentType === type && currentId === id;
   const q = query.trim().toLowerCase();
 
-  // Only actors that can take the issue are listed; agents ordered online
-  // before offline. Search keeps that order inside each match tier.
+  // Only agents that can take the issue are listed, ordered online before
+  // offline. Search keeps that order inside each match tier.
   const availabilityRank: Record<string, number> = { online: 0, unstable: 1, offline: 2 };
   const sortedAgents = agents.filter((entry) => entry.assignable).sort((a, b) => {
     const ra = a.availability ? (availabilityRank[a.availability] ?? 3) : 3;
@@ -198,16 +198,10 @@ export function IssueAssigneePage({ target, query }: { target: IssueTarget; quer
     return ra - rb;
   });
   const visibleAgents = filterByLabel(sortedAgents, q, (e) => e.agent.name);
-  const visibleSquads = filterByLabel(
-    squads.filter((entry) => entry.assignable),
-    q,
-    (e) => e.squad.name,
-  );
-  const visibleMembers = filterByLabel(members, q, (m) => m.name, (m) => [m.email.toLowerCase()]);
   const unassignedLabel = tIssues(($) => $.pickers.assignee.trigger_unassigned);
   const showUnassigned = !q || scoreText(unassignedLabel, q) > 0;
 
-  const select = (type: "member" | "agent" | "squad" | null, id: string | null) => {
+  const select = (type: "agent" | null, id: string | null) => {
     palette.close();
     writer.assign(type, id);
   };
@@ -248,40 +242,6 @@ export function IssueAssigneePage({ target, query }: { target: IssueTarget; quer
                 ) : entry.agent.visibility === "private" ? (
                   <Lock className="ml-auto size-3 shrink-0 text-muted-foreground" />
                 ) : null
-              }
-            />
-          ))}
-        </PaletteGroup>
-      )}
-      {visibleSquads.length > 0 && (
-        <PaletteGroup heading={tIssues(($) => $.pickers.assignee.squads_group)}>
-          {visibleSquads.map((entry) => (
-            <ActorRow
-              key={entry.squad.id}
-              value={`assignee:squad:${entry.squad.id}`}
-              actorType="squad"
-              actorId={entry.squad.id}
-              name={entry.squad.name}
-              query={query}
-              onSelect={() => select("squad", entry.squad.id)}
-              trailing={isCurrent("squad", entry.squad.id) ? <RowCheck label={t(($) => $.pages.current)} /> : null}
-            />
-          ))}
-        </PaletteGroup>
-      )}
-      {visibleMembers.length > 0 && (
-        <PaletteGroup heading={tIssues(($) => $.pickers.assignee.members_group)}>
-          {visibleMembers.map((member) => (
-            <ActorRow
-              key={member.user_id}
-              value={`assignee:member:${member.user_id}`}
-              actorType="member"
-              actorId={member.user_id}
-              name={member.name}
-              query={query}
-              onSelect={() => select("member", member.user_id)}
-              trailing={
-                isCurrent("member", member.user_id) ? <RowCheck label={t(($) => $.pages.current)} /> : null
               }
             />
           ))}

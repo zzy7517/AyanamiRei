@@ -5,7 +5,7 @@
  * multica comments and would otherwise show as visible syntax garbage in a
  * one- or two-line preview:
  *
- *   - mention links   `[@Alice](mention://member/uuid)` → `@Alice`
+ *   - mention links   `[@Alice](mention://agent/uuid)` → `@Alice`
  *   - issue mentions  `[MUL-123](mention://issue/uuid)` → `MUL-123`
  *   - images          `![filename](url)` / `![](url)`  → `📷`
  *   - plain links     `[label](https://...)`           → `label`

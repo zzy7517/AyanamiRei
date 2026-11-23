@@ -10,7 +10,6 @@
     "commands": "コマンド",
     "members": "メンバー",
     "agents": "エージェント",
-    "squads": "スクワッド",
     "projects": "プロジェクト",
     "issues": "タスク",
     "autopilots": "オートパイロット",
@@ -147,7 +146,6 @@
     "project": "プロジェクト",
     "agent": "エージェント",
     "autopilot": "オートパイロット",
-    "squad": "スクワッド",
     "member": "メンバー"
   },
   "footer": {

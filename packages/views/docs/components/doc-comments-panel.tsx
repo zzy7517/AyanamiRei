@@ -72,7 +72,6 @@ function Composer({
         ref={ref}
         defaultValue=""
         placeholder={placeholder}
-        mentionHideGuests
         onUpdate={(md) => setEmpty(!md.trim())}
         onSubmit={submit}
         debounceMs={0}

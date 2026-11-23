@@ -97,13 +97,13 @@ export const issueKeys = {
     [...issueKeys.all(wsId), "assignee-groups"] as const,
   assigneeGroups: (wsId: string, filter: AssigneeGroupedIssuesFilter) =>
     [...issueKeys.assigneeGroupsAll(wsId), filter] as const,
-  /** All "my issues" queries — use for bulk invalidation. */
+  /** All scoped list queries — use for bulk invalidation. */
   myAll: (wsId: string) => [...issueKeys.all(wsId), "my"] as const,
   /** PREFIX for per-scope invalidation — no sort. */
-  myList: (wsId: string, scope: string, filter: MyIssuesFilter) =>
+  myList: (wsId: string, scope: string, filter: IssueListFilter) =>
     [...issueKeys.myAll(wsId), scope, filter] as const,
   /** FULL KEY for queryOptions — includes sort. */
-  myListSorted: (wsId: string, scope: string, filter: MyIssuesFilter, sort?: IssueSortParam) =>
+  myListSorted: (wsId: string, scope: string, filter: IssueListFilter, sort?: IssueSortParam) =>
     [...issueKeys.myList(wsId, scope, filter), sort ?? {}] as const,
   myAssigneeGroupsAll: (wsId: string) =>
     [...issueKeys.myAll(wsId), "assignee-groups"] as const,
@@ -225,21 +225,19 @@ export function sourceContextPreviewOptions(
   });
 }
 
-export type MyIssuesFilter = Pick<
+export type IssueListFilter = Pick<
   ListIssuesParams,
   | "assignee_id"
   | "assignee_ids"
   | "assignee_types"
   | "creator_id"
-  | "created_by_user_id"
   | "project_id"
-  | "involves_user_id"
 >;
 
 /** Server-side contract for the flat table window. These facets must travel
  * with every offset page (and live in the query key); post-filtering a loaded
  * page can silently omit matching issues after the current offset. */
-export type IssueFlatFilter = MyIssuesFilter &
+export type IssueFlatFilter = IssueListFilter &
   Pick<
     ListIssuesParams,
     | "q"
@@ -292,7 +290,7 @@ export function flattenIssueBuckets(data: ListIssuesCache) {
  * own row count. A custom status the server did not resolve falls back to
  * `issueColumnCategory`'s bucket, so no row is dropped.
  */
-async function fetchFirstPages(filter: MyIssuesFilter = {}, sort?: IssueSortParam): Promise<ListIssuesCache> {
+async function fetchFirstPages(filter: IssueListFilter = {}, sort?: IssueSortParam): Promise<ListIssuesCache> {
   const res = await api.listIssues({ limit: ISSUE_PAGE_SIZE, offset: 0, ...sort, ...filter });
   const byStatus: ListIssuesCache["byStatus"] = {};
   for (const category of PAGINATED_CATEGORIES) {

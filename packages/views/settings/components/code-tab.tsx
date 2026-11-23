@@ -23,7 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@multica/ui/components/ui/dropdown-menu";
-import { useConfigStore } from "@multica/core/config";
+import { useConfigStore, useFeatureEnabled } from "@multica/core/config";
+import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useCurrentMember } from "@multica/core/permissions";
 import { useCurrentWorkspace } from "@multica/core/paths";
@@ -45,6 +46,7 @@ import { HostMark, HostStatus } from "./code-host";
 import { RepositoriesSection } from "./repositories-section";
 import { useConnectGitHub } from "./use-connect-github";
 import { PRMergeStatusRow } from "./pr-merge-status-row";
+import { TaskTreeRetentionRow } from "./task-tree-retention-row";
 
 type GitHubSettingsKey =
   | "github_enabled"
@@ -65,6 +67,8 @@ export function CodeTab() {
   const { role, member } = useCurrentMember(wsId);
   const isManager = role === "owner" || role === "admin";
   const vcsAvailable = useConfigStore((s) => s.vcsIntegrationAvailable);
+  // Worktrees exist only while task sessions do.
+  const taskSessions = useFeatureEnabled(TASK_SESSIONS_V1_FLAG, false);
 
   // Every member can see the installation list (MUL-2413); connect and
   // disconnect follow the backend's `can_manage` so the UI never offers what
@@ -260,6 +264,14 @@ export function CodeTab() {
       </SettingsSection>
 
       <RepositoriesSection connection={githubConnection} />
+
+      {taskSessions ? (
+        <SettingsSection title={t(($) => $.code.task_trees_title)} anchor="task-trees">
+          <SettingsCard>
+            <TaskTreeRetentionRow canManage={isManager} />
+          </SettingsCard>
+        </SettingsSection>
+      ) : null}
 
       <SettingsSection
         title={t(($) => $.code.pr_linking_title)}

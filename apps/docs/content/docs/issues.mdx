@@ -17,7 +17,7 @@ An issue is Multica's basic unit for organizing work: a feature, a bug, an inves
 |---|---|
 | **Title and description** | Goal, background, requirements, and acceptance criteria. |
 | **Status and priority** | Where the work stands and what to handle first. |
-| **Assignee** | A workspace member, an agent, or a squad. |
+| **Assignee** | An agent. |
 | **Dates, labels, and custom properties** | Planning, categorization, and your team's own fields. |
 | **Project and parent-child relationships** | Fits into a larger body of work, or splits into sub-issues. |
 | **Activity and execution log** | Comments, status changes, runs, and results returned by agents. |
@@ -33,27 +33,21 @@ Each issue has a number, such as `MUL-123`. The digits increment within the work
 
 ### Create with agent
 
-Describe the work, pick an agent or squad under **Created by**, and click **Create**. The dialog closes right away. The agent works in the background, turns the request into a title and description, and creates the issue; success or failure lands in your inbox. A failure notification has **Edit as advanced form**, which puts your original request into the manual form.
+Describe the work, pick an agent under **Created by**, and click **Create**. The dialog closes right away. The agent works in the background, turns the request into a title and description, and creates the issue; success or failure lands in your inbox. A failure notification has **Edit as advanced form**, which puts your original request into the manual form.
 
 <IssueDraftDemo />
 
 - The agent restates your request faithfully and does not add requirements or acceptance criteria you did not give.
-- If the request names an assignee ("give this to Lei Li"), the agent assigns them. Otherwise the assignee is whoever you picked under **Created by**: the agent itself, or the squad if you picked one. New issues start in `todo`, so when the assignee is an agent, it starts working on the issue as soon as it exists.
+- If the request names an agent as the assignee ("give this to Lei Li"), the agent assigns it. Otherwise the assignee is the agent you picked under **Created by**. New issues start in `todo`, so the assignee starts working on the issue as soon as it exists.
 - The project, priority, and due date you set in the dialog are used as-is; the agent does not infer different ones from the text. Project shows by default, and priority and due date are under the **⋯** menu. Choose which fields always show in **Settings → Preferences → Fields shown when creating issues**.
 - With **Create another** on, the dialog stays open after each submission so you can write the next one.
-- **Created by** lists only the agents and squads you are allowed to assign. If the agent's runtime has a multica CLI that is too old, the dialog asks you to upgrade the daemon or switch to manual create.
+- **Created by** lists only the agents you are allowed to assign. If the agent's runtime has a multica CLI that is too old, the dialog asks you to upgrade the daemon or switch to manual create.
 
 ## Choose an assignee
 
-| Assignee | Effect |
-|---|---|
-| **Member** | That member owns the follow-up; no run is created. |
-| **Agent** | A run is created for that agent. |
-| **Squad** | The squad leader receives it and decides who handles it. |
+When assigned to an agent, the issue enqueues immediately unless it is in `backlog`; if the runtime is offline, the run waits in the queue. Archived agents cannot be assigned.
 
-When assigned to an agent or a squad, the issue enqueues immediately unless it is in `backlog`; if the runtime is offline, the run waits in the queue. Archived agents and squads cannot be assigned.
-
-Assignment does not bypass an agent's Access; when assigning to a squad, the leader's Access is what gets checked. See [Assign issues to agents](/assigning-issues).
+Assignment does not bypass an agent's Access. See [Assign issues to agents](/assigning-issues).
 
 ## Status
 
@@ -161,11 +155,11 @@ Save a combination of filters and display settings you use often as a view: clic
 | **Only visible to me** | Only you | You |
 | **Visible to workspace members** | Members with the `owner`, `admin`, or `member` role | You, plus workspace `owner` and `admin` |
 
-The display settings saved in a view are its **Default display**: members see the view that way the first time they open it, then adjust it for themselves without affecting anyone else. A view lives on the page it was created on: one created in a project belongs to that project, and views created on the **My Issues** page are always private.
+The display settings saved in a view are its **Default display**: members see the view that way the first time they open it, then adjust it for themselves without affecting anyone else. A view lives on the page it was created on: one created in a project belongs to that project.
 
 Drag views in the view bar to reorder them; ordering and visibility in **Manage views** affect only you. Right-click a view to edit it, delete it, or **Add to sidebar**, which lists it in the **Views** section of the Work panel.
 
-The Views section also offers five built-in views: **All issues**; **My work**, issues assigned to you or to your agents; **Working**, issues an agent is running on; and **Subscribed**, every issue you subscribe to. **Snoozed** lists issues you have [snoozed in your inbox](/inbox#snooze-an-issue). My work, Working, and Subscribed are All issues under a fixed condition: other filters can narrow them, but that condition can't be removed or widened. The sliders button in the Views section header turns each built-in view on or off.
+The Views section also offers five built-in views: **All issues**; **My work**, issues assigned to your agents; **Working**, issues an agent is running on; and **Subscribed**, every issue you subscribe to. **Snoozed** lists issues you have [snoozed in your inbox](/inbox#snooze-an-issue). My work, Working, and Subscribed are All issues under a fixed condition: other filters can narrow them, but that condition can't be removed or widened. The sliders button in the Views section header turns each built-in view on or off.
 
 ### Side preview
 
@@ -183,7 +177,7 @@ If some issues cannot take a change, the others are still updated. The result na
 
 - When the selection spans several projects, the status menu offers only statuses every selected issue's workflow allows. An issue that does not support a change keeps its value, and the rest are updated.
 - Batch status changes apply directly. Agent-assigned issues that leave `backlog` start running as usual.
-- Batch-assigning to an agent or squad first asks you to confirm the runs that will start; if every selected issue is in `backlog`, the assignment applies directly.
+- Batch-assigning to an agent first asks you to confirm the runs that will start; if every selected issue is in `backlog`, the assignment applies directly.
 
 ## Mark as duplicate
 

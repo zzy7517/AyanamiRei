@@ -41,7 +41,6 @@ vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
     memberDetail: (id: string) => `/acme/members/${id}`,
     agentDetail: (id: string) => `/acme/agents/${id}`,
-    squadDetail: (id: string) => `/acme/squads/${id}`,
   }),
 }));
 
@@ -90,10 +89,6 @@ vi.mock("../../agents/components/agent-live-peek-card", () => ({
 
 vi.mock("../../members/member-profile-card", () => ({
   MemberProfileCard: () => null,
-}));
-
-vi.mock("../../squads/components/squad-profile-card", () => ({
-  SquadProfileCard: () => null,
 }));
 
 vi.mock("./issue-agent-activity-indicator", () => ({
@@ -148,32 +143,29 @@ function makeIssue(assigneeType: IssueAssigneeType): Issue {
 }
 
 describe("BoardCardContent assignee picker", () => {
-  it.each<IssueAssigneeType>(["member", "agent", "squad"])(
-    "opens the picker from an avatar-only %s assignee without navigating the card",
-    (assigneeType) => {
-      const issue = makeIssue(assigneeType);
-      const { container } = render(
-        <NavigationProvider value={navigation}>
-          <IssueSurfaceActionsProvider actions={actions}>
-            <AppLink href={`/acme/issues/${issue.id}`}>
-              <BoardCardContent issue={issue} editable />
-            </AppLink>
-          </IssueSurfaceActionsProvider>
-        </NavigationProvider>,
-      );
-      const avatar = container.querySelector('[data-slot="avatar"]');
+  it("opens the picker from an avatar-only agent assignee without navigating the card", () => {
+    const issue = makeIssue("agent");
+    const { container } = render(
+      <NavigationProvider value={navigation}>
+        <IssueSurfaceActionsProvider actions={actions}>
+          <AppLink href={`/acme/issues/${issue.id}`}>
+            <BoardCardContent issue={issue} editable />
+          </AppLink>
+        </IssueSurfaceActionsProvider>
+      </NavigationProvider>,
+    );
+    const avatar = container.querySelector('[data-slot="avatar"]');
 
-      expect(avatar).not.toBeNull();
-      expect(avatar!.closest('[role="link"]')).toBeNull();
-      expect(fireEvent.click(avatar!)).toBe(false);
-      expect(screen.getByRole("textbox")).toBeInTheDocument();
-      expect(navigation.push).not.toHaveBeenCalled();
-    },
-  );
+    expect(avatar).not.toBeNull();
+    expect(avatar!.closest('[role="link"]')).toBeNull();
+    expect(fireEvent.click(avatar!)).toBe(false);
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+    expect(navigation.push).not.toHaveBeenCalled();
+  });
 
   it("does not repeat the assignee inside an assignee-grouped board", () => {
     viewState.grouping = "assignee";
-    const issue = makeIssue("member");
+    const issue = makeIssue("agent");
     const { container } = render(
       <NavigationProvider value={navigation}>
         <IssueSurfaceActionsProvider actions={actions}>
@@ -188,7 +180,7 @@ describe("BoardCardContent assignee picker", () => {
 
   it("does not repeat the assignee inside an assignee-grouped swimlane", () => {
     viewState.viewMode = "swimlane";
-    const issue = makeIssue("member");
+    const issue = makeIssue("agent");
     const { container } = render(
       <NavigationProvider value={navigation}>
         <IssueSurfaceActionsProvider actions={actions}>
@@ -204,7 +196,7 @@ describe("BoardCardContent assignee picker", () => {
   it("keeps empty priority and assignee fields visually silent", () => {
     viewState.cardProperties.priority = true;
     const issue = {
-      ...makeIssue("member"),
+      ...makeIssue("agent"),
       assignee_type: null,
       assignee_id: null,
       start_date: null,
@@ -235,14 +227,11 @@ describe("BoardCardContent assignee picker run confirmation", () => {
   });
 
   function renderAndPick(name: string) {
-    queryData.set("workspaces/ws-1/members", [
-      { user_id: "viewer-1", name: "Viewer", role: "member" },
-      { user_id: "member-2", name: "Teammate", role: "member" },
-    ]);
+    queryData.set("workspaces/ws-1/members", [{ user_id: "viewer-1", name: "Viewer", role: "member" }]);
     queryData.set("workspaces/ws-1/agents", [
       { id: "agent-2", name: "Builder", owner_id: "viewer-1", archived_at: null },
     ]);
-    const issue = makeIssue("member");
+    const issue = makeIssue("agent");
     const { container } = render(
       <NavigationProvider value={navigation}>
         <IssueSurfaceActionsProvider actions={actions}>
@@ -267,16 +256,5 @@ describe("BoardCardContent assignee picker run confirmation", () => {
       assigneeId: "agent-2",
     });
     expect(actions.updateIssue).not.toHaveBeenCalled();
-  });
-
-  it("applies a member reassignment directly", () => {
-    const issue = renderAndPick("Teammate");
-
-    expect(useModalStore.getState().modal).toBeNull();
-    expect(actions.updateIssue).toHaveBeenCalledWith(
-      issue.id,
-      { assignee_type: "member", assignee_id: "member-2" },
-      expect.anything(),
-    );
   });
 });

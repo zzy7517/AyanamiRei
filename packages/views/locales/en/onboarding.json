@@ -38,9 +38,7 @@
       "card4_actor_name": "Review Agent",
       "card4_body": "Reviewed Monday's draft — left 4 notes on tone. Standing by for the new one.",
       "card5_actor_name": "Coding Agent",
-      "card5_body_prefix": "Shipped the export feature ",
-      "card5_body_suffix": " flagged. Preview link in the PR.",
-      "card5_mention_you": "@you",
+      "card5_body": "Shipped the export feature you flagged. Preview link in the PR.",
       "card5_timestamp": "just now"
     }
   },

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AgentTaskSchema,
   IssueSchema,
+  IssueAgentReplyResponseSchema,
   AppConfigSchema,
   WecomInstallationSchema,
   ListWecomInstallationsResponseSchema,
@@ -59,8 +60,6 @@ import {
   RuntimeUsageByHourListSchema,
   RuntimeUsageListSchema,
   SendChatMessageResponseSchema,
-  SquadListSchema,
-  SquadSchema,
   SourceContextPreviewSchema,
   TimelineEntriesSchema,
   UserSchema,
@@ -238,6 +237,31 @@ describe("IssueSchema (via ListIssuesResponseSchema)", () => {
     const parsed = ListIssuesResponseSchema.parse({ issues: [withoutName], total: 1 });
     expect(parsed.issues[0]?.id).toBe(baseIssue.id);
     expect(parsed.issues[0]?.status_name).toBeUndefined();
+  });
+  it("reads when a task was completed, and a missing or malformed value as not completed", () => {
+    const read = (issue: object) =>
+      ListIssuesResponseSchema.parse({ issues: [issue], total: 1 }).issues[0]?.completed_at;
+    expect(read({ ...baseIssue, completed_at: "2026-11-22T10:00:00Z" })).toBe("2026-11-22T10:00:00Z");
+    expect(read({ ...baseIssue, completed_at: null })).toBeNull();
+    expect(read(baseIssue)).toBeNull();
+    // The issue stays, with the odd value dropped.
+    expect(read({ ...baseIssue, completed_at: 42 })).toBeNull();
+  });
+  it("reads when an agent's reply is waiting to be seen, and a missing or malformed value as none", () => {
+    const read = (issue: object) =>
+      ListIssuesResponseSchema.parse({ issues: [issue], total: 1 }).issues[0]?.agent_replied_at;
+    expect(read({ ...baseIssue, agent_replied_at: "2026-11-22T10:00:00Z" })).toBe("2026-11-22T10:00:00Z");
+    expect(read({ ...baseIssue, agent_replied_at: null })).toBeNull();
+    expect(read(baseIssue)).toBeNull();
+    // The issue stays, with the odd value dropped.
+    expect(read({ ...baseIssue, agent_replied_at: 42 })).toBeNull();
+  });
+  it("reads the answer to marking a reply seen as cleared unless it names a moment", () => {
+    const read = (answer: unknown) => IssueAgentReplyResponseSchema.parse(answer).agent_replied_at;
+    expect(read({ agent_replied_at: "2026-11-22T10:00:00Z" })).toBe("2026-11-22T10:00:00Z");
+    expect(read({ agent_replied_at: null })).toBeNull();
+    expect(read({})).toBeNull();
+    expect(read({ agent_replied_at: 42 })).toBeNull();
   });
   it("keeps the issue while independently dropping a malformed source context", () => {
     const parsed = ListIssuesResponseSchema.parse({
@@ -1156,51 +1180,6 @@ describe("UserSchema star prompt drift", () => {
   });
 });
 
-describe("SquadListSchema member preview drift", () => {
-  const baseSquad = {
-    id: "squad-1",
-    workspace_id: "ws-1",
-    name: "Frontend Squad",
-    description: "",
-    instructions: "",
-    avatar_url: null,
-    leader_id: "agent-1",
-    creator_id: "user-1",
-    created_at: "2026-05-01T00:00:00Z",
-    updated_at: "2026-05-01T00:00:00Z",
-    archived_at: null,
-    archived_by: null,
-  };
-
-  it("defaults preview fields when an older backend omits them", () => {
-    const parsed = SquadListSchema.parse([baseSquad]);
-    expect(parsed[0]?.member_count).toBe(0);
-    expect(parsed[0]?.member_preview).toEqual([]);
-  });
-
-  it("defaults preview fields on a single squad response", () => {
-    const parsed = SquadSchema.parse(baseSquad);
-    expect(parsed.member_count).toBe(0);
-    expect(parsed.member_preview).toEqual([]);
-  });
-
-  it("preserves lightweight member preview rows", () => {
-    const parsed = SquadListSchema.parse([
-      {
-        ...baseSquad,
-        member_count: 2,
-        member_preview: [
-          { member_type: "agent", member_id: "agent-1", role: "leader" },
-          { member_type: "member", member_id: "user-2", role: "member" },
-        ],
-      },
-    ]);
-    expect(parsed[0]?.member_count).toBe(2);
-    expect(parsed[0]?.member_preview).toHaveLength(2);
-    expect(parsed[0]?.member_preview?.[0]?.role).toBe("leader");
-  });
-});
-
 // The workspace dashboard and runtime-detail pages were re-pointed at the
 // unified `task_usage_hourly` rollup. Every numeric field drives chart /
 // KPI math, and string keys (date / agent_id / model) bucket the series.
@@ -1793,12 +1772,12 @@ describe("CommentTriggerPreviewSchema.blocked", () => {
     const parsed = CommentTriggerPreviewSchema.parse({
       agents: [{ id: "a1", source: "mention_agent", reason: "" }],
       blocked: [
-        { target_type: "squad", target_id: "s1", status: "blocked", reason_code: "invocation_not_allowed" },
+        { target_type: "agent", target_id: "a2", status: "blocked", reason_code: "invocation_not_allowed" },
       ],
     });
     expect(parsed.agents).toHaveLength(1);
     expect(parsed.blocked).toEqual([
-      { target_type: "squad", target_id: "s1", status: "blocked", reason_code: "invocation_not_allowed" },
+      { target_type: "agent", target_id: "a2", status: "blocked", reason_code: "invocation_not_allowed" },
     ]);
   });
 
@@ -1820,12 +1799,12 @@ describe("CommentTriggerPreviewSchema.blocked", () => {
     const parsed = CommentTriggerPreviewSchema.parse({
       agents: [],
       blocked: [
-        { target_type: "squad", target_id: "s1", status: "blocked", reason_code: "invocation_not_allowed" },
+        { target_type: "agent", target_id: "a2", status: "blocked", reason_code: "invocation_not_allowed" },
         { status: "blocked" }, // missing target_id → dropped individually
         { target_type: "agent", target_id: "a1", status: "blocked", reason_code: "runtime_offline" },
       ],
     });
-    expect(parsed.blocked.map((b) => b.target_id)).toEqual(["s1", "a1"]);
+    expect(parsed.blocked.map((b) => b.target_id)).toEqual(["a2", "a1"]);
   });
 });
 
@@ -2079,13 +2058,13 @@ describe("SidebarProjectPrefsDocSchema", () => {
   it("keeps every setting this client knows", () => {
     const doc = {
       projects: { ordering: "name", statuses: ["planned"], onlyMine: true, showCount: false },
-      issues: { sortBy: "priority", sortDirection: "asc", hiddenStatuses: ["done"], assignee: "me", showSubIssues: false },
+      issues: { sortBy: "priority", sortDirection: "asc", hiddenStatuses: ["done"], assignee: "my_agents", showSubIssues: false },
       order: ["p2", "p1"],
     };
     expect(SidebarProjectPrefsDocSchema.parse(doc)).toEqual(doc);
   });
 
-  it.each(["anyone", "me", "my_agents", "me_and_my_agents"] satisfies SidebarIssueAssignee[])(
+  it.each(["anyone", "my_agents"] satisfies SidebarIssueAssignee[])(
     "keeps the %s assignee setting",
     (assignee) => {
       expect(SidebarProjectPrefsDocSchema.parse({ issues: { assignee } }).issues.assignee).toBe(assignee);

@@ -67,29 +67,6 @@ describe("notification preference patches", () => {
     ).toEqual({ status_changes: "muted", comments: "muted" });
   });
 
-  it("carries the mentions group independently of comments", () => {
-    // The point of the split (#6468): muting comment volume must not travel
-    // to mentions. A missing key in NOTIFICATION_GROUP_KEYS would make the
-    // toggle silently un-sendable, so derive and apply are both covered.
-    expect(
-      deriveNotificationPreferencePatch(
-        { comments: "muted" },
-        { comments: "muted", mentions: "muted" },
-      ),
-    ).toEqual({ mentions: "muted" });
-
-    expect(
-      deriveNotificationPreferencePatch({ comments: "muted" }, {}),
-    ).toEqual({ comments: "all" });
-
-    expect(
-      applyNotificationPreferencePatch(
-        { comments: "muted" },
-        { mentions: "muted" },
-      ),
-    ).toEqual({ comments: "muted", mentions: "muted" });
-  });
-
   it("treats a missing others_issues as key updates, not all", () => {
     expect(notificationPreferenceValue({}, "others_issues")).toBe("key_updates");
     expect(

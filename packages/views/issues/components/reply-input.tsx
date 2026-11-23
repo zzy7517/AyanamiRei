@@ -138,7 +138,7 @@ function ReplyInput({
   const stopRunsBeforeSend = useStopRunsBeforeSend(issueId);
   // A pending annotation note previews recipients while the reply itself is
   // still empty, so the chip row can render under the one-line placeholder.
-  const showsTriggerChips = recipients.length > 0 || triggerPreview.blocked.length > 0 || triggerPreview.hasAllMembersMention;
+  const showsTriggerChips = recipients.length > 0 || triggerPreview.blocked.length > 0;
 
   // Readonly-first: static shell until intent; an unsent draft mounts the
   // real editor immediately (see CommentInput). This is also what keeps the
@@ -290,7 +290,7 @@ function ReplyInput({
       submit, submitting, uploading: gate.uploading, targetMissing, restart: routing.restartTaskIds.length > 0,
       draftContent: content, annotations,
       recipients: <CommentTriggerChips recipients={recipients} blocked={triggerPreview.blocked}
-        hasAllMembersMention={triggerPreview.hasAllMembersMention} draftContent={composedContent} onActionChange={setAction} />,
+        draftContent={composedContent} onActionChange={setAction} />,
     })}
     <div className="group/editor flex items-start gap-2.5">
       <ActorAvatar
@@ -384,7 +384,6 @@ function ReplyInput({
           recipients={<CommentTriggerChips
             recipients={recipients}
             blocked={triggerPreview.blocked}
-            hasAllMembersMention={triggerPreview.hasAllMembersMention}
             draftContent={composedContent}
             onActionChange={setAction}
           />}

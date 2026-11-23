@@ -45,7 +45,7 @@ function findMentionStart(src: string): number {
 
 /** A mention as text, the way its pill reads: issues and projects by name. */
 export function mentionText(attrs: Record<string, unknown>): string {
-  const type = attrs.type ?? "member";
+  const type = attrs.type ?? "agent";
   const prefix = type === "issue" || type === "project" || type === "doc" ? "" : "@";
   return `${prefix}${String(attrs.label ?? attrs.id ?? "")}`;
 }
@@ -59,7 +59,7 @@ export const MentionSchema = Mention.extend({
         this.options.HTMLAttributes,
         HTMLAttributes,
         {
-          "data-mention-type": node.attrs.type ?? "member",
+          "data-mention-type": node.attrs.type ?? "agent",
           "data-mention-id": node.attrs.id,
         },
       ),
@@ -70,9 +70,9 @@ export const MentionSchema = Mention.extend({
     return {
       ...this.parent?.(),
       type: {
-        default: "member",
+        default: "agent",
         parseHTML: (el: HTMLElement) =>
-          el.getAttribute("data-mention-type") ?? "member",
+          el.getAttribute("data-mention-type") ?? "agent",
         renderHTML: () => ({}),
       },
     };
@@ -102,7 +102,7 @@ export const MentionSchema = Mention.extend({
       return {
         type: "mention",
         raw: match[0],
-        attributes: { label: rawLabel, type: match[2] ?? "member", id: match[3] },
+        attributes: { label: rawLabel, type: match[2] ?? "agent", id: match[3] },
       };
     },
   },
@@ -110,7 +110,7 @@ export const MentionSchema = Mention.extend({
     return helpers.createNode("mention", token.attributes);
   },
   renderMarkdown: (node: any) => {
-    const { id, label, type = "member" } = node.attrs || {};
+    const { id, label, type = "agent" } = node.attrs || {};
     const prefix = type === "issue" || type === "project" || type === "doc" ? "" : "@";
     // Escape [ ] \ ( ) in the label so the markdown link syntax is not broken
     // and the label survives the linear tokenizer (which now treats "\" as an

@@ -32,8 +32,14 @@ export type IssueStatus = BuiltInIssueStatus | (string & {});
 
 export type IssuePriority = "urgent" | "high" | "medium" | "low" | "none";
 
-export type IssueAssigneeType = "member" | "agent" | "squad";
+/** An issue's assignee is an agent; an unassigned issue carries null. */
+export type IssueAssigneeType = "agent";
 
+/** Who created an issue: a person or an agent. */
+export type IssueCreatorType = "member" | "agent";
+
+// Reactions are no longer stored or served. This and `Issue.reactions`
+// remain only because apps/mobile still reads them.
 export interface IssueReaction {
   id: string;
   issue_id: string;
@@ -209,7 +215,7 @@ export interface Issue {
   priority: IssuePriority;
   assignee_type: IssueAssigneeType | null;
   assignee_id: string | null;
-  creator_type: IssueAssigneeType;
+  creator_type: IssueCreatorType;
   creator_id: string;
   requester_id?: string | null;
   parent_issue_id: string | null;
@@ -246,6 +252,18 @@ export interface Issue {
    * created_at/updated_at values are second-precision; parse before comparing.
    */
   last_activity_at?: string | null;
+  /**
+   * When the task last entered the done or closed category, and null until
+   * then or once it leaves again. The API client defaults a missing value to
+   * null; absent only on an issue object built by hand.
+   */
+  completed_at?: string | null;
+  /**
+   * When the task's agent last ended a turn that no member has seen yet, and
+   * null once one has. The API client defaults a missing value to null; absent
+   * only on an issue object built by hand.
+   */
+  agent_replied_at?: string | null;
   /** Present only on issue detail responses for issues created from a comment. */
   source_context?: IssueSourceContext;
 }

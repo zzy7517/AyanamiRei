@@ -81,7 +81,6 @@ import type {
   Label,
   Project,
   ListProjectsResponse,
-  MemberWithUser,
   IssueProperty,
   ListPropertiesResponse,
   QuickAction,
@@ -109,18 +108,16 @@ import type {
   RuntimeModelListRequest,
   SearchIssuesResponse,
   SearchProjectsResponse,
-  ShareLink,
-  ShareLinkInfo,
   Skill,
   SkillImportResult,
   SkillSummary,
   SkillVersion,
   SkillVersionSummary,
-  Squad,
   TimelineEntry,
   User,
   WebhookDelivery,
   WorkspaceMcpServer,
+  IssueProjectScope,
 } from "../types";
 import type { CloudRuntimeNode } from "../runtimes/cloud-runtime";
 import type { CreateFeedbackResponse } from "../feedback/types";
@@ -705,7 +702,7 @@ const IssueWorkflowHandlerSchema = z.object({
 }).loose();
 
 const ISSUE_WORKFLOW_HANDLER_TYPES = new Set<string>([
-  "none", "agent", "squad", "member", "project_lead", "creator",
+  "none", "agent", "member", "project_lead", "creator",
 ]);
 
 const IssueWorkflowStepSchema = z.object({
@@ -780,7 +777,7 @@ export const IssueWorkflowBriefPreviewSchema = z.object({
   brief: z.string().default(""),
 }).loose();
 
-const HANDOFF_HANDLER_TYPES = new Set(["agent", "squad", "member"]);
+const HANDOFF_HANDLER_TYPES = new Set(["agent", "member"]);
 
 export const WorkflowHandoffPreviewSchema = z.object({
   handoff: z.boolean().default(false),
@@ -788,7 +785,7 @@ export const WorkflowHandoffPreviewSchema = z.object({
   from_status: z.string().default(""),
   to_status: z.string().default(""),
   handler_type: z.string().optional().transform((value): WorkflowHandoffPreview["handler_type"] =>
-    value && HANDOFF_HANDLER_TYPES.has(value) ? (value as "agent" | "squad" | "member") : null,
+    value && HANDOFF_HANDLER_TYPES.has(value) ? (value as "agent" | "member") : null,
   ),
   handler_id: z.string().nullable().optional().transform((value) => value || null),
   previous_assignee_type: z.string().nullable().default(null),
@@ -889,7 +886,7 @@ export const SidebarProjectPrefsDocSchema = z.object({
     sortBy: z.enum(["updated_at", "created_at", "priority", "status", "title", "due_date"]).optional().catch(undefined),
     sortDirection: z.enum(["asc", "desc"]).optional().catch(undefined),
     hiddenStatuses: z.array(z.string()).nullable().optional().catch(undefined),
-    assignee: z.enum(["anyone", "me", "my_agents", "me_and_my_agents"]).optional().catch(undefined),
+    assignee: z.enum(["anyone", "my_agents"]).optional().catch(undefined),
     showSubIssues: z.boolean().optional().catch(undefined),
   }).catch({}),
   order: z.array(z.unknown()).catch([]).transform((ids) => ids.filter((id): id is string => typeof id === "string")),
@@ -899,9 +896,9 @@ export type SidebarProjectPrefsDoc = z.infer<typeof SidebarProjectPrefsDocSchema
 
 export interface CreateIssueViewRequest {
   name: string;
-  scope_type: "workspace" | "my" | "project";
+  scope_type: "workspace" | "project";
   scope_id?: string | null;
-  scope_variant?: "assigned" | "created" | "involved" | "any" | "members" | "agents" | null;
+  scope_variant?: "agents" | null;
   visibility: "private" | "workspace";
   definition_version: number;
   query: Record<string, unknown>;
@@ -1103,8 +1100,8 @@ export interface AppConfigResponse {
 //     the UI, never crash a `safeParse`.
 //   - Optional fields are unioned with `null` and given fallbacks where
 //     existing UI code already coerces them.
-//   - Arrays default to `[]` so a missing `reactions` / `attachments` /
-//     `entries` field doesn't take the page down.
+//   - Arrays default to `[]` so a missing `attachments` / `entries` field
+//     doesn't take the page down.
 //   - Every object schema ends with `.loose()` so unknown server-side
 //     fields pass through unchanged. zod 4's `.object()` defaults to STRIP,
 //     which would silently delete fields the schema didn't explicitly list
@@ -1118,15 +1115,6 @@ export interface AppConfigResponse {
 // literal unions, which would defeat the leniency above. `parseWithFallback`
 // returns the parsed value cast to the caller-supplied `T`, so the strict
 // type still flows out at the call site; the schema only guards shape.
-
-const ReactionSchema = z.object({
-  id: z.string(),
-  comment_id: z.string(),
-  actor_type: z.string(),
-  actor_id: z.string(),
-  emoji: z.string(),
-  created_at: z.string(),
-});
 
 // Nested attachments embedded in timeline/comment responses stay lenient on
 // purpose: a single malformed attachment must not knock the whole timeline
@@ -1285,7 +1273,6 @@ const TimelineEntrySchema = z.object({
   updated_at: z.string().optional(),
   revision: z.number().int().positive().optional(),
   comment_type: z.string().optional(),
-  reactions: z.array(ReactionSchema).optional(),
   attachments: z.array(AttachmentSchema).optional(),
   source_task_id: z.string().nullable().optional(),
   supplements: CommentSupplementReceiptsSchema,
@@ -1502,7 +1489,6 @@ export const CommentSchema = z.object({
   content: z.string(),
   type: z.string(),
   parent_id: z.string().nullable(),
-  reactions: z.array(ReactionSchema).default([]),
   attachments: z.array(AttachmentSchema).default([]),
   created_at: z.string(),
   updated_at: z.string(),
@@ -1548,7 +1534,7 @@ const CommentTriggerPreviewAgentSchema = z.object({
   reason: z.string().default(""),
 }).loose();
 
-// Per-target outcome of an explicit @agent / @squad mention (MUL-4525 §2).
+// Per-target outcome of an explicit @agent mention (MUL-4525 §2).
 // target_id is required to correlate with the client's rendered mention; a
 // malformed entry (missing id) is dropped rather than failing the whole payload.
 export const CommentTriggerOutcomeSchema = z.object({
@@ -1727,7 +1713,10 @@ export const IssueSchema = z.object({
   // catalog — so dropping it costs a fallback to the key. (MUL-6749)
   status_name: z.string().optional().catch(undefined),
   priority: z.string(),
-  assignee_type: z.string().nullable(),
+  // A parse failure anywhere in IssueSchema blanks the whole list through
+  // parseWithFallback, so an assignee type this client cannot show reads as
+  // unassigned instead.
+  assignee_type: z.enum(["agent"]).nullable().catch(null),
   assignee_id: z.string().nullable(),
   creator_type: z.string(),
   creator_id: z.string(),
@@ -1751,7 +1740,6 @@ export const IssueSchema = z.object({
   // Older backends predate custom properties; default {} so consumers never
   // nil-guard issue.properties.
   properties: IssuePropertyValuesSchema,
-  reactions: z.array(z.unknown()).optional(),
   labels: z.array(z.unknown()).optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -1759,6 +1747,14 @@ export const IssueSchema = z.object({
   // Optional for compatibility with older self-hosted backends; a current
   // backend emits null until its historical backfill reaches the issue.
   last_activity_at: z.string().nullable().optional(),
+  // When the task last entered the done or closed category; null until then
+  // and after it leaves again. Absent from an older backend, and read as
+  // null when malformed: one odd value must not blank a list of issues.
+  completed_at: z.string().nullable().optional().catch(null).default(null),
+  // When the task's agent last ended a turn no member has seen yet, and null
+  // once one has. Read the same way as `completed_at`: an older backend omits
+  // it, and one odd value must not blank a list of issues.
+  agent_replied_at: z.string().nullable().optional().catch(null).default(null),
   // Detail-only and potentially large. A malformed additive field must not
   // erase an otherwise usable issue returned by a mixed-version server.
   source_context: IssueSourceContextSchema.optional().catch(undefined),
@@ -1813,7 +1809,6 @@ export const ProjectSchema = z.object({
   id: z.string(),
   workspace_id: z.string(),
   title: z.string(),
-  visibility: z.enum(["workspace", "private"]).default("workspace").catch("private"),
   description: z.string().nullable(),
   icon: z.string().nullable(),
   status: z.string(),
@@ -1856,46 +1851,6 @@ export const ListProjectsResponseSchema = z.object({
 }).loose();
 
 export const EMPTY_LIST_PROJECTS_RESPONSE: ListProjectsResponse = { projects: [], total: 0 };
-
-export const ProjectMemberSchema = z.object({
-  project_id: z.string(),
-  user_id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  avatar_url: z.string().nullable().default(null),
-}).loose();
-
-export const ListProjectMembersResponseSchema = z.object({
-  members: z.array(ProjectMemberSchema),
-  total: z.number(),
-  // Absent from a server that predates it; see canManageProjectAccess.
-  manager_id: z.string().nullable().default(null).catch(null),
-}).loose();
-
-// The workspace owner's overview of private projects (`/api/projects/private`).
-// A row whose id is missing is dropped rather than failing the whole list: the
-// overview is how an owner gets back into a project nobody else can open.
-const PrivateProjectOverviewSchema = z.object({
-  id: z.string(),
-  title: z.string().catch(""),
-  icon: z.string().nullable().default(null).catch(null),
-  lead_type: z.enum(["member", "agent"]).nullable().default(null).catch(null),
-  lead_id: z.string().nullable().default(null).catch(null),
-  created_at: z.string().catch(""),
-  archived_at: z.string().nullable().default(null).catch(null),
-  is_member: z.boolean().catch(false),
-  members: z.array(ProjectMemberSchema.omit({ project_id: true })).default([]).catch([]),
-}).loose();
-
-export const ListPrivateProjectsResponseSchema = z.object({
-  projects: z.array(z.unknown()).default([]).catch([]).transform((rows) =>
-    rows.flatMap((row) => {
-      const parsed = PrivateProjectOverviewSchema.safeParse(row);
-      return parsed.success ? [parsed.data] : [];
-    }),
-  ),
-  total: z.number().default(0).catch(0),
-}).loose();
 
 // The viewer's own project subscription (`/api/projects/:id/subscription`).
 // Anything but an explicit `true` reads as not subscribed.
@@ -1965,7 +1920,7 @@ export const SearchIndexChangesSchema = z.object({
 
 const IssueAssigneeGroupSchema = z.object({
   id: z.string(),
-  assignee_type: z.string().nullable(),
+  assignee_type: z.enum(["agent"]).nullable().catch(null),
   assignee_id: z.string().nullable(),
   issues: z.array(IssueSchema).default([]),
   total: z.number().default(0),
@@ -2884,78 +2839,6 @@ export const agentBuilderRuntimeSwitchFallback = (
   requestedRuntimeID: string,
 ): AgentBuilderRuntimeSwitch => ({ runtime_id: requestedRuntimeID });
 
-// Squad list responses carry lightweight membership previews used by hover
-// cards. The preview fields are additive API fields, so older backends default
-// cleanly to no preview instead of breaking newer frontends.
-const SquadMemberPreviewSchema = z.object({
-  member_type: z.string(),
-  member_id: z.string(),
-  role: z.string().default(""),
-}).loose();
-
-export const SquadSchema = z.object({
-  id: z.string(),
-  workspace_id: z.string(),
-  name: z.string(),
-  description: z.string().default(""),
-  instructions: z.string().default(""),
-  system_key: z.string().optional(),
-  system_instructions: z.string().optional(),
-  avatar_url: z.string().nullable().optional().transform((v) => v ?? null),
-  leader_id: z.string(),
-  creator_id: z.string(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  archived_at: z.string().nullable().optional().transform((v) => v ?? null),
-  archived_by: z.string().nullable().optional().transform((v) => v ?? null),
-  member_count: z.number().default(0),
-  member_preview: z.array(SquadMemberPreviewSchema).default([]),
-}).loose();
-
-export const SquadListSchema = z.array(SquadSchema);
-export const EMPTY_SQUAD_LIST: Squad[] = [];
-export const EMPTY_SQUAD: Squad = {
-  id: "",
-  workspace_id: "",
-  name: "",
-  description: "",
-  instructions: "",
-  avatar_url: null,
-  leader_id: "",
-  creator_id: "",
-  created_at: "",
-  updated_at: "",
-  archived_at: null,
-  archived_by: null,
-  member_count: 0,
-  member_preview: [],
-};
-
-// Squad member status — backs the Squad detail page's Members tab. status
-// is `string | null` (not the narrow `SquadMemberStatusValue` union) so a
-// new server-side status doesn't fail the parse; the UI defaults to a
-// neutral pill for unknown values.
-const SquadActiveIssueBriefSchema = z.object({
-  issue_id: z.string(),
-  identifier: z.string(),
-  title: z.string(),
-  issue_status: z.string(),
-}).loose();
-
-const SquadMemberStatusSchema = z.object({
-  member_type: z.string(),
-  member_id: z.string(),
-  status: z.string().nullable().optional().transform((v) => v ?? null),
-  active_issues: z.array(SquadActiveIssueBriefSchema).default([]),
-  last_active_at: z.string().nullable().optional().transform((v) => v ?? null),
-}).loose();
-
-export const SquadMemberStatusListResponseSchema = z.object({
-  members: z.array(SquadMemberStatusSchema).default([]),
-}).loose();
-
-export const EMPTY_SQUAD_MEMBER_STATUS_LIST = { members: [] };
-
 // Structured error body — POST /api/workspaces/:wsId/issues 409 conflict.
 //
 // When the server detects an active issue with the same title in the same
@@ -3323,17 +3206,6 @@ export const SubscribedIssueIdsSchema = z
   })
   .loose();
 
-// The squads behind the viewer's "my agents" relation (`/api/squads/involved`
-// GET). Same rules as `SubscribedIssueIdsSchema`: an empty set would hide
-// every squad row under the filter, so a body without the list fails.
-export const InvolvedSquadIdsSchema = z
-  .object({
-    squad_ids: z
-      .array(z.unknown())
-      .transform((ids) => ids.filter((id): id is string => typeof id === "string" && id.length > 0)),
-  })
-  .loose();
-
 // Inbox items (`/api/inbox` and `/api/inbox/archived` GET).
 // Lenient per the usual rules: `severity` / `type` / `recipient_type` stay
 // `z.string()` so a notification kind this client doesn't know yet still
@@ -3362,7 +3234,7 @@ export const InboxItemListSchema = z.array(
       issue_status: z.string().nullish(),
       issue_priority: z.string().nullish(),
       issue_project_id: z.string().nullish(),
-      issue_assignee_type: z.string().nullish(),
+      issue_assignee_type: z.enum(["agent"]).nullish().catch(null),
       issue_assignee_id: z.string().nullish(),
       issue_due_date: z.string().nullish(),
       issue_label_ids: z.array(z.string()).nullish(),
@@ -4722,90 +4594,9 @@ export const EMPTY_WORKSPACE_MCP_SERVER: WorkspaceMcpServer = {
   updated_at: "",
 };
 
-// Share links. Introduced with the workspace share-link invite flow; schemas
-// mirror the API responses so malformed payloads fall back to safe defaults.
-export const ShareLinkSchema = z.object({
-  id: z.string(),
-  workspace_id: z.string(),
-  code: z.string(),
-  created_by: z.string(),
-  role: z.string(),
-  expires_at: z.string().nullable().optional().default(null),
-  max_uses: z.number().nullable().optional().default(null),
-  use_count: z.number().optional().default(0),
-  is_active: z.boolean().optional().default(true),
-  created_at: z.string().optional().default(""),
-  creator_name: z.string().optional().default(""),
-  creator_email: z.string().optional().default(""),
-}).loose();
-
-export const EMPTY_SHARE_LINK: ShareLink = {
-  id: "",
-  workspace_id: "",
-  code: "",
-  created_by: "",
-  role: "member",
-  expires_at: null,
-  max_uses: null,
-  use_count: 0,
-  is_active: false,
-  created_at: "",
-};
-
-export const ShareLinkListResponseSchema = z.array(ShareLinkSchema).default([]);
-
-export const ShareLinkInfoSchema = z.object({
-  workspace_name: z.string().optional().default(""),
-  workspace_slug: z.string().optional().default(""),
-  creator_name: z.string().optional().default(""),
-  role: z.string().optional().default("member"),
-}).loose();
-
-export const EMPTY_SHARE_LINK_INFO: ShareLinkInfo = {
-  workspace_name: "",
-  workspace_slug: "",
-  role: "member",
-};
-
-export const MemberWithUserSchema = z.object({
-  id: z.string(),
-  workspace_id: z.string(),
-  user_id: z.string(),
-  role: z.string(),
-  created_at: z.string().optional().default(""),
-  name: z.string().optional().default(""),
-  email: z.string().optional().default(""),
-  avatar_url: z.string().nullable().optional().default(null),
-}).loose();
-
-export const JoinShareLinkResponseSchema = z.object({
-  member: MemberWithUserSchema,
-  workspace_id: z.string(),
-  workspace_slug: z.string().optional().default(""),
-}).loose();
-
-export const EMPTY_JOIN_SHARE_LINK_RESPONSE: {
-  member: MemberWithUser;
-  workspace_id: string;
-  workspace_slug: string;
-} = {
-  member: {
-    id: "",
-    workspace_id: "",
-    user_id: "",
-    role: "member",
-    created_at: "",
-    name: "",
-    email: "",
-    avatar_url: null,
-  },
-  workspace_id: "",
-  workspace_slug: "",
-};
-
 export const WakeupConditionSchema = z.union([
   z.object({ type: z.literal("issue_field"), field: z.literal("status"), value: z.string() }),
-  z.object({ type: z.literal("issue_field"), field: z.literal("assignee"), assignee_type: z.enum(["member", "agent", "squad"]), assignee_id: z.string() }),
+  z.object({ type: z.literal("issue_field"), field: z.literal("assignee"), assignee_type: z.enum(["agent"]), assignee_id: z.string() }),
   z.object({ type: z.literal("issue_field"), field: z.literal("label"), label_id: z.string() }),
   z.object({ type: z.literal("issue_field"), field: z.literal("property"), property_id: z.string(), value: z.unknown() }),
   z.object({ type: z.literal("children_done"), stage: z.number().int().nullish() }),
@@ -4854,8 +4645,8 @@ export const SystemWakeupSchema = z.object({
   paused_reason: z.enum(["max_fires", "loop", "rate"]).nullish().catch(null).transform((v) => v ?? null),
   staged: z.boolean(), stage: z.number().int().nullable(), total: z.number().int().nonnegative(),
   remaining: z.number().int().nonnegative(), waiting: z.array(z.string()).default([]),
-  target: z.object({ type: z.enum(["agent", "squad", "member"]), id: z.string(), name: z.string() }).nullable().catch(null),
-  blocked: z.enum(["", "backlog", "member_assignee", "no_assignee"]).catch(""),
+  target: z.object({ type: z.enum(["agent"]), id: z.string(), name: z.string() }).nullable().catch(null),
+  blocked: z.enum(["", "backlog", "no_assignee"]).catch(""),
   workspace_default: z.boolean().default(true),
 });
 
@@ -5134,3 +4925,46 @@ export const WorkspaceListItemSchema = z.object({
 export const WorkspacePinnedSchema = z.object({
   pinned_at: z.iso.datetime({ offset: true }).nullable().catch(null),
 });
+
+// Project + branch scope of agents and tasks. A pair with a malformed tree
+// reads as one without a tree, and a malformed pair drops out, so one odd row
+// never empties a scope the view maps.
+
+export const IssueProjectTreeSchema = z.object({
+  id: z.string(),
+  // An unknown future state reads as not built yet.
+  state: z.enum(["pending", "ready", "failed", "deleted"]).catch("pending"),
+  path: z.string().default(""),
+  task_branch: z.string().default(""),
+  error: z.string().default(""),
+  created_at: z.string().default(""),
+  updated_at: z.string().default(""),
+}).loose();
+
+export const ProjectScopeItemSchema = z.object({
+  // A pair without a project or a branch names nothing a task can work on.
+  project_id: z.string().min(1),
+  base_branch: z.string().min(1),
+  position: z.number().default(0),
+  // Null when the task has no tree for the pair.
+  tree: IssueProjectTreeSchema.nullable().optional().catch(null).default(null),
+}).loose();
+
+export const IssueProjectScopeSchema = z.object({
+  items: lenientArray(ProjectScopeItemSchema),
+}).loose();
+
+export const EMPTY_ISSUE_PROJECT_SCOPE: IssueProjectScope = { items: [] };
+
+// What a rebuild answers: the tree as the server left it, waiting to be built.
+// A malformed tree reads as no answer, and the scope is fetched again.
+export const IssueProjectTreeResponseSchema = z.object({
+  tree: IssueProjectTreeSchema.nullable().catch(null),
+}).loose();
+
+// What marking an agent's reply seen answers: the marker as the server left
+// it, which is null once cleared. A malformed answer reads as cleared too —
+// that is what the request asked for — rather than leaving the caches unsure.
+export const IssueAgentReplyResponseSchema = z.object({
+  agent_replied_at: z.string().nullable().catch(null).default(null),
+}).loose();

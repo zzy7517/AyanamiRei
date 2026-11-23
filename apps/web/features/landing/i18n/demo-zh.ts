@@ -5,7 +5,6 @@ export const zhDemoCopy: DemoDict = {
     spaces: { inbox: "收件箱", work: "工作", team: "团队", chat: "聊天", autopilots: "自动化" },
     views: "视图",
     projects: "项目",
-    myIssues: "我的任务",
     myAgents: "我的智能体在做",
     allIssues: "全部任务",
     allViews: "全部视图",

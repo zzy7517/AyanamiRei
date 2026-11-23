@@ -12,7 +12,6 @@ import type { InboxItem } from "@multica/core/types";
 import { findSnoozedInboxIssue, snoozedInboxOptions } from "@multica/core/inbox/queries";
 import { nextInboxRow } from "@multica/core/inbox/open-row";
 import { useWorkspacePaths } from "@multica/core/paths";
-import { useIsGuest } from "@multica/core/permissions";
 import {
   getShortcut,
   isEditableShortcutTarget,
@@ -62,7 +61,6 @@ export function IssueInboxBar({ issueId, issueActions }: { issueId: string; issu
   const p = useWorkspacePaths();
   const { push } = useNavigation();
   const builtinNav = useBuiltinViewNavigation();
-  const guest = useIsGuest(wsId);
   const { fromInbox } = useSidebarInboxIssue(wsId, issueId);
   const { rows, kept, filtered } = useFilteredInboxRows(wsId, issueId, fromInbox);
   const index = fromInbox ? rows.findIndex((row) => row.issue_id === issueId) : -1;
@@ -218,7 +216,7 @@ export function IssueInboxBar({ issueId, issueActions }: { issueId: string; issu
             : undefined
         }
         onGoToMyWork={
-          inboxCleared && !guest
+          inboxCleared
             ? () => {
                 builtinNav.prepare("my_work");
                 push(builtinNav.hrefFor("my_work"));

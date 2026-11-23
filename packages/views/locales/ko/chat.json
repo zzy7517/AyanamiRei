@@ -297,7 +297,6 @@
     },
     "failure": {
       "permission_revoked": "요청한 사람이 더 이상 이 에이전트를 실행할 수 없습니다",
-      "access_lost": "지켜보던 항목이 비공개 프로젝트로 이동했습니다",
       "dispatch_failed": "에이전트를 실행할 수 없습니다"
     },
     "kind": {

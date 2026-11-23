@@ -18,7 +18,6 @@
     "not_found_description": "Es posible que este miembro haya abandonado el espacio de trabajo.",
     "role": "Rol",
     "email": "Correo electrónico",
-    "joined": "Se unió",
-    "relation": "Relación"
+    "joined": "Se unió"
   }
 }

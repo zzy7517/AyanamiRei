@@ -38,7 +38,7 @@
  *     reports which action submitted.
  *
  * Cleanup: mention draft store cleared on unmount so navigating away
- * from comment-A's draft doesn't leak `@张三` into comment-B's composer.
+ * from comment-A's draft doesn't leak its mentions into comment-B's composer.
  */
 import {
   useCallback,
@@ -159,12 +159,7 @@ function makeLocalId(): string {
 function serializeMentions(chips: MentionChip[]): string {
   return chips
     .map((m) => {
-      const label =
-        m.type === "issue"
-          ? m.name
-          : m.type === "all"
-            ? "@all"
-            : `@${m.name}`;
+      const label = m.type === "issue" ? m.name : `@${m.name}`;
       return `[${label}](mention://${m.type}/${m.id})`;
     })
     .join(" ");
@@ -587,7 +582,7 @@ export function MessageComposer({
 
         <View className="flex-row items-center px-2 pb-2 pt-1">
           {/* @ leads the toolbar — highest-signal attachment (only one
-           *  that drives notifications) and cross-resource (people +
+           *  that drives notifications) and cross-resource (agents +
            *  issues), pride-of-place left. */}
           <IconButton
             name="at"

@@ -41,11 +41,11 @@ describe("commonIssueFields", () => {
 
   it("reflects a single issue's own fields", () => {
     const common = commonIssueFields([
-      makeIssue({ status: "in_progress", priority: "high", assignee_type: "member", assignee_id: "u-1" }),
+      makeIssue({ status: "in_progress", priority: "high", assignee_type: "agent", assignee_id: "agent-1" }),
     ]);
     expect(common.status).toBe("in_progress");
     expect(common.priority).toBe("high");
-    expect(common.assignee).toEqual({ type: "member", id: "u-1" });
+    expect(common.assignee).toEqual({ type: "agent", id: "agent-1" });
   });
 
   it("returns the shared status when every issue agrees, not a hardcoded default", () => {
@@ -93,24 +93,16 @@ describe("commonIssueFields", () => {
 
   it("returns null assignee when actors differ", () => {
     const common = commonIssueFields([
-      makeIssue({ id: "a", assignee_type: "member", assignee_id: "u-1" }),
-      makeIssue({ id: "b", assignee_type: "member", assignee_id: "u-2" }),
+      makeIssue({ id: "a", assignee_type: "agent", assignee_id: "agent-1" }),
+      makeIssue({ id: "b", assignee_type: "agent", assignee_id: "agent-2" }),
     ]);
     expect(common.assignee).toBeNull();
   });
 
   it("returns null assignee when some are assigned and some are unassigned", () => {
     const common = commonIssueFields([
-      makeIssue({ id: "a", assignee_type: "member", assignee_id: "u-1" }),
+      makeIssue({ id: "a", assignee_type: "agent", assignee_id: "agent-1" }),
       makeIssue({ id: "b", assignee_type: null, assignee_id: null }),
-    ]);
-    expect(common.assignee).toBeNull();
-  });
-
-  it("distinguishes assignees of the same id but different type", () => {
-    const common = commonIssueFields([
-      makeIssue({ id: "a", assignee_type: "member", assignee_id: "x" }),
-      makeIssue({ id: "b", assignee_type: "agent", assignee_id: "x" }),
     ]);
     expect(common.assignee).toBeNull();
   });

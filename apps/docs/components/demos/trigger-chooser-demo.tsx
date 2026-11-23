@@ -27,7 +27,7 @@ const copy = {
       {
         need: "Have an agent own an issue",
         method: "Assign",
-        how: "Open the issue, click Assignee, and choose an agent or squad.",
+        how: "Open the issue, click Assignee, and choose an agent.",
         why: "The agent reads the issue's description and discussion and writes progress and results back to the same issue.",
         page: "Assign issues to agents",
         href: "/assigning-issues",
@@ -98,7 +98,7 @@ const copy = {
       {
         need: "让智能体负责一条任务",
         method: "分配任务",
-        how: "打开任务，点击负责人，选择智能体或小队。",
+        how: "打开任务，点击负责人，选择智能体。",
         why: "智能体会读取任务的说明和讨论，并把进展和结果写回原来的任务。",
         page: "分配任务给智能体",
         href: "/assigning-issues",
@@ -170,7 +170,7 @@ const copy = {
       {
         need: "エージェントにタスクを任せる",
         method: "割り当て",
-        how: "タスクを開き、担当者をクリックして、エージェントかスクワッドを選びます。",
+        how: "タスクを開き、担当者をクリックして、エージェントを選びます。",
         why: "エージェントはタスクの説明と議論を読み、進捗と結果を同じタスクに書き戻します。",
         page: "タスクをエージェントに割り当てる",
         href: "/assigning-issues",
@@ -241,7 +241,7 @@ const copy = {
       {
         need: "에이전트에게 태스크 맡기기",
         method: "할당",
-        how: "태스크를 열고 담당자를 클릭한 뒤 에이전트나 스쿼드를 선택합니다.",
+        how: "태스크를 열고 담당자를 클릭한 뒤 에이전트를 선택합니다.",
         why: "에이전트가 태스크의 설명과 논의를 읽고, 진행 상황과 결과를 같은 태스크에 기록합니다.",
         page: "태스크를 에이전트에게 할당하기",
         href: "/assigning-issues",
@@ -313,7 +313,7 @@ const copy = {
       {
         need: "Confier une tâche à un agent",
         method: "Assignation",
-        how: "Ouvrez la tâche, cliquez sur Assigné à et choisissez un agent ou un squad.",
+        how: "Ouvrez la tâche, cliquez sur Assigné à et choisissez un agent.",
         why: "L'agent lit la description et la discussion de la tâche, puis réécrit l'avancement et les résultats dans la même tâche.",
         page: "Assigner des tâches aux agents",
         href: "/assigning-issues",

@@ -10,7 +10,6 @@ import enOnboarding from "./en/onboarding.json";
 import enInvite from "./en/invite.json";
 import enLabels from "./en/labels.json";
 import enMembers from "./en/members.json";
-import enMyIssues from "./en/my-issues.json";
 import enSearch from "./en/search.json";
 import enInbox from "./en/inbox.json";
 import enWorkspace from "./en/workspace.json";
@@ -23,8 +22,8 @@ import enRuntimes from "./en/runtimes.json";
 import enLayout from "./en/layout.json";
 import enUsage from "./en/usage.json";
 import enUi from "./en/ui.json";
-import enSquads from "./en/squads.json";
 import enBilling from "./en/billing.json";
+import enTerminal from "./en/terminal.json";
 
 const resources: LocaleResources = {
   docs: enDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: enInvite,
   labels: enLabels,
   members: enMembers,
-  "my-issues": enMyIssues,
   search: enSearch,
   inbox: enInbox,
   workspace: enWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: enLayout,
   usage: enUsage,
   ui: enUi,
-  squads: enSquads,
   billing: enBilling,
+  terminal: enTerminal,
 };
 
 export default resources;

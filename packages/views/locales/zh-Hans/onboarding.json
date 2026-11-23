@@ -38,9 +38,7 @@
       "card4_actor_name": "审稿智能体",
       "card4_body": "已审完周一那版草稿——留了 4 条语气批注。等新一版。",
       "card5_actor_name": "编码智能体",
-      "card5_body_prefix": "已发布 ",
-      "card5_body_suffix": " 标记的导出功能，PR 里附了预览链接。",
-      "card5_mention_you": "@你",
+      "card5_body": "已发布你标记的导出功能，PR 里附了预览链接。",
       "card5_timestamp": "刚刚"
     }
   },

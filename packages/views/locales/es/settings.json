@@ -131,7 +131,7 @@
     "delete_title": "¿Eliminar esta acción rápida?",
     "delete_description": "Desaparecerá del panel lateral de todas las tareas. Las ejecuciones anteriores quedan en el registro de ejecución. Archívala si puede que la quieras recuperar.",
     "no_target": "Sin agente (solo comentario)",
-    "no_target_hint": "Publica un mensaje sin mencionar a nadie."
+    "no_target_hint": "Publica un mensaje sin mencionar a ningún agente."
   },
   "auto_save": {
     "saving": "Guardando…",
@@ -433,7 +433,7 @@
       },
       "unsubscribeArchiveInboxItem": {
         "label": "Darse de baja y archivar",
-        "description": "Date de baja de la tarea de la notificación abierta y archívala. Disponible en tareas que no son tuyas ni de tus agentes."
+        "description": "Date de baja de la tarea de la notificación abierta y archívala. Disponible en tareas que no son de tus agentes."
       },
       "snoozeInboxItem": {
         "label": "Posponer notificación",
@@ -463,10 +463,6 @@
         "label": "Ir al chat",
         "description": "Abre el chat del espacio de trabajo."
       },
-      "goMyIssues": {
-        "label": "Ir a Mis tareas",
-        "description": "Abre las tareas asignadas a ti."
-      },
       "goIssues": {
         "label": "Ir a Tareas",
         "description": "Abre la lista de tareas."
@@ -482,10 +478,6 @@
       "goAgents": {
         "label": "Ir a Agentes",
         "description": "Abre la lista de agentes."
-      },
-      "goSquads": {
-        "label": "Ir a Squads",
-        "description": "Abre la lista de squads."
       },
       "goUsage": {
         "label": "Ir a Uso",
@@ -854,7 +846,7 @@
     },
     "others_issues": {
       "label": "Tareas de otras personas",
-      "description": "Tareas asignadas a otra persona o a su agente que sigues porque las creaste, comentaste en ellas o te mencionaron. Las actualizaciones clave incluyen @menciones, respuestas en hilos en los que participaste y, con Cambios de estado activado, los estados que requieren atención (En revisión, Bloqueado, Hecho).",
+      "description": "Tareas asignadas a otra persona o a su agente que sigues porque las creaste o comentaste en ellas. Las actualizaciones clave incluyen respuestas en hilos en los que participaste y, con Cambios de estado activado, los estados que requieren atención (En revisión, Bloqueado, Hecho).",
       "key_updates": "Solo actualizaciones clave",
       "all": "Toda la actividad"
     },
@@ -910,14 +902,6 @@
       "comments": {
         "label": "Comentarios",
         "description": "Comentarios nuevos en tareas que sigues"
-      },
-      "mentions": {
-        "label": "Menciones",
-        "description": "Cuando alguien te @menciona, incluidos @all y @squad"
-      },
-      "reactions": {
-        "label": "Reacciones",
-        "description": "Cuando alguien reacciona a una tarea que creaste o a un comentario que escribiste"
       },
       "updates": {
         "label": "Prioridad y fecha de entrega",
@@ -1663,31 +1647,9 @@
       "member": {
         "label": "Miembro",
         "description": "Crea tareas y trabaja en ellas"
-      },
-      "guest": {
-        "label": "Invitado",
-        "description": "Ve y comenta los proyectos compartidos con él. No puede ejecutar agentes."
       }
     },
-    "share_links_create_title": "Crear enlace de invitación",
-    "share_links_create_button": "Generar",
-    "share_links_creating": "Generando...",
-    "share_link_uses": "{{used}} / {{max}} usos",
-    "share_link_expires": "Caduca {{date}}",
-    "share_link_copy_tooltip": "Copiar enlace",
-    "share_link_revoke_tooltip": "Revocar enlace",
-    "toast_share_link_created": "Enlace de invitación creado",
-    "toast_share_link_failed": "Error al crear el enlace de invitación",
-    "toast_share_link_revoked": "Enlace de invitación revocado",
-    "toast_share_link_revoke_failed": "Error al revocar el enlace de invitación",
-    "toast_share_link_copied": "Enlace copiado",
-    "toast_share_link_copy_failed": "Error al copiar el enlace",
-    "expiry_24h": "24 horas",
-    "expiry_7d": "7 días",
-    "expiry_30d": "30 días",
-    "expiry_never": "Nunca",
     "email_label": "Correo electrónico",
-    "expiry_label": "Caduca después de",
     "invitation_meta": "Enviada {{sent}} · Caduca {{expires}}",
     "joined": "Se unió el {{date}}",
     "manage_seats": "Gestionar puestos",
@@ -1695,14 +1657,11 @@
     "members_label": "Miembros",
     "no_invitations": "No hay invitaciones pendientes.",
     "no_results": "Ningún miembro coincide con esta búsqueda.",
-    "no_share_links": "Aún no hay enlaces de invitación.",
     "pending_label": "Invitaciones pendientes",
     "revoke_invitation_aria": "Revocar invitación de {{email}}",
     "role_label": "Rol",
     "search_placeholder": "Buscar por nombre o correo electrónico",
     "seats_used": "{{used}} de {{purchased}} puestos usados",
-    "share_links_description": "Cualquiera con el enlace puede unirse con el rol elegido hasta que caduque o lo revoques.",
-    "share_links_label": "Enlaces de invitación",
     "you": "Tú",
     "member_limit_full_title": "Este plan permite hasta {{limit}} miembros. El espacio de trabajo está lleno.",
     "member_limit_full_description": "Pasa a Pro para tener miembros ilimitados. Cada miembro ocupa un puesto de pago, y la mejora incluye uno para esta invitación. O elimina antes a un miembro.",
@@ -1717,31 +1676,6 @@
     "toast_invite_check_unavailable": "No se pudieron comprobar los miembros y las invitaciones actuales. Inténtalo de nuevo en un momento.",
     "member_limit_full_description_billing": "La suscripción del espacio de trabajo necesita atención. Restablécela en Facturación para añadir miembros, o elimina antes a un miembro.",
     "open_billing": "Abrir Facturación",
-    "guest_free_tag": "Gratis · sin asiento",
-    "guest_projects_label": "Proyectos a los que puede acceder",
-    "guest_projects_add": "Añadir proyecto…",
-    "guest_projects_remove": "Quitar {{project}}",
-    "guest_projects_hint": "Los invitados no ven otros proyectos, agentes, automatizaciones ni ajustes.",
-    "invite_guest_button": "Invitar invitado",
-    "all_label": "Todos",
-    "guests_label": "Invitados",
-    "guest_count": "Invitados: {{count}}",
-    "list_separator": ", ",
-    "takes_seat": "Ocupa 1 asiento",
-    "frees_seat": "Libera un asiento",
-    "make_member": "Convertir en miembro",
-    "make_member_title": "¿Convertir a {{name}} en miembro?",
-    "make_member_description": "{{name}} verá todo el espacio de trabajo y podrá ejecutar agentes. Ocupa 1 asiento.",
-    "make_member_seat_description": "{{name}} verá todo el espacio de trabajo y podrá ejecutar agentes. Todos los asientos están ocupados, así que se compra 1 más.",
-    "purchase_seat_and_make_member": "Comprar asiento y convertir",
-    "making_member": "Convirtiendo…",
-    "make_guest_title": "¿Convertir a {{name}} en invitado?",
-    "make_guest_description": "{{name}} solo verá los proyectos de abajo y liberará un asiento. Se retiran sus agentes, automatizaciones y acceso a runtimes.",
-    "make_guest_button": "Convertir en invitado",
-    "manage_projects": "Gestionar proyectos accesibles",
-    "manage_projects_title": "Proyectos a los que {{name}} puede acceder",
-    "save_projects": "Guardar",
-    "toast_projects_updated": "Proyectos actualizados",
     "revoke_invitation_confirm": "Revocar invitación",
     "remove_member_confirm": "Eliminar miembro"
   },
@@ -1790,7 +1724,13 @@
   "code": {
     "github_actions": "Acciones de GitHub",
     "hosting_title": "Alojamiento de código",
-    "pr_linking_title": "Pull requests y tareas"
+    "pr_linking_title": "Pull requests y tareas",
+    "task_trees_title": "Worktrees",
+    "task_tree_retention": {
+      "label": "Conservar los worktrees de las tareas completadas durante",
+      "unit": "días",
+      "description": "Después, los worktrees se eliminan de la máquina. Las ramas se conservan."
+    }
   },
   "layout": {
     "read_only": {
@@ -2132,26 +2072,5 @@
       "retry_failed": "No se pudo transcribir esta grabación",
       "show_more": "Mostrar más"
     }
-  },
-  "private_projects": {
-    "title": "Proyectos privados",
-    "description": "Solo los miembros de un proyecto privado pueden abrirlo. Como propietario del espacio de trabajo puedes ver quién está en cada uno y añadirte cuando tengas que intervenir.",
-    "empty": "Este espacio de trabajo no tiene proyectos privados.",
-    "load_failed": "No se pudieron cargar los proyectos privados.",
-    "retry": "Reintentar",
-    "no_members": "Sin miembros",
-    "lead_name": "{{name}} (responsable)",
-    "more_members": "+{{count}} más",
-    "archived": "Archivado",
-    "member": "Eres miembro",
-    "open": "Abrir",
-    "join": "Unirme",
-    "join_title": "¿Unirte a «{{title}}»?",
-    "join_description": "Se te añadirá a la lista de miembros de este proyecto y verás sus tareas, comentarios y archivos adjuntos. Se avisará a sus miembros actuales.",
-    "join_description_empty": "Este proyecto no tiene miembros. Serás su único miembro y verás sus tareas, comentarios y archivos adjuntos.",
-    "join_confirm": "Unirme al proyecto",
-    "cancel": "Cancelar",
-    "toast_joined": "Te uniste a {{title}}",
-    "toast_failed": "No se pudo unir al proyecto."
   }
 }

@@ -1,5 +1,6 @@
 import type {
   ActorFilterValue,
+  AssigneeFilterValue,
   FilterSnapshot,
   IssueRelationFilter,
   NegatableFilterDimension,
@@ -81,6 +82,17 @@ function actorArray(v: unknown): ActorFilterValue[] {
   );
 }
 
+function assigneeArray(v: unknown): AssigneeFilterValue[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter(
+    (x): x is AssigneeFilterValue =>
+      !!x &&
+      typeof x === "object" &&
+      (x as AssigneeFilterValue).type === "agent" &&
+      typeof (x as AssigneeFilterValue).id === "string",
+  );
+}
+
 export function baselineFromQuery(query: Record<string, unknown>): IssueViewBaseline {
   // Unknown enum members (a newer server, a hand-edited blob) are dropped —
   // a value the store cannot represent must not enter the snapshot.
@@ -96,7 +108,7 @@ export function baselineFromQuery(query: Record<string, unknown>): IssueViewBase
   const priorityFilters = stringArray(query.priorityFilters).filter(
     (p): p is IssuePriority => (PRIORITY_DISPLAY_ORDER as readonly string[]).includes(p),
   );
-  const assigneeFilters = actorArray(query.assigneeFilters);
+  const assigneeFilters = assigneeArray(query.assigneeFilters);
   const creatorFilters = actorArray(query.creatorFilters);
   const projectFilters = stringArray(query.projectFilters);
   // A saved view predating this dimension has no key at all, and an unknown

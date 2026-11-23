@@ -17,8 +17,8 @@ function makeIssue(overrides: Partial<Issue> = {}): Issue {
     description: null,
     status: "todo",
     priority: "none",
-    assignee_type: "member",
-    assignee_id: "me",
+    assignee_type: "agent",
+    assignee_id: "agent-me",
     creator_type: "member",
     creator_id: "me",
     parent_issue_id: null,
@@ -29,7 +29,7 @@ function makeIssue(overrides: Partial<Issue> = {}): Issue {
     due_date: null,
     labels: [],
     metadata: {},
-  properties: {},
+    properties: {},
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
     ...overrides,
@@ -39,76 +39,42 @@ function makeIssue(overrides: Partial<Issue> = {}): Issue {
 describe("issueMatchesListFilter", () => {
   it("judges assignee_id filters definitively", () => {
     const issue = makeIssue();
-    expect(issueMatchesListFilter(issue, "assigned", { assignee_id: "me" })).toBe(true);
-    expect(issueMatchesListFilter(issue, "assigned", { assignee_id: "bob" })).toBe(false);
+    expect(issueMatchesListFilter(issue, { assignee_id: "agent-me" })).toBe(true);
+    expect(issueMatchesListFilter(issue, { assignee_id: "agent-bob" })).toBe(false);
   });
 
   it("degrades to unknown when the entity is missing the filtered field", () => {
-    expect(
-      issueMatchesListFilter({ title: "partial" }, "assigned", { assignee_id: "me" }),
-    ).toBe("unknown");
+    expect(issueMatchesListFilter({ title: "partial" }, { assignee_id: "agent-me" })).toBe("unknown");
   });
 
   it("judges assignee_types filters, treating unassigned as a definitive miss", () => {
-    expect(
-      issueMatchesListFilter(makeIssue(), "workspace:members", {
-        assignee_types: ["member"],
-      }),
-    ).toBe(true);
-    expect(
-      issueMatchesListFilter(makeIssue({ assignee_type: "agent" }), "workspace:members", {
-        assignee_types: ["member"],
-      }),
-    ).toBe(false);
-    expect(
-      issueMatchesListFilter(
-        makeIssue({ assignee_type: null, assignee_id: null }),
-        "workspace:agents",
-        { assignee_types: ["agent", "squad"] },
-      ),
-    ).toBe(false);
+    expect(issueMatchesListFilter(makeIssue(), { assignee_types: ["agent"] })).toBe(true);
+    expect(issueMatchesListFilter(makeIssue({ assignee_type: null, assignee_id: null }), {
+      assignee_types: ["agent"],
+    })).toBe(false);
+  });
+
+  it("judges creator filters", () => {
+    expect(issueMatchesListFilter(makeIssue(), { creator_id: "me" })).toBe(true);
+    expect(issueMatchesListFilter(makeIssue(), { creator_id: "bob" })).toBe(false);
   });
 
   it("judges project filters", () => {
-    expect(
-      issueMatchesListFilter(makeIssue(), "project:p1", { project_id: "p1" }),
-    ).toBe(true);
-    expect(
-      issueMatchesListFilter(makeIssue({ project_id: "p2" }), "project:p1", {
-        project_id: "p1",
-      }),
-    ).toBe(false);
-    expect(
-      issueMatchesListFilter(makeIssue({ project_id: null }), "project:p1", {
-        project_id: "p1",
-      }),
-    ).toBe(false);
-  });
-
-  it("never decides involves_user_id — the ownership graph is server-side", () => {
-    expect(
-      issueMatchesListFilter(makeIssue(), "agents", { involves_user_id: "me" }),
-    ).toBe("unknown");
-  });
-
-  it("never decides the my:all union scope", () => {
-    expect(issueMatchesListFilter(makeIssue(), "all", {})).toBe("unknown");
+    expect(issueMatchesListFilter(makeIssue(), { project_id: "p1" })).toBe(true);
+    expect(issueMatchesListFilter(makeIssue({ project_id: "p2" }), { project_id: "p1" })).toBe(false);
+    expect(issueMatchesListFilter(makeIssue({ project_id: null }), { project_id: "p1" })).toBe(false);
   });
 
   it("ANDs across fields — a definitive miss beats an unknown", () => {
     expect(
-      issueMatchesListFilter(
-        makeIssue({ project_id: "p2" }),
-        "scoped",
-        { project_id: "p1", involves_user_id: "me" },
-      ),
+      issueMatchesListFilter({ project_id: "p2" }, { project_id: "p1", assignee_id: "agent-me" }),
     ).toBe(false);
   });
 });
 
 describe("issueChangedDims", () => {
   it("treats written membership fields as changed when no base is known", () => {
-    expect(issueChangedDims({ assignee_id: "bob", assignee_type: "member" })).toEqual({
+    expect(issueChangedDims({ assignee_id: "agent-bob", assignee_type: "agent" })).toEqual({
       assignee: true,
       project: false,
       status: false,
@@ -122,7 +88,7 @@ describe("issueChangedDims", () => {
 
   it("sharpens against a base entity — writing the same value changes nothing", () => {
     const base = makeIssue();
-    expect(issueChangedDims({ assignee_id: "me", assignee_type: "member" }, base)).toEqual({
+    expect(issueChangedDims({ assignee_id: "agent-me", assignee_type: "agent" }, base)).toEqual({
       assignee: false,
       project: false,
       status: false,
@@ -144,43 +110,20 @@ describe("issueChangedDims", () => {
 describe("listFilterDependsOn", () => {
   const none = { assignee: false, project: false, status: false };
 
-  it("my:all reacts to assignee changes only", () => {
-    expect(listFilterDependsOn("all", {}, { ...none, assignee: true })).toBe(true);
-    expect(listFilterDependsOn("all", {}, { ...none, project: true })).toBe(false);
-  });
-
   it("assignee-keyed filters react to assignee changes", () => {
-    expect(
-      listFilterDependsOn("assigned", { assignee_id: "me" }, { ...none, assignee: true }),
-    ).toBe(true);
-    expect(
-      listFilterDependsOn(
-        "workspace:members",
-        { assignee_types: ["member"] },
-        { ...none, assignee: true },
-      ),
-    ).toBe(true);
-    expect(
-      listFilterDependsOn("agents", { involves_user_id: "me" }, { ...none, assignee: true }),
-    ).toBe(true);
-    expect(
-      listFilterDependsOn("assigned", { assignee_id: "me" }, { ...none, project: true }),
-    ).toBe(false);
+    expect(listFilterDependsOn({ assignee_id: "agent-me" }, { ...none, assignee: true })).toBe(true);
+    expect(listFilterDependsOn({ assignee_types: ["agent"] }, { ...none, assignee: true })).toBe(true);
+    expect(listFilterDependsOn({ assignee_id: "agent-me" }, { ...none, project: true })).toBe(false);
   });
 
   it("project filters react to project changes", () => {
-    expect(
-      listFilterDependsOn("project:p1", { project_id: "p1" }, { ...none, project: true }),
-    ).toBe(true);
-    expect(
-      listFilterDependsOn("project:p1", { project_id: "p1" }, { ...none, assignee: true }),
-    ).toBe(false);
+    expect(listFilterDependsOn({ project_id: "p1" }, { ...none, project: true })).toBe(true);
+    expect(listFilterDependsOn({ project_id: "p1" }, { ...none, assignee: true })).toBe(false);
   });
 
   it("creator filters never react — creator is immutable", () => {
     expect(
       listFilterDependsOn(
-        "created",
         { creator_id: "me" },
         { assignee: true, project: true, status: true },
       ),
@@ -188,21 +131,6 @@ describe("listFilterDependsOn", () => {
   });
 
   it("the unfiltered workspace list never reacts", () => {
-    expect(
-      listFilterDependsOn(undefined, {}, { assignee: true, project: true, status: true }),
-    ).toBe(false);
-  });
-});
-
-
-describe("created by user membership", () => {
-  const filter = { created_by_user_id: "me" };
-  it("uses the persisted requester and distinguishes absent from null", () => {
-    expect(issueMatchesListFilter(makeIssue(), "created", filter)).toBe(true);
-    expect(issueMatchesListFilter(makeIssue({ creator_type: "agent", requester_id: "me" }), "created", filter)).toBe(true);
-    expect(issueMatchesListFilter(makeIssue({ creator_type: "agent", requester_id: "bob" }), "created", filter)).toBe(false);
-    expect(issueMatchesListFilter(makeIssue({ creator_type: "agent", requester_id: null }), "created", filter)).toBe(false);
-    expect(issueMatchesListFilter(makeIssue({ creator_type: "agent" }), "created", filter)).toBe("unknown");
-    expect(issueMatchesListFilter({ requester_id: null }, "created", filter)).toBe("unknown");
+    expect(listFilterDependsOn({}, { assignee: true, project: true, status: true })).toBe(false);
   });
 });

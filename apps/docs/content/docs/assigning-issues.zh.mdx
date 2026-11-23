@@ -21,7 +21,7 @@ import { AssignDemo } from "@/components/demos/assign-demo";
 </Step>
 <Step>
 
-选择一个智能体或小队。
+选择一个智能体。
 
 </Step>
 <Step>
@@ -34,8 +34,6 @@ import { AssignDemo } from "@/components/demos/assign-demo";
 <AssignDemo />
 
 智能体这次需要知道的信息，要写在任务的说明和讨论里，或者写进项目说明和智能体指令。
-
-分配给小队时，任务的负责人是小队，首先开始执行的是小队 leader。它会按照小队的工作方式判断是否需要交给其他成员。
 
 ## 分配后的执行流程
 
@@ -62,7 +60,7 @@ Multica 会为智能体创建一条[运行](/tasks)。在线运行时领取运�
 
 `backlog` 也不会因为分配智能体而启动执行。把任务移出 `backlog`，或者在评论中继续向负责人提出要求后，才会产生后续执行。
 
-如果任务已经有智能体或小队负责人，把它移出 `backlog` 也会弹出同一个确认窗，因为启动执行的是这次状态变更。窗里同样有**暂不开始**：只改状态，不叫醒智能体。只要目标不是 `backlog` 本身，也不属于 `done` 或 `closed` 分类，都会弹这个确认窗。
+如果任务已经有智能体负责人，把它移出 `backlog` 也会弹出同一个确认窗，因为启动执行的是这次状态变更。窗里同样有**暂不开始**：只改状态，不叫醒智能体。只要目标不是 `backlog` 本身，也不属于 `done` 或 `closed` 分类，都会弹这个确认窗。
 
 只有固定的 `backlog` 状态有这个效果。`unstarted` 分类下的[自定义状态](/issues#自定义状态)**不会**停住工作，把智能体分配到那里会立刻启动执行。已经处于 `done` 或 `cancelled` 的任务，分配或重新分配给智能体时同样会立即开始执行。
 
@@ -78,7 +76,7 @@ Multica 会为智能体创建一条[运行](/tasks)。在线运行时领取运�
 
 ## 更换或移除负责人
 
-把负责人换成另一个智能体，会为新负责人启动一次新的运行；选择成员只会改变负责人，不会调用 AI 编程工具。移除负责人也不会创建运行。
+把负责人换成另一个智能体，会为新负责人启动一次新的运行。移除负责人也不会创建运行。
 
 <Callout type="warning">
 通常，更换或移除负责人不会停止已经开始的运行，需要时请在执行日志中停止。[工作流交接](/workflows)的确认窗口还可以在移动任务的同时，停止或取消上一位智能体的运行。
@@ -93,7 +91,7 @@ multica issue status MUL-42 in_progress --no-start
 multica issue assign MUL-42 --unassign
 ```
 
-脚本中用 `--to-id <uuid>` 可避免同名对象匹配错误。UUID 通过 `multica agent list --output json` 或 `multica workspace member list --output json` 查看。
+脚本中用 `--to-id <uuid>` 可避免同名对象匹配错误。UUID 通过 `multica agent list --output json` 查看。
 
 如果指派只用于记录负责人、不应创建新运行（例如同一智能体已在另一次运行中处理该任务），请使用 `--no-start`。`issue update` 和 `issue status` 同样支持这个 flag。如果只记录归属的流程同时修改负责人和状态，两条命令都要传入该 flag；抑制指派不会自动抑制后续状态变更触发的运行。
 
@@ -103,4 +101,3 @@ multica issue assign MUL-42 --unassign
 
 - [在评论中 @智能体](/mentioning-agents) — 不改变负责人，处理新的问题。
 - [运行](/tasks) — 查看排队、重试和停止规则。
-- [小队](/squads) — 由 leader 协调多个智能体。

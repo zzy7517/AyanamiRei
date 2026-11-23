@@ -111,6 +111,15 @@ Things to know:
 
 > Note: setting `ALLOW_SIGNUP=false` enables invite-only account creation. A new user with a live pending workspace invitation can create an account with the invited email; users without an allowlist match or a valid invitation remain blocked. Invitations also permit emails outside configured allowlists when `ALLOW_SIGNUP=true`. Revocation does not delete accounts already created using an invitation or prevent those accounts from signing in. Combine this with `DISABLE_WORKSPACE_CREATION=true` when invitees must join an existing workspace instead of creating their own.
 
+### Pre-shared Sign-in Token (Optional)
+
+| Variable | Description |
+|----------|-------------|
+| `MULTICA_AUTH_TOKEN` | Fixed secret accepted wherever a personal access token is: `/api/**` and the WebSocket endpoints. Leave empty to keep email and Google sign-in only |
+| `MULTICA_AUTH_TOKEN_EMAIL` | Email of the account the token belongs to; required when the token is set. Startup creates the account with a first workspace if it does not exist |
+
+Desktop sends this token when `~/.multica/desktop.json` sets `authToken`, which lets it skip the login page. Restart the backend after changing either variable.
+
 ### File Storage (Optional)
 
 Uploads and attachments are written to local disk by default. Set `S3_BUCKET` to
@@ -148,7 +157,7 @@ no upload-size environment variable is supported.
 
 #### Avatars on a private bucket
 
-User / agent / squad / workspace avatars are stored as the raw storage object
+User / agent / workspace avatars are stored as the raw storage object
 URL. When the bucket is public — a public `CLOUDFRONT_DOMAIN`, or the default
 local-disk backend — that URL is served to clients unchanged.
 
@@ -342,30 +351,6 @@ Things to know:
 - **Only the trust problem is fixed.** An expired certificate, or one that does
   not cover the host name in the URL, is still rejected; fix the certificate
   itself.
-
-### WeCom frame tracing
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MULTICA_WECOM_TRACE` | empty (off) | `1` records every WeCom frame the backend reads and writes, including the first 120 runes of each message body. Anything else is off. |
-
-Turn it on for a debugging session and unset it when the session ends. Before
-you do:
-
-- **It is read at boot, so changing it needs a backend restart** — `docker compose -f docker-compose.selfhost.yml up -d backend`. There is no runtime toggle. While it is on, the backend logs a warning on every startup saying so.
-- **Anyone who can read the backend's logs can read the traced message text.** That is a wider audience than the WeCom chat it came from: your `docker logs` / journald / log shipper, and whoever administers them. The smart-bot secret is never read, and `token=` / `access_token=` / `code=` parameters are redacted out of message text — but user message content is not, and **an attachment's `Content-Disposition` and the filename read out of it are written verbatim**, up to 2048 runes and past the redactor. That line exists to show exactly how the storage backend encoded a name, and a redacted or truncated copy of it answers nothing; it also means an attachment's filename reaches your logs as sent.
-- **Retention is your log stack's, not the application's.** The backend writes to stderr and keeps nothing itself, so how long the traced text survives is whatever your Docker logging driver or shipper is set to. If that is "forever", decide about it before enabling rather than after.
-
-Each outbound frame produces two lines that share a `seq`: `dir=out` when it is
-about to be written, and `dir=out.done` with `ok=true` / `ok=false` once the
-socket has answered. `seq` is the frame's position in the write order, so the
-pair tells you what this backend sent and in which order; an attempt with no
-matching outcome is a write that never returned.
-
-`ok=true` means the frame reached the socket, not that WeCom accepted it. For
-the platform's verdict, match the frame's `req_id` against the `dir=in` line
-answering it and read that line's `errcode` — a frame can be written
-successfully and still be rejected there.
 
 ### CLI / Daemon
 

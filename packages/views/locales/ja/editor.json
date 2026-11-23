@@ -100,13 +100,11 @@
     "copy_failed": "コピーできませんでした"
   },
   "mention": {
-    "group_users": "メンバー",
+    "group_agents": "エージェント",
     "group_issues": "タスク",
     "group_projects": "プロジェクト",
     "group_docs": "ドキュメント",
-    "all_members": "すべてのメンバー",
     "agent_badge": "エージェント",
-    "squad_badge": "スクワッド",
     "searching": "検索中...",
     "no_results": "結果なし",
     "group_current": "現在のページ",

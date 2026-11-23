@@ -44,7 +44,7 @@ import {
   ObjectSection,
 } from "../../layout/object-page";
 import { AppLink, useNavigation } from "../../navigation";
-import { createPathWithParams } from "../../agents/create/squad-param";
+import { createPathWithParams } from "../../agents/create/create-route-params";
 import { useT } from "../../i18n";
 import { ProviderLogo } from "./provider-logo";
 import { QoderConfiguration } from "./qoder-configuration";

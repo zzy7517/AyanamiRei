@@ -131,8 +131,6 @@ export function SettingsPage({ extraDeviceTabs = [] }: SettingsPageProps = {}) {
   const workspaceName = workspace?.name ?? t(($) => $.page.workspace_fallback);
   const { role } = useCurrentMember(workspace?.id ?? "");
   const isMember = role === "member";
-  // A guest (MUL-9420) has personal settings only.
-  const isGuest = role === "guest";
   const navigation = useNavigation();
   const paths = useWorkspacePaths();
   const listCollapsed = useListColumnCollapsed();
@@ -151,7 +149,7 @@ export function SettingsPage({ extraDeviceTabs = [] }: SettingsPageProps = {}) {
     options: { wide?: boolean; adminOnly?: boolean } = {},
   ): SettingsEntry => ({ value, label, icon, content, ...options });
 
-  const scopeGroups: SettingsScopeGroup[] = [
+  const groups: SettingsScopeGroup[] = [
     {
       key: "personal",
       label: t(($) => $.page.groups.personal),
@@ -284,9 +282,6 @@ export function SettingsPage({ extraDeviceTabs = [] }: SettingsPageProps = {}) {
         ]
       : []),
   ];
-  const groups = isGuest
-    ? scopeGroups.filter((group) => group.key !== "workspace")
-    : scopeGroups;
   const allEntries = groups.flatMap((group) =>
     group.subgroups.flatMap((subgroup) => subgroup.entries),
   );

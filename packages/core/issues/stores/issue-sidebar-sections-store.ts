@@ -4,9 +4,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { defaultStorage } from "../../platform/storage";
 
-/** The issue sidebar's sections, in their default order. */
+/**
+ * The issue sidebar's sections, in their default order. `trees` shows only
+ * where the host passes it: its actions open terminals, which only the
+ * desktop app has a route for.
+ */
 export const ISSUE_SIDEBAR_SECTIONS = [
   "properties",
+  "trees",
   "quick_actions",
   "wakeups",
   "plugins",

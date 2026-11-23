@@ -17,8 +17,7 @@ import type { CommandBarContext } from "@multica/core/command-bar";
 import { useArchiveAllReadInbox, useMarkAllInboxRead } from "@multica/core/inbox/mutations";
 import { openCreateIssueWithPreference } from "@multica/core/issues/stores";
 import { useModalStore } from "@multica/core/modals";
-import { useCurrentWorkspace, useWorkspacePaths } from "@multica/core/paths";
-import { useIsGuest } from "@multica/core/permissions";
+import { useWorkspacePaths } from "@multica/core/paths";
 import { useShortcut } from "@multica/core/shortcuts";
 import { isFloatingChatRouteSuppressed } from "../../chat/floating-chat-visibility";
 import { useNavigation } from "../../navigation";
@@ -40,8 +39,6 @@ export function useGlobalCommands(contexts: readonly CommandBarContext[]): Palet
   const toggleChatShortcut = useShortcut("toggleChat");
   const markAllRead = useMarkAllInboxRead();
   const archiveAllRead = useArchiveAllReadInbox();
-  // A guest (MUL-9420) cannot create issues.
-  const guest = useIsGuest(useCurrentWorkspace()?.id);
 
   const projectContext = contexts.find((c) => c.kind === "project");
   const projectId = projectContext?.kind === "project" ? projectContext.project.id : null;
@@ -51,21 +48,16 @@ export function useGlobalCommands(contexts: readonly CommandBarContext[]): Palet
 
   return useMemo<PaletteCommand[]>(() => {
     const chatPath = p.chat();
-    const newIssue: PaletteCommand[] = guest
-      ? []
-      : [
-          {
-            id: "new-issue",
-            label: t(($) => $.commands.new_issue),
-            icon: SquarePen,
-            keywords: ["new", "issue", "create", "add", "新建", "任务"],
-            shortcut: createIssueShortcut,
-            run: () => openCreateIssueWithPreference(projectId ? { project_id: projectId } : undefined),
-            primary: true,
-          },
-        ];
     return [
-      ...newIssue,
+      {
+        id: "new-issue",
+        label: t(($) => $.commands.new_issue),
+        icon: SquarePen,
+        keywords: ["new", "issue", "create", "add", "新建", "任务"],
+        shortcut: createIssueShortcut,
+        run: () => openCreateIssueWithPreference(projectId ? { project_id: projectId } : undefined),
+        primary: true,
+      },
       {
         id: "chat-with-agent",
         label: t(($) => $.commands.chat_with_agent),
@@ -154,7 +146,6 @@ export function useGlobalCommands(contexts: readonly CommandBarContext[]): Palet
   }, [
     archiveAllRead,
     createIssueShortcut,
-    guest,
     inbox,
     markAllRead,
     navigation,

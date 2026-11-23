@@ -304,17 +304,17 @@ describe("WorkPanel sections", () => {
   const labels = () => sections().map((section) => section.querySelector("h3")?.textContent);
 
   it("orders Pinned, Inbox, Views, Projects", () => {
-    renderPanel("/acme/my-issues", [PIN], [PROJECT]);
+    renderPanel("/acme/issues", [PIN], [PROJECT]);
     expect(labels()).toEqual(["Pinned", "Inbox", "Views", "Projects"]);
   });
 
   // The panel body drops the top margin of a section that is its first child.
   it("starts the panel with its first section, with or without pins", () => {
-    renderPanel("/acme/my-issues", [PIN], [PROJECT]);
+    renderPanel("/acme/issues", [PIN], [PROJECT]);
     expect(sections()[0]!.parentElement!.firstElementChild).toBe(sections()[0]);
     cleanup();
 
-    renderPanel("/acme/my-issues", [], [PROJECT]);
+    renderPanel("/acme/issues", [], [PROJECT]);
     expect(labels()[0]).toBe("Inbox");
     expect(sections()[0]!.parentElement!.firstElementChild).toBe(sections()[0]);
   });
@@ -322,21 +322,21 @@ describe("WorkPanel sections", () => {
 
 describe("WorkPanel Inbox highlight", () => {
   const inInbox = () => document.querySelector('[data-sidebar-list="inbox"]') as HTMLElement;
-  const inMyIssues = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
+  const inMyWork = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
 
   it("lights an issue opened from the Inbox there only", async () => {
-    renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE)]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE)]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.click(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }));
 
     expect(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME })).toHaveAttribute("aria-current", "page");
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
     expect(allIssues()).not.toHaveAttribute("aria-current");
   });
 
   it("lights an issue opened from the Inbox at its identifier URL", async () => {
-    const qc = renderPanel("/acme/my-issues", [], [], [], [{ ...inboxItem(ISSUE), issue_identifier: ISSUE.identifier }]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    const qc = renderPanel("/acme/issues", [], [], [], [{ ...inboxItem(ISSUE), issue_identifier: ISSUE.identifier }]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     const row = within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME });
     expect(row).toHaveAttribute("href", `/acme/issues/${ISSUE.identifier}`);
     fireEvent.click(row);
@@ -346,16 +346,16 @@ describe("WorkPanel Inbox highlight", () => {
     await waitFor(() =>
       expect(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME })).toHaveAttribute("aria-current", "page"),
     );
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
   });
 
   it("moves the light to the list the issue is clicked in next", async () => {
-    renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE)]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE)]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.click(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }));
-    fireEvent.click(within(inMyIssues()).getByRole("link", { name: ISSUE.title }));
+    fireEvent.click(within(inMyWork()).getByRole("link", { name: ISSUE.title }));
 
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).toHaveAttribute("aria-current", "page");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).toHaveAttribute("aria-current", "page");
     expect(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME })).not.toHaveAttribute("aria-current");
   });
 
@@ -370,8 +370,8 @@ describe("WorkPanel Inbox highlight", () => {
   });
 
   it("keeps the open row lit in place once its notification is archived some other way", async () => {
-    const qc = renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE)]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    const qc = renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE)]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.click(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }));
     act(() => {
       qc.setQueryData(inboxListOptions("ws-1").queryKey, []);
@@ -379,13 +379,13 @@ describe("WorkPanel Inbox highlight", () => {
 
     const row = await within(inInbox()).findByRole("link", { name: /Leaves the Inbox when you move on/ });
     expect(row).toHaveAttribute("aria-current", "page");
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
     expect(allIssues()).not.toHaveAttribute("aria-current");
   });
 
   it("lights nothing else once an Inbox action took the open row with nothing left to open", async () => {
-    const qc = renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE)]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    const qc = renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE)]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.click(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }));
     act(() => {
       useInboxSelectionStore.getState().leaveRow("ws-1", ISSUE.id);
@@ -393,18 +393,18 @@ describe("WorkPanel Inbox highlight", () => {
     });
 
     await waitFor(() => expect(inInbox()).toBeNull());
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
     expect(allIssues()).not.toHaveAttribute("aria-current");
   });
 
   it("lights an issue opened from a row's hover card in the Inbox", async () => {
-    renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE)]);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE)]);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.mouseEnter(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }).parentElement!);
     fireEvent.click(await screen.findByRole("link", { name: "Open" }, { timeout: 2000 }));
 
     expect(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME })).toHaveAttribute("aria-current", "page");
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
   });
 
   it("keeps the open row lit while newer notifications push it past the limit", async () => {
@@ -418,8 +418,8 @@ describe("WorkPanel Inbox highlight", () => {
       created_at: `2026-11-10T08:0${minute}:00Z`,
     });
     const older = [notified(ISSUE, 0), ...others.slice(0, 4).map((issue, i) => notified(issue, i + 1))];
-    const qc = renderPanel("/acme/my-issues", [], [], [], older);
-    await within(await waitFor(inMyIssues)).findByRole("link", { name: ISSUE.title });
+    const qc = renderPanel("/acme/issues", [], [], [], older);
+    await within(await waitFor(inMyWork)).findByRole("link", { name: ISSUE.title });
     fireEvent.click(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME }));
     act(() => {
       qc.setQueryData(inboxListOptions("ws-1").queryKey, [...older, notified(others[4]!, 6)]);
@@ -427,13 +427,13 @@ describe("WorkPanel Inbox highlight", () => {
 
     await within(inInbox()).findByRole("link", { name: /^Other 4/ });
     expect(within(inInbox()).getByRole("link", { name: INBOX_ROW_NAME })).toHaveAttribute("aria-current", "page");
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
   });
 });
 
 describe("WorkPanel Inbox highlight while the next page loads", () => {
   const inInbox = () => document.querySelector('[data-sidebar-list="inbox"]') as HTMLElement;
-  const inMyIssues = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
+  const inMyWork = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
   const inboxRow = (issue: Issue) => within(inInbox()).getByRole("link", { name: new RegExp(`^${issue.title}`) });
   const finishLoading = () => fireEvent.click(screen.getByRole("button", { name: "Finish loading" }));
 
@@ -441,7 +441,7 @@ describe("WorkPanel Inbox highlight while the next page loads", () => {
   // other row marks lights All issues.
   async function openFromInbox(expanded: string[]) {
     useSidebarTreeStore.setState({ expanded, projectsCollapsed: true });
-    const qc = renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE), inboxItem(OTHER)], true);
+    const qc = renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE), inboxItem(OTHER)], true);
     act(() => {
       qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, ISSUE);
     });
@@ -465,14 +465,14 @@ describe("WorkPanel Inbox highlight while the next page loads", () => {
 
   it("keeps the open issue lit in the Inbox until an issue clicked in a view arrives", async () => {
     await openFromInbox(["builtin:my_work"]);
-    fireEvent.click(await within(await waitFor(inMyIssues)).findByRole("link", { name: OTHER.title }));
+    fireEvent.click(await within(await waitFor(inMyWork)).findByRole("link", { name: OTHER.title }));
 
     expect(inboxRow(ISSUE)).toHaveAttribute("aria-current", "page");
-    expect(within(inMyIssues()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
+    expect(within(inMyWork()).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
     expect(allIssues()).not.toHaveAttribute("aria-current");
 
     finishLoading();
-    expect(within(inMyIssues()).getByRole("link", { name: OTHER.title })).toHaveAttribute("aria-current", "page");
+    expect(within(inMyWork()).getByRole("link", { name: OTHER.title })).toHaveAttribute("aria-current", "page");
     expect(inboxRow(ISSUE)).not.toHaveAttribute("aria-current");
   });
 
@@ -509,7 +509,7 @@ describe("WorkPanel Inbox highlight while the next page loads", () => {
 
 describe("WorkPanel Inbox across desktop tabs", () => {
   const inInbox = () => document.querySelector('[data-sidebar-list="inbox"]') as HTMLElement;
-  const inMyIssues = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
+  const inMyWork = () => document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
   const inboxRow = (issue: Issue) => within(inInbox()).getByRole("link", { name: new RegExp(`^${issue.title}`) });
   const offersInboxActions = () => !!within(screen.getByTestId("issue-header")).queryByRole("button", { name: "Archive" });
   const switchToNewTab = () => fireEvent.click(screen.getByRole("button", { name: "Switch to new tab" }));
@@ -517,7 +517,7 @@ describe("WorkPanel Inbox across desktop tabs", () => {
 
   async function openFromInbox() {
     useSidebarTreeStore.setState({ expanded: ["builtin:my_work"], projectsCollapsed: true });
-    const qc = renderPanel("/acme/my-issues", [], [], [], [inboxItem(ISSUE), inboxItem(OTHER)], false, true);
+    const qc = renderPanel("/acme/issues", [], [], [], [inboxItem(ISSUE), inboxItem(OTHER)], false, true);
     act(() => {
       qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, ISSUE);
       qc.setQueryData(issueDetailOptions("ws-1", OTHER.id).queryKey, OTHER);
@@ -565,16 +565,16 @@ describe("WorkPanel Inbox across desktop tabs", () => {
     await openFromInbox();
     fireEvent.click(inboxRow(OTHER), { metaKey: true });
     switchToNewTab();
-    fireEvent.click(await within(inMyIssues()).findByRole("link", { name: OTHER.title }));
+    fireEvent.click(await within(inMyWork()).findByRole("link", { name: OTHER.title }));
 
     expect(offersInboxActions()).toBe(false);
-    expect(within(inMyIssues()).getByRole("link", { name: OTHER.title })).toHaveAttribute("aria-current", "page");
+    expect(within(inMyWork()).getByRole("link", { name: OTHER.title })).toHaveAttribute("aria-current", "page");
   });
 });
 
 describe("WorkPanel issue highlight", () => {
   it("lights a clicked tree issue at once, never All issues first", async () => {
-    renderPanel("/acme/my-issues");
+    renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
 
     expect(issueRow()).toHaveAttribute("aria-current", "page");
@@ -589,7 +589,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("keeps a pinned issue lit on the tree row it was clicked from", async () => {
-    renderPanel("/acme/my-issues", [PIN]);
+    renderPanel("/acme/issues", [PIN]);
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
 
     expect(issueRow()).toHaveAttribute("aria-current", "page");
@@ -610,7 +610,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("keeps an issue its list drops lit in place until another issue opens", async () => {
-    const qc = renderPanel("/acme/my-issues");
+    const qc = renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
     qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, { ...ISSUE, title: "Fixed the sidebar", status: "done" });
     apiMock.listIssueTableRows.mockResolvedValue({ rows: [{ issue: OTHER }], total: 1, next_cursor: null });
@@ -624,7 +624,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("drops a kept issue once it is deleted", async () => {
-    const qc = renderPanel("/acme/my-issues");
+    const qc = renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
     qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, ISSUE);
     apiMock.listIssueTableRows.mockResolvedValue({ rows: [{ issue: OTHER }], total: 1, next_cursor: null });
@@ -637,7 +637,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("keeps the dropped issue lit in a peek opened afterwards", async () => {
-    const qc = renderPanel("/acme/my-issues");
+    const qc = renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
     qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, { ...ISSUE, title: "Fixed the sidebar", status: "done" });
     apiMock.listIssueTableRows.mockResolvedValue({ rows: [{ issue: OTHER }], total: 1, next_cursor: null });
@@ -651,7 +651,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("keeps the dropped issue while the panel remounts on the same page", async () => {
-    const qc = renderPanel("/acme/my-issues");
+    const qc = renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
     qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, { ...ISSUE, title: "Fixed the sidebar", status: "done" });
     apiMock.listIssueTableRows.mockResolvedValue({ rows: [{ issue: OTHER }], total: 1, next_cursor: null });
@@ -665,7 +665,7 @@ describe("WorkPanel issue highlight", () => {
   });
 
   it("ends the keep after leaving Work and coming back to the issue", async () => {
-    const qc = renderPanel("/acme/my-issues");
+    const qc = renderPanel("/acme/issues");
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
     qc.setQueryData(issueDetailOptions("ws-1", ISSUE.id).queryKey, { ...ISSUE, title: "Fixed the sidebar", status: "done" });
     apiMock.listIssueTableRows.mockResolvedValue({ rows: [{ issue: OTHER }], total: 1, next_cursor: null });
@@ -715,7 +715,7 @@ describe("WorkPanel and the open issue's project", () => {
   });
 
   it("leaves the project closed when its issue is clicked in a view", async () => {
-    const qc = renderPanel("/acme/my-issues", [], [PROJECT]);
+    const qc = renderPanel("/acme/issues", [], [PROJECT]);
     await openInProject(qc);
     fireEvent.click(await screen.findByRole("link", { name: ISSUE.title }));
 
@@ -726,13 +726,13 @@ describe("WorkPanel and the open issue's project", () => {
 
   it("lights the issue only in the list it was clicked in", async () => {
     useSidebarTreeStore.setState({ expanded: ["builtin:my_work", PROJECT_SOURCE] });
-    const qc = renderPanel("/acme/my-issues", [], [PROJECT]);
+    const qc = renderPanel("/acme/issues", [], [PROJECT]);
     await openInProject(qc);
     await waitFor(() => expect(screen.getAllByRole("link", { name: ISSUE.title })).toHaveLength(2));
-    const inMyIssues = document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
-    fireEvent.click(within(inMyIssues).getByRole("link", { name: ISSUE.title }));
+    const inMyWork = document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
+    fireEvent.click(within(inMyWork).getByRole("link", { name: ISSUE.title }));
 
-    expect(litIssueRows()).toEqual([within(inMyIssues).getByRole("link", { name: ISSUE.title })]);
+    expect(litIssueRows()).toEqual([within(inMyWork).getByRole("link", { name: ISSUE.title })]);
   });
 
   it("marks the closed project of an issue no list shows, instead of All issues", async () => {
@@ -813,14 +813,14 @@ describe("WorkPanel and the open issue's project", () => {
     apiMock.listIssueTableRows.mockImplementation(async ({ query }: IssueTableRowsRequest) =>
       query.scope.kind === "project" ? { rows: [{ issue: OTHER }], total: 2, next_cursor: null } : builtinRows,
     );
-    const qc = renderPanel("/acme/my-issues", [], [PROJECT]);
+    const qc = renderPanel("/acme/issues", [], [PROJECT]);
     await openInProject(qc);
-    const inMyIssues = await waitFor(() => {
+    const inMyWork = await waitFor(() => {
       const element = document.querySelector('[data-sidebar-list="builtin:my_work"]') as HTMLElement;
       expect(within(element).getByRole("link", { name: ISSUE.title })).toBeInTheDocument();
       return element;
     });
-    fireEvent.click(within(inMyIssues).getByRole("link", { name: ISSUE.title }));
+    fireEvent.click(within(inMyWork).getByRole("link", { name: ISSUE.title }));
 
     act(() => {
       useSidebarTreeStore.getState().setExpanded(PROJECT_SOURCE, true);
@@ -831,7 +831,7 @@ describe("WorkPanel and the open issue's project", () => {
       return element;
     });
     expect(within(list).getByRole("link", { name: ISSUE.title })).not.toHaveAttribute("aria-current");
-    expect(litIssueRows()).toEqual([within(inMyIssues).getByRole("link", { name: ISSUE.title })]);
+    expect(litIssueRows()).toEqual([within(inMyWork).getByRole("link", { name: ISSUE.title })]);
   });
 
   it("lists the open issue last under its expanded project when no page has it", async () => {

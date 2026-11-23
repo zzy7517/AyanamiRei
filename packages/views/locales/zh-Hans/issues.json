@@ -131,7 +131,7 @@
     "breadcrumb_title": "任务",
     "breadcrumb_workspace_fallback": "工作区",
     "empty_title": "还没有任务",
-    "empty_description": "任务是交给成员或智能体的一件具体工作。分配给智能体后，它会在你的运行时上自己开始。",
+    "empty_description": "任务是一件具体的工作。分配给智能体后，它会在你的运行时上自己开始。",
     "break_down_with_chat": "用聊天拆解需求",
     "break_down_prompt": "我想完成下面这件事。先问清楚你需要了解的，然后在这个工作区里把它拆成任务：\n\n",
     "move_failed": "移动任务失败"
@@ -165,8 +165,6 @@
   "scope": {
     "all_label": "全部",
     "all_description": "工作区内的全部任务",
-    "members_label": "成员",
-    "members_description": "分配给成员的任务",
     "agents_label": "智能体",
     "agents_description": "分配给智能体的任务"
   },
@@ -190,7 +188,6 @@
     "section_project_status": "项目状态",
     "section_label": "标签",
     "section_relation": "与我的关系",
-    "relation_assigned": "分配给我的",
     "relation_created": "我创建的",
     "relation_my_agents": "我的智能体在做",
     "relation_subscribed": "我订阅的",
@@ -216,7 +213,6 @@
     "date_clear": "清除日期筛选",
     "members_group": "成员",
     "agents_group": "智能体",
-    "squads_group": "小队",
     "issue_count_other": "{{count}} 个任务",
     "reset": "重置全部筛选",
     "chip_remove": "移除 {{name}} 筛选",
@@ -413,11 +409,11 @@
     "scope": {
       "assigned": {
         "label": "已分配",
-        "description": "分配给这个成员或智能体的任务"
+        "description": "分配给这个智能体的任务"
       },
       "created": {
         "label": "已创建",
-        "description": "这个成员或智能体创建的任务"
+        "description": "这个智能体创建的任务"
       }
     },
     "empty": {
@@ -552,7 +548,7 @@
     "delegated_subscription_badge": "由智能体代你关注",
     "delegated_subscription_hint": "你的智能体代你创建了这个任务，因此你已订阅它。开启 \"状态变更\" 后，任务需要审核、完成或受阻时会通知你。",
     "key_updates_subscription_badge": "仅关键更新",
-    "key_updates_subscription_hint": "这是别人负责的任务，你是因为创建、评论或被 @ 才订阅的。只有 @你、回复你参与的讨论，以及（开启 \"状态变更\" 时）待审核、受阻、完成时会通知你。",
+    "key_updates_subscription_hint": "这是别人负责的任务，你是因为创建或评论才订阅的。只有回复你参与的讨论，以及（开启 \"状态变更\" 时）待审核、受阻、完成时会通知你。",
     "key_updates_follow_all": "接收全部动态",
     "key_updates_follow_all_done": "之后会收到这个任务的全部动态",
     "key_updates_settings": "修改默认设置",
@@ -597,8 +593,7 @@
     "workdir_path_unavailable": "暂无本地工作目录——这个任务还没被本地智能体运行过",
     "unsubscribe_subtree_succeeded": "已取消订阅此任务及其子任务。",
     "subscription_update_failed": "无法更新订阅状态，请重试。",
-    "pull_requests_empty_title": "暂无关联 PR。",
-    "guest_readonly_note": "访客可以查看和评论，不能修改任务属性。"
+    "pull_requests_empty_title": "暂无关联 PR。"
   },
   "timeline": {
     "loading": "加载中...",
@@ -622,13 +617,6 @@
     "description_updated": "更新了描述",
     "task_completed_other": "完成了运行（{{count}} 次）",
     "task_failed_other": "运行失败（{{count}} 次）",
-    "squad_leader_evaluated": "评估了小队触发",
-    "squad_leader_action": "已评估并采取了操作",
-    "squad_leader_action_reason": "已评估并采取了操作：{{reason}}",
-    "squad_leader_no_action": "已评估：无需操作",
-    "squad_leader_no_action_reason": "已评估：无需操作（{{reason}}）",
-    "squad_leader_failed": "评估失败",
-    "squad_leader_failed_reason": "评估失败：{{reason}}",
     "coalesced_badge": "×{{count}}",
     "activity_count_other": "{{count}} 条动态",
     "show_more_activities_other": "展开更早 {{count}} 条动态",
@@ -669,7 +657,6 @@
     "wakeup_child_done_stage_single": "第 {{stage}} 阶段的子任务已结束"
   },
   "comment": {
-    "add_reaction": "添加表情回应",
     "collapse_thread": "收起讨论",
     "expand_thread": "展开讨论",
     "delete_title": "删除评论",
@@ -695,7 +682,7 @@
     "posted_partial_trigger_named": "评论已发布，但 {{name}} 未触发（{{reason}}）",
     "trigger_blocked_chip_aria": "{{name}} 不会被触发——{{reason}}",
     "trigger_blocked_invocation_not_allowed": "找不到该目标，或你没有它的使用权限",
-    "trigger_blocked_target_unavailable": "找不到该智能体或小队——请刷新页面后重试。",
+    "trigger_blocked_target_unavailable": "找不到该智能体——请刷新页面后重试。",
     "trigger_blocked_runtime_offline": "该目标的运行时已离线",
     "trigger_blocked_runtime_unusable": "该目标的 CLI 在它所在的机器上无法运行 —— 需要在那台机器上重装",
     "trigger_blocked_runtime_profile_missing": "该智能体的 CLI 在它所在的机器上缺少运行时配置——需要在那台机器上安装。",
@@ -718,13 +705,10 @@
     "send_tooltip": "发送",
     "trigger_source_issue_assignee": "负责人",
     "trigger_source_mention_agent": "@提及",
-    "trigger_source_mention_squad_leader": "小队",
     "trigger_source_unknown": "将触发",
     "trigger_skipped_label": "已跳过",
     "trigger_wont_trigger": "本次不会开始",
     "trigger_none_will_trigger": "都不会开始",
-    "all_members_notice": "成员广播 · @all 不会启动智能体",
-    "trigger_reason_mention_squad_leader": "被 @ 小队的队长。",
     "trigger_reason_unknown": "将由这条评论开始。",
     "trigger_will_start": "发送后开始",
     "trigger_will_start_count_other": "发送后 {{count}} 个智能体开始工作",
@@ -766,9 +750,7 @@
     "restart_failed": "没能停止当前运行，消息还没有发送。",
     "reply_action": "回复",
     "actions_label": "评论操作",
-    "create_issue_from_selection": "用选中内容创建子任务",
-    "guest_placeholder": "回复... 可以 @ 成员",
-    "guest_hint": "访客不能 @ 智能体，也不能分配任务给智能体"
+    "create_issue_from_selection": "用选中内容创建子任务"
   },
   "reply": {
     "recipients_changed": "回复目标已变更。重新发送前请先确认接收方。",
@@ -807,6 +789,7 @@
     "unread_completed": "{{agent}} 已完成运行 · {{time}}",
     "unread_failed": "{{agent}} 运行失败 · {{time}}",
     "unread_manual": "已标为未读",
+    "new_reply": "有新回复",
     "empty_hover": "当前没有智能体在工作",
     "unknown_hover": "工作中的智能体：尚未加载",
     "filter_active_label": "正在查看有智能体在工作的任务",
@@ -1078,8 +1061,7 @@
       "search_placeholder": "分配给...",
       "recent_group": "最近",
       "members_group": "成员",
-      "agents_group": "智能体",
-      "squads_group": "小队"
+      "agents_group": "智能体"
     },
     "start_date": {
       "trigger_label": "开始日期",
@@ -1135,14 +1117,8 @@
   },
   "save_view": {
     "scope_label_workspace": "负责人类型",
-    "scope_label_my": "与我的关系",
     "variant_all": "不限负责人",
-    "variant_members": "分配给成员",
-    "variant_agents": "分配给智能体",
-    "variant_my_any": "任何相关",
-    "variant_my_assigned": "分配给我",
-    "variant_my_created": "我创建的",
-    "variant_my_involved": "我的智能体在做"
+    "variant_agents": "分配给智能体"
   },
   "plugins": {
     "panels": "插件",
@@ -1189,8 +1165,6 @@
     "comment_deleted": "评论已删除",
     "comment_resolved": "讨论已解决",
     "comment_unresolved": "讨论重新打开",
-    "reaction_added": "新增表态",
-    "reaction_removed": "移除表态",
     "attachment_attached": "关联附件",
     "attachment_detached": "移除附件",
     "at_time": "{{time}} 唤醒",
@@ -1258,8 +1232,6 @@
       "comment_deleted": "当评论被删除时",
       "comment_resolved": "当讨论被标记为已解决时",
       "comment_unresolved": "当讨论被重新打开时",
-      "reaction_added": "当新增表态时",
-      "reaction_removed": "当表态被移除时",
       "attachment_attached": "当此任务关联新附件时",
       "attachment_detached": "当此任务移除附件时",
       "run_completed": "当 {{agent}} 的运行成功结束时",
@@ -1374,7 +1346,6 @@
       "choose_label": "选择标签",
       "choose_property": "选择属性",
       "value_placeholder": "值",
-      "squads": "小队",
       "children_all": "全部子任务",
       "children_stage": "第 {{stage}} 阶段",
       "pr_checks": "CI 结束",
@@ -1403,12 +1374,11 @@
       "wake_assignee": "唤醒负责人 {{name}}",
       "remaining_other": "还差 {{count}} 个",
       "blocked_backlog": "任务在待规划中，暂不唤醒",
-      "blocked_member": "负责人是成员，会收到收件箱通知",
       "blocked_none": "没有智能体负责人，不会唤醒",
       "turned_off": "已在此任务上关闭",
       "target_title": "唤醒",
       "target_current": "负责人（当前 {{name}}）",
-      "target_none": "负责人：智能体或小队会被唤醒，成员会收到通知",
+      "target_none": "负责人：唤醒智能体",
       "progress_title": "进度",
       "progress": "{{done}}/{{total}} 已结束",
       "waiting_on": "还差 {{ids}}",
@@ -1420,7 +1390,6 @@
       "save_error": "无法保存系统规则。",
       "default_on": "工作区默认开启。",
       "default_off": "工作区默认关闭。",
-      "notify_member": "通过收件箱通知 {{name}}",
       "instruction": "唤醒后要做什么",
       "instruction_edit": "编辑指令",
       "instruction_default": "此任务未设置，使用默认指令：",
@@ -1581,7 +1550,6 @@
     "handler": {
       "none": "负责人不变",
       "agent": "智能体",
-      "squad": "小队",
       "member": "成员",
       "project_lead": "项目负责人",
       "creator": "任务创建者",
@@ -1650,12 +1618,11 @@
       "card_then": "完成后 → {{status}}",
       "status": "状态",
       "status_hint": "状态来自状态库。改名和颜色在状态库里改，会同步到所有使用它的工作流。",
-      "handler_hint_on": "任务进入这一步时，负责人改为这里的处理人；处理人是智能体或小队时立即开始运行。",
+      "handler_hint_on": "任务进入这一步时，负责人改为这里的处理人；处理人是智能体时立即开始运行。",
       "handler_hint_off": "进入这一步时负责人不变，也不会启动运行。",
       "handler_hint_lead": "按项目解析：每个项目的负责人。",
       "handler_hint_creator": "按任务解析：创建这个任务的人。",
       "target_agent": "智能体",
-      "target_squad": "小队 · 由队长分派",
       "target_member": "成员",
       "instructions_hint": "作为这次运行的说明发给处理人，和任务描述、评论一起作为上下文。",
       "next_hint": "由处理人自己改状态，只有需要返工时才退回，受阻不用退回。运行结束不会自动改状态。",
@@ -1825,8 +1792,6 @@
   },
   "views": {
     "builtin": {
-      "my_issues": "我的任务",
-      "my_agents": "我的智能体在做",
       "all_issues": "全部任务",
       "my_work": "我的工作",
       "working": "运行中",
@@ -2019,5 +1984,28 @@
     "focus_failed": "无法切到 {{name}}",
     "retry": "重试",
     "dismiss": "忽略"
+  },
+  "trees": {
+    "section_title": "Worktree",
+    "state": {
+      "pending": "构建中",
+      "ready": "已就绪",
+      "failed": "失败",
+      "deleted": "已删除"
+    },
+    "copy_task_branch": "复制任务分支",
+    "copy_path": "复制路径",
+    "copied": "已复制",
+    "copy_failed": "无法复制",
+    "open_agent_terminal": "智能体终端",
+    "open_shell": "终端",
+    "delete": "删除 worktree",
+    "delete_description": "worktree 会从机器上删除。分支会保留，未提交的改动会先提交到该分支。",
+    "delete_confirm": "删除",
+    "cancel": "取消",
+    "delete_failed": "无法删除 worktree",
+    "rebuild": "重新构建",
+    "rebuild_failed": "无法重新构建 worktree",
+    "save_failed": "无法保存这些项目 + 分支组合。"
   }
 }

@@ -225,7 +225,7 @@ describe("ViewsSection built-in filtered views", () => {
   });
 
   it.each([
-    ["my_work", "My work", { relations: ["assigned", "my_agents"] }],
+    ["my_work", "My work", { relations: ["my_agents"] }],
     ["subscribed", "Subscribed", { relations: ["subscribed"] }],
   ])("lists %s's issues when expanded", async (key, name, filters) => {
     useSidebarTreeStore.setState({ expanded: [builtinSidebarSource(key as "my_work")] });

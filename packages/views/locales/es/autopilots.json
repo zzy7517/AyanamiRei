@@ -324,7 +324,7 @@
     "section_agent": "Agente",
     "section_assignee": "Asignado",
     "select_agent": "Seleccionar agente",
-    "select_assignee": "Seleccionar agente o squad",
+    "select_assignee": "Seleccionar agente",
     "section_project": "Proyecto",
     "project_hint": "También define dónde se ejecutan las ejecuciones: el repositorio del proyecto o el directorio local",
     "no_project": "Sin proyecto",
@@ -370,7 +370,7 @@
     "schedule_empty": "Sin programación: esta automatización solo se ejecuta cuando se dispara manualmente.",
     "schedule_add": "Añadir programación",
     "error_title_required": "Introduce un nombre para esta automatización.",
-    "error_assignee_required": "Elige el agente o squad que ejecutará esta automatización.",
+    "error_assignee_required": "Elige el agente que ejecutará esta automatización.",
     "output_modes": {
       "create_issue": {
         "label": "Crear tarea",
@@ -486,13 +486,11 @@
     }
   },
   "agent_picker": {
-    "filter_placeholder": "Filtrar agentes o squads...",
+    "filter_placeholder": "Filtrar agentes...",
     "select_agent": "Seleccionar agente",
-    "select_assignee": "Seleccionar agente o squad",
+    "select_assignee": "Seleccionar agente",
     "agents_group": "Agentes",
-    "squads_group": "Squads",
-    "agent_runtime_required": "Vincula un runtime antes de seleccionar este agente",
-    "squad_runtime_required": "Vincula un runtime al líder de este squad antes de seleccionarlo"
+    "agent_runtime_required": "Vincula un runtime antes de seleccionar este agente"
   },
   "timezone_picker": {
     "search_placeholder": "Buscar zona horaria..."
@@ -602,7 +600,7 @@
     },
     "defaults": {
       "title": "Al terminar las subtareas",
-      "description": "Despierta al responsable del padre cuando una etapa termina y otra posterior está en espera, y una vez más cuando todas las subtareas se cierran. Si el responsable es un miembro, recibe una notificación en la bandeja de entrada.",
+      "description": "Despierta al responsable del padre cuando una etapa termina y otra posterior está en espera, y una vez más cuando todas las subtareas se cierran.",
       "badge": "Valor predeterminado del espacio de trabajo",
       "admin_only": "Solo los propietarios y administradores pueden cambiar estos valores predeterminados.",
       "builtin": "Instrucción integrada",

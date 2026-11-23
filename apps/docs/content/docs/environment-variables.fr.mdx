@@ -121,6 +121,15 @@ SMTP est prioritaire sur Resend dès que `SMTP_HOST` n'est pas vide.
 
 Pour l'ordre exact d'évaluation des listes d'autorisation, consultez [Connexion et inscription](/auth-setup#restrictions-dinscription).
 
+### Jeton pré-partagé
+
+Un secret fixe qui connecte un client à un seul compte, sans code de vérification ni Google. [Desktop](/desktop-app#se-connecter-sans-page-de-connexion) l'envoie lorsque son fichier de configuration définit `authToken` ; le CLI et le daemon l'acceptent dans le champ `token` de la configuration de leur profil.
+
+| Variable | Valeur par défaut | Description |
+|---|---|---|
+| `MULTICA_AUTH_TOKEN` | vide | Secret accepté partout où l'est un jeton d'accès personnel : `/api/**` et les points d'accès WebSocket. Désactivé si non défini |
+| `MULTICA_AUTH_TOKEN_EMAIL` | vide | Adresse e-mail du compte auquel appartient le jeton. Obligatoire quand `MULTICA_AUTH_TOKEN` est défini ; sans elle, le serveur journalise une erreur et refuse le jeton. Un compte qui n'existe pas encore est créé au démarrage avec son premier espace de travail |
+
 ## Stockage des pièces jointes
 
 Lorsque `S3_BUCKET` n'est pas défini, Multica utilise le disque local.
@@ -202,7 +211,7 @@ Les limites de débit d'authentification nécessitent `REDIS_URL` ; sans cette v
 
 Sans `GITHUB_APP_ID` et la clé privée, les PR sont toujours liées, reflétées et changent normalement le statut de la tâche lors du merge, mais les cartes n'affichent ni statut CI ni possibilité de fusion, et l'entrée de dépôt « Choisir depuis GitHub » est désactivée.
 
-Pour les étapes de configuration, consultez [Intégration GitHub](/github-integration#configuration-en-auto-hébergement), [Bot Lark](/lark-bot-integration#configuration-en-auto-hébergement), [Bot Slack](/slack-bot-integration#configuration-en-auto-hébergement) et [Bot Telegram](/telegram-bot-integration#configuration-en-auto-hébergement).
+Pour les étapes de configuration, consultez [Intégration GitHub](/github-integration#configuration-en-auto-hébergement).
 
 ## LLM côté serveur
 

@@ -14,7 +14,7 @@ import { UnsubscribeArchiveButton } from "./unsubscribe-archive-button";
 const ISSUE_ID = "issue-1";
 
 function setup({
-  assignee = { assignee_type: "member", assignee_id: "someone" } as Partial<Issue>,
+  assignee = { assignee_type: "agent", assignee_id: "agent-other" } as Partial<Issue>,
   subscribed = true,
   children = [] as Partial<Issue>[],
 } = {}) {
@@ -71,11 +71,8 @@ describe("UnsubscribeArchiveButton", () => {
     expect(onConfirm).toHaveBeenCalledWith("subtree");
   });
 
-  it.each([
-    ["assigned to the viewer", { assignee_type: "member", assignee_id: "me" }],
-    ["assigned to the viewer's agent", { assignee_type: "agent", assignee_id: "agent-mine" }],
-  ] as const)("is not offered on an issue %s", async (_, assignee) => {
-    setup({ assignee });
+  it("is not offered on an issue assigned to the viewer's agent", async () => {
+    setup({ assignee: { assignee_type: "agent", assignee_id: "agent-mine" } });
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.queryByRole("button", { name: "Unsubscribe & archive" })).toBeNull();
   });

@@ -21,7 +21,6 @@ import {
   skillDetailOptions,
   agentListOptions,
   memberListOptions,
-  squadListOptions,
 } from "@multica/core/workspace/queries";
 import { runtimeListOptions } from "@multica/core/runtimes/queries";
 import { runtimeDisplayLabel } from "@multica/core/runtimes";
@@ -53,7 +52,7 @@ import { ROUTE_ICON_COMPONENTS } from "./route-icon-components";
  *
  * The one exception is an actor tab's avatar: `ResourceLeadingVisual` renders
  * `ActorAvatar`, which loads the (workspace-global, sidebar-warmed) member /
- * agent / squad directories itself. That is intentional — it resolves the
+ * agent directories itself. That is intentional — it resolves the
  * avatar and, in turn, the name this hook reads from the same lists.
  */
 
@@ -69,7 +68,6 @@ const PENDING_RESOURCE_KEYS: ReadonlySet<TabLabelKey> = new Set<TabLabelKey>([
   "autopilot",
   "agent",
   "member",
-  "squad",
   "skill",
   "doc",
   "docFolder",
@@ -153,7 +151,6 @@ function useTabEntityData(subject: TabSubject, wsId: string, fetch: boolean): Re
 
   const agents = useQuery({ ...agentListOptions(wsId), enabled: false }).data;
   const members = useQuery({ ...memberListOptions(wsId), enabled: false }).data;
-  const squads = useQuery({ ...squadListOptions(wsId), enabled: false }).data;
   const runtimes = useQuery({ ...runtimeListOptions(wsId), enabled: false }).data;
   const sessions = useQuery({ ...chatSessionsOptions(wsId), enabled: false }).data;
 
@@ -189,9 +186,7 @@ function useTabEntityData(subject: TabSubject, wsId: string, fetch: boolean): Re
       const name =
         subject.actorType === "agent"
           ? agents?.find((a) => a.id === subject.id)?.name
-          : subject.actorType === "member"
-            ? members?.find((m) => m.user_id === subject.id)?.name
-            : squads?.find((s) => s.id === subject.id)?.name;
+          : members?.find((m) => m.user_id === subject.id)?.name;
       if (name) data.actorName = name;
       break;
     }
@@ -312,11 +307,9 @@ export function useTabPresentation(
       ? {
           kind: "icon",
           icon:
-            visual.actorType === "squad"
-              ? "Users"
-              : visual.actorType === "member"
-                ? "CircleUser"
-                : "Bot",
+            visual.actorType === "member"
+              ? "CircleUser"
+              : "Bot",
         }
       : visual;
 

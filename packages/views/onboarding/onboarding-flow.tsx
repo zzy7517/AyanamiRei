@@ -101,9 +101,9 @@ function mergeQuestionnaire(
  *   - Skip-existing (Welcome): completeOnboarding marks onboarded; navigate
  *     to the existing workspace's issue list.
  *   - Runtime-skipped (no runtime on Step 3): create one install-runtime guide
- *     issue assigned to the member, mark onboarding complete, and open that
- *     issue. Once a runtime appears, the Runtimes page offers the same Mika
- *     bootstrap used by the connected path.
+ *     issue, mark onboarding complete, and open that issue. Once a runtime
+ *     appears, the Runtimes page offers the same Mika bootstrap used by the
+ *     connected path.
  *   - Runtime-connected: create or repair the workspace's Mika on the selected
  *     runtime, start one hidden onboarding kickoff, mark onboarding complete,
  *     and open Mika's real chat. No fixed specialist team is created.
@@ -314,8 +314,6 @@ export function OnboardingFlow({
               description: INSTALL_RUNTIME_ISSUE_BODY[contentLang],
               status: "in_progress",
               priority: "high",
-              assignee_type: "member",
-              assignee_id: user.id,
             },
             workspace.slug,
           );

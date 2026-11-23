@@ -22,7 +22,8 @@ import { createLogger } from "../logger";
 import { clearWorkspaceStorage } from "../platform/storage-cleanup";
 import { defaultStorage } from "../platform/storage";
 import { getCurrentWsId, getCurrentSlug } from "../platform/workspace-storage";
-import { issueKeys } from "../issues/queries";
+import { issueDetailOptions, issueKeys } from "../issues/queries";
+import { agentReplyBody, cachedIssue, isIssueShown, patchIssueAgentReply } from "../issues/agent-reply";
 import type { SidebarIssuesRequest } from "../issues/sidebar-list";
 import { refreshIssueUnread } from "../issues/unread";
 import { refreshSubscribedIssues, subscribedIssueKeys } from "../issues/subscribed";
@@ -59,8 +60,6 @@ import {
   onIssuePropertiesChanged,
   onIssueMetadataChanged,
   onIssueAuxiliaryRevision,
-  onIssueReactionAdded,
-  onIssueReactionRemoved,
   invalidateIssueOwnerProjections,
 } from "../issues/ws-updaters";
 import {
@@ -77,6 +76,7 @@ import { workspaceKeys, workspaceListOptions } from "../workspace/queries";
 import { memberLimitKeys } from "../billing/member-limit";
 import { isWorkspaceDeletePending } from "../workspace/pending-delete";
 import {
+  hasNativeNotificationBridge,
   showSystemNotification,
   systemNotificationSuppressedByFocus,
   type SystemNotificationPayload,
@@ -111,6 +111,7 @@ import type {
   IssueAttachmentsChangedPayload,
   IssueLabelsChangedPayload,
   IssueUnreadChangedPayload,
+  IssueAgentRepliedPayload,
   IssueMetadataChangedPayload,
   IssuePropertiesChangedPayload,
   InboxNewPayload,
@@ -123,10 +124,6 @@ import type {
   CommentResolvedPayload,
   CommentUnresolvedPayload,
   ActivityCreatedPayload,
-  ReactionAddedPayload,
-  ReactionRemovedPayload,
-  IssueReactionAddedPayload,
-  IssueReactionRemovedPayload,
   SubscriberAddedPayload,
   SubscriberRemovedPayload,
   TaskMessagePayload,
@@ -689,6 +686,46 @@ export function createChatReplyNotifier(
   };
 }
 
+/** A banner naming the task whose agent just ended a turn. Left out while
+ *  that task's page or agent terminal is on screen (the viewer is reading the
+ *  reply), when the workspace mutes system notifications, and where the app
+ *  has no bridge of its own to show banners (the web). The event also carries
+ *  the clearing of the marker, which is nothing to announce. */
+export function createAgentReplyNotifier(qc: QueryClient) {
+  return async (wsId: string, payload: IssueAgentRepliedPayload): Promise<void> => {
+    const { issue_id: issueId, agent_replied_at: repliedAt } = payload;
+    if (!wsId || !issueId || !repliedAt || !hasNativeNotificationBridge()) return;
+    if (isIssueShown(issueId) || systemNotificationSuppressedByFocus()) return;
+
+    const slug = await resolveInboxSourceSlug(qc, wsId);
+    if (!slug) return;
+    try {
+      const { preferences } = await qc.ensureQueryData(notificationPreferenceOptions(wsId, slug));
+      if (preferences.system_notifications === "muted") return;
+    } catch {
+      // Match the existing default-on system-notification behavior.
+    }
+    let issue = cachedIssue(qc, wsId, issueId);
+    if (!issue) {
+      try {
+        issue = await qc.fetchQuery({ ...issueDetailOptions(wsId, issueId), staleTime: 0, retry: false });
+      } catch {
+        // Without the task's name the banner says only that a reply arrived.
+      }
+    }
+    // The reads above took time, during which the viewer may have opened the task.
+    if (isIssueShown(issueId) || systemNotificationSuppressedByFocus()) return;
+    const body = agentReplyBody();
+    showSystemNotification({
+      slug,
+      itemId: `agent-reply:${issueId}:${repliedAt}`,
+      issueKey: issueId,
+      title: issue ? `${issue.identifier} ${issue.title}`.trim() : body,
+      body: issue ? body : "",
+    });
+  };
+}
+
 /**
  * Invalidates workspace and account caches. Used after reconnect and when a
  * new WSClient instance is detected (workspace switch) to recover events
@@ -706,7 +743,6 @@ function invalidateWorkspaceScopedQueries(qc: QueryClient): void {
     void onInboxInvalidate(qc, wsId);
     qc.invalidateQueries({ queryKey: workspaceKeys.agents(wsId) });
     qc.invalidateQueries({ queryKey: workspaceKeys.members(wsId) });
-    qc.invalidateQueries({ queryKey: workspaceKeys.squads(wsId) });
     qc.invalidateQueries({ queryKey: workspaceKeys.skills(wsId) });
     qc.invalidateQueries({ queryKey: workspaceKeys.invitations(wsId) });
     qc.invalidateQueries({ queryKey: projectKeys.all(wsId) });
@@ -846,20 +882,6 @@ function replayableSubscriptions(ws: WSClient) {
   };
 }
 
-function invalidateSquadMemberStatusQueries(qc: QueryClient, wsId: string): void {
-  qc.invalidateQueries({
-    predicate: (query) => {
-      const key = query.queryKey;
-      return (
-        key[0] === "workspaces" &&
-        key[1] === wsId &&
-        key[2] === "squads" &&
-        key[4] === "members-status"
-      );
-    },
-  });
-}
-
 export interface RealtimeSyncStores {
   authStore: UseBoundStore<StoreApi<AuthState>>;
 }
@@ -872,7 +894,7 @@ export interface RealtimeSyncStores {
  * - Debounce per-prefix prevents rapid-fire refetches (e.g. bulk issue updates)
  * - Precise handlers only for side effects (toast, navigation, self-check)
  *
- * Per-issue events (comments, activity, reactions, subscribers) are handled
+ * Per-issue events (comments, activity, subscribers) are handled
  * both here (invalidation fallback) and by per-page useWSEvent hooks (granular
  * updates). Daemon register events invalidate runtimes globally; heartbeats
  * are skipped to avoid excessive refetches.
@@ -921,11 +943,6 @@ export function useRealtimeSync(
         const wsId = getCurrentWsId();
         if (wsId) {
           qc.invalidateQueries({ queryKey: workspaceKeys.agents(wsId) });
-          // Squad members status is derived per agent, so any agent
-          // change (status flip, archive, runtime swap) needs to refresh the
-          // per-squad members-status cache without refetching the static squad
-          // list summary.
-          invalidateSquadMemberStatusQueries(qc, wsId);
         }
       },
       member: () => {
@@ -969,14 +986,6 @@ export function useRealtimeSync(
           qc.invalidateQueries({ queryKey: issueKeys.tableAll(wsId) });
           // Deleting a project deletes the saved views scoped to it.
           qc.invalidateQueries({ queryKey: issueViewKeys.all(wsId) });
-        }
-      },
-      squad: () => {
-        const wsId = getCurrentWsId();
-        if (wsId) {
-          qc.invalidateQueries({ queryKey: workspaceKeys.squads(wsId) });
-          // squad:deleted triggers assignee transfer — refresh issues too.
-          qc.invalidateQueries({ queryKey: issueKeys.all(wsId) });
         }
       },
       label: () => {
@@ -1056,10 +1065,6 @@ export function useRealtimeSync(
           // refetch it when a daemon changes state even if its private runtime
           // is absent from this member's runtime list.
           qc.invalidateQueries({ queryKey: workspaceKeys.agents(wsId) });
-          // Runtime online/offline transitions move the derived status
-          // for every agent that hosts on this runtime, which shifts the
-          // working/idle/offline pill on the squad page.
-          invalidateSquadMemberStatusQueries(qc, wsId);
         }
       },
       autopilot: () => {
@@ -1127,9 +1132,6 @@ export function useRealtimeSync(
         // catches every agent's list — the per-agent detail key sits
         // under agentTasks/<wsId>/<agentId>.
         qc.invalidateQueries({ queryKey: agentTasksKeys.all(wsId) });
-        // Squad members-status reads the same task lifecycle to flip
-        // working ↔ idle for each agent member.
-        invalidateSquadMemberStatusQueries(qc, wsId);
         // Comment trigger previews answer "who would a send wake right
         // now" — the pending-task dedup guard makes that answer
         // queue-dependent, so any task lifecycle change must refresh an
@@ -1212,12 +1214,10 @@ export function useRealtimeSync(
     // Event types handled by specific handlers below -- skip generic refresh
     const specificEvents = new Set([
       "workspace:updated",
-      "issue:updated", "issue:created", "issue:deleted", "issue_attachments:changed", "issue_labels:changed", "issue_unread:changed", "issue_metadata:changed", "issue_properties:changed", "property:created", "property:updated", "inbox:new",
+      "issue:updated", "issue:created", "issue:deleted", "issue_attachments:changed", "issue_labels:changed", "issue_unread:changed", "issue:agent_replied", "issue_metadata:changed", "issue_properties:changed", "property:created", "property:updated", "inbox:new",
       "comment:created", "comment:updated", "comment:deleted",
       "comment:resolved", "comment:unresolved",
       "activity:created",
-      "reaction:added", "reaction:removed",
-      "issue_reaction:added", "issue_reaction:removed",
       "subscriber:added", "subscriber:removed",
       "daemon:heartbeat",
       // Chat events are handled explicitly below; do not double-invalidate.
@@ -1347,6 +1347,18 @@ export function useRealtimeSync(
       if (workspace_id) void refreshIssueUnread(qc, workspace_id);
     });
 
+    // The marker moved forward when an agent ended a turn, or a member marked
+    // the reply seen. It reaches every cache that holds the task; only the
+    // first is worth a banner.
+    const notifyAgentReply = createAgentReplyNotifier(qc);
+    const unsubIssueAgentReplied = ws.on("issue:agent_replied", (p) => {
+      const { issue_id: issueId, agent_replied_at: repliedAt } = p as IssueAgentRepliedPayload;
+      const wsId = getCurrentWsId();
+      if (!issueId || !wsId) return;
+      patchIssueAgentReply(qc, wsId, issueId, repliedAt ?? null);
+      void notifyAgentReply(wsId, { issue_id: issueId, agent_replied_at: repliedAt ?? null });
+    });
+
     const unsubIssueAttachmentsChanged = ws.on("issue_attachments:changed", (p) => {
       const { issue_id, issue_revision } = p as IssueAttachmentsChangedPayload;
       if (!issue_id) return;
@@ -1413,7 +1425,7 @@ export function useRealtimeSync(
     //
     // `refetchType: "none"` is the load-bearing detail: without it, an
     // active IssueDetail observer would refetch the entire timeline on
-    // every comment / activity / reaction event. The refetch replaces
+    // every comment / activity event. The refetch replaces
     // every entry's reference and busts React.memo on every CommentCard
     // subtree (visible during AI streaming as a flash across all sibling
     // threads, MUL-1941). Inactive observers don't refetch either way;
@@ -1428,7 +1440,7 @@ export function useRealtimeSync(
     };
     // The issue attachment list is the complete file inventory, labelled with
     // each file's comment. Only comment writes bind, rebind or delete comment
-    // files; activity, reactions and resolutions leave it as it is.
+    // files; activity and resolutions leave it as it is.
     const invalidateCommentFiles = (issueId: string) => {
       qc.invalidateQueries({ queryKey: issueKeys.attachments(issueId) });
     };
@@ -1531,34 +1543,6 @@ export function useRealtimeSync(
     const unsubActivityCreated = ws.on("activity:created", (p) => {
       const { issue_id } = p as ActivityCreatedPayload;
       if (issue_id) invalidateTimeline(issue_id);
-    });
-
-    const unsubReactionAdded = ws.on("reaction:added", (p) => {
-      const { issue_id } = p as ReactionAddedPayload;
-      if (issue_id) invalidateTimeline(issue_id);
-    });
-
-    const unsubReactionRemoved = ws.on("reaction:removed", (p) => {
-      const { issue_id } = p as ReactionRemovedPayload;
-      if (issue_id) invalidateTimeline(issue_id);
-    });
-
-    // --- Issue-level reactions & subscribers (global fallback) ---
-
-    const unsubIssueReactionAdded = ws.on("issue_reaction:added", (p) => {
-      const { issue_id, reaction, issue_revision } = p as IssueReactionAddedPayload;
-      const wsId = getCurrentWsId();
-      if (issue_id && wsId) {
-        onIssueReactionAdded(qc, wsId, issue_id, reaction, issue_revision);
-      }
-    });
-
-    const unsubIssueReactionRemoved = ws.on("issue_reaction:removed", (p) => {
-      const { issue_id, issue_revision, ...removed } = p as IssueReactionRemovedPayload;
-      const wsId = getCurrentWsId();
-      if (issue_id && wsId) {
-        onIssueReactionRemoved(qc, wsId, issue_id, removed, issue_revision);
-      }
     });
 
     // The viewer's own subscription changing also moves issues in and out of
@@ -2148,6 +2132,7 @@ export function useRealtimeSync(
       unsubIssueAttachmentsChanged();
       unsubIssueLabelsChanged();
       unsubIssueUnreadChanged();
+      unsubIssueAgentReplied();
       unsubIssueMetadataChanged();
       unsubIssuePropertiesChanged();
       unsubPropertyChanged.forEach((unsub) => unsub());
@@ -2160,10 +2145,6 @@ export function useRealtimeSync(
       unsubCommentResolved();
       unsubCommentUnresolved();
       unsubActivityCreated();
-      unsubReactionAdded();
-      unsubReactionRemoved();
-      unsubIssueReactionAdded();
-      unsubIssueReactionRemoved();
       unsubSubscriberAdded();
       unsubSubscriberRemoved();
       unsubWsUpdated();

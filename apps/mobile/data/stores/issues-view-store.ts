@@ -1,10 +1,8 @@
 /**
  * View store for the workspace-wide Issues page (`more/issues.tsx`).
  *
- * Shape mirrors `useMyIssuesViewStore` plus a `scope` field — workspace
- * Issues has `all / members / agents` scope tabs (see web
- * `packages/views/issues/components/issues-page.tsx:32-94`), while
- * My Issues has its own `assigned / created / agents` scopes.
+ * Workspace Issues has `all / agents` scope tabs (see web
+ * `packages/views/issues/components/issues-page.tsx:32-94`).
  *
  * The `scope` filter is **client-side** on `assignee_type` — see
  * `more/issues.tsx`'s `scopedIssues` derivation. Server param stays unset
@@ -28,7 +26,7 @@
 import { create } from "zustand";
 import type { IssuePriority, IssueStatus } from "@multica/core/types";
 
-export type IssuesScope = "all" | "members" | "agents";
+export type IssuesScope = "all" | "agents";
 
 interface IssuesViewState {
   scope: IssuesScope;

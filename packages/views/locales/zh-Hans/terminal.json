@@ -1,0 +1,30 @@
+{
+  "directory_label": "目录",
+  "directory_placeholder": "/home/you/project",
+  "directory_required": "请输入绝对路径。",
+  "open": "打开",
+  "end_session": "结束会话",
+  "agent_terminal": "智能体终端",
+  "restart": "重启",
+  "status": {
+    "connecting": "正在连接...",
+    "reconnecting": "正在重新连接...",
+    "ended": "会话已结束",
+    "ended_with_code": "会话已结束，退出码 {{code}}",
+    "ended_by_signal": "会话被信号 {{signal}} 终止",
+    "reattached": "已重新连接。在程序再次输出之前，屏幕保持空白。"
+  },
+  "errors": {
+    "unavailable": "此服务端不提供终端。",
+    "flag_disabled": "此服务端未开启终端。",
+    "bad_request": "服务端拒绝了该请求。",
+    "terminal_root_unconfigured": "该机器尚未配置终端目录。",
+    "path_not_allowed": "不能在该目录打开终端。",
+    "daemon_unavailable": "该机器未连接。",
+    "not_found": "该终端已不在运行。",
+    "unsupported_platform": "该机器的系统不支持终端。",
+    "tree_not_ready": "worktree 尚未构建完成。",
+    "runtime_offline": "构建该 worktree 的机器未连接。",
+    "internal": "出现未知错误。"
+  }
+}

@@ -413,18 +413,6 @@ describe("IssueHoverCard", () => {
     expect(screen.queryByText("Queued")).not.toBeInTheDocument();
   });
 
-  it("never marks a member assignee with agent activity", async () => {
-    mockIssue(
-      { ...BASE_ISSUE, assignee_type: "member", assignee_id: "user-9" },
-      { tasks: [{ issue_id: "issue-1", agent_id: "user-9", status: "queued" }] },
-    );
-
-    await openCard();
-
-    expect(screen.queryByText("Working")).not.toBeInTheDocument();
-    expect(screen.queryByText("Queued")).not.toBeInTheDocument();
-  });
-
   it("names who created the issue and when it last moved", async () => {
     await openCard();
 

@@ -129,21 +129,21 @@ describe("desktop issue views per tab", () => {
   });
 
   it("leaves the outgoing page's view alone while the tab moves to another page", () => {
-    // The tab's URL changes before the router swaps pages, so My issues is
+    // The tab's URL changes before the router swaps pages, so the project is
     // still mounted when the URL already names the Issues page's view.
-    useTabStore.getState().navigateActiveSession("/acme/my-issues?view=m");
+    useTabStore.getState().navigateActiveSession("/acme/projects/p1?view=m");
     render(
       <DesktopNavigationProvider>
-        <IssueViewUrlSync scope={{ scope_type: "my" }}>
+        <IssueViewUrlSync scope={{ scope_type: "project", scope_id: "p1" }}>
           <span />
         </IssueViewUrlSync>
       </DesktopNavigationProvider>,
     );
-    expect(useActiveIssueViewStore.getState().active["ws-1:my"]).toBe("m");
+    expect(useActiveIssueViewStore.getState().active["ws-1:project:p1"]).toBe("m");
 
     act(() => useTabStore.getState().navigateActiveSession("/acme/issues?view=w"));
 
-    expect(useActiveIssueViewStore.getState().active["ws-1:my"]).toBe("m");
+    expect(useActiveIssueViewStore.getState().active["ws-1:project:p1"]).toBe("m");
     expect(activeUrl()).toBe("/acme/issues?view=w");
   });
 

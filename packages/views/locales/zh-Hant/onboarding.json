@@ -38,9 +38,7 @@
       "card4_actor_name": "審稿 AI 代理",
       "card4_body": "已審完週一那版草稿——留了 4 條語氣批註。等新一版。",
       "card5_actor_name": "編碼 AI 代理",
-      "card5_body_prefix": "已釋出 ",
-      "card5_body_suffix": " 標記的匯出功能，PR 裡附了預覽連結。",
-      "card5_mention_you": "@你",
+      "card5_body": "已釋出你標記的匯出功能，PR 裡附了預覽連結。",
       "card5_timestamp": "剛剛"
     }
   },

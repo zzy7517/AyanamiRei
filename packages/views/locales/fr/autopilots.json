@@ -324,7 +324,7 @@
     "section_agent": "Agent",
     "section_assignee": "Assigné à",
     "select_agent": "Sélectionner un agent",
-    "select_assignee": "Sélectionner un agent ou un squad",
+    "select_assignee": "Sélectionner un agent",
     "section_project": "Projet",
     "project_hint": "Définit aussi le lieu des exécutions : le dépôt ou le répertoire local du projet",
     "no_project": "Aucun projet",
@@ -386,7 +386,7 @@
     "schedule_empty": "Aucune planification — cette automatisation ne s'exécute que sur déclenchement manuel.",
     "schedule_add": "Ajouter une planification",
     "error_title_required": "Saisissez un nom pour cette automatisation.",
-    "error_assignee_required": "Choisissez l'agent ou le squad qui exécutera cette automatisation.",
+    "error_assignee_required": "Choisissez l'agent qui exécutera cette automatisation.",
     "output_modes": {
       "create_issue": {
         "label": "Créer une tâche",
@@ -486,13 +486,11 @@
     }
   },
   "agent_picker": {
-    "filter_placeholder": "Filtrer les agents ou les squads...",
+    "filter_placeholder": "Filtrer les agents...",
     "select_agent": "Sélectionner un agent",
-    "select_assignee": "Sélectionner un agent ou un squad",
+    "select_assignee": "Sélectionner un agent",
     "agents_group": "Agents",
-    "squads_group": "Squads",
-    "agent_runtime_required": "Associez un runtime avant de sélectionner cet agent",
-    "squad_runtime_required": "Associez un runtime au chef de ce squad avant de le sélectionner"
+    "agent_runtime_required": "Associez un runtime avant de sélectionner cet agent"
   },
   "timezone_picker": {
     "search_placeholder": "Rechercher un fuseau horaire..."
@@ -602,7 +600,7 @@
     },
     "defaults": {
       "title": "À la fin des sous-tâches",
-      "description": "Réveille le responsable de la tâche parente quand une étape se termine alors qu’une étape suivante attend, puis une fois de plus quand toutes les sous-tâches sont fermées. Un responsable humain reçoit une notification à la place.",
+      "description": "Réveille le responsable de la tâche parente quand une étape se termine alors qu’une étape suivante attend, puis une fois de plus quand toutes les sous-tâches sont fermées.",
       "badge": "Valeur par défaut de l’espace",
       "enabled": "Activé par défaut",
       "instruction": "Instruction par défaut",

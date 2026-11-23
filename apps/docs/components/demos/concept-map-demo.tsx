@@ -14,7 +14,6 @@ type NodeId =
   | "skill"
   | "runtime"
   | "run"
-  | "squad"
   | "chat"
   | "inbox"
   | "autopilot";
@@ -31,8 +30,6 @@ type EdgeId =
   | "run_issue"
   | "run_chat"
   | "skill_agent"
-  | "squad_agent"
-  | "squad_issue"
   | "issue_inbox";
 
 type NodeCopy = { name: string; desc: string; page: string };
@@ -44,7 +41,6 @@ const POSITION: Record<MapNode, [number, number]> = {
   chat: [12, 71],
   autopilot: [12, 90],
   inbox: [31, 24],
-  squad: [50, 24],
   skill: [70, 24],
   agent: [48, 52],
   run: [72, 52],
@@ -62,8 +58,6 @@ const EDGES: { id: EdgeId; from: MapNode; to: MapNode; curve?: [number, number];
   { id: "run_issue", from: "run", to: "issue", curve: [44, 92], dashed: true },
   { id: "run_chat", from: "run", to: "chat", curve: [46, 102], dashed: true },
   { id: "skill_agent", from: "skill", to: "agent" },
-  { id: "squad_agent", from: "squad", to: "agent" },
-  { id: "squad_issue", from: "squad", to: "issue" },
   { id: "issue_inbox", from: "issue", to: "inbox" },
 ];
 
@@ -75,7 +69,7 @@ const GUIDE: MapNode[] = ["issue", "agent", "run", "runtime"];
 const GROUPS: { key: "basic" | "execution" | "collaboration"; nodes: NodeId[] }[] = [
   { key: "basic", nodes: ["workspace", "issue", "project"] },
   { key: "execution", nodes: ["agent", "skill", "runtime", "run"] },
-  { key: "collaboration", nodes: ["squad", "chat", "inbox", "autopilot"] },
+  { key: "collaboration", nodes: ["chat", "inbox", "autopilot"] },
 ];
 
 const copy = {
@@ -90,7 +84,7 @@ const copy = {
       },
       issue: {
         name: "Issue",
-        desc: "A piece of work to be done, plus the description, discussion, status, and history that accumulate around it. The assignee can be a member, an agent, or a squad.",
+        desc: "A piece of work to be done, plus the description, discussion, status, and history that accumulate around it. The assignee is an agent.",
         page: "Issues",
       },
       project: {
@@ -118,11 +112,6 @@ const copy = {
         desc: "One concrete execution record for an agent. One issue can produce multiple runs over time; a finished run does not mean the issue is done.",
         page: "Runs",
       },
-      squad: {
-        name: "Squad",
-        desc: "A group of agents and members led by an agent leader. Assign an issue to a squad and the leader coordinates the work.",
-        page: "Squads",
-      },
       chat: {
         name: "Chat",
         desc: "A way to talk that is not attached to an issue — good for questions and quick experiments. Each message triggers one run.",
@@ -130,7 +119,7 @@ const copy = {
       },
       inbox: {
         name: "Inbox",
-        desc: "A member's notification center: activity on subscribed issues, mentions, and assignments all land here. Agents do not use the inbox.",
+        desc: "A member's notification center: activity on subscribed issues and assignments all land here. Agents do not use the inbox.",
         page: "Inbox and subscriptions",
       },
       autopilot: {
@@ -149,9 +138,7 @@ const copy = {
       run_issue: "Results are written back to the issue that triggered it.",
       run_chat: "Results are written back to the chat that triggered it.",
       skill_agent: "Skills attach to agents, so what works is reused across them.",
-      squad_agent: "A squad lets multiple agents work together.",
-      squad_issue: "An issue can be assigned to a squad; its leader coordinates.",
-      issue_inbox: "Issue activity, mentions, and assignments reach members' inboxes.",
+      issue_inbox: "Issue activity and assignments reach members' inboxes.",
     } as Record<EdgeId, string>,
     workspaceRelation: "The workspace is the container for everything; humans and agents collaborate inside it.",
     learnMore: "See ",
@@ -178,7 +165,7 @@ const copy = {
       },
       issue: {
         name: "任务",
-        desc: "一项要完成的工作，以及围绕它积累的描述、讨论、状态和历史。负责人可以是成员、智能体或小队。",
+        desc: "一项要完成的工作，以及围绕它积累的描述、讨论、状态和历史。负责人只能是智能体。",
         page: "任务",
       },
       project: {
@@ -206,11 +193,6 @@ const copy = {
         desc: "智能体的一次具体执行记录。一个任务可以先后产生多次运行；运行结束不等于任务完成。",
         page: "运行",
       },
-      squad: {
-        name: "小队",
-        desc: "一组智能体和成员，由一个智能体 leader 带领。把任务分配给小队，由 leader 协调完成。",
-        page: "小队",
-      },
       chat: {
         name: "对话",
         desc: "不依附于任务的交流方式，适合提问和快速尝试。每条消息触发一轮执行。",
@@ -218,7 +200,7 @@ const copy = {
       },
       inbox: {
         name: "收件箱",
-        desc: "成员的通知中心：订阅的任务动态、提及和分配都汇聚在这里。智能体不使用收件箱。",
+        desc: "成员的通知中心：订阅的任务动态和分配都汇聚在这里。智能体不使用收件箱。",
         page: "收件箱与订阅",
       },
       autopilot: {
@@ -237,9 +219,7 @@ const copy = {
       run_issue: "结果写回触发它的任务。",
       run_chat: "结果写回触发它的对话。",
       skill_agent: "Skill 挂载给智能体，让成功经验跨智能体复用。",
-      squad_agent: "小队让多个智能体协同。",
-      squad_issue: "任务可以分配给小队，由 leader 协调。",
-      issue_inbox: "任务动态、提及和分配通知进成员的收件箱。",
+      issue_inbox: "任务动态和分配通知进成员的收件箱。",
     } as Record<EdgeId, string>,
     workspaceRelation: "工作区是一切的容器，人和智能体都在其中协作。",
     learnMore: "详见",
@@ -267,7 +247,7 @@ const copy = {
       },
       issue: {
         name: "タスク",
-        desc: "完了すべき 1 件の仕事と、その周りに蓄積される説明、議論、ステータス、履歴。担当者はメンバー、エージェント、スクワッドのいずれかです。",
+        desc: "完了すべき 1 件の仕事と、その周りに蓄積される説明、議論、ステータス、履歴。担当者はエージェントです。",
         page: "タスク",
       },
       project: {
@@ -295,11 +275,6 @@ const copy = {
         desc: "エージェントの 1 回の具体的な実行記録。1 つのタスクから複数の実行が順に生まれることがあり、実行の終了はタスクの完了を意味しません。",
         page: "実行",
       },
-      squad: {
-        name: "スクワッド",
-        desc: "1 体のリーダーエージェントが率いる、エージェントとメンバーのグループ。タスクをスクワッドに割り当てると、リーダーが調整して進めます。",
-        page: "スクワッド",
-      },
       chat: {
         name: "チャット",
         desc: "タスクに紐づかないやり取りの方法で、質問や素早い試行に向いています。メッセージ 1 件ごとに 1 回の実行がトリガーされます。",
@@ -307,7 +282,7 @@ const copy = {
       },
       inbox: {
         name: "インボックス",
-        desc: "メンバーの通知センター。購読しているタスクの動き、メンション、割り当てがここに集まります。エージェントはインボックスを使いません。",
+        desc: "メンバーの通知センター。購読しているタスクの動きと割り当てがここに集まります。エージェントはインボックスを使いません。",
         page: "インボックスと購読",
       },
       autopilot: {
@@ -326,9 +301,7 @@ const copy = {
       run_issue: "結果はトリガー元のタスクに書き戻されます。",
       run_chat: "結果はトリガー元のチャットに書き戻されます。",
       skill_agent: "スキルはエージェントに取り付けて、成功したやり方をエージェント間で再利用させます。",
-      squad_agent: "スクワッドは複数のエージェントを協働させます。",
-      squad_issue: "タスクはスクワッドにも割り当てられ、リーダーが調整します。",
-      issue_inbox: "タスクの動き、メンション、割り当てはメンバーのインボックスに届きます。",
+      issue_inbox: "タスクの動きと割り当てはメンバーのインボックスに届きます。",
     } as Record<EdgeId, string>,
     workspaceRelation: "ワークスペースはすべての入れ物で、人間とエージェントがその中で協働します。",
     learnMore: "詳しくは",
@@ -354,7 +327,7 @@ const copy = {
       },
       issue: {
         name: "태스크",
-        desc: "해야 할 일과 그에 관한 설명, 논의, 상태, 이력을 한곳에 모은 객체입니다. 멤버나 에이전트, 스쿼드를 담당자로 지정할 수 있습니다.",
+        desc: "해야 할 일과 그에 관한 설명, 논의, 상태, 이력을 한곳에 모은 객체입니다. 에이전트를 담당자로 지정할 수 있습니다.",
         page: "태스크",
       },
       project: {
@@ -382,11 +355,6 @@ const copy = {
         desc: "에이전트가 한 번 실행된 기록입니다. 하나의 태스크에서 여러 실행이 만들어질 수 있으며, 실행이 끝났다고 해서 태스크까지 완료된 것은 아닙니다.",
         page: "실행",
       },
-      squad: {
-        name: "스쿼드",
-        desc: "리더 에이전트 한 명이 이끄는 에이전트와 멤버의 그룹입니다. 태스크를 스쿼드에 할당하면 리더가 작업을 조율합니다.",
-        page: "스쿼드",
-      },
       chat: {
         name: "채팅",
         desc: "태스크에 연결하지 않고 대화하는 방식으로, 질문이나 간단한 시도에 적합합니다. 메시지를 보낼 때마다 한 번의 실행이 트리거됩니다.",
@@ -394,7 +362,7 @@ const copy = {
       },
       inbox: {
         name: "인박스",
-        desc: "멤버를 위한 알림 센터입니다. 구독한 태스크의 활동, 멘션, 할당 알림이 이곳에 모입니다. 에이전트는 인박스를 사용하지 않습니다.",
+        desc: "멤버를 위한 알림 센터입니다. 구독한 태스크의 활동과 할당 알림이 이곳에 모입니다. 에이전트는 인박스를 사용하지 않습니다.",
         page: "인박스와 구독",
       },
       autopilot: {
@@ -413,9 +381,7 @@ const copy = {
       run_issue: "결과는 실행을 트리거한 태스크에 다시 기록됩니다.",
       run_chat: "결과는 실행을 트리거한 채팅에 다시 기록됩니다.",
       skill_agent: "스킬은 에이전트에 연결되어 검증된 작업 방식을 여러 에이전트에서 재사용하게 합니다.",
-      squad_agent: "스쿼드는 여러 에이전트가 함께 일하게 합니다.",
-      squad_issue: "태스크를 스쿼드에 할당하면 리더가 조율합니다.",
-      issue_inbox: "태스크 활동, 멘션, 할당 알림은 멤버의 인박스로 갑니다.",
+      issue_inbox: "태스크 활동과 할당 알림은 멤버의 인박스로 갑니다.",
     } as Record<EdgeId, string>,
     workspaceRelation: "워크스페이스는 모든 객체를 담는 공간이며, 사람과 에이전트가 그 안에서 협업합니다.",
     learnMore: "자세히: ",
@@ -442,7 +408,7 @@ const copy = {
       },
       issue: {
         name: "Tâche",
-        desc: "Un travail à réaliser, accompagné de la description, de la discussion, du statut et de l'historique qui s'accumulent autour de lui. L'assigné peut être un membre, un agent ou un squad.",
+        desc: "Un travail à réaliser, accompagné de la description, de la discussion, du statut et de l'historique qui s'accumulent autour de lui. L'assigné est un agent.",
         page: "Tâches",
       },
       project: {
@@ -470,11 +436,6 @@ const copy = {
         desc: "L'enregistrement concret d'une exécution d'un agent. Une tâche peut produire plusieurs exécutions au fil du temps ; une exécution terminée ne signifie pas que la tâche est terminée.",
         page: "Exécutions",
       },
-      squad: {
-        name: "Squad",
-        desc: "Un groupe d'agents et de membres dirigé par un agent chef. Assignez une tâche à un squad et le chef coordonne le travail.",
-        page: "Squads",
-      },
       chat: {
         name: "Discussion",
         desc: "Un moyen d'échanger qui n'est rattaché à aucune tâche, idéal pour les questions et les essais rapides. Chaque message déclenche une exécution.",
@@ -482,7 +443,7 @@ const copy = {
       },
       inbox: {
         name: "Boîte de réception",
-        desc: "Le centre de notifications d'un membre : l'activité sur les tâches suivies, les mentions et les assignations y arrivent. Les agents n'utilisent pas la Boîte de réception.",
+        desc: "Le centre de notifications d'un membre : l'activité sur les tâches suivies, et les assignations y arrivent. Les agents n'utilisent pas la Boîte de réception.",
         page: "Boîte de réception et abonnements",
       },
       autopilot: {
@@ -501,9 +462,7 @@ const copy = {
       run_issue: "Les résultats sont réécrits dans la tâche qui l'a déclenchée.",
       run_chat: "Les résultats sont réécrits dans la discussion qui l'a déclenchée.",
       skill_agent: "Les skills se rattachent aux agents pour réutiliser ce qui fonctionne de l'un à l'autre.",
-      squad_agent: "Un squad fait travailler plusieurs agents ensemble.",
-      squad_issue: "Une tâche peut être assignée à un squad ; son chef coordonne.",
-      issue_inbox: "L'activité des tâches, les mentions et les assignations arrivent dans la Boîte de réception des membres.",
+      issue_inbox: "L'activité des tâches et les assignations arrivent dans la Boîte de réception des membres.",
     } as Record<EdgeId, string>,
     workspaceRelation: "L'espace de travail contient tout ; humains et agents y collaborent.",
     learnMore: "Voir ",
@@ -529,7 +488,6 @@ const PAGE_HREF: Record<NodeId, string> = {
   skill: "/skills",
   runtime: "/daemon-runtimes",
   run: "/tasks",
-  squad: "/squads",
   chat: "/chat",
   inbox: "/inbox",
   autopilot: "/autopilots",

@@ -35,7 +35,6 @@
     "issues": "Issues",
     "inbox": "Inbox",
     "chat": "Chat",
-    "mentions": "Mentions",
     "assignments": "Assignments",
     "status_changes": "Status changes",
     "saved": "Notification settings saved"
@@ -71,8 +70,6 @@
     "status_changes": "Status changes",
     "comments": "Comments",
     "comments_description": "New comments on issues you're subscribed to.",
-    "mentions": "Mentions",
-    "mentions_description": "When someone @mentions you, including @all and @squad.",
     "reactions": "Reactions",
     "reactions_description": "When someone reacts to an issue you created or a comment you wrote.",
     "updates": "Priority & due date",

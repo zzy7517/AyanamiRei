@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useMemo } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  useMutationState,
-} from "@tanstack/react-query";
+import { useEffect, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import type {
-  Comment,
-  TimelineEntry,
-  Reaction,
-} from "@multica/core/types";
+import type { Comment, TimelineEntry } from "@multica/core/types";
 import type {
   CommentCreatedPayload,
   CommentUpdatedPayload,
@@ -19,8 +11,6 @@ import type {
   CommentResolvedPayload,
   CommentUnresolvedPayload,
   ActivityCreatedPayload,
-  ReactionAddedPayload,
-  ReactionRemovedPayload,
 } from "@multica/core/types";
 import {
   issueTimelineOptions,
@@ -32,8 +22,6 @@ import {
   useUpdateComment,
   useDeleteComment,
   useResolveComment,
-  useToggleCommentReaction,
-  type ToggleCommentReactionVars,
 } from "@multica/core/issues/mutations";
 import { commentToTimelineEntry, mergeCommentThread } from "@multica/core/issues/comment-thread";
 import { sortTimelineEntriesAsc } from "@multica/core/issues/timeline-sort";
@@ -119,7 +107,6 @@ export function useIssueTimeline(issueId: string, userId?: string, focusCommentI
   const { mutateAsync: updateComment } = useUpdateComment(issueId);
   const { mutateAsync: deleteCommentAsync } = useDeleteComment(issueId);
   const { mutateAsync: resolveCommentAsync } = useResolveComment(issueId);
-  const { mutate: toggleCommentReaction } = useToggleCommentReaction(issueId);
 
   // Reconnect recovery: invalidate so the next render refetches the full
   // timeline. Cheaper than diffing across a possibly-long disconnect.
@@ -220,83 +207,6 @@ export function useIssueTimeline(issueId: string, userId?: string, focusCommentI
           if (old.some((e) => e.id === entry.id)) return old;
           return sortTimelineEntriesAsc([...old, entry]);
         });
-      },
-      [qc, issueId],
-    ),
-  );
-
-  useWSEvent(
-    "reaction:added",
-    useCallback(
-      (payload: unknown) => {
-        const { reaction, issue_id, comment_revision } = payload as ReactionAddedPayload;
-        if (issue_id !== issueId) return;
-        let missingRevision = false;
-        qc.setQueryData<TLCache>(issueKeys.timeline(issueId), (old) =>
-          old?.map((e) => {
-            if (e.id !== reaction.comment_id) return e;
-            if (comment_revision === undefined && e.revision !== undefined) {
-              missingRevision = true;
-              return e;
-            }
-            if (
-              comment_revision !== undefined &&
-              e.revision !== undefined &&
-              comment_revision < e.revision
-            ) return e;
-            const existing = e.reactions ?? [];
-            if (existing.some((r) => r.id === reaction.id)) return e;
-            return {
-              ...e,
-              revision: comment_revision ?? e.revision,
-              reactions: [...existing, reaction],
-            };
-          }),
-        );
-        if (missingRevision) {
-          qc.invalidateQueries({ queryKey: issueKeys.timeline(issueId) });
-        }
-      },
-      [qc, issueId],
-    ),
-  );
-
-  useWSEvent(
-    "reaction:removed",
-    useCallback(
-      (payload: unknown) => {
-        const p = payload as ReactionRemovedPayload;
-        if (p.issue_id !== issueId) return;
-        let missingRevision = false;
-        qc.setQueryData<TLCache>(issueKeys.timeline(issueId), (old) =>
-          old?.map((e) => {
-            if (e.id !== p.comment_id) return e;
-            if (p.comment_revision === undefined && e.revision !== undefined) {
-              missingRevision = true;
-              return e;
-            }
-            if (
-              p.comment_revision !== undefined &&
-              e.revision !== undefined &&
-              p.comment_revision < e.revision
-            ) return e;
-            return {
-              ...e,
-              revision: p.comment_revision ?? e.revision,
-              reactions: (e.reactions ?? []).filter(
-                (r) =>
-                  !(
-                    r.emoji === p.emoji &&
-                    r.actor_type === p.actor_type &&
-                    r.actor_id === p.actor_id
-                  ),
-              ),
-            };
-          }),
-        );
-        if (missingRevision) {
-          qc.invalidateQueries({ queryKey: issueKeys.timeline(issueId) });
-        }
       },
       [qc, issueId],
     ),
@@ -432,85 +342,8 @@ export function useIssueTimeline(issueId: string, userId?: string, focusCommentI
     [resolveCommentAsync, t],
   );
 
-  // --- Optimistic UI for comment reactions ---
-  // Derive at render time from pending mutation variables instead of writing
-  // temp data into the cache (which would race with WS events).
-
-  const pendingReactionVars = useMutationState({
-    filters: {
-      mutationKey: ["toggleCommentReaction", issueId],
-      status: "pending",
-    },
-    select: (m) =>
-      m.state.variables as ToggleCommentReactionVars | undefined,
-  });
-
-  const optimisticTimeline = useMemo(() => {
-    if (pendingReactionVars.length === 0) return timeline;
-
-    return timeline.map((entry) => {
-      const pendingForEntry = pendingReactionVars.filter(
-        (v) => v && v.commentId === entry.id,
-      );
-      if (pendingForEntry.length === 0) return entry;
-
-      let reactions = entry.reactions ?? [];
-      for (const vars of pendingForEntry) {
-        if (!vars) continue;
-        if (vars.existing) {
-          reactions = reactions.filter((r) => r.id !== vars.existing!.id);
-        } else {
-          const alreadyExists = reactions.some(
-            (r) =>
-              r.emoji === vars.emoji &&
-              r.actor_type === "member" &&
-              r.actor_id === userId,
-          );
-          if (!alreadyExists) {
-            reactions = [
-              ...reactions,
-              {
-                id: `optimistic-${vars.emoji}`,
-                comment_id: vars.commentId,
-                actor_type: "member",
-                actor_id: userId ?? "",
-                emoji: vars.emoji,
-                created_at: "",
-              },
-            ];
-          }
-        }
-      }
-      return { ...entry, reactions };
-    });
-  }, [timeline, pendingReactionVars, userId]);
-
-  // toggleReaction reads from a ref so its identity does not change with
-  // every WS event. Without this every memoized CommentCard down-tree would
-  // re-render on each timeline mutation, defeating the React.memo cost
-  // savings on long timelines (#1968).
-  const timelineRef = useRef(timeline);
-  useEffect(() => {
-    timelineRef.current = timeline;
-  }, [timeline]);
-
-  const toggleReaction = useCallback(
-    async (commentId: string, emoji: string) => {
-      if (!userId) return;
-      const entry = timelineRef.current.find((e) => e.id === commentId);
-      const existing: Reaction | undefined = (entry?.reactions ?? []).find(
-        (r) =>
-          r.emoji === emoji &&
-          r.actor_type === "member" &&
-          r.actor_id === userId,
-      );
-      toggleCommentReaction({ commentId, emoji, existing });
-    },
-    [userId, toggleCommentReaction],
-  );
-
   return {
-    timeline: optimisticTimeline,
+    timeline,
     loading: loading || (needsThread && threadQuery.isPending),
     /**
      * When the cached timeline was last written (Query's `dataUpdatedAt`).
@@ -523,6 +356,5 @@ export function useIssueTimeline(issueId: string, userId?: string, focusCommentI
     editComment,
     deleteComment,
     toggleResolveComment,
-    toggleReaction,
   };
 }

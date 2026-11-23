@@ -1,6 +1,7 @@
 import type { Issue, IssueStatus, IssuePriority, IssueAssigneeGroup, ProjectStatus, PropertyFilterValue, PropertyOperatorFilter } from "@multica/core/types";
 import type {
   ActorFilterValue,
+  AssigneeFilterValue,
   IssueRelationFilter,
   NegatableFilterDimension,
 } from "@multica/core/issues/stores/view-store";
@@ -20,7 +21,7 @@ import type { IssueActivityState } from "../surface/activity";
 export interface IssueFilters {
   statusFilters: IssueStatus[];
   priorityFilters: IssuePriority[];
-  assigneeFilters: ActorFilterValue[];
+  assigneeFilters: AssigneeFilterValue[];
   includeNoAssignee: boolean;
   /** Keeps an explicitly active assignee predicate distinct from the normal
    *  empty-array = no-filter state. When true with no selected assignees and
@@ -71,7 +72,7 @@ export interface IssueFilters {
 export interface IssueFilterState {
   statusFilters: IssueStatus[];
   priorityFilters: IssuePriority[];
-  assigneeFilters: ActorFilterValue[];
+  assigneeFilters: AssigneeFilterValue[];
   includeNoAssignee: boolean;
   /** See IssueFilters.assigneeFilterActive. */
   assigneeFilterActive?: boolean;
@@ -121,10 +122,6 @@ export interface IssueRelationContext {
   /** Agents the viewer owns. Loaded only while a filter tests "my_agents";
    *  without it that relation is left to the server for agent rows. */
   myAgentIds?: ReadonlySet<string>;
-  /** Squads led by an agent the viewer owns, the other half of
-   *  "my_agents"; without it that relation is left to the server for squad
-   *  rows. */
-  mySquadIds?: ReadonlySet<string>;
   /** Issues the viewer subscribes to. Loaded only while a filter tests the
    *  relation; without it "subscribed" is left to the server. */
   subscribedIssueIds?: ReadonlySet<string>;
@@ -406,19 +403,12 @@ function issueMatchesRelation(
   switch (relation) {
     case "subscribed":
       return context.subscribedIssueIds?.has(issue.id);
-    case "assigned":
-      return issue.assignee_type === "member" && issue.assignee_id === context.userId;
     case "created":
       if (issue.creator_type === "member") return issue.creator_id === context.userId;
       return issue.requester_id === undefined ? undefined : issue.requester_id === context.userId;
     case "my_agents": {
-      const ids =
-        issue.assignee_type === "agent"
-          ? context.myAgentIds
-          : issue.assignee_type === "squad"
-            ? context.mySquadIds
-            : null;
-      if (ids === null) return false;
+      if (issue.assignee_type !== "agent") return false;
+      const ids = context.myAgentIds;
       if (!ids) return undefined;
       return !!issue.assignee_id && ids.has(issue.assignee_id);
     }

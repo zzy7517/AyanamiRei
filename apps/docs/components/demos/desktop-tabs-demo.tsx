@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronsUpDown, Inbox, ListTodo, Pin, PinOff, UserRound, X } from "@multica/ui/icons";
+import { Check, ChevronsUpDown, Inbox, ListTodo, Pin, PinOff, X } from "@multica/ui/icons";
 import { cn } from "@multica/ui/lib/utils";
 import { CoachMark, DemoFrame, useDemoCopy, useStartWhenVisible } from "./demo-kit";
 
@@ -14,7 +14,7 @@ const copy = {
     title: "Desktop · Each workspace keeps its own tabs",
     workspaces: { a: "Ops team", b: "Marketing team" } as Record<Ws, string>,
     workspacesLabel: "Workspaces",
-    nav: { inbox: "Inbox", myIssues: "My Issues", issues: "Issues" },
+    nav: { inbox: "Inbox", issues: "Issues" },
     issues: {
       a: [
         { id: "OPS-31", title: "Travel expense rules", status: "in_progress" },
@@ -46,7 +46,7 @@ const copy = {
     title: "Desktop · 每个工作区保留自己的标签页",
     workspaces: { a: "运营团队", b: "市场团队" } as Record<Ws, string>,
     workspacesLabel: "工作区",
-    nav: { inbox: "收件箱", myIssues: "我的任务", issues: "任务" },
+    nav: { inbox: "收件箱", issues: "任务" },
     issues: {
       a: [
         { id: "OPS-31", title: "差旅报销规则", status: "in_progress" },
@@ -78,7 +78,7 @@ const copy = {
     title: "Desktop · ワークスペースごとにタブを保持",
     workspaces: { a: "運用チーム", b: "マーケティングチーム" } as Record<Ws, string>,
     workspacesLabel: "ワークスペース",
-    nav: { inbox: "インボックス", myIssues: "マイタスク", issues: "タスク" },
+    nav: { inbox: "インボックス", issues: "タスク" },
     issues: {
       a: [
         { id: "OPS-31", title: "出張旅費の精算ルール", status: "in_progress" },
@@ -110,7 +110,7 @@ const copy = {
     title: "Desktop · 워크스페이스마다 탭을 따로 보관",
     workspaces: { a: "운영팀", b: "마케팅팀" } as Record<Ws, string>,
     workspacesLabel: "워크스페이스",
-    nav: { inbox: "인박스", myIssues: "내 태스크", issues: "태스크" },
+    nav: { inbox: "인박스", issues: "태스크" },
     issues: {
       a: [
         { id: "OPS-31", title: "출장비 정산 규칙", status: "in_progress" },
@@ -142,7 +142,7 @@ const copy = {
     title: "Desktop · Chaque espace de travail garde ses onglets",
     workspaces: { a: "Équipe ops", b: "Équipe marketing" } as Record<Ws, string>,
     workspacesLabel: "Espaces de travail",
-    nav: { inbox: "Boîte de réception", myIssues: "Mes tâches", issues: "Tâches" },
+    nav: { inbox: "Boîte de réception", issues: "Tâches" },
     issues: {
       a: [
         { id: "OPS-31", title: "Règles des notes de frais", status: "in_progress" },
@@ -316,7 +316,6 @@ export function DesktopTabsDemo() {
           <ul aria-hidden className="m-0 mt-10 hidden list-none flex-col gap-0.5 p-0 text-caption text-muted-foreground sm:flex">
             {[
               { Icon: Inbox, label: t.nav.inbox },
-              { Icon: UserRound, label: t.nav.myIssues },
               { Icon: ListTodo, label: t.nav.issues },
             ].map(({ Icon, label }) => (
               <li key={label} className="m-0 flex items-center gap-2 rounded-md px-1.5 py-1">

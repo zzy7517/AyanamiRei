@@ -24,15 +24,12 @@ describe("paths.workspace(slug)", () => {
     expect(ws.chatSession("session one")).toBe(
       "/acme/chat?session=session%20one",
     );
-    expect(ws.myIssues()).toBe("/acme/my-issues");
     expect(ws.runtimes()).toBe("/acme/runtimes");
     expect(ws.runtimeSettings("machine/runtime", "runtime one")).toBe(
       "/acme/runtimes/machine%2Fruntime/runtime/runtime%20one",
     );
     expect(ws.skills()).toBe("/acme/skills");
     expect(ws.skillDetail("skl_123")).toBe("/acme/skills/skl_123");
-    expect(ws.squads()).toBe("/acme/squads");
-    expect(ws.squadDetail("sq_1")).toBe("/acme/squads/sq_1");
     expect(ws.settings()).toBe("/acme/settings");
     expect(ws.attachmentPreview("att_42")).toBe("/acme/attachments/att_42/preview");
   });
@@ -62,6 +59,19 @@ describe("paths.workspace(slug)", () => {
     ws.issueDeliverable(issue.identifier, "report.html");
     // @ts-expect-error -- `identifier` must be stated, even as null
     issueRouteRef({ id: issue.id });
+  });
+});
+
+describe("terminal addresses", () => {
+  it("name a shell by its directory and an agent's session by its task and tree", () => {
+    const ws = paths.workspace("acme");
+    expect(ws.terminalIn("/srv/app")).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp");
+    expect(ws.terminalIn("/srv/app", "t-1")).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp&t=t-1");
+    expect(ws.terminalAgent("issue-1", "tree-1")).toBe("/acme/terminal?issue=issue-1&tree=tree-1");
+    expect(ws.terminalAgent("issue-1", "tree-1", "t-1")).toBe(
+      "/acme/terminal?issue=issue-1&tree=tree-1&t=t-1",
+    );
+    expect(ws.terminalAgent("a/b", "c d")).toBe("/acme/terminal?issue=a%2Fb&tree=c%20d");
   });
 });
 

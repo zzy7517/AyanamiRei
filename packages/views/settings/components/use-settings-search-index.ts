@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { useFeatureEnabled } from "@multica/core/config";
+import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
 import { useT } from "../../i18n";
 import type { SettingsSearchEntry } from "./settings-search";
 import { CHANNEL_INTEGRATIONS } from "./settings-navigation";
@@ -10,8 +12,6 @@ const NOTIFICATION_GROUPS = [
   "assignments",
   "status_changes",
   "comments",
-  "mentions",
-  "reactions",
   "updates",
   "new_issues",
   "agent_activity",
@@ -35,6 +35,7 @@ export function useSettingsSearchIndex(
   pages: readonly SettingsSearchPage[],
 ): SettingsSearchIndexEntry[] {
   const { t } = useT("settings");
+  const taskSessions = useFeatureEnabled(TASK_SESSIONS_V1_FLAG, false);
   return useMemo(() => {
     const visible = new Set(pages.map((page) => page.value));
     const rows: SettingsSearchIndexEntry[] = [
@@ -318,15 +319,9 @@ export function useSettingsSearchIndex(
         anchor: "issue-prefix",
         title: t(($) => $.workspace.issue_prefix_label),
       },
-      {
-        tab: "workspace",
-        anchor: "private-projects",
-        title: t(($) => $.private_projects.title),
-      },
       { tab: "workspace", anchor: "leave", title: t(($) => $.workspace.leave_title) },
       { tab: "workspace", anchor: "delete", title: t(($) => $.workspace.delete_title) },
       { tab: "members", anchor: "invitations", title: t(($) => $.members.pending_label) },
-      { tab: "members", anchor: "links", title: t(($) => $.members.share_links_label) },
       {
         tab: "labels",
         title: t(($) => $.page.tabs.labels),
@@ -377,6 +372,17 @@ export function useSettingsSearchIndex(
         title: t(($) => $.pr_merge_status.label),
         description: t(($) => $.pr_merge_status.description),
       },
+      // The worktrees of tasks exist only while task sessions do.
+      ...(taskSessions
+        ? [
+            {
+              tab: "code",
+              anchor: "task-tree-retention",
+              title: t(($) => $.code.task_tree_retention.label),
+              description: t(($) => $.code.task_tree_retention.description),
+            },
+          ]
+        : []),
       ...CHANNEL_INTEGRATIONS.map((channel) => ({
         tab: "channels",
         integration: channel,
@@ -405,5 +411,5 @@ export function useSettingsSearchIndex(
       ...pageEntries,
       ...rows.filter((row) => row.anchor || row.integration),
     ].filter((entry) => visible.has(entry.tab));
-  }, [pages, t]);
+  }, [pages, t, taskSessions]);
 }

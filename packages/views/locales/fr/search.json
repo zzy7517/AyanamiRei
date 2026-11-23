@@ -10,7 +10,6 @@
     "commands": "Commandes",
     "members": "Membres",
     "agents": "Agents",
-    "squads": "Squads",
     "projects": "Projets",
     "issues": "Tâches",
     "autopilots": "Automatisations",
@@ -150,7 +149,6 @@
     "project": "Projet",
     "agent": "Agent",
     "autopilot": "Automatisation",
-    "squad": "Squad",
     "member": "Membre"
   },
   "footer": {

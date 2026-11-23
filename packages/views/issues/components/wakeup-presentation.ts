@@ -134,10 +134,6 @@ export function useWakeupText() {
     "comment.unresolved": t(($) => $.wakeups.conditions.comment_unresolved, {
       agent,
     }),
-    "reaction.added": t(($) => $.wakeups.conditions.reaction_added, { agent }),
-    "reaction.removed": t(($) => $.wakeups.conditions.reaction_removed, {
-      agent,
-    }),
     "attachment.attached": t(($) => $.wakeups.conditions.attachment_attached, {
       agent,
     }),

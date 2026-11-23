@@ -2,8 +2,9 @@
  * Mobile-owned issue cache patchers, called by record and listing subscriptions.
  * Use mobile's key factories and cache shapes rather than web's bucketed caches.
  * Detail stores an Issue; timelines store chronological TimelineEntry arrays;
- * My Issues stores one Issue array per scope/filter and patches all matching keys;
- * the workspace list stores a single client-filtered Issue array.
+ * the viewer's created-issues lists store one Issue array per filter and patch
+ * all matching keys; the workspace list stores a single client-filtered Issue
+ * array.
  */
 import type { QueryClient } from "@tanstack/react-query";
 import type {
@@ -361,9 +362,9 @@ export function removeCommentCascade(
   );
 }
 
-// My Issues list (flat Issue[] across many keys)
+// The viewer's own list (flat Issue[] across its cached filters)
 
-export function patchMyIssuesList(
+export function patchMyIssueList(
   qc: QueryClient,
   wsId: string,
   partial: Partial<Issue> & { id: string },
@@ -371,9 +372,8 @@ export function patchMyIssuesList(
   if (partial.revision === undefined) {
     qc.invalidateQueries({ queryKey: issueKeys.myAll(wsId) });
   }
-  // myList is keyed by (wsId, scope, filter); we don't know which entries
-  // the issue belongs to, so update every cached one. Any not-yet-loaded
-  // list will fetch fresh on mount.
+  // myList is keyed by (wsId, filter); update every cached one. Any
+  // not-yet-loaded list will fetch fresh on mount.
   qc.setQueriesData<Issue[]>({ queryKey: issueKeys.myAll(wsId) }, (old) =>
     old ? old.map((i) =>
       i.id === partial.id && acceptsRevision(i.revision, partial.revision)
@@ -384,7 +384,7 @@ export function patchMyIssuesList(
   reconcileIssueFullSnapshotRevision(qc, wsId, partial.id, partial.revision);
 }
 
-export function removeFromMyIssuesList(
+export function removeFromMyIssueList(
   qc: QueryClient,
   wsId: string,
   issueId: string,

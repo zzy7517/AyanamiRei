@@ -39,7 +39,6 @@ function renderFilterMenu(setup?: (store: StoreApi<IssueViewState>) => void, wit
       { id: "agent-lambda", name: "Lambda", archived_at: null, owner_id: "u-1" },
       { id: "agent-eve", name: "Eve", archived_at: null, owner_id: "u-1" },
     ],
-    listSquads: async () => [],
     listProjects: async () => ({ projects: [
       { id: "project-launch", title: "Launch Plan" },
       { id: "project-maintenance", title: "Maintenance" },

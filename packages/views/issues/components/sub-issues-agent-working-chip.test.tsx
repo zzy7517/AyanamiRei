@@ -102,11 +102,9 @@ describe("SubIssuesAgentWorkingChip", () => {
 
     render(<SubIssuesAgentWorkingChip parentIssueId="parent-1" />);
 
-    // type=issue plus the parent id, and no My Issues relation. Getting this
-    // wrong silently widens the chip to the whole workspace.
-    expect(mockState.optionsCalls).toEqual([
-      ["ws-1", "issue", undefined, "parent-1"],
-    ]);
+    // type=issue plus the parent id. Getting this wrong silently widens
+    // the chip to the whole workspace.
+    expect(mockState.optionsCalls).toEqual([["ws-1", "issue", "parent-1"]]);
   });
 
   it("counts the agents the server returned", () => {

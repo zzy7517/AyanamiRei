@@ -1,10 +1,7 @@
 {
   "tabs": {
     "all": "All",
-    "created": "Created",
-    "assigned": "Assigned",
-    "agents": "Agents",
-    "members": "Members"
+    "agents": "Agents"
   },
   "status": {
     "queued": "Queued",
@@ -105,13 +102,6 @@
     "tasks_completed_other": "completed {{count}} runs",
     "tasks_failed_one": "failed {{count}} run",
     "tasks_failed_other": "failed {{count}} runs",
-    "squad_action_with_reason": "evaluated and took action: {{reason}}",
-    "squad_action": "evaluated and took action",
-    "squad_no_action_with_reason": "evaluated: no action needed ({{reason}})",
-    "squad_no_action": "evaluated: no action needed",
-    "squad_failed_with_reason": "evaluation failed: {{reason}}",
-    "squad_failed": "evaluation failed",
-    "squad_evaluated": "evaluated the squad trigger",
     "commented": "commented"
   },
   "errors": {
@@ -120,11 +110,8 @@
   },
   "empty": {
     "filtered": "No issues match the current filters.",
-    "assigned": "No issues assigned to you.",
-    "created": "You haven't created any issues.",
-    "agents": "No issues assigned to agents or squads.",
-    "all": "No issues in this workspace.",
-    "members": "No issues assigned to a member."
+    "agents": "No issues assigned to agents.",
+    "all": "No issues in this workspace."
   },
   "menu": {
     "pin": "Pin",
@@ -168,25 +155,20 @@
     "unassigned": "Unassigned",
     "agent": "Agent",
     "needs_runtime": "Needs runtime",
-    "leader_needs_runtime": "Leader needs runtime",
-    "squad": "Squad",
     "no_matches": "No matches.",
     "no_project": "No project",
     "no_projects": "No projects in this workspace yet.",
     "no_labels": "No labels in this workspace yet.",
     "create_label": "Create \"{{name}}\"",
     "no_members_agents": "No members or agents in this workspace yet.",
-    "people": "People",
     "agents": "Agents",
-    "squads": "Squads",
     "issues": "Issues",
-    "everyone": "Everyone (@all)",
     "unknown": "Unknown",
-    "search_people": "Search people",
+    "search_agents": "Search agents",
     "search_projects": "Search projects",
     "search_labels": "Search labels",
     "search_members_agents": "Search members or agents",
-    "search_people_issues": "Search people or issues",
+    "search_agents_issues": "Search agents or issues",
     "reference_issue": "Reference an issue",
     "clear": "Clear"
   },
@@ -210,11 +192,8 @@
     "composer_pill": "Add a comment, type @ to mention..."
   },
   "suggestions": {
-    "everyone": "Everyone",
-    "all": "All",
-    "member": "Member",
     "recent": "Recent",
-    "my_issues": "My issues"
+    "created_by_me": "Created by me"
   },
   "resolved": {
     "a11y_folded_one": "Resolved thread by {{authors}}, {{count}} message. Tap to expand.",

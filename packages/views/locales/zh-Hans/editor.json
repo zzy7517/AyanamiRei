@@ -100,13 +100,11 @@
     "copy_failed": "复制失败"
   },
   "mention": {
-    "group_users": "成员",
+    "group_agents": "智能体",
     "group_issues": "任务",
     "group_projects": "项目",
     "group_docs": "文档",
-    "all_members": "所有成员",
     "agent_badge": "智能体",
-    "squad_badge": "小队",
     "searching": "搜索中...",
     "no_results": "无结果",
     "group_current": "当前页面",

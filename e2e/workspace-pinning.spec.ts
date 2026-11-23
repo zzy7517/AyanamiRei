@@ -19,7 +19,7 @@ test("workspace unread stays visible before pinning and after unpinning", async 
     try {
       await db.query(
         `INSERT INTO inbox_item (workspace_id, recipient_type, recipient_id, type, title)
-         VALUES ($1, 'member', $2, 'mention', 'Workspace unread regression')`,
+         VALUES ($1, 'member', $2, 'new_comment', 'Workspace unread regression')`,
         [target.id, login.user.id],
       );
     } finally {

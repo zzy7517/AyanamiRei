@@ -96,11 +96,7 @@ import { propertyListOptions } from "@multica/core/properties";
 import { projectListOptions } from "@multica/core/projects/queries";
 import { useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
 import { buildActorNameResolver, useActorName } from "@multica/core/workspace/hooks";
-import {
-  agentListOptions,
-  memberListOptions,
-  squadListOptions,
-} from "@multica/core/workspace/queries";
+import { agentListOptions, memberListOptions } from "@multica/core/workspace/queries";
 import type {
   Issue,
   IssueProperty,
@@ -167,6 +163,7 @@ import type { ChildProgress } from "./list-row";
 import { ListLoadMoreFooter } from "./list-load-more-footer";
 import { IssueAgentActivityIndicator } from "./issue-agent-activity-indicator";
 import { IssueDuplicateOfMarker } from "./issue-duplicates";
+import { AgentReplyMarker } from "./agent-reply-marker";
 import { IssuePullRequestChips, useIssuePullRequestSummaries } from "./pull-request-chips";
 import { issuePullRequestSummariesOptions } from "@multica/core/github";
 
@@ -785,6 +782,7 @@ export function InlineTitle({
             {row.issue.title}
           </button>
           <IssueDuplicateOfMarker issue={row.issue} />
+          <AgentReplyMarker issue={row.issue} />
           {/* Lifted out of the flex flow, the way SidebarMenuAction is. Laid
             * out inline these two reserved ~40px of the title column for
             * buttons that are invisible until hovered — and title is the
@@ -2408,9 +2406,8 @@ export function TableView({
           ? Promise.all([
               queryClient.fetchQuery(memberListOptions(wsId)),
               queryClient.fetchQuery(agentListOptions(wsId)),
-              queryClient.fetchQuery(squadListOptions(wsId)),
-            ]).then(([members, agents, squads]) =>
-              buildActorNameResolver({ members, agents, squads }),
+            ]).then(([members, agents]) =>
+              buildActorNameResolver({ members, agents }),
             )
           : Promise.resolve(getActorName),
         csvColumns.some((column) => column.key === "pull_requests")

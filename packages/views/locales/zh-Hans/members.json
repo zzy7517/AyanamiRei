@@ -15,7 +15,6 @@
     "role": "角色",
     "email": "邮箱",
     "joined": "加入时间",
-    "relation": "关系",
     "breadcrumb_fallback": "成员",
     "not_found_title": "未找到该成员",
     "not_found_description": "该成员可能已经离开工作区。"

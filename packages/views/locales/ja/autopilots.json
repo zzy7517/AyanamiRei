@@ -323,7 +323,7 @@
     "section_agent": "エージェント",
     "section_assignee": "担当者",
     "select_agent": "エージェントを選択",
-    "select_assignee": "エージェントまたはスクワッドを選択",
+    "select_assignee": "エージェントを選択",
     "section_project": "プロジェクト",
     "project_hint": "実行環境も決まります — このプロジェクトのリポジトリまたはローカルディレクトリ",
     "no_project": "プロジェクトなし",
@@ -385,7 +385,7 @@
     "schedule_empty": "スケジュールはありません。このオートパイロットは手動で実行したときだけ動きます。",
     "schedule_add": "スケジュールを追加",
     "error_title_required": "オートパイロット名を入力してください。",
-    "error_assignee_required": "実行するエージェントまたはスクワッドを選択してください。",
+    "error_assignee_required": "実行するエージェントを選択してください。",
     "output_modes": {
       "create_issue": {
         "label": "タスクを作成",
@@ -485,13 +485,11 @@
     }
   },
   "agent_picker": {
-    "filter_placeholder": "エージェントまたはスクワッドを絞り込み...",
+    "filter_placeholder": "エージェントを絞り込み...",
     "select_agent": "エージェントを選択",
-    "select_assignee": "エージェントまたはスクワッドを選択",
+    "select_assignee": "エージェントを選択",
     "agents_group": "エージェント",
-    "squads_group": "スクワッド",
-    "agent_runtime_required": "このエージェントを選択する前にランタイムをバインドしてください",
-    "squad_runtime_required": "選択する前に、このスクワッドのリーダーにランタイムをバインドしてください"
+    "agent_runtime_required": "このエージェントを選択する前にランタイムをバインドしてください"
   },
   "timezone_picker": {
     "search_placeholder": "タイムゾーンを検索..."
@@ -599,7 +597,7 @@
     },
     "defaults": {
       "title": "サブタスクが終わったとき",
-      "description": "あるステージが終わり、後のステージが待っているときに親タスクの担当者を起こし、すべてのサブタスクが終わったときにもう一度起こします。担当者がメンバーの場合は受信トレイに通知します。",
+      "description": "あるステージが終わり、後のステージが待っているときに親タスクの担当者を起こし、すべてのサブタスクが終わったときにもう一度起こします。",
       "badge": "ワークスペースの既定値",
       "enabled": "既定でオン",
       "instruction": "既定の指示",

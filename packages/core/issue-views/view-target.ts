@@ -24,17 +24,11 @@ export function issueViewTarget(
   paths: WorkspacePaths,
 ): IssueViewTarget {
   const scope: IssueViewScope =
-    view.scope_type === "my"
-      ? { scope_type: "my" }
-      : view.scope_type === "project" && view.scope_id
-        ? { scope_type: "project", scope_id: view.scope_id }
-        : { scope_type: "workspace" };
+    view.scope_type === "project" && view.scope_id
+      ? { scope_type: "project", scope_id: view.scope_id }
+      : { scope_type: "workspace" };
   const path =
-    scope.scope_type === "my"
-      ? paths.myIssues()
-      : scope.scope_type === "project"
-        ? paths.projectDetail(scope.scope_id!)
-        : paths.issues();
+    scope.scope_type === "project" ? paths.projectDetail(scope.scope_id!) : paths.issues();
   return {
     scope,
     path,

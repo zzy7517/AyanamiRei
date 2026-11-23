@@ -4,12 +4,9 @@
  * and the chat composer).
  *
  * `?mode=` controls which sections render:
- *   - "comment" (default) — @all + People + Agents + Squads + Issues.
- *     The comment composer offers the full surface; mentions notify the
- *     mentioned actor.
- *   - "chat" — Issues only. Chat is user ↔ single agent, so member /
- *     agent / squad / @all mentions are noise (and would generate
- *     unintended notifications). Issues remain useful as "reference this
+ *   - "comment" (default) — Agents + Issues.
+ *   - "chat" — Issues only. Chat is user ↔ single agent, so an agent
+ *     mention there is noise. Issues remain useful as "reference this
  *     ticket for the agent's context".
  *
  * Lives at workspace level (not nested under issue/[id]) because the chat
@@ -30,7 +27,7 @@ export default function MentionPickerRoute() {
   const placeholder =
     mode === "chat"
       ? t("picker.reference_issue")
-      : t("picker.search_people_issues");
+      : t("picker.search_agents_issues");
   const query = useNativeSearchBar(placeholder, { autoFocus: true });
   return <MentionPickerBody mode={mode} query={query} />;
 }

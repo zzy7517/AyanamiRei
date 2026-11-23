@@ -35,6 +35,11 @@ import { archivedInboxQuery, type ArchivedInboxFilters } from "../inbox/filters"
 import type { ArchivedInboxPage, ArchivedInboxFacets } from "../types/inbox";
 import { parseQoderConnection, parseQoderCatalog, type QoderInput } from "../runtimes/qoder-schema";
 import { configStore } from "../config";
+import {
+  TERMINAL_TICKET_ENDPOINT,
+  TerminalTicketSchema,
+  type TerminalTicket,
+} from "../terminal/protocol";
 import type {
   Issue,
   IssuePriority,
@@ -77,7 +82,6 @@ import type {
   AgentActivityBucket,
   AgentRunCount,
   WorkspaceWorkingAgent,
-  WorkspaceWorkingAgentMineRelation,
   WorkspaceWorkingAgentType,
   AgentRuntime,
   RuntimeProfile,
@@ -92,8 +96,6 @@ import type {
   CommentTriggerPreview,
   IssueTriggerPreview,
   IssueTriggerPreviewParams,
-  Reaction,
-  IssueReaction,
   Workspace,
   WorkspaceRepo,
   WorkspaceMcpServer,
@@ -149,8 +151,6 @@ import type {
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsResponse,
-  ListProjectMembersResponse,
-  ListPrivateProjectsResponse,
   ProjectResource,
   CreateProjectResourceRequest,
   UpdateProjectResourceRequest,
@@ -189,8 +189,6 @@ import type {
   PinnedItemType,
   ReorderPinsRequest,
   Invitation,
-  ShareLink,
-  ShareLinkInfo,
   Autopilot,
   AutopilotTrigger,
   AutopilotRun,
@@ -255,6 +253,9 @@ import type {
   AppActionPolicy,
   AppCatalogMode,
   UpdateAgentAppsRequest,
+  IssueProjectScope,
+  IssueProjectTree,
+  ReplaceIssueProjectScopeRequest,
   SlackInstallation,
   ListSlackInstallationsResponse,
   RegisterSlackBYORequest,
@@ -275,9 +276,6 @@ import type {
   ListTelegramInstallationsResponse,
   RegisterTelegramRequest,
   RedeemTelegramBindingTokenResponse,
-  Squad,
-  SquadMember,
-  SquadMemberStatusListResponse,
   BillingBalance,
   BillingTransactionsPage,
   BillingBatchesPage,
@@ -383,9 +381,6 @@ import {
   EMPTY_LIST_ISSUES_RESPONSE,
   EMPTY_SEARCH_ISSUES_RESPONSE,
   EMPTY_SEARCH_PROJECTS_RESPONSE,
-  EMPTY_SQUAD,
-  EMPTY_SQUAD_LIST,
-  EMPTY_SQUAD_MEMBER_STATUS_LIST,
   EMPTY_TIMELINE_ENTRIES,
   EMPTY_USER,
   EMPTY_LIST_WEBHOOK_DELIVERIES_RESPONSE,
@@ -427,8 +422,6 @@ import {
   SearchIssuesResponseSchema,
   ProjectSchema,
   ArchiveProjectResponseSchema,
-  ListProjectMembersResponseSchema,
-  ListPrivateProjectsResponseSchema,
   ProjectSubscriptionSchema,
   ListProjectsResponseSchema,
   EMPTY_PROJECT,
@@ -437,9 +430,6 @@ import {
   SearchIndexManifestSchema,
   SearchIndexSnapshotPageSchema,
   SearchIndexChangesSchema,
-  SquadSchema,
-  SquadListSchema,
-  SquadMemberStatusListResponseSchema,
   SubscribersListSchema,
   TaskMessageListSchema,
   TaskContextReceiptResponseSchema,
@@ -513,6 +503,10 @@ import {
   EMPTY_INBOX_UNREAD_SUMMARY,
   IssueUnreadPageSchema,
   AgentAppsResponseSchema,
+  IssueProjectScopeSchema,
+  IssueProjectTreeResponseSchema,
+  IssueAgentReplyResponseSchema,
+  EMPTY_ISSUE_PROJECT_SCOPE,
   AppActivityResponseSchema,
   AppCatalogResponseSchema,
   AppConnectInitSchema,
@@ -529,7 +523,6 @@ import {
   TeamAppImpactSchema,
   EMPTY_ISSUE_UNREAD_PAGE,
   SubscribedIssueIdsSchema,
-  InvolvedSquadIdsSchema,
   IssueInboxReadSchema,
   InboxDeleteSchema,
   InboxItemListSchema,
@@ -620,13 +613,6 @@ import {
   PluginPreviewSchema,
   WorkspaceMcpServerListSchema,
   WorkspaceMcpServerSchema,
-  ShareLinkSchema,
-  ShareLinkListResponseSchema,
-  ShareLinkInfoSchema,
-  JoinShareLinkResponseSchema,
-  EMPTY_SHARE_LINK,
-  EMPTY_SHARE_LINK_INFO,
-  EMPTY_JOIN_SHARE_LINK_RESPONSE,
   WorkspaceListItemSchema,
   WorkspacePinnedSchema,
   type IssueView,
@@ -898,14 +884,6 @@ function skillFromImportResult(raw: unknown, endpoint: string): Skill {
 export const CHAT_DRAFT_RESTORE_CAPABILITY = "chat-draft-restore-v1";
 
 /**
- * Advertised in X-Client-Capabilities on member and invitation lists: without
- * it the server leaves guest rows out, because clients released before guests
- * crash on the unknown role. Must stay in sync with
- * protocol.AppCapabilityWorkspaceGuestsV1.
- */
-export const WORKSPACE_GUESTS_CAPABILITY = "workspace-guests-v1";
-
-/**
  * Body shared by both unsubscribe endpoints: an omitted target means "the
  * caller", which the server resolves from the request actor.
  */
@@ -1107,6 +1085,19 @@ export class ApiClient {
       DocCollabTicketSchema,
       { enabled: false },
       { endpoint: "POST /api/docs/{id}/collab-ticket" },
+    );
+  }
+  /**
+   * A single-use, short-lived ticket for the terminal socket, or null when the
+   * server's answer carries no usable ticket. Rejects with an `ApiError` when
+   * the endpoint refuses (404 while the `terminal_v1` flag is off).
+   */
+  async createTerminalTicket(): Promise<TerminalTicket | null> {
+    return parseWithFallback<TerminalTicket | null>(
+      await this.fetch<unknown>(TERMINAL_TICKET_ENDPOINT, { method: "POST" }),
+      TerminalTicketSchema,
+      null,
+      { endpoint: "POST /api/terminal/ticket" },
     );
   }
   async getDocVersion(id: string, number: number): Promise<DocVersion | null> {
@@ -1547,7 +1538,6 @@ export class ApiClient {
     if (params?.assignee_ids?.length) search.set("assignee_ids", params.assignee_ids.join(","));
     if (params?.assignee_types?.length) search.set("assignee_types", params.assignee_types.join(","));
     if (params?.creator_id) search.set("creator_id", params.creator_id);
-    if (params?.created_by_user_id) search.set("created_by_user_id", params.created_by_user_id);
     if (params?.project_id) search.set("project_id", params.project_id);
     if (params?.assignee_filters?.length) {
       search.set("assignee_filters", params.assignee_filters.map((f) => `${f.type}:${f.id}`).join(","));
@@ -1564,7 +1554,6 @@ export class ApiClient {
     // `ids=` — the server treats a PRESENT-but-empty list as an empty window
     // (nothing running), while an absent param means no restriction.
     if (params?.ids) search.set("ids", params.ids.join(","));
-    if (params?.involves_user_id) search.set("involves_user_id", params.involves_user_id);
     if (params?.metadata && Object.keys(params.metadata).length > 0) {
       search.set("metadata", JSON.stringify(params.metadata));
     }
@@ -1587,23 +1576,12 @@ export class ApiClient {
         method: "POST",
         body: JSON.stringify(Object.fromEntries(search)),
       });
-      if (params?.created_by_user_id && (
-        !raw || typeof raw !== "object" || !("created_by_user_id" in raw) ||
-        raw.created_by_user_id !== params.created_by_user_id
-      )) {
-        return this.listIssues({ ...params, created_by_user_id: undefined, creator_id: params.creator_id ?? params.created_by_user_id });
-      }
       return parseWithFallback(raw, ListIssuesResponseSchema, EMPTY_LIST_ISSUES_RESPONSE, {
         endpoint: "POST /api/issues/query",
       });
     }
     const path = `/api/issues?${search}`;
     const raw = await this.fetch<unknown>(path);
-    // Older servers silently ignore unknown query parameters. Never expose
-    // their unfiltered response as a Created list.
-    if (params?.created_by_user_id && (!raw || typeof raw !== "object" || !("created_by_user_id" in raw) || raw.created_by_user_id !== params.created_by_user_id)) {
-      return this.listIssues({ ...params, created_by_user_id: undefined, creator_id: params.creator_id ?? params.created_by_user_id });
-    }
     return parseWithFallback(raw, ListIssuesResponseSchema, EMPTY_LIST_ISSUES_RESPONSE, {
       endpoint: "GET /api/issues",
     });
@@ -1620,9 +1598,7 @@ export class ApiClient {
     if (params.assignee_id) search.set("assignee_id", params.assignee_id);
     if (params.assignee_ids?.length) search.set("assignee_ids", params.assignee_ids.join(","));
     if (params.creator_id) search.set("creator_id", params.creator_id);
-    if (params.created_by_user_id) search.set("created_by_user_id", params.created_by_user_id);
     if (params.project_id) search.set("project_id", params.project_id);
-    if (params.involves_user_id) search.set("involves_user_id", params.involves_user_id);
     if (params.metadata && Object.keys(params.metadata).length > 0) {
       search.set("metadata", JSON.stringify(params.metadata));
     }
@@ -1647,9 +1623,6 @@ export class ApiClient {
     if (params.sort_by) search.set("sort", params.sort_by);
     if (params.sort_direction) search.set("direction", params.sort_direction);
     const raw = await this.fetch<unknown>(`/api/issues/grouped?${search}`);
-    if (params.created_by_user_id && (!raw || typeof raw !== "object" || !("created_by_user_id" in raw) || raw.created_by_user_id !== params.created_by_user_id)) {
-      return this.listGroupedIssues({ ...params, created_by_user_id: undefined, creator_id: params.creator_id ?? params.created_by_user_id });
-    }
     return parseWithFallback(raw, GroupedIssuesResponseSchema, EMPTY_GROUPED_ISSUES_RESPONSE, {
       endpoint: "GET /api/issues/grouped",
     });
@@ -1919,7 +1892,6 @@ export class ApiClient {
 
   async quickCreateIssue(data: {
     agent_id?: string;
-    squad_id?: string;
     prompt: string;
     priority?: IssuePriority;
     due_date?: string;
@@ -2028,6 +2000,64 @@ export class ApiClient {
     return this.fetch(`/api/issues/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    });
+  }
+
+  /** A task's "project + branch" pairs, in their order. */
+  async getIssueProjectScope(issueId: string): Promise<IssueProjectScope> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/project-scope`);
+    return parseWithFallback(raw, IssueProjectScopeSchema, EMPTY_ISSUE_PROJECT_SCOPE, {
+      endpoint: "GET /api/issues/:id/project-scope",
+    });
+  }
+
+  /** Replaces a task's pairs wholesale, in their order. Resolves to null when
+   *  the write succeeded but its response was malformed: the stored pairs are
+   *  then unknown, not none, so the caller refetches rather than caches. */
+  async replaceIssueProjectScope(
+    issueId: string,
+    data: ReplaceIssueProjectScopeRequest,
+  ): Promise<IssueProjectScope | null> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/project-scope`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    return parseWithFallback(raw, IssueProjectScopeSchema, null, {
+      endpoint: "PUT /api/issues/:id/project-scope",
+    });
+  }
+
+  /** Marks a task's tree deleted; the daemon then removes it from the disk,
+   *  so nothing is known about the new state until the scope is read again.
+   *  Rejects with an `ApiError` when the server refuses (404 while the
+   *  `task_sessions_v1` flag is off). */
+  async deleteIssueProjectTree(issueId: string, treeId: string): Promise<void> {
+    await this.fetch<unknown>(`/api/issues/${issueId}/project-scope/${treeId}/tree`, {
+      method: "DELETE",
+    });
+  }
+
+  /** Asks for a deleted or failed tree to be built again. Resolves to the tree
+   *  as the server left it, or null when the write went through but its answer
+   *  was malformed: the tree is then unknown, not gone, so the caller refetches
+   *  rather than caches. */
+  async rebuildIssueProjectTree(issueId: string, treeId: string): Promise<IssueProjectTree | null> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/project-scope/${treeId}/rebuild`, {
+      method: "POST",
+    });
+    return parseWithFallback<{ tree: IssueProjectTree | null }>(raw, IssueProjectTreeResponseSchema, { tree: null }, {
+      endpoint: "POST /api/issues/:id/project-scope/:treeId/rebuild",
+    }).tree;
+  }
+
+  /** Says a member saw the agent's reply on a task. Resolves to the marker as
+   *  the server left it: null, since the request cleared it. */
+  async markIssueAgentReplySeen(issueId: string): Promise<{ agent_replied_at: string | null }> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/agent-reply/seen`, {
+      method: "POST",
+    });
+    return parseWithFallback(raw, IssueAgentReplyResponseSchema, { agent_replied_at: null }, {
+      endpoint: "POST /api/issues/:id/agent-reply/seen",
     });
   }
 
@@ -2220,34 +2250,6 @@ export class ApiClient {
 
   async unresolveComment(commentId: string): Promise<Comment> {
     return this.fetch(`/api/comments/${commentId}/resolve`, { method: "DELETE" });
-  }
-
-  async addReaction(commentId: string, emoji: string): Promise<Reaction> {
-    return this.fetch(`/api/comments/${commentId}/reactions`, {
-      method: "POST",
-      body: JSON.stringify({ emoji }),
-    });
-  }
-
-  async removeReaction(commentId: string, emoji: string): Promise<void> {
-    await this.fetch(`/api/comments/${commentId}/reactions`, {
-      method: "DELETE",
-      body: JSON.stringify({ emoji }),
-    });
-  }
-
-  async addIssueReaction(issueId: string, emoji: string): Promise<IssueReaction> {
-    return this.fetch(`/api/issues/${issueId}/reactions`, {
-      method: "POST",
-      body: JSON.stringify({ emoji }),
-    });
-  }
-
-  async removeIssueReaction(issueId: string, emoji: string): Promise<void> {
-    await this.fetch(`/api/issues/${issueId}/reactions`, {
-      method: "DELETE",
-      body: JSON.stringify({ emoji }),
-    });
   }
 
   // Subscribers
@@ -3429,25 +3431,17 @@ export class ApiClient {
 
   // Independent workspace-level projection. Unlike the task snapshot, this
   // already deduplicates running agents and returns only the display fields
-  // consumers need. Callers may narrow the projection by task source and, for
-  // issue work, the authenticated member's My Issues relation.
+  // consumers need. Callers may narrow the projection by task source.
   // `parentIssueId` narrows the projection to that issue's direct children,
   // which is how the sub-issue header on issue detail reads the same source
-  // as the Issues list header. The server rejects combining it with `scope`,
-  // so callers pass one or the other.
+  // as the Issues list header.
   async getWorkspaceWorkingAgents(
     type?: WorkspaceWorkingAgentType,
-    mineRelation?: WorkspaceWorkingAgentMineRelation,
     parentIssueId?: string,
   ): Promise<WorkspaceWorkingAgent[]> {
     const search = new URLSearchParams();
     if (type) search.set("type", type);
-    if (mineRelation) {
-      search.set("scope", "mine");
-      search.set("relation", mineRelation);
-    } else if (parentIssueId) {
-      search.set("parent", parentIssueId);
-    }
+    if (parentIssueId) search.set("parent", parentIssueId);
     const query = search.toString();
     return this.fetch(`/api/working-agents${query ? `?${query}` : ""}`);
   }
@@ -4162,9 +4156,7 @@ export class ApiClient {
 
   // Members
   async listMembers(workspaceId: string): Promise<MemberWithUser[]> {
-    return this.fetch(`/api/workspaces/${workspaceId}/members`, {
-      headers: { "X-Client-Capabilities": WORKSPACE_GUESTS_CAPABILITY },
-    });
+    return this.fetch(`/api/workspaces/${workspaceId}/members`);
   }
 
   async createMember(workspaceId: string, data: CreateMemberRequest): Promise<Invitation> {
@@ -4178,13 +4170,6 @@ export class ApiClient {
     return this.fetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
       method: "PATCH",
       body: JSON.stringify(data),
-    });
-  }
-
-  async setMemberProjects(workspaceId: string, memberId: string, projectIds: string[]): Promise<MemberWithUser> {
-    return this.fetch(`/api/workspaces/${workspaceId}/members/${memberId}/projects`, {
-      method: "PUT",
-      body: JSON.stringify({ project_ids: projectIds }),
     });
   }
 
@@ -4202,9 +4187,7 @@ export class ApiClient {
 
   // Invitations
   async listWorkspaceInvitations(workspaceId: string): Promise<Invitation[]> {
-    return this.fetch(`/api/workspaces/${workspaceId}/invitations`, {
-      headers: { "X-Client-Capabilities": WORKSPACE_GUESTS_CAPABILITY },
-    });
+    return this.fetch(`/api/workspaces/${workspaceId}/invitations`);
   }
 
   async revokeInvitation(workspaceId: string, invitationId: string): Promise<void> {
@@ -4230,46 +4213,6 @@ export class ApiClient {
   async declineInvitation(invitationId: string): Promise<void> {
     await this.fetch(`/api/invitations/${invitationId}/decline`, {
       method: "POST",
-    });
-  }
-
-  async createShareLink(workspaceId: string, data: { role?: string; expires_in?: number; max_uses?: number }): Promise<ShareLink> {
-    const raw = await this.fetch<unknown>(`/api/workspaces/${workspaceId}/share-links`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    return parseWithFallback(raw, ShareLinkSchema, EMPTY_SHARE_LINK, {
-      endpoint: "POST /api/workspaces/{id}/share-links",
-    });
-  }
-
-  async listShareLinks(workspaceId: string): Promise<ShareLink[]> {
-    const raw = await this.fetch<unknown>(`/api/workspaces/${workspaceId}/share-links`);
-    return parseWithFallback(raw, ShareLinkListResponseSchema, [], {
-      endpoint: "GET /api/workspaces/{id}/share-links",
-    });
-  }
-
-  async revokeShareLink(workspaceId: string, linkId: string): Promise<void> {
-    await this.fetch(`/api/workspaces/${workspaceId}/share-links/${linkId}`, {
-      method: "DELETE",
-    });
-  }
-
-  async joinByShareLink(code: string): Promise<{ member: MemberWithUser; workspace_id: string; workspace_slug: string }> {
-    const raw = await this.fetch<unknown>("/api/share-links/join", {
-      method: "POST",
-      body: JSON.stringify({ code }),
-    });
-    return parseWithFallback(raw, JoinShareLinkResponseSchema, EMPTY_JOIN_SHARE_LINK_RESPONSE, {
-      endpoint: "POST /api/share-links/join",
-    });
-  }
-
-  async getShareLinkInfo(code: string): Promise<ShareLinkInfo> {
-    const raw = await this.fetch<unknown>(`/api/share-links/${encodeURIComponent(code)}`);
-    return parseWithFallback(raw, ShareLinkInfoSchema, EMPTY_SHARE_LINK_INFO, {
-      endpoint: "GET /api/share-links/{code}",
     });
   }
 
@@ -4992,13 +4935,6 @@ export class ApiClient {
     return parseWithFallback(raw, ProjectSchema, EMPTY_PROJECT, { endpoint: "POST /api/projects/:id/restore" });
   }
 
-  async getProjectMembers(id: string): Promise<ListProjectMembersResponse> {
-    const raw = await this.fetch<unknown>(`/api/projects/${id}/members`);
-    return parseWithFallback(raw, ListProjectMembersResponseSchema, { members: [], total: 0, manager_id: null }, {
-      endpoint: "GET /api/projects/:id/members",
-    });
-  }
-
   async getProjectSubscription(id: string): Promise<boolean> {
     return this.parseProjectSubscription(
       await this.fetch<unknown>(`/api/projects/${id}/subscription`),
@@ -5016,33 +4952,6 @@ export class ApiClient {
 
   private parseProjectSubscription(raw: unknown, endpoint: string): boolean {
     return parseWithFallback(raw, ProjectSubscriptionSchema, { subscribed: false }, { endpoint }).subscribed;
-  }
-
-  async addProjectMembers(id: string, userIds: string[]): Promise<ListProjectMembersResponse> {
-    const raw = await this.fetch<unknown>(`/api/projects/${id}/members`, {
-      method: "POST", body: JSON.stringify({ user_ids: userIds }),
-    });
-    return parseWithFallback(raw, ListProjectMembersResponseSchema, { members: [], total: 0, manager_id: null }, {
-      endpoint: "POST /api/projects/:id/members",
-    });
-  }
-
-  async removeProjectMember(id: string, userId: string): Promise<void> {
-    await this.fetch(`/api/projects/${id}/members/${userId}`, { method: "DELETE" });
-  }
-
-  // Workspace owners only: every private project with its member list, so an
-  // owner who is not in one can still find it and add themselves.
-  async listPrivateProjectsForOwner(): Promise<ListPrivateProjectsResponse> {
-    const raw = await this.fetch<unknown>("/api/projects/private");
-    return parseWithFallback(raw, ListPrivateProjectsResponseSchema, { projects: [], total: 0 }, {
-      endpoint: "GET /api/projects/private",
-    });
-  }
-
-  async joinPrivateProject(id: string): Promise<Project> {
-    const raw = await this.fetch<unknown>(`/api/projects/${id}/join`, { method: "POST" });
-    return parseWithFallback(raw, ProjectSchema, EMPTY_PROJECT, { endpoint: "POST /api/projects/:id/join" });
   }
 
   // Project resources
@@ -5640,75 +5549,6 @@ export class ApiClient {
       method: "PUT",
       body: JSON.stringify(data),
     });
-  }
-
-  // Squads
-  async listSquads(): Promise<Squad[]> {
-    const raw = await this.fetch<unknown>(`/api/squads`);
-    return parseWithFallback(raw, SquadListSchema, EMPTY_SQUAD_LIST, {
-      endpoint: "GET /api/squads",
-    }) as Squad[];
-  }
-
-  async listInvolvedSquadIds(): Promise<string[]> {
-    const raw = await this.fetch<unknown>("/api/squads/involved");
-    const parsed = parseWithFallback<{ squad_ids: string[] } | null>(raw, InvolvedSquadIdsSchema, null, {
-      endpoint: "GET /api/squads/involved",
-    });
-    if (!parsed) throw new Error("GET /api/squads/involved returned a malformed body");
-    return parsed.squad_ids;
-  }
-
-  async getSquad(id: string): Promise<Squad> {
-    const raw = await this.fetch<unknown>(`/api/squads/${id}`);
-    return parseWithFallback(raw, SquadSchema, EMPTY_SQUAD, {
-      endpoint: "GET /api/squads/:id",
-    }) as Squad;
-  }
-
-  async createSquad(data: { name: string; description?: string; leader_id: string; avatar_url?: string }): Promise<Squad> {
-    const raw = await this.fetch<unknown>("/api/squads", { method: "POST", body: JSON.stringify(data) });
-    return parseWithFallback(raw, SquadSchema, EMPTY_SQUAD, {
-      endpoint: "POST /api/squads",
-    }) as Squad;
-  }
-
-  async updateSquad(id: string, data: { name?: string; description?: string; instructions?: string; leader_id?: string; avatar_url?: string }): Promise<Squad> {
-    const raw = await this.fetch<unknown>(`/api/squads/${id}`, { method: "PUT", body: JSON.stringify(data) });
-    return parseWithFallback(raw, SquadSchema, EMPTY_SQUAD, {
-      endpoint: "PUT /api/squads/:id",
-    }) as Squad;
-  }
-
-  async deleteSquad(id: string): Promise<void> {
-    await this.fetch(`/api/squads/${id}`, { method: "DELETE" });
-  }
-
-  async listSquadMembers(squadId: string): Promise<SquadMember[]> {
-    return this.fetch(`/api/squads/${squadId}/members`);
-  }
-
-  async addSquadMember(squadId: string, data: { member_type: string; member_id: string; role?: string }): Promise<SquadMember> {
-    return this.fetch(`/api/squads/${squadId}/members`, { method: "POST", body: JSON.stringify(data) });
-  }
-
-  async removeSquadMember(squadId: string, data: { member_type: string; member_id: string }): Promise<void> {
-    await this.fetch(`/api/squads/${squadId}/members`, { method: "DELETE", body: JSON.stringify(data) });
-  }
-
-  async updateSquadMemberRole(squadId: string, data: { member_type: string; member_id: string; role: string }): Promise<SquadMember> {
-    return this.fetch(`/api/squads/${squadId}/members/role`, { method: "PATCH", body: JSON.stringify(data) });
-  }
-
-  // Per-squad members status snapshot: one row per member with derived
-  // working/idle/offline/unstable plus the issues each agent is currently
-  // running. Parsed with a lenient schema so a new server-side status
-  // value or extra field can't white-screen the Squad page (#2143).
-  async getSquadMemberStatus(squadId: string): Promise<SquadMemberStatusListResponse> {
-    const raw = await this.fetch<unknown>(`/api/squads/${squadId}/members/status`);
-    return parseWithFallback(raw, SquadMemberStatusListResponseSchema, EMPTY_SQUAD_MEMBER_STATUS_LIST, {
-      endpoint: "GET /api/squads/:id/members/status",
-    }) as SquadMemberStatusListResponse;
   }
 
   // Autopilots

@@ -11,15 +11,15 @@ import {
 } from "@multica/core/issues/stores/assignee-picks-store";
 import { AssigneePicker } from "./assignee-picker";
 
-const MEMBERS = [
-  { user_id: "user-1", name: "Ada Lovelace", role: "member" },
-  { user_id: "user-2", name: "Grace Hopper", role: "member" },
-];
+const MEMBERS = [{ user_id: "user-1", name: "Ada Lovelace", role: "member" }];
 const AGENTS = [
   { id: "agent-1", name: "Builder", archived_at: null, visibility: "workspace" },
   { id: "agent-2", name: "Retired", archived_at: "2026-01-01T00:00:00Z", visibility: "workspace" },
+  { id: "agent-3", name: "Scout", archived_at: null, visibility: "workspace" },
+  { id: "agent-4", name: "Drifter", archived_at: null, visibility: "workspace" },
+  { id: "agent-5", name: "Patrol", archived_at: null, visibility: "workspace" },
 ];
-const SQUADS = [{ id: "squad-1", name: "Platform", archived_at: null, leader_id: "agent-1" }];
+const AGENT_ORDER = ["Builder", "Scout", "Drifter", "Patrol"];
 
 const SCOPE = "user-1:workspace-1";
 
@@ -35,7 +35,6 @@ vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
     if (queryKey[0] === "members") return { data: MEMBERS };
     if (queryKey[0] === "agents") return { data: AGENTS };
-    if (queryKey[0] === "squads") return { data: SQUADS };
     return { data: [] };
   },
 }));
@@ -52,7 +51,6 @@ vi.mock("@multica/core/workspace/hooks", () => ({
 vi.mock("@multica/core/workspace/queries", () => ({
   memberListOptions: () => ({ queryKey: ["members"] }),
   agentListOptions: () => ({ queryKey: ["agents"] }),
-  squadListOptions: () => ({ queryKey: ["squads"] }),
 }));
 vi.mock("../../../common/actor-avatar", () => ({
   ActorAvatar: () => <span data-testid="actor-avatar" />,
@@ -103,63 +101,62 @@ describe("AssigneePicker Recent group", () => {
 
   it("is hidden without local picks", async () => {
     renderPicker();
-    await screen.findByText("Members");
+    await screen.findByText("Agents");
     expect(screen.queryByText("Recent")).toBeNull();
   });
 
-  it("shows the top 3 by count, highest first, between Unassigned and Members", async () => {
+  it("shows the top 3 by count, highest first, between Unassigned and Agents", async () => {
     seed(
-      [{ type: "member", id: "user-1" }, 2],
-      [{ type: "squad", id: "squad-1" }, 9],
-      [{ type: "member", id: "user-2" }, 1],
+      [{ type: "agent", id: "agent-4" }, 2],
+      [{ type: "agent", id: "agent-3" }, 9],
+      [{ type: "agent", id: "agent-5" }, 1],
       [{ type: "agent", id: "agent-1" }, 5],
     );
     renderPicker();
 
-    expect(await recentRows()).toEqual(["Platform", "Builder", "Ada Lovelace"]);
-    // Recent sits between the Unassigned row and Members.
+    expect(await recentRows()).toEqual(["Scout", "Builder", "Drifter"]);
+    // Recent sits between the Unassigned row and Agents.
     const follows = (a: Node, b: Node) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     const unassignedRow = screen.getAllByText("Unassigned").at(-1)!;
     const recentLabel = screen.getByText("Recent");
     expect(follows(unassignedRow, recentLabel)).toBe(true);
-    expect(follows(recentLabel, screen.getByText("Members"))).toBe(true);
+    expect(follows(recentLabel, screen.getByText("Agents"))).toBe(true);
     // The same actors still appear in their own groups.
-    expect(screen.getAllByText("Platform")).toHaveLength(2);
+    expect(screen.getAllByText("Scout")).toHaveLength(2);
   });
 
-  it("skips archived and removed actors, letting the next one move up", async () => {
+  it("skips archived and removed agents, letting the next one move up", async () => {
     seed(
       [{ type: "agent", id: "agent-2" }, 10], // archived
-      [{ type: "member", id: "user-gone" }, 8], // removed
-      [{ type: "squad", id: "squad-gone" }, 7], // deleted
-      [{ type: "member", id: "user-2" }, 3],
+      [{ type: "agent", id: "agent-gone" }, 8], // removed
+      [{ type: "agent", id: "agent-3" }, 3],
     );
     renderPicker();
 
-    expect(await recentRows()).toEqual(["Grace Hopper"]);
+    expect(await recentRows()).toEqual(["Scout"]);
   });
 
-  it("orders each group by its own counts, default order on ties", async () => {
-    seed([{ type: "member", id: "user-2" }, 2]);
+  it("orders the Agents group by its own counts, default order on ties", async () => {
+    seed([{ type: "agent", id: "agent-3" }, 2]);
     renderPicker();
 
-    await screen.findByText("Members");
-    expect(sectionRows("Members")).toEqual(["Grace Hopper", "Ada Lovelace"]);
+    await screen.findByText("Agents");
+    expect(sectionRows("Agents")).toEqual(["Scout", "Builder", "Drifter", "Patrol"]);
   });
 
   it("ignores another account's or workspace's picks", async () => {
     useAssigneePicksStore.setState({
       byScope: {
-        "user-2:workspace-1": [{ type: "member", id: "user-2" }],
-        "user-1:workspace-2": [{ type: "member", id: "user-2" }],
+        "user-2:workspace-1": [{ type: "agent", id: "agent-3" }],
+        "user-1:workspace-2": [{ type: "agent", id: "agent-3" }],
       },
     });
     renderPicker();
 
-    await screen.findByText("Members");
+    await screen.findByText("Agents");
     expect(screen.queryByText("Recent")).toBeNull();
-    expect(sectionRows("Members")).toEqual(["Ada Lovelace", "Grace Hopper"]);
+    expect(sectionRows("Agents")).toEqual(AGENT_ORDER);
   });
 
   it("assigns from a Recent row", async () => {
@@ -175,17 +172,17 @@ describe("AssigneePicker Recent group", () => {
   });
 
   it("is hidden while searching so Enter picks the first match", async () => {
-    seed([{ type: "member", id: "user-1" }, 6]);
+    seed([{ type: "agent", id: "agent-1" }, 6]);
     const user = userEvent.setup();
     const onUpdate = vi.fn();
     renderPicker(onUpdate);
 
     await screen.findByText("Recent");
-    await user.type(screen.getByPlaceholderText("Assign to..."), "grace");
+    await user.type(screen.getByPlaceholderText("Assign to..."), "scout");
     expect(screen.queryByText("Recent")).toBeNull();
 
     await user.keyboard("{Enter}");
-    expect(onUpdate).toHaveBeenCalledWith({ assignee_type: "member", assignee_id: "user-2" });
+    expect(onUpdate).toHaveBeenCalledWith({ assignee_type: "agent", assignee_id: "agent-3" });
   });
 
   it("keeps the keyboard highlight on the same row when Recent loads late", async () => {
@@ -193,18 +190,18 @@ describe("AssigneePicker Recent group", () => {
     const onUpdate = vi.fn();
     const { rerender } = renderPicker(onUpdate);
 
-    await screen.findByText("Members");
-    // Unassigned, then Ada Lovelace.
+    await screen.findByText("Agents");
+    // Unassigned, then the first two agent rows.
     await user.click(screen.getByPlaceholderText("Assign to..."));
-    await user.keyboard("{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
 
-    // A pick from another picker lands and Recent is inserted above Members.
+    // A pick from another picker lands and Recent is inserted above Agents.
     act(() => seed([{ type: "agent", id: "agent-1" }, 4]));
     rerender(picker(onUpdate));
     await screen.findByText("Recent");
 
     await user.keyboard("{Enter}");
-    expect(onUpdate).toHaveBeenCalledWith({ assignee_type: "member", assignee_id: "user-1" });
+    expect(onUpdate).toHaveBeenCalledWith({ assignee_type: "agent", assignee_id: "agent-3" });
   });
 });
 
@@ -231,17 +228,17 @@ describe("AssigneePicker pick recording", () => {
     const onUpdate = vi.fn();
     renderPicker(onUpdate, { mixed: true });
 
-    await user.click(await screen.findByText("Platform"));
+    await user.click(await screen.findByText("Builder"));
     expect(onUpdate).toHaveBeenCalledTimes(1);
-    expect(queue()).toEqual([{ type: "squad", id: "squad-1" }]);
+    expect(queue()).toEqual([{ type: "agent", id: "agent-1" }]);
   });
 
   it("does not record re-picking the current assignee or clearing it", async () => {
     const user = userEvent.setup();
     const onUpdate = vi.fn();
-    renderPicker(onUpdate, { assigneeType: "member", assigneeId: "user-2" });
+    renderPicker(onUpdate, { assigneeType: "agent", assigneeId: "agent-3" });
 
-    await user.click(await screen.findByText("Grace Hopper"));
+    await user.click(await screen.findByText("Scout"));
     await user.click(screen.getAllByText("Unassigned").at(-1)!);
     expect(onUpdate).toHaveBeenCalledTimes(2);
     expect(queue()).toEqual([]);

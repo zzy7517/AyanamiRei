@@ -1,5 +1,5 @@
 import type { CreateIssueRequest } from "../../types";
-import type { MyIssuesFilter } from "../queries";
+import type { IssueListFilter } from "../queries";
 import {
   assigneeTypesForActorKind,
   issueScopeKey,
@@ -21,39 +21,8 @@ import {
  */
 export interface IssueSurfaceQueryPlan {
   scopeKey: string;
-  queryFilter: MyIssuesFilter;
+  queryFilter: IssueListFilter;
   createDefaults: Partial<CreateIssueRequest>;
-}
-
-function buildMyRelationPlan(
-  scope: Extract<IssueScope, { type: "my" }>,
-  scopeKey: string,
-): IssueSurfaceQueryPlan {
-  switch (scope.relation) {
-    case "assigned":
-      return {
-        scopeKey,
-        queryFilter: { assignee_id: scope.userId },
-        createDefaults: {
-          assignee_type: "member",
-          assignee_id: scope.userId,
-        },
-      };
-    case "created":
-      return {
-        scopeKey,
-        queryFilter: { created_by_user_id: scope.userId },
-        createDefaults: {},
-      };
-    case "involved":
-      return {
-        scopeKey,
-        queryFilter: { involves_user_id: scope.userId },
-        createDefaults: {},
-      };
-    case "all":
-      return { scopeKey, queryFilter: {}, createDefaults: {} };
-  }
 }
 
 export function buildIssueSurfaceQueryPlan(
@@ -80,23 +49,14 @@ export function buildIssueSurfaceQueryPlan(
         createDefaults: { project_id: scope.projectId },
       };
     }
-    case "my":
-      return buildMyRelationPlan(scope, scopeKey);
     case "actor":
-      return {
-        scopeKey,
-        queryFilter:
-          scope.relation === "assigned"
-            ? { assignee_id: scope.actorId }
-            : { creator_id: scope.actorId },
-        createDefaults:
-          scope.relation === "assigned"
-            ? {
-                assignee_type: scope.actorType,
-                assignee_id: scope.actorId,
-              }
-            : {},
-      };
+      return scope.relation === "assigned"
+        ? {
+            scopeKey,
+            queryFilter: { assignee_id: scope.actorId },
+            createDefaults: { assignee_type: scope.actorType, assignee_id: scope.actorId },
+          }
+        : { scopeKey, queryFilter: { creator_id: scope.actorId }, createDefaults: {} };
     case "team":
       throw new UnsupportedIssueScopeError(scope, "issue surface query plan");
   }

@@ -26,7 +26,6 @@ vi.mock("@multica/core/issues/mutations", () => {
     useUpdateComment: mutation,
     useDeleteComment: mutation,
     useResolveComment: mutation,
-    useToggleCommentReaction: mutation,
   };
 });
 vi.mock("sonner", () => ({ toast: toastMock }));

@@ -17,7 +17,7 @@ import {
 import { useWorkspaceStore } from "@/data/workspace-store";
 import { useT } from "@/lib/i18n";
 import {
-  getInboxNoticeBody,
+  getAutopilotQuotaBody,
   isInboxNotice,
   getInboxDisplayTitle,
 } from "@/lib/inbox-display";
@@ -117,7 +117,7 @@ export default function InboxNoticeDetail() {
   const webUrl = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/+$/, "");
   const billingUrl =
     webUrl && wsSlug ? `${webUrl}/${wsSlug}/settings?tab=billing` : null;
-  const body = item ? getInboxNoticeBody(item) : null;
+  const body = item ? getAutopilotQuotaBody(item) : null;
 
   return (
     <View className="flex-1 bg-background">

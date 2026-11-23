@@ -65,15 +65,17 @@ Pour un projet existant, ouvrez **Ressources → Dossiers locaux** et suivez les
 </Step>
 <Step>
 
-Sous votre ordinateur, cliquez sur **Choisir un dossier...**, puis sélectionnez le dossier à utiliser.
+Sous votre ordinateur, cliquez sur **Choisir un dossier...**, puis sélectionnez le dossier à utiliser. Le sélecteur n'atteint que cet ordinateur : pour un dossier situé sur un autre ordinateur, cliquez plutôt sur **Ajouter un dossier sur un autre ordinateur...**, choisissez l'ordinateur, saisissez le chemin du dossier tel qu'il s'écrit sur cette machine, puis cliquez sur **Ajouter le dossier**.
 
 </Step>
 <Step>
 
-Choisissez **Modifier directement** ou **Exécuter en parallèle**, décrits dans [Comment les exécutions partagent le répertoire](#comment-les-exécutions-partagent-le-répertoire), puis cliquez sur **Ajouter le dossier**. L'application de bureau présélectionne **Exécuter en parallèle** si le dossier est un dépôt git que le runtime de cette machine peut isoler, et **Modifier directement** sinon. Pour changer ce choix ensuite, cliquez sur l'étiquette du mode du dossier dans **Ressources** : le nouveau mode est enregistré dès sa sélection.
+Choisissez **Modifier directement** ou **Exécuter en parallèle**, décrits dans [Comment les exécutions partagent le répertoire](#comment-les-exécutions-partagent-le-répertoire), puis cliquez sur **Ajouter le dossier**. L'application de bureau présélectionne **Exécuter en parallèle** si le dossier est un dépôt git que le runtime de cette machine peut isoler, et **Modifier directement** sinon. Pour changer ce choix ensuite, cliquez sur l'étiquette du mode du dossier dans **Ressources** : le nouveau mode est enregistré dès sa sélection. Un dossier ajouté par chemin commence en **Modifier directement**, car on ne peut pas vérifier d'ici s'il s'agit d'un dépôt git ; changez le mode ensuite de la même façon.
 
 </Step>
 </Steps>
+
+Les ordinateurs de cette liste portent le même nom que sur la page [Daemon et runtimes](/daemon-runtimes), et ceux qui sont hors ligne sont signalés. Le chemin est envoyé tel que saisi ; si le serveur le refuse, l'erreur s'affiche sous le champ. Un ordinateur ne peut rattacher qu'un dossier local par projet : ajoutez-le donc avant qu'il en ait un.
 
 La présélection ne s'applique qu'au répertoire que vous rattachez maintenant. Un répertoire rattaché auparavant conserve le mode avec lequel il a été enregistré : une configuration existante n'est jamais modifiée à votre insu.
 

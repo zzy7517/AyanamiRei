@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { setApiInstance } from "@multica/core/api";
 import { ApiError } from "@multica/core/api/client";
 import type { ApiClient } from "@multica/core/api/client";
+import { isIssueShown } from "@multica/core/issues/agent-reply";
 import { NavigationProvider } from "../../navigation";
 import type { NavigationAdapter } from "../../navigation";
 import { IssueDetail, IssueDetailSkeleton } from "./issue-detail";
@@ -245,6 +246,25 @@ describe("IssueDetailRoute loading sidebar layout", () => {
     view.unmount();
     qc.clear();
     localStorage.removeItem(storageKey);
+  });
+
+  // A reply that lands while the page is opening is not announced over the
+  // page itself, so the page counts as on screen before its task has loaded.
+  // (An address by identifier joins once the identifier resolves to an id.)
+  it("is on screen from the moment its address resolves, and not after it closes", () => {
+    const issueId = "cb240efb-154c-42a8-ae92-42b02676feca";
+    setApiInstance({ getIssue: vi.fn(() => new Promise<never>(() => {})) } as unknown as ApiClient);
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    const view = render(
+      <QueryClientProvider client={qc}>
+        {wrapper({ children: <IssueDetailRoute routeId={issueId} /> })}
+      </QueryClientProvider>,
+    );
+
+    expect(isIssueShown(issueId)).toBe(true);
+    view.unmount();
+    expect(isIssueShown(issueId)).toBe(false);
+    qc.clear();
   });
 });
 

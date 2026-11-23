@@ -99,7 +99,7 @@ test("closing floating chat releases its list and preserves the live composer", 
         name: "Fixture User", email: "fixture@example.test", avatar_url: null,
       }];
       case "/api/skills": case "/api/autopilots":
-      case "/api/runtimes": case "/api/squads": case "/api/agent-task-snapshot":
+      case "/api/runtimes": case "/api/agent-task-snapshot":
       case "/api/invitations": case "/api/inbox": case "/api/inbox/unread-summary":
       case "/api/pins": case "/api/chat/pending-tasks": case "/api/assignee-frequency":
       case "/api/issue-views": case "/api/issue-wakeup-summaries":

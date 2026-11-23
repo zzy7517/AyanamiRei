@@ -12,7 +12,6 @@ import {
   agentListOptions,
   memberListOptions,
   skillListOptions,
-  squadListOptions,
   workspaceListOptions,
 } from "@multica/core/workspace/queries";
 import { NavigationProvider, type NavigationAdapter } from "../../navigation";
@@ -90,7 +89,6 @@ beforeEach(() => {
     agentTaskSnapshotOptions(WS),
     memberListOptions(WS),
     skillListOptions(WS),
-    squadListOptions(WS),
   ]) {
     qc.setQueryData(options.queryKey, []);
   }

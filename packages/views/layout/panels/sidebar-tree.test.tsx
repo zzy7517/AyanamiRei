@@ -1,6 +1,6 @@
 import { cloneElement, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { agentTaskSnapshotOptions } from "@multica/core/agents";
 import { buildIssueStatusCatalog } from "@multica/core/issue-statuses/queries";
@@ -87,16 +87,21 @@ function renderList({
   params = PARAMS,
   tasks = [],
   unread = [],
+  replied = [],
   onCollapse = vi.fn(),
 }: {
   total?: number;
   params?: SidebarIssuesRequest | null;
   tasks?: Partial<AgentTask>[];
   unread?: IssueUnread[];
+  /** Tasks whose agent left a reply no member has seen yet. */
+  replied?: string[];
   onCollapse?: () => void;
 } = {}) {
   const qc = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } });
-  const all = issues(total);
+  const all = issues(total).map((issue) =>
+    replied.includes(issue.id) ? { ...issue, agent_replied_at: "2026-11-22T10:00:00Z" } : issue,
+  );
   for (const limit of [5, 15, 25]) {
     qc.setQueryData(issueKeys.sidebar("ws-1", SOURCE, PARAMS, limit), { issues: all.slice(0, limit), total });
   }
@@ -120,8 +125,15 @@ function renderList({
 }
 
 const rows = () => screen.getAllByRole("link");
+const marked = () => rows().filter((row) => within(row).queryByText("New reply"));
 
 describe("SidebarIssueList", () => {
+  it("marks only the tasks whose agent left a reply no member has seen yet", () => {
+    renderList({ replied: ["issue-3"] });
+
+    expect(marked().map((row) => row.getAttribute("data-issue-id"))).toEqual(["issue-3"]);
+    expect(marked()[0]).toHaveAccessibleName(/Issue 3.*New reply/);
+  });
   it("opens an unread issue on what its run left", () => {
     const run = { outcome: "completed", agent_id: "agent-1", created_at: "2026-11-03T10:00:00Z" };
     renderList({

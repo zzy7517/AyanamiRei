@@ -27,7 +27,6 @@ import type {
   Issue,
   IssueLabelsResponse,
   IssueMetadata,
-  IssueReaction,
   IssuePropertyValues,
   IssueTableRowsResponse,
   Label,
@@ -40,8 +39,7 @@ type AuxiliaryIssueProjection =
   | "generic"
   | "labels"
   | "metadata"
-  | "properties"
-  | "reactions";
+  | "properties";
 
 function auxiliaryIssueRevisionPrefix(wsId: string, issueId: string) {
   return `${wsId}:${issueId}:`;
@@ -199,7 +197,9 @@ function patchIssueInTableCaches(
   }
 }
 
-function patchIssueSnapshot(
+/** Applies a change to one issue everywhere it is cached. Exported for the
+ *  "new reply" marker, which reaches the caches the way an update does. */
+export function patchIssueSnapshot(
   qc: QueryClient,
   wsId: string,
   issueId: string,
@@ -546,7 +546,7 @@ export function onIssueUpdated(
 }
 
 /**
- * Patch an issue's labels in-place across the list cache, my-issues caches,
+ * Patch an issue's labels in-place across the list cache, scoped list caches,
  * the detail cache, and the per-issue label cache. Triggered by the
  * `issue_labels:changed` WS event after attach/detach so list/board chips
  * and the issue-detail Properties LabelPicker update without a refetch.
@@ -638,7 +638,7 @@ export function invalidateIssueLabelDerivatives(qc: QueryClient, wsId: string) {
 }
 
 /**
- * Apply a metadata snapshot to the issue detail + list + my-issues caches.
+ * Apply a metadata snapshot to the issue detail, list and scoped list caches.
  * The server emits this whenever a single key is set or deleted, so the
  * payload is always the FULL post-mutation map — we replace, not merge.
  *
@@ -766,97 +766,6 @@ export function invalidatePropertyWindowQueries(qc: QueryClient, wsId: string) {
         return typeof rec.sort_by === "string" && rec.sort_by.startsWith("property:");
       }),
   });
-}
-
-/**
- * Apply a committed issue-reaction change to the issue detail cache, the only
- * projection that carries `reactions` (list payloads omit them). Never touches
- * `Issue.revision`: the auxiliary revision below marks the detail stale when
- * the event proves a newer snapshot exists.
- */
-export function patchIssueReactions(
-  qc: QueryClient,
-  wsId: string,
-  issueId: string,
-  update: (reactions: IssueReaction[]) => IssueReaction[],
-  revision?: number,
-) {
-  if (
-    isOlderThanRecordedAuxiliaryProjection(
-      qc,
-      wsId,
-      issueId,
-      revision,
-      "reactions",
-    )
-  ) {
-    return;
-  }
-  qc.setQueryData<Issue>(issueKeys.detail(wsId, issueId), (old) => {
-    if (!old) return old;
-    // A snapshot at or past this revision already reflects the change; a
-    // removal replayed onto it could drop a later re-add of the same emoji.
-    if (
-      revision !== undefined &&
-      old.revision !== undefined &&
-      revision <= old.revision
-    ) {
-      return old;
-    }
-    const reactions = old.reactions ?? [];
-    const next = update(reactions);
-    return next === reactions ? old : { ...old, reactions: next };
-  });
-  onIssueAuxiliaryRevision(qc, wsId, issueId, revision, "reactions");
-}
-
-export function addReactionToList(reaction: IssueReaction) {
-  return (reactions: IssueReaction[]) =>
-    reactions.some((r) => r.id === reaction.id)
-      ? reactions
-      : [...reactions, reaction];
-}
-
-export function removeReactionFromList(
-  removed: Pick<IssueReaction, "emoji" | "actor_type" | "actor_id">,
-) {
-  return (reactions: IssueReaction[]) => {
-    const next = reactions.filter(
-      (r) =>
-        !(
-          r.emoji === removed.emoji &&
-          r.actor_type === removed.actor_type &&
-          r.actor_id === removed.actor_id
-        ),
-    );
-    return next.length === reactions.length ? reactions : next;
-  };
-}
-
-export function onIssueReactionAdded(
-  qc: QueryClient,
-  wsId: string,
-  issueId: string,
-  reaction: IssueReaction,
-  revision?: number,
-) {
-  patchIssueReactions(qc, wsId, issueId, addReactionToList(reaction), revision);
-  if (revision === undefined) {
-    qc.invalidateQueries({ queryKey: issueKeys.detail(wsId, issueId), exact: true });
-  }
-}
-
-export function onIssueReactionRemoved(
-  qc: QueryClient,
-  wsId: string,
-  issueId: string,
-  removed: Pick<IssueReaction, "emoji" | "actor_type" | "actor_id">,
-  revision?: number,
-) {
-  patchIssueReactions(qc, wsId, issueId, removeReactionFromList(removed), revision);
-  if (revision === undefined) {
-    qc.invalidateQueries({ queryKey: issueKeys.detail(wsId, issueId), exact: true });
-  }
 }
 
 /**

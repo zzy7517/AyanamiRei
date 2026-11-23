@@ -87,7 +87,7 @@
       "billing_interval": "付款周期",
       "period_end": "当前周期结束时间",
       "change_plan": "更换套餐",
-      "business_adds": "Business 增加私有项目、按成员授权、团队应用账号，以及更高的自动化额度。",
+      "business_adds": "Business 增加按成员授权、团队应用账号，以及更高的自动化额度。",
       "plan_change_hold": "套餐变更",
       "plan_change_confirming": "正在切换到 {{plan}}，等待 Stripe 确认。确认之前不能更换套餐或增加席位。",
       "plan_change_unresolved": "切换到 {{plan}} 的结果尚未确认。请联系支持团队处理；处理完成前无法更换套餐或增加席位。",
@@ -111,7 +111,7 @@
         "pro_storage": "每人 10 GB 附件存储",
         "pro_dashboard": "统计查看最近 90 天",
         "business_everything": "Pro 的全部功能",
-        "business_access": "私有项目和按成员授权",
+        "business_access": "按成员授权",
         "business_apps": "团队应用账号和审批规则",
         "business_autopilots": "自动化每人每月 3,000 次",
         "business_reports": "按成员的用量和成本报表"
@@ -297,7 +297,7 @@
     },
     "welcome": {
       "title_other": "欢迎！你的工作区可以免费试用 {{count}} 天 Business",
-      "body": "私有项目等 Business 功能都可以用。不需要绑卡，到期自动切换到 Free。",
+      "body": "Business 功能都可以用。不需要绑卡，到期自动切换到 Free。",
       "action": "查看包含功能",
       "close": "关闭"
     },
@@ -306,7 +306,6 @@
       "description": "{{workspace}} 已切换到 Free。没有任何数据被删除。",
       "description_without_name": "工作区已切换到 Free。没有任何数据被删除。",
       "kept": "已有的成员、项目和设置都保留。",
-      "private_projects": "私有项目保持私有，访问名单在升级前只读。",
       "autopilot": "自动化每月 {{limit}} 次，本月已用 {{used}} 次。",
       "autopilot_paused": "自动化每月 {{limit}} 次，本月已用 {{used}} 次，自动化已暂停到 {{date}}。",
       "keep_free": "继续使用 Free",
@@ -325,18 +324,6 @@
       "ended_description": "试用已于 {{date}} 结束。在下方选择套餐即可恢复 Business 功能。",
       "choose_plan": "选择套餐",
       "ended_description_member": "试用已于 {{date}} 结束。如需恢复 Business 功能，请联系工作区管理员升级。"
-    },
-    "features": {
-      "title": "试用中的 Business 功能",
-      "description": "试用结束后不会被删除或关闭，只是不能新建和修改。",
-      "private_projects": {
-        "name": "私有项目",
-        "after": "到期后保持私有，访问名单只读。"
-      },
-      "guests": {
-        "name": "访客",
-        "after": "到期后已有访客保留访问权限，邀请新访客需要 Pro 或 Business。"
-      }
     }
   },
   "storage_limit": {

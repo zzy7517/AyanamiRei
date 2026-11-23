@@ -121,6 +121,15 @@ primary와 복제본의 연결 한도는 서로 독립적입니다. 모든 API �
 
 allowlist의 정확한 판단 순서는 [로그인과 가입](/auth-setup#가입-범위-제어)을 참고하세요.
 
+### 사전 공유 토큰
+
+인증 코드나 Google 없이 클라이언트를 한 계정으로 로그인시키는 고정 비밀값입니다. [Desktop](/desktop-app#로그인-없이-바로-진입)은 설정 파일에 `authToken`이 있으면 이를 전송하며, CLI와 데몬은 프로필 설정의 `token` 필드에서 이를 받아들입니다.
+
+| 변수 | 기본값 | 설명 |
+|---|---|---|
+| `MULTICA_AUTH_TOKEN` | 비어 있음 | 개인 액세스 토큰이 받아들여지는 모든 곳에서 받아들여지는 비밀값: `/api/**`와 WebSocket 엔드포인트. 설정하지 않으면 꺼집니다 |
+| `MULTICA_AUTH_TOKEN_EMAIL` | 비어 있음 | 토큰이 속한 계정의 이메일. `MULTICA_AUTH_TOKEN`을 설정했다면 필수이며, 없으면 서버가 오류를 기록하고 토큰을 거부합니다. 계정이 아직 없다면 시작 시 첫 워크스페이스와 함께 생성합니다 |
+
 ## 첨부 파일 저장소
 
 `S3_BUCKET`을 설정하지 않으면 Multica가 로컬 디스크를 사용합니다.
@@ -202,7 +211,7 @@ reverse proxy 뒤에 배포한다면 실제 proxy 네트워크를 입력해야 �
 
 `GITHUB_APP_ID`와 private key를 설정하지 않아도 PR 연결, 미러링, merge 시 상태 변경은 정상적으로 작동합니다. 다만 카드에 CI와 merge 가능 상태가 표시되지 않고 "GitHub에서 선택" 저장소 메뉴도 비활성화됩니다.
 
-설정 단계는 [GitHub 연동](/github-integration#자체-호스팅-설정), [Feishu Bot](/lark-bot-integration#자체-호스팅-설정), [Slack Bot](/slack-bot-integration#자체-호스팅-설정), [Telegram Bot](/telegram-bot-integration#관리-및-자체-호스팅)을 참고하세요.
+설정 단계는 [GitHub 연동](/github-integration#자체-호스팅-설정)을 참고하세요.
 
 ## 서버 측 LLM
 

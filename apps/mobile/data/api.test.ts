@@ -26,20 +26,6 @@ describe("api.listAgents", () => {
   });
 });
 
-// The server leaves guests out of the member list unless the caller declares
-// it can render them; useIsGuest reads the caller's own row from that list.
-describe("api.listMembers", () => {
-  afterEach(() => vi.unstubAllGlobals());
-
-  it("advertises the guest capability", async () => {
-    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => Response.json([]));
-    vi.stubGlobal("fetch", fetchMock);
-    await api.listMembers("ws-1");
-    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Record<string, string>;
-    expect(headers["X-Client-Capabilities"]).toBe("workspace-guests-v1");
-  });
-});
-
 describe("api.deleteComment", () => {
   const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
 
@@ -66,18 +52,6 @@ describe("api.deleteComment", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ method: "DELETE" }));
-  });
-});
-
-
-describe("api.listIssues requester compatibility", () => {
-  afterEach(() => vi.unstubAllGlobals());
-  it.each([false, true])("checks server support before returning Created rows (supported=%s)", async (supported) => {
-    const fetchMock = vi.fn(async (_url: string) => Response.json({ issues: [], total: 0, ...(supported ? { created_by_user_id: "me" } : {}) }));
-    vi.stubGlobal("fetch", fetchMock);
-    await api.listIssues({ created_by_user_id: "me" });
-    expect(fetchMock).toHaveBeenCalledTimes(supported ? 1 : 2);
-    if (!supported) expect(String(fetchMock.mock.calls[1]?.[0])).toContain("creator_id=me");
   });
 });
 

@@ -2,9 +2,6 @@
 
 import { useRef, useState, useEffect, useMemo } from "react";
 import { cn } from "@multica/ui/lib/utils";
-import { Info } from "@multica/ui/icons";
-import { useCurrentWorkspace } from "@multica/core/paths";
-import { useIsGuest } from "@multica/core/permissions";
 import { StorageLimitNotice } from "../../billing/storage-limit-notice";
 import { ContentEditor, type ContentEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useUploadGate, useComposerSubmit } from "../../editor";
 import { SubmitButton } from "@multica/ui/components/common/submit-button";
@@ -61,9 +58,7 @@ function CommentInput({ issueId, onSubmit, onAccepted, onEditAnnotation, annotat
   const { t: tEditor } = useT("editor");
   const sendShortcut = useShortcut("send");
   const editorRef = useRef<ContentEditorRef>(null);
-  // A guest (MUL-9420) comments and mentions people, nothing that runs agents.
-  const guest = useIsGuest(useCurrentWorkspace()?.id);
-  const placeholder = guest ? t(($) => $.comment.guest_placeholder) : t(($) => $.comment.leave_comment_placeholder);
+  const placeholder = t(($) => $.comment.leave_comment_placeholder);
   // Sending mid-upload would strip the pending image's blob URL out of the
   // markdown and bind no attachment id — the comment posts without the file.
   const uploadGate = useUploadGate(editorRef);
@@ -250,14 +245,14 @@ function CommentInput({ issueId, onSubmit, onAccepted, onEditAnnotation, annotat
     scope: issueId,
   });
   const { focused, focusProps } = useComposerFocus();
-  const showsTriggerChips = recipients.length > 0 || triggerPreview.blocked.length > 0 || triggerPreview.hasAllMembersMention;
+  const showsTriggerChips = recipients.length > 0 || triggerPreview.blocked.length > 0;
 
   return (<>
     {annotationComposer?.render({
       submit, submitting, uploading: gate.uploading, restart: routing.restartTaskIds.length > 0,
       draftContent: content, annotations,
       recipients: <CommentTriggerChips recipients={recipients} blocked={triggerPreview.blocked}
-        hasAllMembersMention={triggerPreview.hasAllMembersMention} draftContent={composedContent} onActionChange={setAction} />,
+        draftContent={composedContent} onActionChange={setAction} />,
     })}
     <div
       data-mc="comment-composer"
@@ -314,7 +309,7 @@ function CommentInput({ issueId, onSubmit, onAccepted, onEditAnnotation, annotat
           debounceMs={100}
           currentIssueId={issueId}
           attachments={pendingAttachments}
-          enableSlashCommands={!guest}
+          enableSlashCommands
           slashCommandMode="command"
           quickActionMenu={quickActionMenu}
         />
@@ -355,20 +350,14 @@ function CommentInput({ issueId, onSubmit, onAccepted, onEditAnnotation, annotat
       <ComposerToolbar
         className="px-1.5 pb-1"
         voice={voice}
-        hasRecipients={guest || showsTriggerChips}
-        recipients={guest ? (
-          <p className="flex items-center gap-1.5 px-1.5 text-caption text-muted-foreground">
-            <Info className="size-3.5 shrink-0" aria-hidden="true" />
-            <span className="truncate">{t(($) => $.comment.guest_hint)}</span>
-          </p>
-        ) : <CommentTriggerChips
+        hasRecipients={showsTriggerChips}
+        recipients={<CommentTriggerChips
           recipients={recipients}
           blocked={triggerPreview.blocked}
-          hasAllMembersMention={triggerPreview.hasAllMembersMention}
           draftContent={composedContent}
           onActionChange={setAction}
         />}
-        tools={guest ? null : <ComposerTools voice={voice} onAttach={(file) => lazy.uploadOrQueue([file])} />}
+        tools={<ComposerTools voice={voice} onAttach={(file) => lazy.uploadOrQueue([file])} />}
         send={routing.restartTaskIds.length > 0 ? (
           <Button
             size="sm"

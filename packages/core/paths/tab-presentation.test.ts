@@ -24,13 +24,6 @@ describe("resolveTabPresentation — pages", () => {
       title: { kind: "nav", navKey: "projects" },
     });
   });
-
-  it("titles My agents' work as its own page rather than My issues", () => {
-    expect(present("/acme/my-issues?scope=agents")).toEqual({
-      visual: { kind: "icon", icon: "Bot" },
-      title: { kind: "tab", tabKey: "my_agents" },
-    });
-  });
 });
 
 describe("resolveTabPresentation — direct resources", () => {
@@ -72,10 +65,6 @@ describe("resolveTabPresentation — direct resources", () => {
     expect(present("/acme/members/m1", { actorName: "Ada" })).toEqual({
       visual: { kind: "actor", actorType: "member", id: "m1" },
       title: { kind: "text", text: "Ada" },
-    });
-    expect(present("/acme/squads/sq1")).toEqual({
-      visual: { kind: "actor", actorType: "squad", id: "sq1" },
-      title: { kind: "tab", tabKey: "squad" },
     });
   });
 

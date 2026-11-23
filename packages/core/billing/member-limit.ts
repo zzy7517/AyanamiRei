@@ -8,8 +8,8 @@ import { workspaceKeys } from "../workspace/queries";
  * Member limit (MUL-9488).
  *
  * A Free workspace can have a limited number of members. Members and pending
- * invitations both take a slot; guests take none. The server checks every
- * invitation, invitation acceptance and share-link join; this module only
+ * invitations both take a slot. The server checks every
+ * invitation and invitation acceptance; this module only
  * renders the limit ahead of that check and carries an invitation through an
  * upgrade.
  */

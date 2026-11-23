@@ -10,7 +10,6 @@
     "commands": "命令",
     "members": "成員",
     "agents": "AI 代理",
-    "squads": "小隊",
     "projects": "專案",
     "issues": "任務",
     "autopilots": "自動化",
@@ -147,7 +146,6 @@
     "project": "專案",
     "agent": "AI 代理",
     "autopilot": "自動化",
-    "squad": "小隊",
     "member": "成員"
   },
   "footer": {

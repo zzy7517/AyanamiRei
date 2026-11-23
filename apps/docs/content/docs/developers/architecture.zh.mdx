@@ -93,7 +93,7 @@ router → middleware → handler → service → sqlc query → PostgreSQL
 - `internal/service/` 负责跨查询的业务流程和事务；
 - `pkg/db/queries/` 保存手写 SQL；
 - `pkg/db/generated/` 由 sqlc 生成，不能直接编辑；
-- `internal/integrations/` 处理 GitHub、Slack、飞书等外部事件；
+- `internal/integrations/` 处理 GitHub 等外部事件；
 - `internal/storage/` 处理本地或 S3 附件。
 
 PostgreSQL 是业务数据的权威来源。Redis 是可选组件，用于跨实例实时事件、缓存或临时协调；没有配置时，单实例开发环境使用进程内实现。
@@ -123,7 +123,7 @@ provider 适配层统一了不同 AI 编程工具的启动、流式事件、取�
 
 业务查询必须限定 `workspace_id`，请求进入工作区路由前会检查成员身份。`X-Workspace-ID` 选择当前工作区，但不能替代权限检查。
 
-任务的负责人是多态关系，可以指向成员、智能体或小队。新增查询、缓存 key 或实时事件时，都要保留工作区与负责人类型，不能只按资源 ID 假设全局唯一上下文。
+任务的负责人只能是智能体。任务上的其他角色（例如创建者和订阅者）可以是成员或智能体。新增查询、缓存 key 或实时事件时，都要保留工作区与角色类型，不能只按资源 ID 假设全局唯一上下文。
 
 ## 接下来
 

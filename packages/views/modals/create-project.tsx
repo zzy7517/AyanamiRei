@@ -34,7 +34,7 @@ import { useWorkspaceId } from "@multica/core/hooks";
 import { useCurrentWorkspace, useWorkspacePaths } from "@multica/core/paths";
 import { memberListOptions, agentListOptions } from "@multica/core/workspace/queries";
 import { useActorName } from "@multica/core/workspace/hooks";
-import type { ProjectStatus, ProjectPriority, ProjectVisibility } from "@multica/core/types";
+import type { ProjectStatus, ProjectPriority } from "@multica/core/types";
 import { cn } from "@multica/ui/lib/utils";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@multica/ui/components/ui/dialog";
@@ -61,8 +61,6 @@ import {
 } from "../projects/components/labels";
 import { ProjectStartDatePicker } from "../projects/components/project-start-date-picker";
 import { ProjectDueDatePicker } from "../projects/components/project-due-date-picker";
-import { ProjectAccessDraftPicker } from "../projects/components/project-access";
-import { usePaidFeatureErrorMessage } from "../billing";
 import { PillButton } from "../common/pill-button";
 import { WorkflowPill } from "../workflows/workflow-pill";
 import { githubShortLabel } from "../common/github-url";
@@ -179,8 +177,6 @@ export function CreateProjectModal({
   const [icon, setIcon] = useState<string | undefined>(draft.icon);
   const [startDate, setStartDate] = useState<string>(draft.startDate ?? "");
   const [dueDate, setDueDate] = useState<string>(draft.dueDate ?? "");
-  const [visibility, setVisibility] = useState<ProjectVisibility>(draft.visibility ?? "workspace");
-  const [memberIds, setMemberIds] = useState<string[]>(draft.memberIds ?? []);
   // Optional properties stay in the ⋯ menu until selected or opened.
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [dueDatePickerOpen, setDueDatePickerOpen] = useState(false);
@@ -358,7 +354,6 @@ export function CreateProjectModal({
   const hasSource = sourceMode === "local" ? !!selectedLocalPath : selectedRepos.length > 0;
 
   const createProject = useCreateProject();
-  const paidFeatureError = usePaidFeatureErrorMessage();
 
   // Every selected repo's branch, not just the one in the add field. A branch
   // edited on an already-selected row goes through setRepoRef and used to
@@ -421,7 +416,6 @@ export function CreateProjectModal({
         ...(workflowId ? { workflow_id: workflowId } : {}),
         // Server attaches these in the same transaction as the project.
         resources,
-        ...(visibility === "private" ? { visibility, member_ids: memberIds } : {}),
       });
       if (folderId && folders.canFile) folders.moveProject(project.id, folderId);
       clearDraft();
@@ -430,12 +424,7 @@ export function CreateProjectModal({
       router.push(wsPaths.projectDetail(project.id));
     } catch (err) {
       toast.error(
-        paidFeatureError(
-          err,
-          err instanceof Error && err.message
-            ? err.message
-            : t(($) => $.create_project.toast_failed),
-        ),
+        err instanceof Error && err.message ? err.message : t(($) => $.create_project.toast_failed),
       );
     } finally {
       setSubmitting(false);
@@ -646,9 +635,6 @@ export function CreateProjectModal({
 
           <WorkflowPill value={workflowId} onChange={setWorkflowId} />
           {FolderField && <FolderField value={folderId} onChange={setFolderId} />}
-          {<ProjectAccessDraftPicker visibility={visibility} memberIds={memberIds} members={members}
-            leadId={leadType === "member" ? leadId : undefined}
-            onChange={(value, ids) => { setVisibility(value); setMemberIds(ids); setDraft({ visibility: value, memberIds: ids }); }} />}
 
           <Popover
             open={leadOpen}

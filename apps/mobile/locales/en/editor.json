@@ -1,6 +1,6 @@
 {
   "a11y": {
-    "mention_someone": "Mention someone",
+    "mention": "Mention an agent or an issue",
     "bullet_list": "Bullet list",
     "checklist": "Checklist",
     "code_block": "Code block",

@@ -131,7 +131,7 @@
     "breadcrumb_title": "タスク",
     "breadcrumb_workspace_fallback": "ワークスペース",
     "empty_title": "まだタスクがありません",
-    "empty_description": "タスクはメンバーやエージェントに任せる具体的な作業です。エージェントに割り当てると、ランタイム上で自動的に始まります。",
+    "empty_description": "タスクは具体的な作業です。エージェントに割り当てると、ランタイム上で自動的に始まります。",
     "break_down_with_chat": "チャットで分解する",
     "break_down_prompt": "次のことを進めたいです。必要なことを質問してから、このワークスペースのタスクに分解してください：\n\n",
     "move_failed": "タスクを移動できませんでした"
@@ -165,8 +165,6 @@
   "scope": {
     "all_label": "すべて",
     "all_description": "このワークスペースのすべてのタスク",
-    "members_label": "メンバー",
-    "members_description": "チームメンバーに割り当てられたタスク",
     "agents_label": "エージェント",
     "agents_description": "AI エージェントに割り当てられたタスク"
   },
@@ -190,7 +188,6 @@
     "section_project_status": "プロジェクトステータス",
     "section_label": "ラベル",
     "section_relation": "自分との関係",
-    "relation_assigned": "自分が担当",
     "relation_created": "自分が作成",
     "relation_my_agents": "マイエージェントの作業",
     "relation_subscribed": "自分が購読中",
@@ -216,7 +213,6 @@
     "date_clear": "日付フィルターをクリア",
     "members_group": "メンバー",
     "agents_group": "エージェント",
-    "squads_group": "スクワッド",
     "issue_count_other": "タスク {{count}} 件",
     "reset": "すべてのフィルターをリセット",
     "chip_remove": "{{name}}フィルターを削除",
@@ -413,11 +409,11 @@
     "scope": {
       "assigned": {
         "label": "割り当て済み",
-        "description": "このメンバーまたはエージェントに割り当てられたタスク"
+        "description": "このエージェントに割り当てられたタスク"
       },
       "created": {
         "label": "作成済み",
-        "description": "このメンバーまたはエージェントが作成したタスク"
+        "description": "このエージェントが作成したタスク"
       }
     },
     "empty": {
@@ -552,7 +548,7 @@
     "delegated_subscription_badge": "エージェント経由で購読中",
     "delegated_subscription_hint": "エージェントがあなたに代わってこのタスクを作成したため、購読しています。ステータス変更がオンなら、レビュー待ち・完了・ブロック時に通知されます。",
     "key_updates_subscription_badge": "重要な更新のみ",
-    "key_updates_subscription_hint": "これは他の人が担当するタスクで、作成・コメント・メンションによりフォローしています。@メンション、参加したスレッドへの返信、および「ステータス変更」がオンの場合はレビュー中・ブロック中・完了になった際に通知されます。",
+    "key_updates_subscription_hint": "これは他の人が担当するタスクで、作成・コメントによりフォローしています。参加したスレッドへの返信、および「ステータス変更」がオンの場合はレビュー中・ブロック中・完了になった際に通知されます。",
     "key_updates_follow_all": "すべてのアクティビティを受け取る",
     "key_updates_follow_all_done": "このタスクのすべてのアクティビティを受け取ります",
     "key_updates_settings": "デフォルトを変更",
@@ -597,8 +593,7 @@
     "project_directory_path_copied_with_branch": "プロジェクトディレクトリのパスをコピーしました — 作業は {{branch}} ブランチにあります",
     "workdir_path_copy_failed": "作業ディレクトリのパスをコピーできませんでした",
     "workdir_path_unavailable": "ローカル作業ディレクトリはまだありません — このタスクはローカルエージェントで実行されていません",
-    "pull_requests_empty_title": "関連する PR はありません。",
-    "guest_readonly_note": "ゲストは閲覧とコメントのみ可能で、タスクのプロパティは変更できません。"
+    "pull_requests_empty_title": "関連する PR はありません。"
   },
   "timeline": {
     "loading": "読み込み中...",
@@ -622,13 +617,6 @@
     "description_updated": "説明を更新しました",
     "task_completed_other": "実行を完了しました（{{count}} 回）",
     "task_failed_other": "実行が失敗しました（{{count}} 回）",
-    "squad_leader_evaluated": "スクワッドのトリガーを評価しました",
-    "squad_leader_action": "評価してアクションを実行しました",
-    "squad_leader_action_reason": "評価してアクションを実行しました: {{reason}}",
-    "squad_leader_no_action": "評価完了: 必要なアクションはありません",
-    "squad_leader_no_action_reason": "評価完了: 必要なアクションはありません（{{reason}}）",
-    "squad_leader_failed": "評価に失敗しました",
-    "squad_leader_failed_reason": "評価に失敗しました: {{reason}}",
     "coalesced_badge": "×{{count}}",
     "activity_count_other": "アクティビティ {{count}} 件",
     "show_more_activities_other": "アクティビティをさらに {{count}} 件表示",
@@ -669,7 +657,6 @@
     "wakeup_child_done_stage_single": "ステージ {{stage}} のサブ課題が完了しました"
   },
   "comment": {
-    "add_reaction": "リアクションを追加",
     "collapse_thread": "スレッドを折りたたむ",
     "expand_thread": "スレッドを展開",
     "delete_title": "コメントを削除",
@@ -695,7 +682,7 @@
     "posted_partial_trigger_named": "コメントを投稿しましたが、{{name}} はトリガーされませんでした（{{reason}}）",
     "trigger_blocked_chip_aria": "{{name}} はトリガーされません — {{reason}}",
     "trigger_blocked_invocation_not_allowed": "この対象が見つからないか、使用する権限がありません",
-    "trigger_blocked_target_unavailable": "このエージェントまたはスクワッドが見つかりません — ページを再読み込みしてもう一度お試しください。",
+    "trigger_blocked_target_unavailable": "このエージェントが見つかりません — ページを再読み込みしてもう一度お試しください。",
     "trigger_blocked_runtime_offline": "この対象のランタイムがオフラインです",
     "trigger_blocked_runtime_unusable": "この対象の CLI はそのマシンで実行できません — そのマシンで再インストールしてください",
     "trigger_blocked_runtime_profile_missing": "このエージェントの CLI には、対象マシン上のランタイム設定がありません — そのマシンにインストールしてください。",
@@ -718,13 +705,10 @@
     "send_tooltip": "送信",
     "trigger_source_issue_assignee": "担当",
     "trigger_source_mention_agent": "@メンション",
-    "trigger_source_mention_squad_leader": "Squad",
     "trigger_source_unknown": "トリガー",
     "trigger_skipped_label": "スキップ",
     "trigger_wont_trigger": "今回は開始しません",
     "trigger_none_will_trigger": "いずれも開始しません",
-    "all_members_notice": "メンバー向け一斉送信 · @all はエージェントを起動しません",
-    "trigger_reason_mention_squad_leader": "メンションされた Squad のリーダー。",
     "trigger_reason_unknown": "このコメントで開始します。",
     "trigger_will_start": "送信後に作業を開始します",
     "trigger_will_start_count_other": "送信後に {{count}} 体のエージェントが作業を開始します",
@@ -766,9 +750,7 @@
     "restart_failed": "現在の実行を停止できませんでした。メッセージは送信されていません。",
     "reply_action": "返信",
     "actions_label": "コメントの操作",
-    "create_issue_from_selection": "選択内容からサブタスクを作成",
-    "guest_placeholder": "返信… メンバーを @ できます",
-    "guest_hint": "ゲストはエージェントを @ したり、タスクを割り当てたりできません"
+    "create_issue_from_selection": "選択内容からサブタスクを作成"
   },
   "reply": {
     "recipients_changed": "返信先が変更されました。送信先を確認してから、もう一度送信してください。",
@@ -807,6 +789,7 @@
     "unread_completed": "{{agent}} の実行が完了 · {{time}}",
     "unread_failed": "{{agent}} の実行が失敗 · {{time}}",
     "unread_manual": "未読にしました",
+    "new_reply": "新しい返信",
     "empty_hover": "現在作業中のエージェントはありません",
     "unknown_hover": "作業中のエージェント: まだ読み込まれていません",
     "filter_active_label": "エージェントが作業中のタスクを表示中",
@@ -1078,8 +1061,7 @@
       "search_placeholder": "担当者を割り当て...",
       "recent_group": "最近",
       "members_group": "メンバー",
-      "agents_group": "エージェント",
-      "squads_group": "スクワッド"
+      "agents_group": "エージェント"
     },
     "start_date": {
       "trigger_label": "開始日",
@@ -1135,14 +1117,8 @@
   },
   "save_view": {
     "scope_label_workspace": "担当者タイプ",
-    "scope_label_my": "自分との関係",
     "variant_all": "担当者を問わない",
-    "variant_members": "メンバーに割り当て",
-    "variant_agents": "エージェントに割り当て",
-    "variant_my_any": "何らかの関わり",
-    "variant_my_assigned": "自分に割り当て",
-    "variant_my_created": "自分が作成",
-    "variant_my_involved": "マイエージェントの作業"
+    "variant_agents": "エージェントに割り当て"
   },
   "plugins": {
     "panels": "Plugins",
@@ -1189,8 +1165,6 @@
     "comment_deleted": "コメントを削除",
     "comment_resolved": "スレッドを解決",
     "comment_unresolved": "スレッドを再開",
-    "reaction_added": "リアクションを追加",
-    "reaction_removed": "リアクションを削除",
     "attachment_attached": "添付ファイルを追加",
     "attachment_detached": "添付ファイルを削除",
     "at_time": "{{time}} に起動",
@@ -1258,8 +1232,6 @@
       "comment_deleted": "コメントが削除されたとき",
       "comment_resolved": "スレッドが解決済みになったとき",
       "comment_unresolved": "スレッドが再開されたとき",
-      "reaction_added": "リアクションが追加されたとき",
-      "reaction_removed": "リアクションが削除されたとき",
       "attachment_attached": "このタスクに添付ファイルが追加されたとき",
       "attachment_detached": "このタスクの添付ファイルが削除されたとき",
       "run_completed": "{{agent}} の実行が成功したとき",
@@ -1374,7 +1346,6 @@
       "choose_label": "ラベルを選択",
       "choose_property": "プロパティを選択",
       "value_placeholder": "値",
-      "squads": "スクワッド",
       "children_all": "すべてのサブタスク",
       "children_stage": "ステージ {{stage}}",
       "pr_checks": "CI 終了",
@@ -1403,12 +1374,11 @@
       "wake_assignee": "担当者 {{name}} を起こす",
       "remaining_other": "残り {{count}} 件",
       "blocked_backlog": "バックログ中のため起こしません",
-      "blocked_member": "担当者がメンバーのため、受信トレイに通知します",
       "blocked_none": "エージェントの担当者がいないため起こしません",
       "turned_off": "このタスクではオフ",
       "target_title": "起こす対象",
       "target_current": "担当者（現在 {{name}}）",
-      "target_none": "担当者：エージェントやスクワッドは起こし、メンバーには通知します",
+      "target_none": "担当者：エージェントを起こします",
       "progress_title": "進捗",
       "progress": "{{done}}/{{total}} 完了",
       "waiting_on": "残り {{ids}}",
@@ -1420,7 +1390,6 @@
       "save_error": "システムルールを保存できませんでした。",
       "default_on": "ワークスペースでは既定でオン。",
       "default_off": "ワークスペースでは既定でオフ。",
-      "notify_member": "{{name}} に受信トレイで通知",
       "instruction": "起きたあとにすること",
       "instruction_edit": "指示を編集",
       "instruction_default": "このタスクでは未設定のため、既定の指示を使います：",
@@ -1581,7 +1550,6 @@
     "handler": {
       "none": "担当者を変更しない",
       "agent": "エージェント",
-      "squad": "スクワッド",
       "member": "メンバー",
       "project_lead": "プロジェクトリード",
       "creator": "タスク作成者",
@@ -1650,12 +1618,11 @@
       "card_then": "完了後 → {{status}}",
       "status": "ステータス",
       "status_hint": "ステータスはライブラリから来ます。名前や色はライブラリで変更すると、使用中のすべてのワークフローに反映されます。",
-      "handler_hint_on": "タスクがこのステップに入ると、担当者がここの処理者に変わります。エージェントやスクワッドならすぐに実行を始めます。",
+      "handler_hint_on": "タスクがこのステップに入ると、担当者がここの処理者に変わります。エージェントならすぐに実行を始めます。",
       "handler_hint_off": "このステップに入っても担当者は変わらず、実行も始まりません。",
       "handler_hint_lead": "プロジェクトごとに解決：各プロジェクトのリード。",
       "handler_hint_creator": "タスクごとに解決：作成した人。",
       "target_agent": "エージェント",
-      "target_squad": "スクワッド · リーダーが割り振り",
       "target_member": "メンバー",
       "instructions_hint": "今回の実行の指示として処理者に送られ、タスクの説明やコメントと一緒にコンテキストになります。",
       "next_hint": "担当者が直接ステータスを更新し、差し戻すのは手直しが必要な場合のみで、ブロック時は差し戻しません。実行が完了してもステータスは自動的に変わりません。",
@@ -1825,8 +1792,6 @@
   },
   "views": {
     "builtin": {
-      "my_issues": "マイタスク",
-      "my_agents": "マイエージェントの作業",
       "all_issues": "すべてのタスク",
       "my_work": "自分の作業",
       "working": "実行中",
@@ -2019,5 +1984,28 @@
     "focus_failed": "{{name}} に切り替えられませんでした",
     "retry": "再試行",
     "dismiss": "閉じる"
+  },
+  "trees": {
+    "section_title": "Worktree",
+    "state": {
+      "pending": "構築中",
+      "ready": "準備完了",
+      "failed": "失敗",
+      "deleted": "削除済み"
+    },
+    "copy_task_branch": "タスクブランチをコピー",
+    "copy_path": "パスをコピー",
+    "copied": "コピーしました",
+    "copy_failed": "コピーできませんでした",
+    "open_agent_terminal": "エージェントターミナル",
+    "open_shell": "シェル",
+    "delete": "worktree を削除",
+    "delete_description": "worktree はマシンから削除されます。ブランチは保持され、未コミットの変更は先にそのブランチにコミットされます。",
+    "delete_confirm": "削除",
+    "cancel": "キャンセル",
+    "delete_failed": "worktree を削除できませんでした",
+    "rebuild": "再構築",
+    "rebuild_failed": "worktree を再構築できませんでした",
+    "save_failed": "組み合わせを保存できませんでした。"
   }
 }

@@ -1,9 +1,9 @@
 // Submodule imports, not the `@multica/ui/markdown` barrel: the collaboration
 // server runs this in Node, and the barrel pulls in React renderers and CSS.
 import { preprocessLinks } from "@multica/ui/markdown/linkify";
-import { preprocessMentionShortcodes } from "@multica/ui/markdown/mentions";
 import { preprocessFileCards } from "@multica/ui/markdown/file-cards";
 import { preprocessIssueIdentifiers } from "@multica/ui/markdown/issue-identifiers";
+import { preprocessMentionShortcodes } from "@multica/core/markdown";
 import { stripChannelMediaMarkers } from "@multica/core/types/attachment-url";
 
 /**
@@ -14,8 +14,7 @@ import { stripChannelMediaMarkers } from "@multica/core/types/attachment-url";
  * was deleted in the April 2026 refactor.
  *
  * String→string transforms on raw Markdown:
- * 1. Legacy mention shortcodes [@ id="..." label="..."] → [@Label](mention://member/id)
- *    (old serialization format in database, migrated on read)
+ * 1. Legacy member shortcodes [@ id="UUID" label="LABEL"] → plain @LABEL
  * 2. (readonly only) Bare issue identifiers MUL-123 → [MUL-123](mention://issue/MUL-123)
  * 3. Raw URLs → markdown links via linkify-it (so they render as clickable Link nodes)
  * 4. File card syntax (new !file[name](url) + legacy [name](cdnUrl)) → HTML div for

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createRef, type ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { workspaceKeys } from "@multica/core/workspace/queries";
@@ -118,12 +118,6 @@ function fakeQc(data: {
       target_id: string | null;
     }>;
   }>;
-  squads?: Array<{
-    id: string;
-    name: string;
-    archived_at: string | null;
-    leader_id: string;
-  }>;
   issues?: Array<{ id: string; identifier: string; title: string; status: string }>;
   projects?: Array<{ id: string; title: string; status: string; archived_at: string | null }>;
   docs?: Array<{ id: string; title: string; updatedAt: string }>;
@@ -148,7 +142,6 @@ function fakeQc(data: {
         : [{ target_type: "workspace" as const, target_id: null }]),
   }));
   map.set(JSON.stringify(workspaceKeys.agents("ws-1")), agentsWithPermissions);
-  map.set(JSON.stringify(workspaceKeys.squads("ws-1")), data.squads ?? []);
   const byStatus: ListIssuesCache["byStatus"] = {};
   for (const status of PAGINATED_CATEGORIES) {
     const bucket = (data.issues ?? []).filter(
@@ -240,7 +233,7 @@ describe("createMentionSuggestion", () => {
     ]);
   });
 
-  it("returns members and agents synchronously without waiting for the server search", () => {
+  it("returns agents synchronously without waiting for the server search", () => {
     const qc = fakeQc({
       members: [{ user_id: "u1", name: "Alice", role: "member" }],
       agents: [
@@ -262,8 +255,7 @@ describe("createMentionSuggestion", () => {
     // Must be synchronous: a plain array, not a Promise.
     expect(Array.isArray(result)).toBe(true);
     const items = result as MentionItem[];
-    expect(items.some((i) => i.type === "member" && i.label === "Alice")).toBe(true);
-    expect(items.some((i) => i.type === "agent" && i.label === "Aegis")).toBe(true);
+    expect(items.map((i) => `${i.type}:${i.id}`)).toEqual(["agent:a1"]);
   });
 
   it("keeps an unbound agent discoverable but marks it as unselectable", () => {
@@ -484,20 +476,6 @@ describe("createMentionSuggestion", () => {
       expect(screen.getByText("MUL-7")).toBeInTheDocument();
     });
     expect(screen.queryByText("No results")).not.toBeInTheDocument();
-  });
-
-  it("leaves guests out of the member list where they cannot follow the mention", () => {
-    const qc = fakeQc({
-      members: [
-        { user_id: "u1", name: "Alice", role: "member" },
-        { user_id: "u2", name: "Alan", role: "guest" },
-      ],
-    });
-    const members = (config: ReturnType<typeof createMentionSuggestion>) =>
-      (config.items!(itemArgs("al")) as MentionItem[]).filter((i) => i.type === "member").map((i) => i.id).sort();
-
-    expect(members(createMentionSuggestion(qc))).toEqual(["u1", "u2"]);
-    expect(members(createMentionSuggestion(qc, { hideGuests: true }))).toEqual(["u1"]);
   });
 
   it("matches cached live projects synchronously and leaves archived ones to the server", () => {
@@ -905,6 +883,7 @@ describe("createMentionSuggestion", () => {
   it("does not inject current/recent chat context into the normal @ results", () => {
     const qc = fakeQc({
       members: [{ user_id: "u1", name: "Alice", role: "member" }],
+      agents: [{ id: "a1", name: "Aegis", archived_at: null, visibility: "workspace", owner_id: null }],
       issues: [{ id: "i1", identifier: "MUL-1", title: "Login bug", status: "todo" }],
     });
     searchIssuesMock.mockReturnValue(new Promise(() => {}));
@@ -913,7 +892,7 @@ describe("createMentionSuggestion", () => {
     const result = config.items!(itemArgs("")) as MentionItem[];
 
     expect(result.some((item) => item.group === "current" || item.group === "recent")).toBe(false);
-    expect(result.map((item) => `${item.type}:${item.id}`)).toContain("member:u1");
+    expect(result.map((item) => `${item.type}:${item.id}`)).toContain("agent:a1");
     expect(result.map((item) => `${item.type}:${item.id}`)).toContain("issue:i1");
   });
 
@@ -936,7 +915,7 @@ describe("createMentionSuggestion", () => {
     const result = config.items!(itemArgs("")) as MentionItem[];
 
     expect(result.map((item) => `${item.type}:${item.id}`)).toEqual(["issue:i1", "project:p1"]);
-    expect(result.some((item) => item.type === "member" || item.type === "agent")).toBe(false);
+    expect(result.some((item) => item.type === "agent")).toBe(false);
   });
 
   it("prepends current/recent chat context without removing normal mention targets after the user types", () => {
@@ -957,7 +936,6 @@ describe("createMentionSuggestion", () => {
     const result = config.items!(itemArgs("a")) as MentionItem[];
 
     expect(result.map((item) => `${item.type}:${item.id}`).slice(0, 2)).toEqual(["issue:i1", "project:p1"]);
-    expect(result.some((item) => item.type === "member" && item.label === "Alice")).toBe(true);
     expect(result.some((item) => item.type === "agent" && item.label === "Aegis")).toBe(true);
   });
 
@@ -981,174 +959,28 @@ describe("createMentionSuggestion", () => {
     expect(screen.getByText("Roadmap")).toBeInTheDocument();
   });
 
-  it("localizes agent and squad badges", () => {
+  it("localizes the agent badge", () => {
     render(
       <ZhI18nWrapper>
         <MentionList
-          items={[
-            { id: "a1", label: "Aegis", type: "agent" },
-            { id: "s1", label: "Core team", type: "squad" },
-          ]}
+          items={[{ id: "a1", label: "Aegis", type: "agent" }]}
           query=""
           command={vi.fn()}
         />
       </ZhI18nWrapper>,
     );
 
-    expect(screen.getByText("智能体")).toBeInTheDocument();
-    expect(screen.getByText("小队")).toBeInTheDocument();
+    const row = screen.getByRole("button", { name: /Aegis/ });
+    expect(within(row).getByText("智能体")).toBeInTheDocument();
     expect(screen.queryByText("Agent")).not.toBeInTheDocument();
-    expect(screen.queryByText("Squad")).not.toBeInTheDocument();
   });
 
-  it("includes squads with a runnable leader in the mention list", () => {
+  it("matches Chinese agent names by full pinyin", () => {
     const qc = fakeQc({
       members: [{ user_id: "u1", name: "Alice", role: "member" }],
       agents: [
-        {
-          id: "leader-1",
-          name: "Leader",
-          archived_at: null,
-          visibility: "workspace",
-          owner_id: null,
-        },
-      ],
-      squads: [
-        {
-          id: "s1",
-          name: "Jiayuan's Coding Team",
-          archived_at: null,
-          leader_id: "leader-1",
-        },
-        {
-          id: "s2",
-          name: "独立团",
-          archived_at: null,
-          leader_id: "leader-1",
-        },
-        {
-          id: "s3",
-          name: "Archived Squad",
-          archived_at: "2026-01-01T00:00:00Z",
-          leader_id: "leader-1",
-        },
-      ],
-    });
-    searchIssuesMock.mockReturnValue(new Promise(() => {}));
-
-    const config = createMentionSuggestion(qc);
-    const result = config.items!(itemArgs(""));
-
-    const items = result as MentionItem[];
-    expect(items.filter((i) => i.type === "squad")).toHaveLength(2);
-    expect(items.some((i) => i.type === "squad" && i.label === "Jiayuan's Coding Team")).toBe(true);
-    expect(items.some((i) => i.type === "squad" && i.label === "独立团")).toBe(true);
-    expect(items.some((i) => i.type === "squad" && i.label === "Archived Squad")).toBe(false);
-  });
-
-  it("keeps a squad with an unbound leader discoverable but unselectable", () => {
-    const qc = fakeQc({
-      agents: [
-        {
-          id: "leader-1",
-          name: "Leader",
-          archived_at: null,
-          runtime_id: "",
-          runtime_bound: false,
-          visibility: "workspace",
-          owner_id: null,
-        },
-      ],
-      squads: [
-        {
-          id: "s1",
-          name: "Unrunnable Squad",
-          archived_at: null,
-          leader_id: "leader-1",
-        },
-      ],
-    });
-
-    const config = createMentionSuggestion(qc);
-    const items = config.items!(itemArgs("")) as MentionItem[];
-
-    expect(items).toContainEqual(
-      expect.objectContaining({
-        type: "squad",
-        id: "s1",
-        disabledReason: "agent_runtime_required",
-      }),
-    );
-  });
-
-  it("keeps squads discoverable while the agents cache is not ready", () => {
-    const qc = fakeQc({
-      squads: [
-        {
-          id: "s1",
-          name: "Cold Cache Squad",
-          archived_at: null,
-          leader_id: "leader-not-cached",
-        },
-      ],
-    });
-
-    const config = createMentionSuggestion(qc);
-    const items = config.items!(itemArgs("")) as MentionItem[];
-    const squad = items.find((item) => item.type === "squad" && item.id === "s1");
-
-    expect(squad).toBeDefined();
-    expect(squad?.disabledReason).toBeUndefined();
-  });
-
-  it("keeps a squad with an archived leader discoverable", () => {
-    const qc = fakeQc({
-      agents: [
-        {
-          id: "leader-1",
-          name: "Archived Leader",
-          archived_at: "2026-01-01T00:00:00Z",
-          visibility: "workspace",
-          owner_id: null,
-        },
-      ],
-      squads: [
-        {
-          id: "s1",
-          name: "Archived Leader Squad",
-          archived_at: null,
-          leader_id: "leader-1",
-        },
-      ],
-    });
-
-    const config = createMentionSuggestion(qc);
-    const items = config.items!(itemArgs("")) as MentionItem[];
-    const squad = items.find((item) => item.type === "squad" && item.id === "s1");
-
-    expect(squad).toBeDefined();
-    expect(squad?.disabledReason).toBeUndefined();
-  });
-
-  it("returns no squads when the squads cache is empty (not yet fetched)", () => {
-    const qc = fakeQc({
-      members: [{ user_id: "u1", name: "Alice", role: "member" }],
-      // squads not provided — simulates cache miss
-    });
-    searchIssuesMock.mockReturnValue(new Promise(() => {}));
-
-    const config = createMentionSuggestion(qc);
-    const result = config.items!(itemArgs(""));
-
-    const items = result as MentionItem[];
-    expect(items.filter((i) => i.type === "squad")).toHaveLength(0);
-  });
-
-  it("matches Chinese names by full pinyin", () => {
-    const qc = fakeQc({
-      members: [
-        { user_id: "u1", name: "Alice", role: "member" },
-        { user_id: "u2", name: "李云龙", role: "member" },
+        { id: "a1", name: "Atlas", archived_at: null, visibility: "workspace", owner_id: null },
+        { id: "a2", name: "李云龙", archived_at: null, visibility: "workspace", owner_id: null },
       ],
     });
     searchIssuesMock.mockReturnValue(new Promise(() => {}));
@@ -1157,16 +989,15 @@ describe("createMentionSuggestion", () => {
     const result = config.items!(itemArgs("liyunlong"));
 
     const items = result as MentionItem[];
-    expect(items.some((i) => i.type === "member" && i.label === "李云龙")).toBe(true);
-    expect(items.some((i) => i.type === "member" && i.label === "Alice")).toBe(false);
+    expect(items.map((i) => `${i.type}:${i.id}`)).toEqual(["agent:a2"]);
   });
 
-  it("matches Chinese names by pinyin initials", () => {
+  it("matches Chinese agent names by pinyin initials", () => {
     const qc = fakeQc({
-      members: [
-        { user_id: "u1", name: "Alice", role: "member" },
-        { user_id: "u2", name: "李云龙", role: "member" },
-        { user_id: "u3", name: "张大彪", role: "member" },
+      members: [{ user_id: "u1", name: "Alice", role: "member" }],
+      agents: [
+        { id: "a2", name: "李云龙", archived_at: null, visibility: "workspace", owner_id: null },
+        { id: "a3", name: "张大彪", archived_at: null, visibility: "workspace", owner_id: null },
       ],
     });
     searchIssuesMock.mockReturnValue(new Promise(() => {}));
@@ -1175,8 +1006,7 @@ describe("createMentionSuggestion", () => {
     const result = config.items!(itemArgs("lyl"));
 
     const items = result as MentionItem[];
-    expect(items.some((i) => i.type === "member" && i.label === "李云龙")).toBe(true);
-    expect(items.some((i) => i.type === "member" && i.label === "张大彪")).toBe(false);
+    expect(items.map((i) => `${i.type}:${i.id}`)).toEqual(["agent:a2"]);
   });
 
   it("matches Chinese agent names by pinyin", () => {

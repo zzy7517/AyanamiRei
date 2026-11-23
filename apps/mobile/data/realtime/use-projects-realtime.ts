@@ -1,6 +1,6 @@
 /**
  * Projects realtime — listing-level subscriptions. Mounted globally
- * (workspace-session-lifetime) alongside `useMyIssuesRealtime` so the
+ * (workspace-session-lifetime) alongside the other listing-level hooks so the
  * project list stays fresh even if the user is on chat or an issue.
  *
  * Event coverage:

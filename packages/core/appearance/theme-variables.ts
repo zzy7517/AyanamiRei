@@ -285,7 +285,7 @@ const LAYOUT: Entry[] = [
   ["page-padding-x", "Side padding of page headers, the toolbars under them and full-width lists.", "var(--space-md, 1rem)"],
   ["sidebar-panel-width", "Starting width of the navigation panel, kept between 200px and 320px. Once the person drags its edge, their width wins.", "280px"],
   ["content-max-width", "Widest the reading column gets on an issue page and in chat.", "clamp(56rem, 70cqi, 70rem)"],
-  ["object-page-max-width", "Widest the body of a project, agent, squad, runtime or other object page gets.", "760px"],
+  ["object-page-max-width", "Widest the body of a project, agent, runtime or other object page gets.", "760px"],
 ];
 
 const ISSUES: Entry[] = [

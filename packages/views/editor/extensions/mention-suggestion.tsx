@@ -36,7 +36,6 @@ import type {
   ListProjectsResponse,
   MemberWithUser,
   Agent,
-  Squad,
   DocSummary,
   DocTree,
 } from "@multica/core/types";
@@ -61,7 +60,7 @@ import { PluginKey } from "@tiptap/pm/state";
 import {
   getRecencyMap,
   recordMentionUsage,
-  sortUserItemsByRecency,
+  sortAgentItemsByRecency,
 } from "./mention-recency";
 import { matchesPinyin } from "./pinyin-match";
 import {
@@ -79,7 +78,7 @@ import { blockedReasonLabel } from "../../issues/blocked-trigger-copy";
 export interface MentionItem {
   id: string;
   label: string;
-  type: "member" | "agent" | "squad" | "issue" | "project" | "doc" | "all";
+  type: "agent" | "issue" | "project" | "doc";
   /** Optional grouping hint for injected context items. */
   group?: "current" | "recent" | "search";
   /** Secondary text shown beside the label (e.g. issue title) */
@@ -126,7 +125,7 @@ function groupItems(items: MentionItem[], query: string): MentionGroup[] {
   const current: MentionItem[] = [];
   const recent: MentionItem[] = [];
   const search: MentionItem[] = [];
-  const users: MentionItem[] = [];
+  const agents: MentionItem[] = [];
   const issues: MentionItem[] = [];
   const projects: MentionItem[] = [];
   const docs: MentionItem[] = [];
@@ -148,7 +147,7 @@ function groupItems(items: MentionItem[], query: string): MentionGroup[] {
     } else if (item.type === "doc") {
       docs.push(item);
     } else {
-      users.push(item);
+      agents.push(item);
     }
   }
 
@@ -156,7 +155,7 @@ function groupItems(items: MentionItem[], query: string): MentionGroup[] {
   if (current.length > 0) groups.push({ label: "Current", items: current });
   if (recent.length > 0) groups.push({ label: "Recent", items: recent });
   if (search.length > 0) groups.push({ label: "Search", items: search });
-  if (users.length > 0) groups.push({ label: "Users", items: users });
+  if (agents.length > 0) groups.push({ label: "Agents", items: agents });
   if (issues.length > 0) groups.push({ label: "Issues", items: issues });
   if (projects.length > 0) groups.push({ label: "Projects", items: projects });
   if (docs.length > 0) groups.push({ label: "Docs", items: docs });
@@ -413,7 +412,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
     }, [items, normalizedQuery, searchedQuery, selectedKey, serverItems]);
 
     // The single index space for selection. groupItems() re-buckets displayItems
-    // (current → recent → search → users → issues); orderedItems is exactly what
+    // (current → recent → search → agents → issues); orderedItems is exactly what
     // the popup renders, top to bottom. Keyboard nav, Enter, clicks, highlight,
     // and scroll all index THIS, so the highlighted row always equals the
     // committed item — there is no second "data order" to drift against.
@@ -517,7 +516,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
       if (label === "Current") return t(($) => $.mention.group_current);
       if (label === "Recent") return t(($) => $.mention.group_recent);
       if (label === "Search") return t(($) => $.mention.group_search);
-      if (label === "Users") return t(($) => $.mention.group_users);
+      if (label === "Agents") return t(($) => $.mention.group_agents);
       if (label === "Issues") return t(($) => $.mention.group_issues);
       if (label === "Projects") return t(($) => $.mention.group_projects);
       if (label === "Docs") return t(($) => $.mention.group_docs);
@@ -714,22 +713,15 @@ function MentionRow({
       onClick={onSelect}
     >
       <ActorAvatar
-        actorType={item.type === "all" ? "member" : item.type}
+        actorType={item.type}
         actorId={item.id}
         size="sm"
         showStatusDot
       />
-      <span className="truncate font-medium">
-        {item.type === "all" ? t(($) => $.mention.all_members) : item.label}
-      </span>
+      <span className="truncate font-medium">{item.label}</span>
       {item.type === "agent" && (
         <Badge variant="outline" className="ml-auto text-micro h-4 px-1.5">
           {t(($) => $.mention.agent_badge)}
-        </Badge>
-      )}
-      {item.type === "squad" && (
-        <Badge variant="outline" className="ml-auto text-micro h-4 px-1.5">
-          {t(($) => $.mention.squad_badge)}
         </Badge>
       )}
     </button>
@@ -836,8 +828,6 @@ function matchesMentionQuery(item: MentionItem, query: string): boolean {
 interface MentionSuggestionOptions {
   mode?: "default" | "context";
   getContextItems?: () => MentionItem[];
-  /** Leave guests out of the member list, where the mention leads somewhere they cannot open. */
-  hideGuests?: boolean;
 }
 
 export function createMentionSuggestion(
@@ -860,7 +850,6 @@ export function createMentionSuggestion(
 
     const members: MemberWithUser[] = qc.getQueryData(workspaceKeys.members(wsId)) ?? [];
     const agents: Agent[] = qc.getQueryData(workspaceKeys.agents(wsId)) ?? [];
-    const squads: Squad[] = qc.getQueryData(workspaceKeys.squads(wsId)) ?? [];
     const listQueries = qc.getQueriesData<ListIssuesCache>({ queryKey: issueKeys.list(wsId) });
     const cachedResponse = listQueries[0]?.[1];
     const cachedIssues: Issue[] = cachedResponse ? flattenIssueBuckets(cachedResponse) : [];
@@ -873,30 +862,12 @@ export function createMentionSuggestion(
     const userId = useAuthStore.getState().user?.id ?? null;
     const myRole =
       members.find((m) => m.user_id === userId)?.role ?? null;
-    // A guest (MUL-9420) mentions people only: the server refuses agent and
-    // squad mentions from it, and it does not page the whole workspace.
-    const guest = myRole === "guest";
 
     const q = query.toLowerCase();
 
-    const allItem: MentionItem[] =
-      !guest && ("all members".includes(q) || "all".includes(q))
-        ? [{ id: "all", label: "All members", type: "all" as const }]
-        : [];
-
-    const memberItems: MentionItem[] = members
-      .filter((m) => !(options.hideGuests && m.role === "guest"))
-      .filter((m) => m.name.toLowerCase().includes(q) || matchesPinyin(m.name, q))
-      .map((m) => ({
-        id: m.user_id,
-        label: m.name,
-        type: "member" as const,
-      }));
-
-    const agentItems: MentionItem[] = agents
+    const matchingAgents: MentionItem[] = agents
       .filter(
         (a) =>
-          !guest &&
           !a.archived_at &&
           (a.name.toLowerCase().includes(q) || matchesPinyin(a.name, q)) &&
           canAssignAgentToIssue(a, { userId, role: myRole }).allowed,
@@ -909,37 +880,11 @@ export function createMentionSuggestion(
           ? undefined
           : ("agent_runtime_required" as const),
       }));
-    const activeAgentRuntimeBinding = new Map(
-      agents
-        .filter((agent) => !agent.archived_at)
-        .map((agent) => [agent.id, isAgentRuntimeBound(agent)]),
-    );
 
-    const squadItems: MentionItem[] = squads
-      .filter(
-        (s) =>
-          !guest &&
-          !s.archived_at &&
-          (s.name.toLowerCase().includes(q) || matchesPinyin(s.name, q)),
-      )
-      .map((s) => ({
-        id: s.id,
-        label: s.name,
-        type: "squad" as const,
-        disabledReason:
-          activeAgentRuntimeBinding.get(s.leader_id) === false
-            ? ("agent_runtime_required" as const)
-            : undefined,
-      }));
-
-    // Members and agents share a single ranked list — recently mentioned
-    // targets come first regardless of type, with an alphabetical fallback
-    // for everyone the user hasn't mentioned yet on this device.
+    // Recently mentioned agents come first, with an alphabetical fallback
+    // for the agents the user hasn't mentioned yet on this device.
     const recency = getRecencyMap(wsId);
-    const userItems = sortUserItemsByRecency(
-      [...memberItems, ...agentItems, ...squadItems],
-      recency,
-    );
+    const agentItems = sortAgentItemsByRecency(matchingAgents, recency);
 
     // Cached issues give an instant first paint; MentionList adds server
     // matches for done/cancelled and any other issues not in this cache.
@@ -972,7 +917,7 @@ export function createMentionSuggestion(
       docItems = matchDocMentions(docTree?.docs ?? [], query);
     }
 
-    return [...allItem, ...userItems, ...issueItems, ...projectItems, ...docItems];
+    return [...agentItems, ...issueItems, ...projectItems, ...docItems];
   }
 
   // Adds the cached docs matching `query` that `items` (computed at the last

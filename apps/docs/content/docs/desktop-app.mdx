@@ -180,6 +180,20 @@ Delete the file and restart to return to the default Cloud configuration.
 Desktop can only connect to addresses reachable from both the browser and the executing machine. If a remote self-hosted instance doesn't use HTTPS or doesn't proxy WebSocket, Desktop can't establish a connection; see the [self-host quickstart](/self-host-quickstart#remote-access) for the full configuration.
 </Callout>
 
+### Sign-in without the login page
+
+For an instance that only you use, add `authToken` to skip the login page:
+
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "https://api.example.com",
+  "authToken": "<the server's MULTICA_AUTH_TOKEN>"
+}
+```
+
+Use the same value as the server's `MULTICA_AUTH_TOKEN`, and set `MULTICA_AUTH_TOKEN_EMAIL` on the server too; see [Pre-shared token](/environment-variables#pre-shared-token). Desktop then opens straight into the workspace. When the server rejects the token, Desktop shows the login page with a notice: fix the file and restart, or sign in with email or Google as usual. Without `authToken`, nothing changes.
+
 ### Windows: check the filename and encoding
 
 Two common ways of writing the file on Windows produce one Desktop can't read:

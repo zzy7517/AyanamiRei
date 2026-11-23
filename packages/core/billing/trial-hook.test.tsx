@@ -31,7 +31,7 @@ it("refreshes feature access after the last Business policy expires on the serve
   // A policy read just before trial expiry is fresh for another minute.
   const serverPolicyFreshUntil = endsAt + 59_000;
   const getWorkspaceFeatures = vi.fn(async () => ({
-    features: { private_projects: Date.now() < serverPolicyFreshUntil ? "available" : "locked" },
+    features: { agent_invocation_members: Date.now() < serverPolicyFreshUntil ? "available" : "locked" },
   }));
   const getWorkspaceSubscriptionSummary = vi.fn(async () => Date.now() < endsAt ? active : ({
     ...active, entitlement: { plan: "free", status: "inactive" },
@@ -40,13 +40,13 @@ it("refreshes feature access after the last Business policy expires on the serve
   setApiInstance({ getWorkspaceFeatures, getWorkspaceSubscriptionSummary } as unknown as ApiClient);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   qc.setQueryData(workspaceSubscriptionKeys.summary("ws-trial"), active);
-  qc.setQueryData(workspaceFeatureKeys.all("ws-trial"), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all("ws-trial"), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result } = renderHook(() => ({
     trial: useWorkspaceTrial("ws-trial", true),
-    access: usePaidFeatureAccess("ws-trial", "private_projects", { hasExistingConfig: true }),
+    access: usePaidFeatureAccess("ws-trial", "agent_invocation_members", { hasExistingConfig: true }),
   }), { wrapper });
   await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
   await act(async () => { await vi.advanceTimersByTimeAsync(100); });
@@ -81,20 +81,20 @@ it("reads a workspace switched to at the current time and catches up its missed 
   const otherEndsAt = start + 10 * 24 * 60 * 60 * 1000;
   const endedAt = start + 10 * 60 * 1000;
   const getWorkspaceSubscriptionSummary = vi.fn(async () => trialSummary("expired", endedAt));
-  const getWorkspaceFeatures = vi.fn(async () => ({ features: { private_projects: "locked" } }));
+  const getWorkspaceFeatures = vi.fn(async () => ({ features: { agent_invocation_members: "locked" } }));
   setApiInstance({ getWorkspaceFeatures, getWorkspaceSubscriptionSummary } as unknown as ApiClient);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   qc.setQueryData(workspaceSubscriptionKeys.summary("ws-a"), trialSummary("active", otherEndsAt));
   // Read while ws-b's trial was still running.
   qc.setQueryData(workspaceSubscriptionKeys.summary("ws-b"), trialSummary("active", endedAt));
-  qc.setQueryData(workspaceFeatureKeys.all("ws-b"), { features: { private_projects: "available" } });
+  qc.setQueryData(workspaceFeatureKeys.all("ws-b"), { features: { agent_invocation_members: "available" } });
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
   const { result, rerender } = renderHook(
     ({ wsId }) => ({
       trial: useWorkspaceTrial(wsId, true),
-      access: usePaidFeatureAccess(wsId, "private_projects", { hasExistingConfig: true }),
+      access: usePaidFeatureAccess(wsId, "agent_invocation_members", { hasExistingConfig: true }),
     }),
     { wrapper, initialProps: { wsId: "ws-a" } },
   );

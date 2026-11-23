@@ -292,7 +292,6 @@ describe("Table view on the production virtualized hierarchy path", () => {
       listProperties: async () => ({ properties: [] }),
       listMembers: async () => [],
       listAgents: async () => [],
-      listSquads: async () => [],
       listIssueTableRows: async (request: IssueTableRowsRequest) => {
         const parent = request.parent_id ?? "root";
         rowRequests.push(parent);

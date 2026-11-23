@@ -3,6 +3,12 @@ export interface RuntimeConfig {
   apiUrl: string;
   wsUrl: string;
   appUrl: string;
+  /**
+   * Pre-shared token the app signs in with instead of the login page: the
+   * server's `MULTICA_AUTH_TOKEN`. Absent when the user signs in with email
+   * or Google.
+   */
+  authToken?: string;
 }
 
 export interface RuntimeConfigError {
@@ -72,6 +78,9 @@ export function parseRuntimeConfig(raw: string): RuntimeConfig {
   const apiUrl = requiredString(obj.apiUrl, "apiUrl");
   const appUrl = optionalString(obj.appUrl, "appUrl");
   const wsUrl = optionalString(obj.wsUrl, "wsUrl");
+  // A token pasted with a surrounding space or newline is never meant to carry
+  // it, and the server compares the whole string.
+  const authToken = optionalString(obj.authToken, "authToken")?.trim();
 
   const normalizedApiUrl = normalizeHttpUrl(apiUrl, "apiUrl");
   return {
@@ -79,6 +88,7 @@ export function parseRuntimeConfig(raw: string): RuntimeConfig {
     apiUrl: normalizedApiUrl,
     wsUrl: wsUrl ? normalizeWsUrl(wsUrl, "wsUrl") : deriveWsUrl(normalizedApiUrl),
     appUrl: appUrl ? normalizeHttpUrl(appUrl, "appUrl") : deriveAppUrl(normalizedApiUrl),
+    ...(authToken ? { authToken } : {}),
   };
 }
 

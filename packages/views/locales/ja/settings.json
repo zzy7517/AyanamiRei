@@ -124,7 +124,7 @@
     "field_name_placeholder": "コードレビュー",
     "field_target": "実行者",
     "no_target": "エージェントなし（コメントのみ）",
-    "no_target_hint": "誰もメンションせずにメッセージを投稿します。",
+    "no_target_hint": "エージェントをメンションせずにメッセージを投稿します。",
     "field_prompt": "プロンプト",
     "field_prompt_placeholder": "このタスクに関連するコードをレビューし、正確性とエッジケースを重点的に確認してください。",
     "prompt_hint": "そのまま送られます。タスクの内容は既に読めます。",
@@ -427,7 +427,7 @@
       },
       "unsubscribeArchiveInboxItem": {
         "label": "購読解除してアーカイブ",
-        "description": "開いている通知のタスクの購読を解除し、アーカイブします。自分や自分のエージェントのタスク以外で使えます。"
+        "description": "開いている通知のタスクの購読を解除し、アーカイブします。自分のエージェントのタスク以外で使えます。"
       },
       "snoozeInboxItem": {
         "label": "通知をスヌーズ",
@@ -457,10 +457,6 @@
         "label": "チャットへ移動",
         "description": "ワークスペースのチャットを開きます。"
       },
-      "goMyIssues": {
-        "label": "自分のタスクへ移動",
-        "description": "自分に割り当てられたタスクを開きます。"
-      },
       "goIssues": {
         "label": "タスクへ移動",
         "description": "タスク一覧を開きます。"
@@ -476,10 +472,6 @@
       "goAgents": {
         "label": "エージェントへ移動",
         "description": "エージェント一覧を開きます。"
-      },
-      "goSquads": {
-        "label": "Squadsへ移動",
-        "description": "Squad一覧を開きます。"
       },
       "goUsage": {
         "label": "使用量へ移動",
@@ -844,7 +836,7 @@
     },
     "others_issues": {
       "label": "他の人のタスク",
-      "description": "他の人やそのエージェントに割り当てられたタスクで、作成・コメント・メンションによりフォローしているものです。重要な更新には、@メンション、参加したスレッドへの返信、および「ステータス変更」がオンの場合に確認が必要なステータス（レビュー中、ブロック中、完了）が含まれます。",
+      "description": "他の人やそのエージェントに割り当てられたタスクで、作成・コメントによりフォローしているものです。重要な更新には、参加したスレッドへの返信、および「ステータス変更」がオンの場合に確認が必要なステータス（レビュー中、ブロック中、完了）が含まれます。",
       "key_updates": "重要な更新のみ",
       "all": "すべてのアクティビティ"
     },
@@ -900,14 +892,6 @@
       "comments": {
         "label": "コメント",
         "description": "フォロー中のタスクに新しいコメントが付いたとき"
-      },
-      "mentions": {
-        "label": "メンション",
-        "description": "誰かがあなたを @メンションしたとき（@all と @squad を含む）"
-      },
-      "reactions": {
-        "label": "リアクション",
-        "description": "あなたが作成したタスクや書いたコメントに誰かがリアクションしたとき"
       },
       "updates": {
         "label": "優先度と期限",
@@ -1647,40 +1631,15 @@
       "member": {
         "label": "メンバー",
         "description": "タスクの作成と作業"
-      },
-      "guest": {
-        "label": "ゲスト",
-        "description": "共有されたプロジェクトの閲覧とコメントのみ。エージェントは実行できません。"
       }
     },
-    "share_links_create_title": "共有リンクを作成",
-    "share_links_create_button": "生成",
-    "share_links_creating": "生成中...",
-    "share_link_uses": "{{used}} / {{max}} 回使用",
-    "share_link_expires": "有効期限 {{date}}",
-    "share_link_copy_tooltip": "リンクをコピー",
-    "share_link_revoke_tooltip": "リンクを取り消す",
-    "toast_share_link_created": "共有リンクを作成しました",
-    "toast_share_link_failed": "共有リンクの作成に失敗しました",
-    "toast_share_link_revoked": "共有リンクを取り消しました",
-    "toast_share_link_revoke_failed": "共有リンクの取り消しに失敗しました",
-    "toast_share_link_copied": "リンクをコピーしました",
-    "toast_share_link_copy_failed": "リンクのコピーに失敗しました",
-    "expiry_24h": "24時間",
-    "expiry_7d": "7日",
-    "expiry_30d": "30日",
-    "expiry_never": "無期限",
     "members_label": "メンバー",
     "pending_label": "承認待ちの招待",
-    "share_links_label": "共有リンク",
-    "share_links_description": "リンクを知っている人は、期限切れまたは取り消しまで、選択したロールで参加できます。",
     "search_placeholder": "名前またはメールで検索",
     "no_results": "一致するメンバーはいません。",
     "no_invitations": "承認待ちの招待はありません。",
-    "no_share_links": "共有リンクはまだありません。",
     "email_label": "メールアドレス",
     "role_label": "ロール",
-    "expiry_label": "有効期限",
     "you": "あなた",
     "joined": "{{date}} に参加",
     "member_actions": "{{name}} の操作",
@@ -1701,31 +1660,6 @@
     "toast_invite_check_unavailable": "既存のメンバーと招待を確認できませんでした。しばらくしてからもう一度お試しください。",
     "member_limit_full_description_billing": "ワークスペースのサブスクリプションに対応が必要です。請求とプランで復旧するとメンバーを追加できます。先にメンバーを削除することもできます。",
     "open_billing": "請求とプランを開く",
-    "guest_free_tag": "無料・席を使わない",
-    "guest_projects_label": "アクセスできるプロジェクト",
-    "guest_projects_add": "プロジェクトを追加…",
-    "guest_projects_remove": "{{project}} を外す",
-    "guest_projects_hint": "ゲストは他のプロジェクト、エージェント、オートパイロット、設定を見られません。",
-    "invite_guest_button": "ゲストを招待",
-    "all_label": "すべて",
-    "guests_label": "ゲスト",
-    "guest_count": "ゲスト {{count}} 人",
-    "list_separator": "、",
-    "takes_seat": "1 席を使用",
-    "frees_seat": "席が空く",
-    "make_member": "メンバーにする",
-    "make_member_title": "{{name}} をメンバーにしますか？",
-    "make_member_description": "{{name}} はワークスペース全体を見られ、エージェントを実行できます。1 席を使用します。",
-    "make_member_seat_description": "{{name}} はワークスペース全体を見られ、エージェントを実行できます。購入済みの席がすべて使用中のため、1 席を追加購入します。",
-    "purchase_seat_and_make_member": "席を購入してメンバーにする",
-    "making_member": "メンバーにしています…",
-    "make_guest_title": "{{name}} をゲストにしますか？",
-    "make_guest_description": "{{name}} は下のプロジェクトだけを見られ、席が空きます。エージェント、オートパイロット、ランタイムへのアクセスは回収されます。",
-    "make_guest_button": "ゲストにする",
-    "manage_projects": "アクセスできるプロジェクトを管理",
-    "manage_projects_title": "{{name}} がアクセスできるプロジェクト",
-    "save_projects": "保存",
-    "toast_projects_updated": "プロジェクトを更新しました",
     "revoke_invitation_confirm": "招待を取り消す",
     "remove_member_confirm": "メンバーを削除"
   },
@@ -1758,7 +1692,13 @@
   "code": {
     "hosting_title": "コードホスティング",
     "pr_linking_title": "プルリクエストとタスク",
-    "github_actions": "GitHub の操作"
+    "github_actions": "GitHub の操作",
+    "task_trees_title": "Worktree",
+    "task_tree_retention": {
+      "label": "完了したタスクの worktree を保持する期間",
+      "unit": "日",
+      "description": "その後、worktree はマシンから削除されます。ブランチは保持されます。"
+    }
   },
   "channels": {
     "breadcrumb": "パンくずリスト",
@@ -2110,26 +2050,5 @@
       "retry_failed": "この録音を文字起こしできませんでした",
       "show_more": "さらに表示"
     }
-  },
-  "private_projects": {
-    "title": "プライベートプロジェクト",
-    "description": "プライベートプロジェクトを開けるのは、そのメンバーだけです。ワークスペースのオーナーは各プロジェクトのメンバーを確認でき、対応が必要なときは自分を追加できます。",
-    "empty": "このワークスペースにプライベートプロジェクトはありません。",
-    "load_failed": "プライベートプロジェクトを読み込めませんでした。",
-    "retry": "再試行",
-    "no_members": "メンバーなし",
-    "lead_name": "{{name}}（リード）",
-    "more_members": "ほか {{count}} 人",
-    "archived": "アーカイブ済み",
-    "member": "参加済み",
-    "open": "開く",
-    "join": "参加",
-    "join_title": "「{{title}}」に参加しますか？",
-    "join_description": "このプロジェクトのメンバーリストに追加され、タスク、コメント、添付ファイルを閲覧できるようになります。現在のメンバーに通知されます。",
-    "join_description_empty": "このプロジェクトにはメンバーがいません。参加すると唯一のメンバーになり、タスク、コメント、添付ファイルを閲覧できるようになります。",
-    "join_confirm": "プロジェクトに参加",
-    "cancel": "キャンセル",
-    "toast_joined": "{{title}} に参加しました",
-    "toast_failed": "プロジェクトに参加できませんでした。"
   }
 }

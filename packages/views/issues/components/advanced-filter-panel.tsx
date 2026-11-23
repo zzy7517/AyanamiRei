@@ -428,7 +428,7 @@ function PropertyValuePicker({
     ...memberListOptions(wsId),
     enabled: !!property && isActorPropertyType(property.type),
   });
-  const actorName = useMemo(() => buildChipActorNames(members, [], []), [members]);
+  const actorName = useMemo(() => buildChipActorNames(members, []), [members]);
   const valueName = usePropertyValueName(actorName);
   const summary =
     condition.values.length === 0

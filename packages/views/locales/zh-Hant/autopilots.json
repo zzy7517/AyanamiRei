@@ -323,7 +323,7 @@
     "section_agent": "AI 代理",
     "section_assignee": "執行方",
     "select_agent": "選擇 AI 代理",
-    "select_assignee": "選擇 AI 代理或小隊",
+    "select_assignee": "選擇 AI 代理",
     "section_project": "關聯專案",
     "project_hint": "同時決定執行時的執行環境 —— 該專案的倉庫或本地目錄",
     "no_project": "不關聯專案",
@@ -369,7 +369,7 @@
     "schedule_empty": "還沒有時間表——這個自動化只在手動觸發時執行。",
     "schedule_add": "新增時間表",
     "error_title_required": "請填寫自動化名稱。",
-    "error_assignee_required": "請選擇執行該自動化的 AI 代理或小隊。",
+    "error_assignee_required": "請選擇執行該自動化的 AI 代理。",
     "output_modes": {
       "create_issue": {
         "label": "建立任務",
@@ -485,13 +485,11 @@
     }
   },
   "agent_picker": {
-    "filter_placeholder": "篩選 AI 代理或小隊...",
+    "filter_placeholder": "篩選 AI 代理...",
     "select_agent": "選擇 AI 代理",
-    "select_assignee": "選擇 AI 代理或小隊",
+    "select_assignee": "選擇 AI 代理",
     "agents_group": "AI 代理",
-    "squads_group": "小隊",
-    "agent_runtime_required": "請先為該 AI 代理繫結執行時",
-    "squad_runtime_required": "請先為該小隊的負責人繫結執行時"
+    "agent_runtime_required": "請先為該 AI 代理繫結執行時"
   },
   "timezone_picker": {
     "search_placeholder": "搜尋時區..."
@@ -599,7 +597,7 @@
     },
     "defaults": {
       "title": "子任務結束時",
-      "description": "某個階段的子任務全部結束、且後面還有階段在等待時，喚醒父任務的負責人；全部子任務結束時再喚醒一次。負責人是成員時，改為傳送收件箱通知。",
+      "description": "某個階段的子任務全部結束、且後面還有階段在等待時，喚醒父任務的負責人；全部子任務結束時再喚醒一次。",
       "badge": "工作區預設值",
       "enabled": "預設開啟",
       "instruction": "預設指令",

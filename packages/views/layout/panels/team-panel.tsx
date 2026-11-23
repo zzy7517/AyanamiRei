@@ -2,7 +2,18 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, BarChart3, BookOpenText, Bot, MessageSquare, Monitor, Plus, User, UserPlus, Users } from "@multica/ui/icons";
+import {
+  ArrowUpRight,
+  BarChart3,
+  BookOpenText,
+  Bot,
+  MessageSquare,
+  Monitor,
+  Plus,
+  SquareTerminal,
+  User,
+  UserPlus,
+} from "@multica/ui/icons";
 import { DropdownMenuItem } from "@multica/ui/components/ui/dropdown-menu";
 import { cn } from "@multica/ui/lib/utils";
 import { ActorAvatar } from "@multica/ui/components/common/actor-avatar";
@@ -15,8 +26,10 @@ import { canAssignAgentToIssue } from "@multica/core/permissions";
 import { issueDetailOptions } from "@multica/core/issues/queries";
 import { useSidebarTreeStore } from "@multica/core/issues/stores/sidebar-tree-store";
 import { useCurrentWorkspace, useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
+import { useFeatureEnabled } from "@multica/core/config";
+import { TERMINAL_V1_FLAG } from "@multica/core/feature-flags";
 import { runtimeListOptions } from "@multica/core/runtimes/queries";
-import { memberListOptions, skillListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { memberListOptions, skillListOptions } from "@multica/core/workspace/queries";
 import { resolvePublicFileUrl } from "@multica/core/workspace/avatar-url";
 import type { Agent, AgentTask } from "@multica/core/types";
 import { useNavigation } from "../../navigation";
@@ -243,6 +256,7 @@ function WorkingAgentRow({
 }
 
 export function TeamPanel() {
+  const terminalEnabled = useFeatureEnabled(TERMINAL_V1_FLAG, false);
   const { t } = useT("layout");
   const p = useWorkspacePaths();
   const { pathname, push } = useNavigation();
@@ -268,8 +282,6 @@ export function TeamPanel() {
     return map;
   }, [snapshot]);
 
-  const { data: squads = [] } = useQuery({ ...squadListOptions(wsId), enabled: !!wsId });
-  const liveSquads = useMemo(() => squads.filter((squad) => !squad.archived_at), [squads]);
   const { data: members = [] } = useQuery({ ...memberListOptions(wsId), enabled: !!wsId });
   const { data: skills = [] } = useQuery({ ...skillListOptions(wsId), enabled: !!wsId });
   const { data: runtimes = [] } = useQuery({ ...runtimeListOptions(wsId), enabled: !!wsId });
@@ -386,15 +398,8 @@ export function TeamPanel() {
           </PanelList>
         </PanelSection>
 
-        <PanelSection label={t(($) => $.panels.team.squads_and_members)}>
+        <PanelSection label={t(($) => $.panels.team.members_heading)}>
           <PanelList>
-            <PanelLink
-              href={p.squads()}
-              icon={<Users />}
-              label={t(($) => $.nav.squads)}
-              active={isPathWithin(pathname, p.squads())}
-              trailing={<PanelCount value={liveSquads.length} />}
-            />
             <PanelLink
               href={`${p.settings()}?tab=members`}
               label={t(($) => $.panels.team.members, { count: members.length })}
@@ -448,6 +453,15 @@ export function TeamPanel() {
               label={t(($) => $.nav.usage)}
               active={isPathWithin(pathname, p.usage())}
             />
+            {/* Behind its flag: a server without terminals would only refuse the page. */}
+            {terminalEnabled && (
+              <PanelLink
+                href={p.terminal()}
+                icon={<SquareTerminal />}
+                label={t(($) => $.nav.terminal)}
+                active={isPathWithin(pathname, p.terminal())}
+              />
+            )}
           </PanelList>
         </PanelSection>
       </PanelBody>

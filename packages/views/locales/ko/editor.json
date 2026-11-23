@@ -100,13 +100,11 @@
     "copy_failed": "복사하지 못했습니다"
   },
   "mention": {
-    "group_users": "멤버",
+    "group_agents": "에이전트",
     "group_issues": "태스크",
     "group_projects": "프로젝트",
     "group_docs": "문서",
-    "all_members": "모든 멤버",
     "agent_badge": "에이전트",
-    "squad_badge": "스쿼드",
     "searching": "검색 중...",
     "no_results": "결과 없음",
     "group_current": "현재 페이지",

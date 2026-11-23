@@ -48,11 +48,11 @@ import {
   patchIssueDetail,
   patchIssueLabels,
   patchIssuesList,
-  patchMyIssuesList,
+  patchMyIssueList,
   replaceCommentTimelineEntry,
   removeCommentCascade,
   removeCommentReaction,
-  removeFromMyIssuesList,
+  removeFromMyIssueList,
   removeIssueReaction,
 } from "./issue-ws-updaters";
 
@@ -107,13 +107,13 @@ export function useIssueRealtime(
         ws.on("issue:updated", (payload) => {
           if (payload.issue.id !== issueId) return;
           patchIssueDetail(qc, wsId, payload.issue);
-          patchMyIssuesList(qc, wsId, payload.issue);
+          patchMyIssueList(qc, wsId, payload.issue);
           patchIssuesList(qc, wsId, payload.issue);
         }),
         ws.on("issue:deleted", (payload) => {
           if (payload.issue_id !== issueId) return;
           clearIssueDetail(qc, wsId, issueId);
-          removeFromMyIssuesList(qc, wsId, issueId);
+          removeFromMyIssueList(qc, wsId, issueId);
           onDeleted?.();
         }),
         ws.on("issue_labels:changed", (payload) => {

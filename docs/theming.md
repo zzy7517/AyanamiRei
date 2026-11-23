@@ -261,7 +261,7 @@ those change without notice. Anchors, slots and hooks stay until the next
 | `[data-mc="tab-bar"]` | Desktop only: the tab strip above the page. |
 | `[data-mc="bottom-bar"]` | The status bar under the page, on windows wide enough to show it. |
 | `[data-mc="issue-group-header"]` | A status group header in issue lists; `data-status` is the status key (`backlog`, `todo`, `in_progress`, `in_review`, `done`, `blocked`, `cancelled`, or a custom key). |
-| `[data-mc="issue-row"]` | One issue in a list; `data-status`, `data-priority` (`urgent`, `high`, `medium`, `low`, `none`), `data-assignee-type` (`member`, `agent`, `squad` or `none`), `data-parity` (`even` or `odd`, the row's index within its status group, so stripes survive virtual scrolling where `:nth-child` does not) and `data-selected` (`true` or `false`, ticked for bulk actions). |
+| `[data-mc="issue-row"]` | One issue in a list; `data-status`, `data-priority` (`urgent`, `high`, `medium`, `low`, `none`), `data-assignee-type` (`member`, `agent` or `none`), `data-parity` (`even` or `odd`, the row's index within its status group, so stripes survive virtual scrolling where `:nth-child` does not) and `data-selected` (`true` or `false`, ticked for bulk actions). |
 | `[data-mc="board-column"]` | One column on a board. |
 | `[data-mc="board-card"]` | One issue card on a board; `data-status`, `data-priority` and `data-assignee-type` as on `issue-row`. Cards have no `data-parity` or `data-selected`. |
 | `[data-mc="status-icon"]` | The status glyph (an `svg`). A custom status adds `data-color`, its hex colour, and `data-palette`, its [colour slot](#colour-slots). |
@@ -283,10 +283,10 @@ those change without notice. Anchors, slots and hooks stay until the next
 | `[data-mc="issue-title"]` | The issue's title above its description, reading and editing. |
 | `[data-mc="issue-properties"]` | The properties sidebar next to an issue. |
 | `[data-mc="issue-activity"]` | The activity and comments under an issue. |
-| `[data-mc="object-page"]` | The page of one project, agent, squad, runtime, member, autopilot or skill; `data-type` is `project`, `agent`, `squad`, `runtime`, `member`, `autopilot` or `skill`. |
+| `[data-mc="object-page"]` | The page of one project, agent, runtime, member, autopilot or skill; `data-type` is `project`, `agent`, `runtime`, `member`, `autopilot` or `skill`. |
 | `[data-mc="command-palette"]` | The search and command palette. |
-| `[data-mc="palette-item"]` | A row in the palette; `data-type` is `command`, `page`, `workspace`, `issue`, `project`, `member`, `agent`, `squad`, `object` or `option` (a choice inside a palette page). The highlighted row has `data-selected`. |
-| `[data-mc="avatar"]` | An avatar; `data-type` is `member`, `agent`, `squad` or `system`. |
+| `[data-mc="palette-item"]` | A row in the palette; `data-type` is `command`, `page`, `workspace`, `issue`, `project`, `member`, `agent`, `object` or `option` (a choice inside a palette page). The highlighted row has `data-selected`. |
+| `[data-mc="avatar"]` | An avatar; `data-type` is `member`, `agent` or `system`. |
 | `[data-mc="empty-state"]` | A placeholder for something with nothing in it yet; `data-variant` is `page` (a centred state) or `section` (a quiet row in a page section). |
 | `[data-mc="editor-toolbar"]` | The formatting toolbar over selected text; `data-mode` is `format` or `link`. |
 | `[data-mc="editor-menu"]` | A menu floating over the editor while typing; `data-kind` is `slash` or `mention`. |
@@ -803,7 +803,7 @@ and dark differ, both defaults are given.
 | `--page-padding-x` | `var(--space-md, 1rem)` | Side padding of page headers, the toolbars under them and full-width lists. |
 | `--sidebar-panel-width` | `280px` | Starting width of the navigation panel, kept between 200px and 320px. Once the person drags its edge, their width wins. |
 | `--content-max-width` | `clamp(56rem, 70cqi, 70rem)` | Widest the reading column gets on an issue page and in chat. |
-| `--object-page-max-width` | `760px` | Widest the body of a project, agent, squad, runtime or other object page gets. |
+| `--object-page-max-width` | `760px` | Widest the body of a project, agent, runtime or other object page gets. |
 
 ### Issues
 

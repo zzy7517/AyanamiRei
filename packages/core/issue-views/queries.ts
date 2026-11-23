@@ -1,9 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { api } from "../api";
+import type { IssueView } from "../api/schemas";
 
 /** The (scope_type, scope_id) container a surface's views live in. */
 export interface IssueViewScope {
-  scope_type: "workspace" | "my" | "project";
+  scope_type: "workspace" | "project";
   scope_id?: string | null;
 }
 
@@ -16,21 +17,20 @@ export const issueViewKeys = {
   everywhere: (wsId: string) => [...issueViewKeys.all(wsId), "everywhere"] as const,
 };
 
-/** Every view the caller can open, across workspace, my and project scopes. */
+/** Every view the caller can open, across workspace and project scopes. */
 export function issueViewEverywhereOptions(wsId: string) {
   return queryOptions({
     queryKey: issueViewKeys.everywhere(wsId),
     queryFn: async () => {
+      let views: IssueView[];
       try {
-        return await api.listIssueViews({ scope_type: "all" });
+        views = await api.listIssueViews({ scope_type: "all" });
       } catch {
         // Backends without the cross-scope list reject scope_type=all.
-        const [workspace, my] = await Promise.all([
-          api.listIssueViews({ scope_type: "workspace" }),
-          api.listIssueViews({ scope_type: "my" }),
-        ]);
-        return [...workspace, ...my];
+        views = await api.listIssueViews({ scope_type: "workspace" });
       }
+      // A view scoped to a surface this client does not have cannot be opened.
+      return views.filter((view) => view.scope_type !== "my");
     },
     enabled: !!wsId,
   });

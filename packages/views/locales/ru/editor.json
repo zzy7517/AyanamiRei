@@ -112,13 +112,11 @@
     "copy_failed": "Не удалось скопировать"
   },
   "mention": {
-    "group_users": "Участники",
+    "group_agents": "Агенты",
     "group_issues": "Задачи",
     "group_projects": "Проекты",
     "group_docs": "Документы",
-    "all_members": "Все участники",
     "agent_badge": "Агент",
-    "squad_badge": "Команда",
     "searching": "Поиск...",
     "no_results": "Нет результатов",
     "group_current": "Текущая страница",

@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bot, Hourglass, Lock, Sparkles, Users, X } from "@multica/ui/icons";
+import { Bot, Hourglass, Sparkles, Users, X } from "@multica/ui/icons";
 import { autopilotQuotaUsageOptions } from "@multica/core/autopilots";
 import {
   trialNoticeKey,
   useTrialNoticeStore,
   useWorkspaceTrial,
-  workspaceFeaturesOptions,
   type TrialNotice,
   type WorkspaceTrialView,
 } from "@multica/core/billing";
@@ -222,15 +221,10 @@ function TrialEndedDialog({ wsId, trial }: { wsId: string; trial: EndedTrial }) 
   const workspaceName = useCurrentWorkspace()?.name ?? "";
   const [seen, markSeen] = useNoticeSeen(wsId, trial.endsAt, "ended");
   const openBilling = useOpenBilling();
-  // Read both again on mount and use only answers received after the end
+  // Read again on mount and use only answers received after the end
   // settled, so a cached Business answer never leaves a restriction out. The
   // host renders this only once settled, so settledAt is set.
   const settledAt = trial.settledAt ?? Number.POSITIVE_INFINITY;
-  const featuresQuery = useQuery({
-    ...workspaceFeaturesOptions(wsId),
-    enabled: !seen,
-    refetchOnMount: "always",
-  });
   const usageQuery = useQuery({
     ...autopilotQuotaUsageOptions(wsId),
     enabled: !seen,
@@ -247,7 +241,7 @@ function TrialEndedDialog({ wsId, trial }: { wsId: string; trial: EndedTrial }) 
     isFetching: boolean;
     dataUpdatedAt: number;
   }) => current(query) || (query.isError && !query.isFetching);
-  const ready = answered(featuresQuery) && answered(usageQuery);
+  const ready = answered(usageQuery);
   // Once open, it stays open while a detail read retries (on refocus, say);
   // the retry only fills in its line.
   const [opened, setOpened] = useState(false);
@@ -257,8 +251,6 @@ function TrialEndedDialog({ wsId, trial }: { wsId: string; trial: EndedTrial }) 
   if (seen || !(opened || ready)) return null;
 
   const count = new Intl.NumberFormat(locale);
-  const privateProjectsLocked =
-    current(featuresQuery) && featuresQuery.data?.features?.private_projects === "locked";
   const usage = current(usageQuery) ? usageQuery.data : undefined;
   const autopilotEnforced =
     usage?.action === "enforce" && usage.limit !== null && usage.used !== null;
@@ -279,12 +271,6 @@ function TrialEndedDialog({ wsId, trial }: { wsId: string; trial: EndedTrial }) 
             <Users aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
             <span>{t(($) => $.trial.ended.kept)}</span>
           </li>
-          {privateProjectsLocked ? (
-            <li className="flex items-start gap-2.5">
-              <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <span>{t(($) => $.trial.ended.private_projects)}</span>
-            </li>
-          ) : null}
           {autopilotEnforced && usage ? (
             <li className="flex items-start gap-2.5">
               <Bot aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

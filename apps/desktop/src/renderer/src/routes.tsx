@@ -19,18 +19,17 @@ import { IssuesPage } from "@multica/views/issues/components";
 import { ProjectsPage } from "@multica/views/projects/components";
 import { DashboardPage } from "@multica/views/dashboard";
 import { AutopilotsPage } from "@multica/views/autopilots/components";
-import { MyIssuesPage } from "@multica/views/my-issues";
 import { SkillsPage } from "@multica/views/skills";
 import { DesktopRuntimesPage } from "./components/desktop-runtimes-page";
 import { DesktopAgentsPage } from "./components/desktop-agents-page";
 import { ManualCreateAgentPage } from "@multica/views/agents";
 import { DesktopChooseRuntimePage } from "./components/desktop-choose-runtime-page";
 import { AgentCreatedPage } from "./pages/agent-created-page";
-import { SquadsPage, SquadDetailPage as SquadDetailPageView } from "@multica/views/squads/components";
 import { AllViewsPage } from "@multica/views/issue-views";
 import { InboxPage } from "@multica/views/inbox";
 import { ChatPage } from "@multica/views/chat";
 import { SettingsPage } from "@multica/views/settings";
+import { TerminalPage } from "@multica/views/terminal";
 import { useT } from "@multica/views/i18n";
 import { Download, Server } from "@multica/ui/icons";
 import { DaemonSettingsTab } from "./components/daemon-settings-tab";
@@ -41,7 +40,6 @@ import { IssueViewUrlSync } from "./platform/issue-view-tabs";
 import { useRenderedRouteStore } from "./stores/rendered-route-store";
 
 const WORKSPACE_VIEW_SCOPE = { scope_type: "workspace" } as const;
-const MY_VIEW_SCOPE = { scope_type: "my" } as const;
 
 /**
  * Wraps `SettingsPage` so the desktop-only extra tabs can pull their labels
@@ -147,14 +145,6 @@ export const appRoutes: RouteObject[] = [
           { path: "projects/:id", element: <ProjectDetailPage /> },
           { path: "autopilots", element: <AutopilotsPage /> },
           { path: "autopilots/:id", element: <AutopilotDetailPage /> },
-          {
-            path: "my-issues",
-            element: (
-              <IssueViewUrlSync scope={MY_VIEW_SCOPE}>
-                <MyIssuesPage />
-              </IssueViewUrlSync>
-            ),
-          },
           { path: "runtimes", element: <DesktopRuntimesPage /> },
           { path: "runtimes/:id", element: <RuntimeDetailPage /> },
           {
@@ -174,13 +164,16 @@ export const appRoutes: RouteObject[] = [
           { path: "agents/new/ai/:sessionId", element: <AiBuilderSessionPage /> },
           { path: "agents/:id", element: <AgentDetailPage /> },
           { path: "members/:id", element: <MemberDetailPage /> },
-          { path: "squads", element: <SquadsPage /> },
           { path: "views", element: <AllViewsPage /> },
-          { path: "squads/:id", element: <SquadDetailPageView /> },
           { path: "inbox", element: <InboxPage /> },
           { path: "chat", element: <ChatPage /> },
           { path: "attachments/:id/preview", element: <AttachmentPreviewRoute /> },
           { path: "usage", element: <DashboardPage /> },
+          // A terminal in a directory of the machine the daemon runs on
+          // (`terminal?cwd=<absolute path>`), or the agent's command line in a
+          // tree of a task (`?issue=<task id>&tree=<tree id>`); `&t=<id>`
+          // rejoins one that is already running.
+          { path: "terminal", element: <TerminalPage /> },
           { path: "settings", element: <DesktopSettingsRoute /> },
         ],
       },

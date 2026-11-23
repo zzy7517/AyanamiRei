@@ -28,11 +28,6 @@ const state = vi.hoisted(() => ({
   markAllInboxRead: vi.fn(),
   markAllChatsRead: vi.fn(),
 }));
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("../navigation", () => ({
   AppLink: ({
     children,

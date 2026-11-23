@@ -1,6 +1,6 @@
 ---
 title: Tutoriel complet
-description: "Partez d'un espace de travail vide et faites passer un projet de site web personnel par tous les parcours clés de Multica : créer des agents, livrer avec des tâches, former un squad, construire des skills et mettre en place l'automatisation."
+description: "Partez d'un espace de travail vide et faites passer un projet de site web personnel par tous les parcours clés de Multica : créer des agents, livrer avec des tâches, construire des skills et mettre en place l'automatisation."
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
@@ -8,7 +8,7 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 Multica est une plateforme où les personnes et les agents IA travaillent ensemble. Ce tutoriel part de zéro et couvre :
 
 - la mise en place de votre propre espace de travail
-- la collaboration entre personnes et agents, et la collaboration automatique entre agents
+- la collaboration entre personnes et agents
 - la délégation du travail répétitif à l'automatisation
 - la transformation de ce qui fonctionne en skills, et l'amélioration continue de vos agents
 
@@ -303,32 +303,11 @@ La fusion se demande elle aussi par un commentaire : demandez à Engineer de fus
 
 La première tâche est terminée : chaque étape, de la description du besoin jusqu'à la fusion, est consignée dans un seul fil d'activité.
 
-## Former un squad
-
-La boucle de MUL-1 fonctionne, mais chaque passage de relais partait de vous : mentionner Reviewer après votre propre relecture, mentionner Engineer après la sienne. La coordination elle-même est devenue votre travail, et elle peut aussi être déléguée, grâce au **squad** : un groupe nommé d'agents et de membres dirigé par un agent chef. Lorsqu'une tâche est assignée à un squad, le chef la prend en charge : il lit la tâche, délègue le travail et fait avancer le statut. Lorsqu'un membre répond, le chef est réveillé automatiquement et décide de l'étape suivante ; à la fin, il vous présente le livrable. C'est ce que vous faisiez vous-même sur MUL-1.
-
-Un squad, c'est la répartition des rôles que vous avez déjà, plus un chef :
-
-- **Lead** (nouveau) : le chef, chargé de la gestion — répartir le travail, faire avancer le statut de la tâche et vous présenter les livrables, sans faire le travail lui-même ;
-- **Engineer** (existant) : développement ;
-- **Reviewer** (existant) : relit chaque PR ;
-- **Vous** : validation finale.
-
-Les membres ne se limitent pas aux agents. Chaque membre porte une description de rôle d'une ligne, que le chef consulte lorsqu'il délègue.
-
-Il suffit de décrire cette organisation à Multica helper : créer le squad et son chef, attribuer à chaque membre son rôle, rattacher un skill à Lead et un autre à Engineer (voir la section suivante), et inscrire le flux de travail dans les instructions du squad — le développement revient à Engineer, la livraison attend que la PR ait passé la relecture, et Engineer fusionne après votre validation. Le helper applique toute la configuration en une seule passe avec le CLI :
-
-![Le helper configure tout le squad en une seule passe](/images/docs/tutorial-helper-create-squad.webp)
-
-Ouvrez **Squads → Website Team** dans la barre latérale pour vérifier le résultat : le chef, les membres et les descriptions de rôle sont tous là. Les squads peuvent aussi être créés depuis un formulaire sur cette page ; le mécanisme complet est décrit dans [Squads](/squads) :
-
-![Détail du squad : chef, membres et rôles](/images/docs/tutorial-squad-detail.webp)
-
 ## Skills : des méthodes réutilisables
 
 Inscrire les retours dans les instructions n'a résolu plus haut que le problème d'un seul agent, car les instructions n'appartiennent qu'à cet agent. Pour partager une méthode entre plusieurs agents, ou reprendre une méthode déjà écrite par quelqu'un d'autre, utilisez un **skill**.
 
-Un skill est un paquet de connaissances pour un agent : un `SKILL.md` accompagné de fichiers annexes facultatifs, qui indique à l'agent comment aborder et traiter un type de travail. Multica suit le standard ouvert Anthropic Agent Skills : tout skill conforme à la spécification peut donc être importé directement ; une fois rattaché à un agent, il est synchronisé vers le runtime au moment de l'exécution. Ouvrez la page **Skills** — les deux skills importés ci-dessus y figurent, avec à droite les agents auxquels ils sont rattachés :
+Un skill est un paquet de connaissances pour un agent : un `SKILL.md` accompagné de fichiers annexes facultatifs, qui indique à l'agent comment aborder et traiter un type de travail. Multica suit le standard ouvert Anthropic Agent Skills : tout skill conforme à la spécification peut donc être importé directement ; une fois rattaché à un agent, il est synchronisé vers le runtime au moment de l'exécution. Ouvrez la page **Skills** — les skills y figurent, avec à droite les agents auxquels ils sont rattachés :
 
 ![La page Skills de l'espace de travail](/images/docs/tutorial-skills-list.webp)
 
@@ -336,36 +315,13 @@ En ouvrir un affiche tous les fichiers du skill :
 
 ![La structure de fichiers du skill tdd](/images/docs/tutorial-skill-detail.webp)
 
-L'un de ces deux skills porte sur la manière de faire le travail, l'autre sur la manière d'en rendre compte :
-
-- **tdd**, rattaché à Engineer, est une méthode d'ingénierie : écrire d'abord un test qui échoue, puis l'implémentation qui fait passer exactement ce test ;
-- **i-have-adhd**, rattaché à Lead, est un style de compte rendu : la première ligne est toujours une prochaine étape actionnable, les éléments à plusieurs étapes sont numérotés et l'avancement reste visible. Tout ce que produit le chef est un compte rendu qui vous est adressé : ce skill détermine donc ce que vous finissez par lire.
+Le skill **tdd**, rattaché à Engineer, est une méthode d'ingénierie : écrire d'abord un test qui échoue, puis l'implémentation qui fait passer exactement ce test.
 
 La façon de travailler d'une équipe se cristallise dans des skills, et un nouvel agent en hérite dès qu'on lui en rattache un. L'import n'est pas la seule source : **Nouveau skill** propose quatre voies — créer manuellement, importer depuis cet appareil (un dossier local), importer depuis une URL et copier depuis un runtime local — qui ne sont pas détaillées ici ; voir [Skills](/skills) :
 
 ![Les quatre façons d'ajouter un nouveau skill](/images/docs/tutorial-skill-new-modal.webp)
 
 Lisez les fichiers d'un skill tiers avant de l'importer : Multica ne les isole pas dans un bac à sable, et le contenu d'un skill est transmis tel quel à l'outil de codage IA.
-
-## La deuxième tâche : la confier au squad
-
-Confiez au squad un travail complet : transformer le site en modèle générique — remplacer le vrai nom par un nom de photographe fictif et la vraie adresse e-mail par `hello@example.com`, sans toucher à la mise en page ni à la structure du contenu. Cette tâche n'a pas besoin d'être rédigée à la main : décrivez le besoin à Lead dans Discussion et créez-la avec **Créer avec un agent**, en l'assignant au squad — un squad, comme un agent ou un membre, peut apparaître partout où un assigné est possible :
-
-![Créer une tâche depuis une conversation avec Créer avec un agent](/images/docs/tutorial-create-with-agent.webp)
-
-Dans la tâche générée, le besoin est déjà organisé en une description structurée, et le badge à côté du titre montre que le chef l'a prise en charge :
-
-![MUL-2 : Lead crée la tâche et se met au travail](/images/docs/tutorial-issue-squad-created.webp)
-
-La suite est entièrement le travail du chef. Dans son commentaire de délégation, il ajoute deux contraintes absentes de la tâche — l'identité fictive doit être cohérente sur tout le site, et le passage en revue doit couvrir les métadonnées et le README — avant de passer la main à Engineer. Quand Engineer a terminé, il signale la PR dans le même fil d'activité :
-
-![Lead délègue et Engineer signale la PR](/images/docs/tutorial-squad-dispatch.webp)
-
-La relecture revient avec zéro constat et Lead livre : il vous mentionne pour validation, commence par la conclusion, puis donne le lien de la PR, une description des modifications et deux points qui demandent votre jugement, et précise pour finir que rien n'est fusionné sans votre approbation :
-
-![Le compte rendu de livraison de Lead](/images/docs/tutorial-squad-delivery.webp)
-
-De l'organisation du besoin au choix de l'approche, en passant par le développement, la relecture et le compte rendu de livraison, aucune étape de cette tâche n'a eu besoin de vous pour faire le lien. La validation fonctionne comme pour MUL-1 ; vous pouvez aussi lui faire lancer un serveur local et regarder dans le navigateur, ce qui n'est pas répété ici. Le passage à Terminé vous revient toujours : répondez pour demander la fusion, ou changez le statut à la main.
 
 ## Automatisation
 
@@ -400,11 +356,11 @@ La tâche est créée et Reviewer commence la vérification. Désormais, chaque 
 </Step>
 </Steps>
 
-Les déclencheurs prennent en charge les webhooks en plus des planifications, et l'assigné peut aussi être un squad — voir [Automatisations](/autopilots).
+Les déclencheurs prennent en charge les webhooks en plus des planifications — voir [Automatisations](/autopilots).
 
 ## Travailler avec d'autres personnes
 
-Jusqu'ici, vous étiez le seul membre humain de l'espace de travail. Dans **Paramètres → Membres**, invitez d'autres personnes par e-mail ; elles créent des tâches, @mentionnent des agents et rejoignent des squads comme vous — plusieurs personnes et plusieurs agents travaillent ensemble sur le même ensemble de tâches :
+Jusqu'ici, vous étiez le seul membre humain de l'espace de travail. Dans **Paramètres → Membres**, invitez d'autres personnes par e-mail ; elles créent des tâches et @mentionnent des agents comme vous — plusieurs personnes et plusieurs agents travaillent ensemble sur le même ensemble de tâches :
 
 ![Inviter un membre dans l'espace de travail par e-mail](/images/docs/tutorial-invite-member.webp)
 
@@ -412,13 +368,12 @@ Jusqu'ici, vous étiez le seul membre humain de l'espace de travail. Dans **Para
 
 Quand les tâches s'accumulent, des outils permettent de les organiser : un **projet** regroupe des tâches liées et les suit comme un tout (voir [Projets](/projects)). D'autres façons d'organiser le travail arrivent, et **Space** est presque prêt.
 
-Si l'on regarde le chemin parcouru : partir d'un espace de travail vide, connecter un ordinateur, créer quatre agents, mener deux tâches à terme, puis confier la coordination à un chef et les vérifications périodiques à l'automatisation. À la fin, il ne vous reste qu'à décrire le besoin et valider le résultat.
+Si l'on regarde le chemin parcouru : partir d'un espace de travail vide, connecter un ordinateur, créer trois agents, mener une tâche à terme, puis confier les vérifications périodiques à l'automatisation. À la fin, il ne vous reste qu'à décrire le besoin, faire le lien entre les étapes et valider le résultat.
 
 Multica évolue encore rapidement ; retrouvez d'autres fonctionnalités dans la [documentation](/).
 
 ## Étapes suivantes
 
 - [Concepts clés](/concepts) — découvrez en trois minutes tous les objets clés de Multica.
-- [Squads](/squads) — comment un chef répartit le travail, et quand utiliser un squad plutôt qu'un agent seul.
 - [Skills](/skills) — importer, écrire et partager des méthodes d'agent.
 - [Automatisations](/autopilots) — la configuration complète des types de déclencheurs Planification et Webhook.

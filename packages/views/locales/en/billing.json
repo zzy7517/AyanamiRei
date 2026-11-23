@@ -88,7 +88,7 @@
       "billing_interval": "Billing interval",
       "period_end": "Current period ends",
       "change_plan": "Change plan",
-      "business_adds": "Business adds private projects, member-level access, team app accounts, and higher autopilot limits.",
+      "business_adds": "Business adds member-level access, team app accounts, and higher autopilot limits.",
       "plan_change_hold": "Plan change",
       "plan_change_confirming": "Switching to {{plan}}. Waiting for Stripe to confirm; seats and the plan can't be changed until then.",
       "plan_change_unresolved": "The switch to {{plan}} could not be confirmed. Contact support to settle it; seats and the plan can't be changed until then.",
@@ -112,7 +112,7 @@
         "pro_storage": "10 GB of attachment storage per member",
         "pro_dashboard": "90 days of analytics history",
         "business_everything": "Everything in Pro",
-        "business_access": "Private projects and member-level access",
+        "business_access": "Member-level access",
         "business_apps": "Team app accounts and approval rules",
         "business_autopilots": "3,000 autopilot runs per member each month",
         "business_reports": "Usage and cost reports by member"
@@ -308,7 +308,7 @@
     "welcome": {
       "title_one": "Welcome! This workspace has a free {{count}}-day Business trial",
       "title_other": "Welcome! This workspace has a free {{count}}-day Business trial",
-      "body": "Private projects and the other Business features are on. No card needed; the workspace moves to Free when the trial ends.",
+      "body": "Business features are on. No card needed; the workspace moves to Free when the trial ends.",
       "action": "See what's included",
       "close": "Dismiss"
     },
@@ -317,7 +317,6 @@
       "description": "{{workspace}} is now on Free. Nothing was deleted.",
       "description_without_name": "This workspace is now on Free. Nothing was deleted.",
       "kept": "Members, projects, and settings you already have stay as they are.",
-      "private_projects": "Private projects stay private. Their access lists are read-only until you upgrade.",
       "autopilot": "Autopilots get {{limit}} runs a month; {{used}} used this month.",
       "autopilot_paused": "Autopilots get {{limit}} runs a month and {{used}} were used this month, so they are paused until {{date}}.",
       "keep_free": "Continue on Free",
@@ -337,18 +336,6 @@
       "ended_description": "The trial ended on {{date}}. Choose a plan below to get Business features back.",
       "choose_plan": "Choose a plan",
       "ended_description_member": "The trial ended on {{date}}. Ask a workspace admin to upgrade to get Business features back."
-    },
-    "features": {
-      "title": "Business features in your trial",
-      "description": "When the trial ends, nothing is deleted or turned off — existing settings stay active as read-only, and you can't add new ones.",
-      "private_projects": {
-        "name": "Private projects",
-        "after": "Stay private after the trial. Their access lists become read-only."
-      },
-      "guests": {
-        "name": "Guests",
-        "after": "Existing guests keep their access after the trial. New guests need Pro or Business."
-      }
     }
   },
   "storage_limit": {

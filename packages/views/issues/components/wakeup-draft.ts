@@ -1,6 +1,6 @@
 import type { IssueWakeupInput, WakeupCondition as PlatformCondition } from "@multica/core/types";
 
-/** The 25 issue-scoped events, in catalog order. */
+/** The 23 issue-scoped events, in catalog order. */
 export const WAKEUP_EVENT_TYPES = [
   "task.queued",
   "task.dispatched",
@@ -23,8 +23,6 @@ export const WAKEUP_EVENT_TYPES = [
   "comment.deleted",
   "comment.resolved",
   "comment.unresolved",
-  "reaction.added",
-  "reaction.removed",
   "attachment.attached",
   "attachment.detached",
 ] as const;
@@ -75,7 +73,7 @@ export interface WakeupDraft {
   fieldTarget: string;
   /** Property value; select options store their option id. */
   fieldValue: string;
-  assignee: { type: "member" | "agent" | "squad"; id: string } | null;
+  assignee: { type: "agent"; id: string } | null;
   /** Null waits for every sub-issue. */
   stage: number | null;
   prEvent: "checks_finished" | "merged" | "conflicts";

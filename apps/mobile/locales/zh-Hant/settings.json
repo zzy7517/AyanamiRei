@@ -35,7 +35,6 @@
     "issues": "任務",
     "inbox": "收件箱",
     "chat": "聊天",
-    "mentions": "提及",
     "assignments": "分配給我的",
     "status_changes": "狀態變更",
     "saved": "通知設定已儲存"
@@ -71,8 +70,6 @@
     "status_changes": "狀態變更",
     "comments": "評論",
     "comments_description": "你訂閱的任務有新評論時。",
-    "mentions": "提及",
-    "mentions_description": "有人用 @ 提到你時，包括 @all 和 @squad。",
     "reactions": "表情回應",
     "reactions_description": "有人對你建立的任務或你寫的評論加上表情時。",
     "updates": "優先級與截止日期",

@@ -32,7 +32,6 @@ it("reports route labels as page_title, never workspace content", () => {
   expect(t("/acme")).toBe("Workspace");
   expect(t("/acme/issues")).toBe("Workspace · Issues");
   expect(t("/acme/issues/MUL-123")).toBe("Workspace · Issues · Detail");
-  expect(t("/acme/my-issues")).toBe("Workspace · My issues");
   // Unknown segments are not echoed back.
   expect(t("/acme/secret-roadmap")).toBe("Workspace · Page");
   expect(analyticsPageTitle("not a url")).toBe("Multica");

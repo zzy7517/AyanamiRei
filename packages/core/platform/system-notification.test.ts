@@ -44,7 +44,7 @@ function payload(
     slug: "workspace-a",
     itemId: "item-1",
     issueKey: "issue-1",
-    title: "Mentioned you",
+    title: "New comment",
     body: "in a comment",
     ...overrides,
   };
@@ -130,7 +130,7 @@ describe("showWebNotification", () => {
     installWindow(FakeNotification);
     showWebNotification(payload());
     expect(created).toHaveLength(1);
-    expect(created[0]?.title).toBe("Mentioned you");
+    expect(created[0]?.title).toBe("New comment");
     expect(created[0]?.options).toMatchObject({ body: "in a comment", tag: "item-1" });
   });
 

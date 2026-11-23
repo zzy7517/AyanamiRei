@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGetState, logout } = vi.hoisted(() => ({
+const { mockGetState, logout, getToken } = vi.hoisted(() => ({
   mockGetState: vi.fn(),
   logout: vi.fn(),
+  getToken: vi.fn(),
 }));
 
 const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
@@ -10,6 +11,8 @@ const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
 vi.mock("@multica/core/auth", () => ({
   useAuthStore: { getState: mockGetState },
 }));
+
+vi.mock("@multica/core/api", () => ({ api: { getToken } }));
 
 vi.mock("sonner", () => ({
   toast: { error: toastError },
@@ -38,6 +41,8 @@ const daemonAPI = {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  // By default the app presents the credential it stored, as on the web.
+  getToken.mockImplementation(() => localStorage.getItem("multica_token"));
   (window as unknown as { daemonAPI: typeof daemonAPI }).daemonAPI = daemonAPI;
   mockGetState.mockReturnValue({ user: { id: "user-1" }, logout });
 });
@@ -50,6 +55,18 @@ describe("reauthenticateDaemon", () => {
     await reauthenticateDaemon(t);
 
     expect(daemonAPI.reauthenticate).toHaveBeenCalledWith("jwt-abc", "user-1");
+    expect(logout).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("re-mints with the credential the app presents even when it is not stored", async () => {
+    // A pre-shared token from desktop.json is presented from memory only.
+    getToken.mockReturnValue("open-sesame");
+    daemonAPI.reauthenticate.mockResolvedValue({ ok: true });
+
+    await reauthenticateDaemon(t);
+
+    expect(daemonAPI.reauthenticate).toHaveBeenCalledWith("open-sesame", "user-1");
     expect(logout).not.toHaveBeenCalled();
     expect(toastError).not.toHaveBeenCalled();
   });

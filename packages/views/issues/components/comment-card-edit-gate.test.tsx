@@ -17,11 +17,6 @@ const editorDefaultValues = vi.hoisted(() => ({
 // the uploader, which adopts it as the draft `clientUploadId`. Mocks must do
 // the same or the two records drift apart only in tests.
 let mockUploadIdSeq = 0;
-
-vi.mock("@multica/core/permissions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@multica/core/permissions")>()),
-  useIsGuest: () => false,
-}));
 vi.mock("@multica/core/api", () => ({
   // Uploads flow through the coordinator, which calls api.uploadFile (MUL-5181).
   api: { uploadFile: apiUploadFile },
@@ -171,7 +166,6 @@ const entry: TimelineEntry = {
   updated_at: "2026-07-01T00:00:00Z",
   revision: 7,
   attachments: [],
-  reactions: [],
 } as unknown as TimelineEntry;
 
 function renderCard(onEdit = vi.fn().mockResolvedValue(undefined), overrides: Partial<ComponentProps<typeof CommentCard>> = {}) {
@@ -186,7 +180,6 @@ function renderCard(onEdit = vi.fn().mockResolvedValue(undefined), overrides: Pa
         onReply={vi.fn().mockResolvedValue(true)}
         onEdit={onEdit}
         onDelete={vi.fn()}
-        onToggleReaction={vi.fn()}
         {...overrides}
       />
     </QueryClientProvider>,

@@ -38,9 +38,7 @@
       "card4_actor_name": "리뷰 에이전트",
       "card4_body": "월요일 초안을 검토하고 톤 관련 메모 4개를 남겼습니다. 새 초안을 기다리는 중입니다.",
       "card5_actor_name": "코딩 에이전트",
-      "card5_body_prefix": "",
-      "card5_body_suffix": "님이 표시한 내보내기 기능을 배포했습니다. PR에 미리보기 링크가 있습니다.",
-      "card5_mention_you": "@나",
+      "card5_body": "지적해 주신 내보내기 기능을 배포했습니다. PR에 미리보기 링크가 있습니다.",
       "card5_timestamp": "방금 전"
     }
   },

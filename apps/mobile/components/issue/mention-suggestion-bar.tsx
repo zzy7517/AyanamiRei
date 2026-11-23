@@ -5,19 +5,13 @@
  * and new-issue body) and `chat` (used in chat composer).
  *
  * `comment` sections:
- *   1. `@all` (single static row; visible when query matches "all"
- *      prefix or is empty)
- *   2. Members — sorted alphabetically
- *   3. Agents — sorted alphabetically
- *   4. Squads — sorted alphabetically (archived hidden). Selecting a squad
- *      emits `mention://squad/<uuid>`; backend wakes the squad's leader
- *      agent (server/internal/handler/comment.go:444).
+ *   1. Agents — sorted alphabetically
  *
- * `chat` sections (chat is user ↔ single agent — `@member`/`@agent` are
+ * `chat` sections (chat is user ↔ single agent — an `@agent` there is
  * noise; `@` here means "reference a resource for the agent"):
  *   1. Recent — issues the user opened most recently (from the in-memory
  *      viewed-issues store), max 5
- *   2. My issues — assigned-to-me, deduped against Recent, max 10
+ *   2. Created by the viewer — deduped against Recent, max 10
  *
  * Closed issues (status `done` / `cancelled`) are dimmed but selectable,
  * matching web's behaviour (mention-suggestion.tsx).
@@ -25,7 +19,7 @@
 import { useMemo } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import type { Agent, Issue, MemberWithUser, Squad } from "@multica/core/types";
+import type { Agent, Issue } from "@multica/core/types";
 import { canAssignAgentToIssue } from "@multica/core/permissions/rules";
 import { Text } from "@/components/ui/text";
 import { ActorAvatar } from "@/components/ui/actor-avatar";
@@ -39,9 +33,8 @@ import { useIssueStatuses } from "@/lib/use-issue-statuses";
 import { useT } from "@/lib/i18n";
 import { memberListOptions } from "@/data/queries/members";
 import { agentListOptions } from "@/data/queries/agents";
-import { squadListOptions } from "@/data/queries/squads";
 import { issueDetailOptions } from "@/data/queries/issues";
-import { myIssueListOptions } from "@/data/queries/my-issues";
+import { myIssueListOptions } from "@/data/queries/my-list";
 import { useAuthStore } from "@/data/auth-store";
 import { useWorkspaceStore } from "@/data/workspace-store";
 import {
@@ -51,16 +44,12 @@ import {
 import type { MentionMarker } from "@/lib/mention-serialize";
 import { cn } from "@/lib/utils";
 import { isAgentRuntimeBound } from "@/lib/is-agent-runtime-bound";
-import { isGuestRole } from "@/lib/member-role";
 
 type Mode = "comment" | "chat";
 
 type Row =
-  | { kind: "all" }
   | { kind: "section"; label: string }
-  | { kind: "member"; member: MemberWithUser }
   | { kind: "agent"; agent: Agent }
-  | { kind: "squad"; squad: Squad }
   | { kind: "issue"; issue: Issue }
   | { kind: "empty" };
 
@@ -74,7 +63,7 @@ interface Props {
 }
 
 const RECENT_LIMIT = 5;
-const MY_ISSUES_LIMIT = 10;
+const CREATED_LIMIT = 10;
 
 export function MentionSuggestionBar({
   visible,
@@ -89,17 +78,14 @@ export function MentionSuggestionBar({
   const catalog = useIssueStatuses();
   const { t } = useT("issues");
 
-  // Comment-mode data — disabled in chat mode to avoid wasted fetches.
+  // Comment-mode data — disabled in chat mode to avoid wasted fetches. The
+  // member list only supplies the viewer's role for the agent filter.
   const { data: members = [] } = useQuery({
     ...memberListOptions(wsId),
     enabled: !isChat && !!wsId,
   });
   const { data: agents = [] } = useQuery({
     ...agentListOptions(wsId),
-    enabled: !isChat && !!wsId,
-  });
-  const { data: squads = [] } = useQuery({
-    ...squadListOptions(wsId),
     enabled: !isChat && !!wsId,
   });
 
@@ -124,12 +110,12 @@ export function MentionSuggestionBar({
     [recentQueries],
   );
 
-  const myFilter = useMemo(
-    () => (userId ? { assignee_id: userId } : { assignee_id: "" }),
+  const createdFilter = useMemo(
+    () => ({ creator_id: userId ?? "" }),
     [userId],
   );
-  const { data: myIssuesAll = [] } = useQuery({
-    ...myIssueListOptions(wsId, "assigned", myFilter),
+  const { data: createdIssues = [] } = useQuery({
+    ...myIssueListOptions(wsId, createdFilter),
     enabled: isChat && !!wsId && !!userId,
   });
 
@@ -144,18 +130,18 @@ export function MentionSuggestionBar({
 
       const matchedRecent = recentIssues.filter(issueMatches);
       const recentIdSet = new Set(matchedRecent.map((i) => i.id));
-      const matchedMine = myIssuesAll
+      const matchedCreated = createdIssues
         .filter((i) => !recentIdSet.has(i.id) && issueMatches(i))
-        .slice(0, MY_ISSUES_LIMIT);
+        .slice(0, CREATED_LIMIT);
 
       const out: Row[] = [];
       if (matchedRecent.length > 0) {
         out.push({ kind: "section", label: t("suggestions.recent") });
         for (const i of matchedRecent) out.push({ kind: "issue", issue: i });
       }
-      if (matchedMine.length > 0) {
-        out.push({ kind: "section", label: t("suggestions.my_issues") });
-        for (const i of matchedMine) out.push({ kind: "issue", issue: i });
+      if (matchedCreated.length > 0) {
+        out.push({ kind: "section", label: t("suggestions.created_by_me") });
+        for (const i of matchedCreated) out.push({ kind: "issue", issue: i });
       }
       if (out.length === 0) out.push({ kind: "empty" });
       return out;
@@ -164,63 +150,28 @@ export function MentionSuggestionBar({
     // Comment mode.
     const myRole =
       members.find((m) => m.user_id === userId)?.role ?? null;
-    // A guest (MUL-9420) mentions people only — see comment-mention-candidates.
-    const guest = isGuestRole(myRole);
-    const showAll = !guest && (!q || "all".startsWith(q));
-    const matchedMembers = [...members]
-      .filter((m) => !q || m.name.toLowerCase().includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name));
     // Agents: filter archived + drop ones the current user can't assign —
-    // mirrors web (packages/views/editor/extensions/mention-suggestion.tsx:418-424).
+    // mirrors web (packages/views/editor/extensions/mention-suggestion.tsx).
     // A private agent shown in the suggestion list would create a mention the
     // assignee can never act on; web hides them, mobile must too.
-    const runnableAgentIds = new Set(
-      agents
-        .filter(
-          (agent) =>
-            !agent.archived_at && isAgentRuntimeBound(agent),
-        )
-        .map((agent) => agent.id),
-    );
     const matchedAgents = [...agents]
       .filter(
         (a) =>
-          !guest &&
           !a.archived_at &&
           isAgentRuntimeBound(a) &&
           (!q || a.name.toLowerCase().includes(q)) &&
           canAssignAgentToIssue(a, { userId, role: myRole }).allowed,
       )
       .sort((a, b) => a.name.localeCompare(b.name));
-    // Archived squads are filtered out — matching web (mention-suggestion.tsx:428).
-    // A re-activated squad re-appears on the next list refetch.
-    const matchedSquads = [...squads]
-      .filter(
-        (s) =>
-          !guest &&
-          !s.archived_at &&
-          runnableAgentIds.has(s.leader_id) &&
-          (!q || s.name.toLowerCase().includes(q)),
-      )
-      .sort((a, b) => a.name.localeCompare(b.name));
 
     const out: Row[] = [];
-    if (showAll) out.push({ kind: "all" });
-    if (matchedMembers.length > 0) {
-      out.push({ kind: "section", label: t("picker.people") });
-      for (const m of matchedMembers) out.push({ kind: "member", member: m });
-    }
     if (matchedAgents.length > 0) {
       out.push({ kind: "section", label: t("picker.agents") });
       for (const a of matchedAgents) out.push({ kind: "agent", agent: a });
     }
-    if (matchedSquads.length > 0) {
-      out.push({ kind: "section", label: t("picker.squads") });
-      for (const s of matchedSquads) out.push({ kind: "squad", squad: s });
-    }
     if (out.length === 0) out.push({ kind: "empty" });
     return out;
-  }, [isChat, query, recentIssues, myIssuesAll, members, agents, squads, userId, t]);
+  }, [isChat, query, recentIssues, createdIssues, members, agents, userId, t]);
 
   if (!visible) return null;
 
@@ -239,17 +190,13 @@ export function MentionSuggestionBar({
         data={rows}
         keyboardShouldPersistTaps="handled"
         keyExtractor={(row, i) =>
-          row.kind === "all"
-            ? "row:all"
-            : row.kind === "section"
-              ? `row:section:${row.label}`
-              : row.kind === "member"
-                ? `row:m:${row.member.user_id}`
-                : row.kind === "agent"
-                  ? `row:a:${row.agent.id}`
-                  : row.kind === "issue"
-                    ? `row:i:${row.issue.id}`
-                    : `row:empty:${i}`
+          row.kind === "section"
+            ? `row:section:${row.label}`
+            : row.kind === "agent"
+              ? `row:a:${row.agent.id}`
+              : row.kind === "issue"
+                ? `row:i:${row.issue.id}`
+                : `row:empty:${i}`
         }
         renderItem={({ item, index }) => {
           if (item.kind === "section") {
@@ -273,48 +220,6 @@ export function MentionSuggestionBar({
                   {t("picker.no_matches")}
                 </Text>
               </View>
-            );
-          }
-          if (item.kind === "all") {
-            return (
-              <Pressable
-                onPress={() =>
-                  onSelect({ type: "all", id: "all", name: "all" })
-                }
-                className="flex-row items-center gap-3 px-3 py-2 active:bg-secondary"
-              >
-                <View className="size-7 rounded-full bg-brand/15 items-center justify-center">
-                  <Text className="text-xs font-medium text-brand">@</Text>
-                </View>
-                <Text className="flex-1 text-sm text-foreground">
-                  {t("suggestions.everyone")}
-                </Text>
-                <Badge label={t("suggestions.all")} />
-              </Pressable>
-            );
-          }
-          if (item.kind === "member") {
-            return (
-              <Pressable
-                onPress={() =>
-                  onSelect({
-                    type: "member",
-                    id: item.member.user_id,
-                    name: item.member.name,
-                  })
-                }
-                className="flex-row items-center gap-3 px-3 py-2 active:bg-secondary"
-              >
-                <ActorAvatar
-                  type="member"
-                  id={item.member.user_id}
-                  size={28}
-                />
-                <Text className="flex-1 text-sm text-foreground">
-                  {item.member.name}
-                </Text>
-                <Badge label={t("suggestions.member")} />
-              </Pressable>
             );
           }
           if (item.kind === "agent") {
@@ -344,26 +249,6 @@ export function MentionSuggestionBar({
                     : t("picker.needs_runtime")}
                   tone={runtimeBound ? "brand" : "outline"}
                 />
-              </Pressable>
-            );
-          }
-          if (item.kind === "squad") {
-            return (
-              <Pressable
-                onPress={() =>
-                  onSelect({
-                    type: "squad",
-                    id: item.squad.id,
-                    name: item.squad.name,
-                  })
-                }
-                className="flex-row items-center gap-3 px-3 py-2 active:bg-secondary"
-              >
-                <ActorAvatar type="squad" id={item.squad.id} size={28} />
-                <Text className="flex-1 text-sm text-foreground">
-                  {item.squad.name}
-                </Text>
-                <Badge label={t("picker.squad")} tone="outline" />
               </Pressable>
             );
           }
@@ -414,20 +299,16 @@ export function MentionSuggestionBar({
 
 function Badge({
   label,
-  tone = "muted",
+  tone,
 }: {
   label: string;
-  tone?: "muted" | "brand" | "outline";
+  tone: "brand" | "outline";
 }) {
   return (
     <View
       className={cn(
         "px-1.5 py-0.5 rounded-xs",
-        tone === "brand"
-          ? "bg-brand/10"
-          : tone === "outline"
-            ? "border border-border"
-            : "bg-secondary",
+        tone === "brand" ? "bg-brand/10" : "border border-border",
       )}
     >
       <Text

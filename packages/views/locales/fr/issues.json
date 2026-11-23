@@ -134,7 +134,7 @@
     "breadcrumb_title": "Tâches",
     "breadcrumb_workspace_fallback": "Espace de travail",
     "empty_title": "Aucune tâche pour l'instant",
-    "empty_description": "Une tâche est un travail concret confié à un membre ou à un agent. Assignée à un agent, elle démarre seule sur votre runtime.",
+    "empty_description": "Une tâche est un travail concret. Assignée à un agent, elle démarre seule sur votre runtime.",
     "break_down_with_chat": "Découper avec le chat",
     "break_down_prompt": "Voici ce que je veux accomplir. Posez-moi les questions nécessaires, puis découpez-le en tâches dans cet espace de travail :\n\n",
     "move_failed": "Échec du déplacement de la tâche"
@@ -168,8 +168,6 @@
   "scope": {
     "all_label": "Toutes",
     "all_description": "Toutes les tâches de cet espace de travail",
-    "members_label": "Membres",
-    "members_description": "Tâches assignées aux membres de l'équipe",
     "agents_label": "Agents",
     "agents_description": "Tâches assignées aux agents IA"
   },
@@ -193,7 +191,6 @@
     "section_project_status": "Statut du projet",
     "section_label": "Étiquette",
     "section_relation": "Lien avec moi",
-    "relation_assigned": "Qui me sont assignés",
     "relation_created": "Créés par moi",
     "relation_my_agents": "Travail de mes agents",
     "relation_subscribed": "Auxquels je suis abonné",
@@ -220,7 +217,6 @@
     "date_clear": "Effacer le filtre de date",
     "members_group": "Membres",
     "agents_group": "Agents",
-    "squads_group": "Squads",
     "issue_count_one": "{{count}} tâche",
     "issue_count_other": "{{count}} tâches",
     "reset": "Réinitialiser tous les filtres",
@@ -421,11 +417,11 @@
     "scope": {
       "assigned": {
         "label": "Assignées",
-        "description": "Tâches assignées à ce membre ou à cet agent"
+        "description": "Tâches assignées à cet agent"
       },
       "created": {
         "label": "Créées",
-        "description": "Tâches créées par ce membre ou cet agent"
+        "description": "Tâches créées par cet agent"
       }
     },
     "empty": {
@@ -562,7 +558,7 @@
     "delegated_subscription_badge": "Suivi via un agent",
     "delegated_subscription_hint": "Votre agent a créé cette tâche en votre nom : vous y êtes donc abonné. Avec Changements de statut activé, vous serez notifié lorsqu'elle demandera une relecture, se terminera ou se bloquera.",
     "key_updates_subscription_badge": "Mises à jour clés",
-    "key_updates_subscription_hint": "Cette tâche appartient à quelqu'un d'autre, et vous la suivez parce que vous l'avez créée, commentée ou y avez été mentionné. Vous serez informé des @mentions, des réponses dans vos fils et, si Changements de statut est activé, lorsqu'elle nécessite une relecture, est bloquée ou se termine.",
+    "key_updates_subscription_hint": "Cette tâche appartient à quelqu'un d'autre, et vous la suivez parce que vous l'avez créée ou commentée. Vous serez informé des réponses dans vos fils et, si Changements de statut est activé, lorsqu'elle nécessite une relecture, est bloquée ou se termine.",
     "key_updates_follow_all": "Recevoir toute l'activité",
     "key_updates_follow_all_done": "Vous recevrez toute l'activité de cette tâche",
     "key_updates_settings": "Modifier la valeur par défaut",
@@ -609,8 +605,7 @@
     "project_directory_path_copied_with_branch": "Chemin du répertoire du projet copié — le travail se trouve sur {{branch}}",
     "workdir_path_copy_failed": "Échec de la copie du chemin du répertoire de travail",
     "workdir_path_unavailable": "Aucun répertoire de travail local pour l'instant — cette tâche n'a pas encore été exécutée par un agent local",
-    "pull_requests_empty_title": "Aucune pull request associée.",
-    "guest_readonly_note": "Les invités peuvent consulter et commenter, mais pas modifier les propriétés de la tâche."
+    "pull_requests_empty_title": "Aucune pull request associée."
   },
   "timeline": {
     "loading": "Chargement...",
@@ -637,13 +632,6 @@
     "task_completed_other": "a terminé une exécution ({{count}} fois)",
     "task_failed_one": "exécution en échec",
     "task_failed_other": "exécution en échec ({{count}} fois)",
-    "squad_leader_evaluated": "a évalué le déclencheur du squad",
-    "squad_leader_action": "a évalué et agi",
-    "squad_leader_action_reason": "a évalué et agi : {{reason}}",
-    "squad_leader_no_action": "a évalué : aucune action nécessaire",
-    "squad_leader_no_action_reason": "a évalué : aucune action nécessaire ({{reason}})",
-    "squad_leader_failed": "évaluation en échec",
-    "squad_leader_failed_reason": "évaluation en échec : {{reason}}",
     "coalesced_badge": "×{{count}}",
     "activity_count_one": "{{count}} activité",
     "activity_count_other": "{{count}} activités",
@@ -689,7 +677,6 @@
     "wakeup_child_done_stage_single": "La sous-tâche de l'étape {{stage}} est terminée"
   },
   "comment": {
-    "add_reaction": "Ajouter une réaction",
     "collapse_thread": "Replier le fil",
     "expand_thread": "Développer le fil",
     "delete_title": "Supprimer le commentaire",
@@ -716,7 +703,7 @@
     "posted_partial_trigger_named": "Commentaire publié, mais {{name}} n'a pas été déclenché ({{reason}})",
     "trigger_blocked_chip_aria": "{{name}} ne sera pas déclenché — {{reason}}",
     "trigger_blocked_invocation_not_allowed": "Cette cible est introuvable, ou vous n'avez pas la permission de l'utiliser",
-    "trigger_blocked_target_unavailable": "Cet agent ou ce squad est introuvable — actualisez la page et réessayez.",
+    "trigger_blocked_target_unavailable": "Cet agent est introuvable — actualisez la page et réessayez.",
     "trigger_blocked_runtime_offline": "Le runtime de cette cible est hors ligne",
     "trigger_blocked_runtime_unusable": "Le CLI d'agent de cette cible ne peut pas s'exécuter sur sa machine — réinstallez-le sur place",
     "trigger_blocked_runtime_profile_missing": "Il manque une configuration de runtime au CLI de cet agent sur sa machine — installez-la dessus.",
@@ -740,13 +727,10 @@
     "send_tooltip": "Envoyer",
     "trigger_source_issue_assignee": "assigné",
     "trigger_source_mention_agent": "@mention",
-    "trigger_source_mention_squad_leader": "squad",
     "trigger_source_unknown": "déclencheur",
     "trigger_skipped_label": "Ignoré",
     "trigger_wont_trigger": "Ne démarrera pas cette fois",
     "trigger_none_will_trigger": "Aucun agent ne démarrera",
-    "all_members_notice": "Diffusion aux membres · @all ne démarre aucun agent",
-    "trigger_reason_mention_squad_leader": "Dirige un squad mentionné ici.",
     "trigger_reason_unknown": "Démarrera à partir de ce commentaire.",
     "trigger_will_start": "Démarrera à l'envoi",
     "trigger_will_start_count_one": "{{count}} agent démarrera à l'envoi",
@@ -793,9 +777,7 @@
     "restart_failed": "Impossible d'arrêter l'exécution en cours. Votre message n'a pas été envoyé.",
     "reply_action": "Répondre",
     "actions_label": "Actions du commentaire",
-    "create_issue_from_selection": "Créer une sous-tâche à partir de la sélection",
-    "guest_placeholder": "Répondre… vous pouvez @ mentionner des membres",
-    "guest_hint": "Les invités ne peuvent pas @ mentionner d'agents ni leur assigner de tâches"
+    "create_issue_from_selection": "Créer une sous-tâche à partir de la sélection"
   },
   "reply": {
     "recipients_changed": "La cible de la réponse a changé. Vérifiez les destinataires avant de réessayer.",
@@ -838,6 +820,7 @@
     "unread_completed": "{{agent}} a terminé · {{time}}",
     "unread_failed": "L'exécution de {{agent}} a échoué · {{time}}",
     "unread_manual": "Marqué comme non lu",
+    "new_reply": "Nouvelle réponse",
     "empty_hover": "Aucun agent au travail pour l'instant",
     "unknown_hover": "Agents au travail : pas encore chargé",
     "filter_active_label": "Affichage des tâches avec des agents au travail",
@@ -1135,8 +1118,7 @@
       "search_placeholder": "Assigner à...",
       "recent_group": "Récents",
       "members_group": "Membres",
-      "agents_group": "Agents",
-      "squads_group": "Squads"
+      "agents_group": "Agents"
     },
     "start_date": {
       "trigger_label": "Date de début",
@@ -1192,14 +1174,8 @@
   },
   "save_view": {
     "scope_label_workspace": "Type d'assigné",
-    "scope_label_my": "Relation avec moi",
     "variant_all": "Tout assigné",
-    "variant_members": "Assignés à des membres",
-    "variant_agents": "Assignés à des agents",
-    "variant_my_any": "Toute relation",
-    "variant_my_assigned": "Qui me sont assignés",
-    "variant_my_created": "Que j'ai créés",
-    "variant_my_involved": "Travail de mes agents"
+    "variant_agents": "Assignés à des agents"
   },
   "plugins": {
     "panels": "Plugins",
@@ -1246,8 +1222,6 @@
     "comment_deleted": "Commentaire supprimé",
     "comment_resolved": "Discussion résolue",
     "comment_unresolved": "Discussion rouverte",
-    "reaction_added": "Réaction ajoutée",
-    "reaction_removed": "Réaction supprimée",
     "attachment_attached": "Pièce jointe ajoutée",
     "attachment_detached": "Pièce jointe retirée",
     "at_time": "Réveil à {{time}}",
@@ -1315,8 +1289,6 @@
       "comment_deleted": "Quand un commentaire est supprimé",
       "comment_resolved": "Quand une discussion est résolue",
       "comment_unresolved": "Quand une discussion est rouverte",
-      "reaction_added": "Quand une réaction est ajoutée",
-      "reaction_removed": "Quand une réaction est supprimée",
       "attachment_attached": "Quand une pièce jointe est ajoutée à cette tâche",
       "attachment_detached": "Quand une pièce jointe est retirée de cette tâche",
       "run_completed": "Quand {{agent}} termine une exécution avec succès",
@@ -1432,7 +1404,6 @@
       "choose_label": "Choisir un libellé",
       "choose_property": "Choisir une propriété",
       "value_placeholder": "Valeur",
-      "squads": "Équipes",
       "children_all": "Toutes les sous-tâches",
       "children_stage": "Étape {{stage}}",
       "pr_checks": "Fin de la CI",
@@ -1464,12 +1435,11 @@
       "remaining_one": "encore {{count}}",
       "remaining_other": "encore {{count}}",
       "blocked_backlog": "Tâche en backlog ; pas de réveil pour l’instant",
-      "blocked_member": "Responsable humain ; il reçoit une notification",
       "blocked_none": "Aucun agent responsable ; personne n’est réveillé",
       "turned_off": "Désactivé pour cette tâche",
       "target_title": "Réveille",
       "target_current": "Responsable (actuellement {{name}})",
-      "target_none": "Le responsable : un agent ou une équipe est réveillé, un humain est notifié",
+      "target_none": "Le responsable : un agent est réveillé",
       "progress_title": "Avancement",
       "progress": "{{done}}/{{total}} terminés",
       "waiting_on": "en attente de {{ids}}",
@@ -1481,7 +1451,6 @@
       "save_error": "Impossible d’enregistrer la règle système.",
       "default_on": "Activé par défaut dans cet espace.",
       "default_off": "Désactivé par défaut dans cet espace.",
-      "notify_member": "Notifier {{name}} dans sa boîte de réception",
       "instruction": "Que faire au réveil",
       "instruction_edit": "Modifier l’instruction",
       "instruction_default": "Non définie sur cette tâche ; instruction par défaut :",
@@ -1648,7 +1617,6 @@
     "handler": {
       "none": "Garder l’assigné",
       "agent": "Agent",
-      "squad": "Squad",
       "member": "Membre",
       "project_lead": "Responsable du projet",
       "creator": "Créateur de la tâche",
@@ -1722,12 +1690,11 @@
       "card_then": "puis → {{status}}",
       "status": "État",
       "status_hint": "Les états viennent de la bibliothèque. Renommez-les ou changez leur couleur là-bas ; tous les workflows qui les utilisent suivent.",
-      "handler_hint_on": "Quand une tâche entre dans cette étape, son assigné devient ce responsable ; un agent ou un squad commence aussitôt.",
+      "handler_hint_on": "Quand une tâche entre dans cette étape, son assigné devient ce responsable ; un agent commence aussitôt.",
       "handler_hint_off": "Entrer dans cette étape garde l’assigné et ne lance aucune exécution.",
       "handler_hint_lead": "Résolu par projet : le responsable de chaque projet.",
       "handler_hint_creator": "Résolu par tâche : la personne qui l’a créée.",
       "target_agent": "Agent",
-      "target_squad": "Squad · le leader répartit",
       "target_member": "Membre",
       "instructions_hint": "Envoyées au responsable avec cette exécution, avec la description et les commentaires de la tâche.",
       "next_hint": "Le responsable met directement à jour le statut et ne la renvoie que pour une reprise, pas en cas de blocage. La fin d'une exécution ne change jamais le statut automatiquement.",
@@ -1907,8 +1874,6 @@
   },
   "views": {
     "builtin": {
-      "my_issues": "Mes tâches",
-      "my_agents": "Travail de mes agents",
       "all_issues": "Toutes les tâches",
       "my_work": "Mon travail",
       "working": "En cours d'exécution",
@@ -2110,5 +2075,28 @@
     "focus_failed": "Impossible de basculer vers {{name}}",
     "retry": "Réessayer",
     "dismiss": "Ignorer"
+  },
+  "trees": {
+    "section_title": "Worktrees",
+    "state": {
+      "pending": "Construction",
+      "ready": "Prêt",
+      "failed": "Échec",
+      "deleted": "Supprimé"
+    },
+    "copy_task_branch": "Copier la branche de la tâche",
+    "copy_path": "Copier le chemin",
+    "copied": "Copié",
+    "copy_failed": "Impossible de copier",
+    "open_agent_terminal": "Terminal de l’agent",
+    "open_shell": "Shell",
+    "delete": "Supprimer le worktree",
+    "delete_description": "Le worktree est retiré de la machine. Sa branche est conservée, et le travail pas encore commité y est commité d’abord.",
+    "delete_confirm": "Supprimer",
+    "cancel": "Annuler",
+    "delete_failed": "Impossible de supprimer le worktree",
+    "rebuild": "Reconstruire",
+    "rebuild_failed": "Impossible de reconstruire le worktree",
+    "save_failed": "Les paires n’ont pas été enregistrées."
   }
 }

@@ -99,9 +99,8 @@ function useWakeupText() {
       if (w.status !== "failed") return "";
       switch (w.end_reason) {
         case "permission_revoked":
-        case "access_lost":
         case "dispatch_failed":
-          return t(($) => $.wakeup.failure[w.end_reason as "permission_revoked" | "access_lost" | "dispatch_failed"]);
+          return t(($) => $.wakeup.failure[w.end_reason as "permission_revoked" | "dispatch_failed"]);
       }
       return w.last_error ?? "";
     },

@@ -57,7 +57,7 @@ function responseFor(path: string, rows: ReturnType<typeof sessions>): unknown {
       cursor: "0", has_more: false,
     };
     case `/api/workspaces/${wsId}/members`:
-    case "/api/agents": case "/api/runtimes": case "/api/squads":
+    case "/api/agents": case "/api/runtimes":
     case "/api/agent-task-snapshot": case "/api/invitations": case "/api/inbox":
     case "/api/inbox/unread-summary": case "/api/pins": case "/api/assignee-frequency":
     case "/api/skills": case "/api/autopilots":

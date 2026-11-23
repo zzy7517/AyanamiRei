@@ -60,6 +60,10 @@ interface LoginPageProps {
    *  app?" prompt; desktop omits it (a download prompt inside the app
    *  would be absurd). */
   extra?: ReactNode;
+  /** Replaces the notice shown when the server ended the session. Desktop
+   *  passes one when the refused credential was the pre-shared token from its
+   *  config file: that was never a session, and the fix is in the file. */
+  expiredMessage?: ReactNode;
 }
 
 // Helpers
@@ -101,6 +105,7 @@ export function LoginPage({
   onTokenObtained,
   onGoogleLogin,
   extra,
+  expiredMessage,
 }: LoginPageProps) {
   const { t } = useT("auth");
   const qc = useQueryClient();
@@ -423,7 +428,7 @@ export function LoginPage({
           {sessionExpired && (
             <Alert>
               <AlertDescription>
-                {t(($) => $.errors.session_expired)}
+                {expiredMessage ?? t(($) => $.errors.session_expired)}
               </AlertDescription>
             </Alert>
           )}

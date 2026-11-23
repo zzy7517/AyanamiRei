@@ -52,10 +52,10 @@ describe("negated filters", () => {
 describe("relation filters", () => {
   it("toggles relations and clears them as one dimension", () => {
     const store = newStore();
-    store.getState().toggleRelationFilter("assigned");
+    store.getState().toggleRelationFilter("created");
     store.getState().toggleRelationFilter("my_agents");
-    expect(store.getState().relationFilters).toEqual(["assigned", "my_agents"]);
-    store.getState().toggleRelationFilter("assigned");
+    expect(store.getState().relationFilters).toEqual(["created", "my_agents"]);
+    store.getState().toggleRelationFilter("created");
     expect(store.getState().relationFilters).toEqual(["my_agents"]);
     store.getState().setFilterNegated("relation", true);
     store.getState().clearFilterDimension("relation");
@@ -70,12 +70,12 @@ describe("mergeViewStatePersisted negation and relations", () => {
   it("keeps known members and drops the rest", () => {
     const merged = mergeViewStatePersisted(
       {
-        relationFilters: ["assigned", "involved", 3],
+        relationFilters: ["created", "assigned", "involved", 3],
         negatedFilters: ["status", "status", "date", "property:x", null],
       },
       defaults(),
     );
-    expect(merged.relationFilters).toEqual(["assigned"]);
+    expect(merged.relationFilters).toEqual(["created"]);
     expect(merged.negatedFilters).toEqual(["status"]);
   });
 

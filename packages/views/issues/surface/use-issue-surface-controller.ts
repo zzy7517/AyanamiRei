@@ -59,7 +59,7 @@ import {
 } from "@multica/core/issues/stores/view-store";
 import { useViewStore } from "@multica/core/issues/stores/view-store-context";
 import { useAuthStore } from "@multica/core/auth";
-import { agentListOptions, involvedSquadIdsOptions } from "@multica/core/workspace/queries";
+import { agentListOptions } from "@multica/core/workspace/queries";
 import { subscribedIssueIdsOptions } from "@multica/core/issues/subscribed";
 import { useShallow } from "zustand/react/shallow";
 import type { IssueFilters, IssueRelationContext } from "../utils/filter";
@@ -263,7 +263,7 @@ export function useIssueSurfaceController({
   const includeNoProject = useViewStore((s) => s.includeNoProject);
   const projectStatusFilters = useViewStore((s) => s.projectStatusFilters);
   const labelFilters = useViewStore((s) => s.labelFilters);
-  const storedRelationFilters = useViewStore((s) => s.relationFilters);
+  const relationFilters = useViewStore((s) => s.relationFilters);
   const dueDateFilters = useViewStore((s) => s.dueDateFilters);
   const storedAdvancedFilter = useViewStore((s) => s.advancedFilter);
   const negatedFilters = useViewStore(useShallow(effectiveNegatedFilters));
@@ -282,9 +282,6 @@ export function useIssueSurfaceController({
   const catalog = useIssueStatuses(wsId);
   const statusNegated = negatedFilters.includes("status");
   const [tableSearch, setTableSearch] = useState("");
-  // A "my issues" surface already scopes by relation; the menu hides the
-  // dimension there, and a persisted value must not silently narrow it.
-  const relationFilters = scope.type === "my" ? EMPTY_LIST : storedRelationFilters;
   // Active property catalog. Persisted view state can outlive definitions
   // (archive/delete): filters keyed by a non-active definition are stripped
   // before they reach the predicates, and a sort on a non-active definition
@@ -299,7 +296,6 @@ export function useIssueSurfaceController({
   // Pruned: empty rows the panel is still editing filter nothing.
   const advancedFilter = useMemo(() => {
     const fixed: readonly string[] = [
-      ...(scope.type === "my" ? ["relation"] : []),
       ...(scope.type === "project" ? ["project"] : []),
     ];
     return withoutAdvancedFilterConditions(storedAdvancedFilter, (condition) => {
@@ -342,11 +338,6 @@ export function useIssueSurfaceController({
     enabled: usesMyAgents,
   });
   const agents = agentsQuery.data;
-  const involvedSquadIdsQuery = useQuery({
-    ...involvedSquadIdsOptions(wsId),
-    enabled: usesMyAgents,
-  });
-  const involvedSquadIds = involvedSquadIdsQuery.data;
   const subscribedIssueIdsQuery = useQuery({
     ...subscribedIssueIdsOptions(wsId),
     enabled: usesSubscribed,
@@ -354,7 +345,6 @@ export function useIssueSurfaceController({
   const subscribedIssueIds = subscribedIssueIdsQuery.data;
   const relationSources = [
     usesMyAgents && agentsQuery,
-    usesMyAgents && involvedSquadIdsQuery,
     usesSubscribed && subscribedIssueIdsQuery,
   ];
   const relationContext = useMemo<IssueRelationContext | undefined>(() => {
@@ -368,12 +358,11 @@ export function useIssueSurfaceController({
             ),
           }
         : {}),
-      ...(usesMyAgents && involvedSquadIds ? { mySquadIds: new Set(involvedSquadIds) } : {}),
       ...(usesSubscribed && subscribedIssueIds
         ? { subscribedIssueIds: new Set(subscribedIssueIds) }
         : {}),
     };
-  }, [agents, involvedSquadIds, subscribedIssueIds, userId, usesMyAgents, usesSubscribed]);
+  }, [agents, subscribedIssueIds, userId, usesMyAgents, usesSubscribed]);
 
   const allowedModes = useMemo(() => new Set<IssueSurfaceMode>(modes), [modes]);
   const fallbackMode = modes[0] ?? "list";
@@ -542,14 +531,8 @@ export function useIssueSurfaceController({
     agentIdleFilter === true ||
     unreadFilter === true;
 
-  const workingAgentMineRelation =
-    scope.type === "my"
-      ? scope.relation === "all"
-        ? "any"
-        : scope.relation
-      : undefined;
   const workingAgentsProjection = useQuery({
-    ...workspaceWorkingAgentsOptions(wsId, "issue", workingAgentMineRelation),
+    ...workspaceWorkingAgentsOptions(wsId, "issue"),
     // Ordinary surfaces get their chip count from the scoped facet. Only an
     // active working filter or Gantt's canvas count consumes the issue ids.
     enabled: usesGantt || agentRunningFilter,
@@ -618,17 +601,11 @@ export function useIssueSurfaceController({
         };
         break;
       }
-      case "my":
-        queryScope = {
-          kind: "my",
-          relation: scope.relation === "all" ? "any" : scope.relation,
-        };
-        break;
       case "actor":
-        queryScope = {
-          kind: scope.relation === "assigned" ? "assignee" : "creator",
-          actor: { type: scope.actorType, id: scope.actorId },
-        };
+        queryScope =
+          scope.relation === "assigned"
+            ? { kind: "assignee", actor: { type: scope.actorType, id: scope.actorId } }
+            : { kind: "creator", actor: { type: scope.actorType, id: scope.actorId } };
         break;
       case "team":
         throw new Error("Team issue scope is not supported by the Table query");
@@ -644,8 +621,7 @@ export function useIssueSurfaceController({
         : undefined;
     const negate = negatedFilters
       .filter((dimension) =>
-        // A project surface drops the project dimension; and on a "my"
-        // surface the relation dimension (see `relationFilters`).
+        // A project surface drops the project dimension.
         dimension === "project"
           ? viewProjectFilters.length > 0 || viewIncludeNoProject
           : dimension === "relation"

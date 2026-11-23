@@ -15,14 +15,13 @@ import type { IssueStatusIcon } from "./issue-status";
 export type IssueWorkflowHandlerType =
   | "none"
   | "agent"
-  | "squad"
   | "member"
   | "project_lead"
   | "creator";
 
 export interface IssueWorkflowHandler {
   type: IssueWorkflowHandlerType;
-  /** Set only for agent, squad and member handlers. */
+  /** Set only for agent and member handlers. */
   id?: string;
 }
 
@@ -135,7 +134,7 @@ export interface WorkflowHandoffPreview {
   workflow_name: string;
   from_status: string;
   to_status: string;
-  handler_type: "agent" | "squad" | "member" | null;
+  handler_type: "agent" | "member" | null;
   handler_id: string | null;
   previous_assignee_type: string | null;
   previous_assignee_id: string | null;

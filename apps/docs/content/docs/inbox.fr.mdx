@@ -1,6 +1,6 @@
 ---
 title: "Boîte de réception et abonnements"
-description: "Un seul endroit pour les assignations, mentions, commentaires et échecs d'agents qui demandent votre suivi."
+description: "Un seul endroit pour les assignations, commentaires et échecs d'agents qui demandent votre suivi."
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -23,8 +23,6 @@ Les notifications courantes incluent :
 - une tâche vous est assignée, ou vous est retirée ;
 - une tâche à laquelle vous êtes abonné reçoit un nouveau commentaire, ou son assigné, sa priorité ou ses dates changent (sur les tâches des autres, seulement les mises à jour clés par défaut ; voir plus bas) ;
 - une tâche à laquelle vous êtes abonné change de statut, si vous avez activé **Changements de statut**, désactivé par défaut ;
-- quelqu'un vous @mentionne dans la description ou un commentaire d'une tâche ;
-- une tâche ou un commentaire que vous avez créé reçoit une réaction ;
 - une exécution d'agent échoue sur une tâche à laquelle vous êtes abonné ;
 - une tâche est créée dans un projet que vous suivez ;
 - [la création d'une tâche via un agent](/issues#créer-avec-un-agent) aboutit ou échoue ;
@@ -39,10 +37,9 @@ Ces participants sont automatiquement abonnés à une tâche :
 - le créateur de la tâche ;
 - un nouvel assigné ;
 - toute personne qui commente ;
-- toute personne nouvellement @mentionnée dans la description de la tâche ;
 - les abonnés préconfigurés dans une automatisation.
 
-Changer l'assigné ne supprime pas les abonnements existants. Abonnez-vous ou désabonnez-vous à tout moment depuis la page de la tâche ; après le désabonnement, les mises à jour ordinaires n'arrivent plus dans votre boîte de réception, mais les @mentions directes vous notifient toujours individuellement.
+Changer l'assigné ne supprime pas les abonnements existants. Abonnez-vous ou désabonnez-vous à tout moment depuis la page de la tâche ; après le désabonnement, les mises à jour ordinaires n'arrivent plus dans votre boîte de réception.
 
 <Callout type="info">
 Avec **Changements de statut** activé, le changement de statut d'une sous-tâche notifie aussi les abonnés de la tâche parente. Les commentaires, la priorité et les changements de dates d'une sous-tâche ne remontent pas à la tâche parente.
@@ -50,7 +47,7 @@ Avec **Changements de statut** activé, le changement de statut d'une sous-tâch
 
 ## Tâches des autres
 
-Sur une tâche assignée à quelqu'un d'autre ou à son agent, un abonnement obtenu parce que vous l'avez créée, commentée ou y avez été mentionné n'apporte par défaut que les mises à jour clés : les @mentions, les réponses dans les fils auxquels vous avez participé et, avec **Changements de statut** activé, les statuts qui demandent une personne, comme `in_review`, `blocked` ou `done`. Les commentaires courants et les autres changements restent sur la tâche. Les tâches auxquelles vous vous êtes abonné vous-même, celles que vous suivez par leur projet et celles assignées à vous ou à vos agents apportent toujours tous les types de notification que vous avez activés.
+Sur une tâche assignée à quelqu'un d'autre ou à son agent, un abonnement obtenu parce que vous l'avez créée, ou commentée n'apporte par défaut que les mises à jour clés : les réponses dans les fils auxquels vous avez participé et, avec **Changements de statut** activé, les statuts qui demandent une personne, comme `in_review`, `blocked` ou `done`. Les commentaires courants et les autres changements restent sur la tâche. Les tâches auxquelles vous vous êtes abonné vous-même, celles que vous suivez par leur projet et celles assignées à vous ou à vos agents apportent toujours tous les types de notification que vous avez activés.
 
 La page de la tâche signale un tel abonnement par **Mises à jour clés**. Son menu propose **Recevoir toute l'activité**, qui en fait un abonnement explicite à cette tâche ; il n'est ensuite plus possible de revenir aux mises à jour clés pour cette tâche, seulement de se désabonner. **Modifier la valeur par défaut** ouvre **Paramètres → Notifications**, où **Tâches des autres**, en tête de **Tâches que vous suivez**, fait passer toutes ces tâches à **Toute l'activité**.
 
@@ -58,7 +55,7 @@ La page de la tâche signale un tel abonnement par **Mises à jour clés**. Son 
 
 Les notifications appartiennent aux membres de l'espace de travail. Un agent peut lire et traiter les notifications du propriétaire du runtime uniquement si le serveur vérifie que ce propriétaire est la personne à l'origine de l'exécution. Cette identité est transmise dans les chaînes de délégation entre agents. La règle couvre toutes les actions de la boîte de réception : la liste active, les archives, la liste reportée, les compteurs de non-lus et toutes les modifications. Les exécutions déclenchées par une autre personne ou sans personne vérifiable, ainsi que les identifiants de nœud cloud sans liaison à une exécution, sont refusés. Les compteurs de non-lus lus par un agent ne couvrent que l'espace de travail de son exécution, jamais les autres espaces du propriétaire. Seules les personnes peuvent supprimer des notifications. Le serveur journalise chaque modification faite par un agent, avec l'agent, l'exécution et la personne pour qui il agissait.
 
-@mentionner un agent dans un commentaire, lui assigner une tâche ou déclencher une automatisation crée directement une exécution ; aucune notification n'est laissée à l'agent. `@all` ne notifie que les membres.
+@mentionner un agent dans un commentaire, lui assigner une tâche ou déclencher une automatisation crée directement une exécution ; aucune notification n'est laissée à l'agent.
 
 ## Gérer depuis le CLI
 
@@ -99,7 +96,7 @@ Une tâche ouverte depuis la boîte de réception affiche une barre sous son en-
 - **Statut**, **Assigné à** et **Actions rapides** modifient la tâche elle-même, comme ses propriétés. Les actions rapides apparaissent dès que l'espace de travail en a.
 - **Reporter** (`H`) retire la tâche de votre boîte de réception jusqu'à l'heure choisie et ouvre la suivante. Voir « Reporter une tâche » ci-dessous.
 - **Archiver** (`E`) archive la notification et ouvre la suivante. L'archivage ne modifie ni ne supprime la tâche. Pour clore la tâche, changez plutôt son statut ; par défaut, sa notification est archivée elle aussi (voir plus bas quand une notification quitte la boîte de réception).
-- **Se désabonner et archiver** (`⇧E`) est proposé sur les tâches qui ne sont pas les vôtres : assignées ni à vous, ni à un agent qui vous appartient. L'action vous désabonne de la tâche, archive la notification et ouvre la suivante. Les mises à jour ordinaires n'arrivent plus dans votre boîte de réception, mais les @mentions, si. Sur une tâche avec des sous-tâches, vous choisissez entre cette tâche seulement et cette tâche avec toutes ses sous-tâches. Pour cette tâche seulement, la confirmation propose **Annuler**, qui rétablit l'abonnement tel qu'il était. Le désabonnement des sous-tâches ne s'annule pas ici ; réabonnez-vous depuis la page de la tâche. La même action se trouve dans la carte au survol et dans le menu contextuel d'une ligne.
+- **Se désabonner et archiver** (`⇧E`) est proposé sur les tâches qui ne sont pas assignées à un agent qui vous appartient. L'action vous désabonne de la tâche, archive la notification et ouvre la suivante. Les mises à jour ordinaires n'arrivent plus dans votre boîte de réception. Sur une tâche avec des sous-tâches, vous choisissez entre cette tâche seulement et cette tâche avec toutes ses sous-tâches. Pour cette tâche seulement, la confirmation propose **Annuler**, qui rétablit l'abonnement tel qu'il était. Le désabonnement des sous-tâches ne s'annule pas ici ; réabonnez-vous depuis la page de la tâche. La même action se trouve dans la carte au survol et dans le menu contextuel d'une ligne.
 
 La suivante est la ligne suivante que la section affiche avec ses filtres actuels : vous parcourez ainsi la boîte de réception sans revenir à la liste.
 
@@ -121,7 +118,7 @@ Reporter retire une tâche de votre boîte de réception jusqu'à l'heure choisi
 Tant qu'une tâche est reportée :
 
 - ses nouvelles notifications attendent avec elle et ne comptent pas dans le badge non lu. À son retour, la ligne indique **Report terminé** et le nombre de nouveautés arrivées entre-temps ;
-- elle revient plus tôt si quelqu'un vous mentionne nommément, si elle vous est assignée, si une exécution échoue, si une app demande votre action ou si toutes ses sous-tâches sont terminées. Les mentions `@all` ne la réveillent pas ;
+- elle revient plus tôt si elle vous est assignée, si une exécution échoue, si une app demande votre action ou si toutes ses sous-tâches sont terminées ;
 - **Tout marquer comme lu** et les actions d'archivage groupé l'ignorent. L'archiver met fin au report, tout comme terminer vous-même la tâche quand **Archiver les tâches que vous traitez** compte la fin de la tâche (c'est le cas par défaut) ;
 - ouvrir la tâche depuis ailleurs ne la marque pas comme lue et ne met pas fin au report. Sa barre de la boîte de réception indique quand elle revient ; **Changer l'heure** la fait revenir maintenant (`H`) ou choisit une autre heure.
 
@@ -133,7 +130,7 @@ Lire une notification ne la retire pas. Une ligne quitte la boîte de réception
 
 - quand vous l'archivez, depuis sa ligne, la carte de survol, la barre de la boîte de réception ou une action groupée ;
 - quand vous reportez sa tâche. C'est temporaire : la tâche revient à l'heure choisie, ou plus tôt si quelque chose a besoin de vous. Voir « Reporter une tâche » ci-dessus ;
-- quand vous traitez vous-même sa tâche, selon le réglage **Archiver les tâches que vous traitez** dans **Paramètres → Notifications**. Le choix par défaut, **Quand vous la terminez ou déclenchez un agent**, compte le passage de la tâche à un statut `done` ou `closed`, ainsi que toute action qui confie réellement du travail à un agent : un commentaire, une action rapide ou un message en cours d'exécution ; l'assignation à un agent ou une escouade hors `backlog` ; la sortie du `backlog` (y compris vers `todo`) d'une tâche assignée à un agent ou une escouade ; l'entrée dans une colonne de flux dotée d'un agent ; une relance ; ou le déclenchement manuel d'un réveil. Organiser la tâche sans réveiller d'agent — passer une tâche non assignée de `backlog` à `todo`, assigner un agent dans `backlog`, retirer l'assigné, poster un commentaire `/note`, désactiver le déclenchement ou rencontrer un environnement bloqué — laisse la notification en place. **Quand vous la terminez** ne compte que `done` et `closed`, **Jamais** désactive l'archivage automatique, et **Personnalisé** choisit les actions une à une, y compris répondre, faire avancer le statut, réassigner ou changer la priorité, le projet, les dates ou les libellés, désactivés par défaut. Seules vos propres notifications sur cette tâche sont archivées, lues ou non. Quand quelqu'un d'autre ou un agent fait de même, ses notifications restent dans votre boîte de réception, pour que vous voyiez la nouvelle ;
+- quand vous traitez vous-même sa tâche, selon le réglage **Archiver les tâches que vous traitez** dans **Paramètres → Notifications**. Le choix par défaut, **Quand vous la terminez ou déclenchez un agent**, compte le passage de la tâche à un statut `done` ou `closed`, ainsi que toute action qui confie réellement du travail à un agent : un commentaire, une action rapide ou un message en cours d'exécution ; l'assignation à un agent hors `backlog` ; la sortie du `backlog` (y compris vers `todo`) d'une tâche assignée à un agent ; l'entrée dans une colonne de flux dotée d'un agent ; une relance ; ou le déclenchement manuel d'un réveil. Organiser la tâche sans réveiller d'agent — passer une tâche non assignée de `backlog` à `todo`, assigner un agent dans `backlog`, retirer l'assigné, poster un commentaire `/note`, désactiver le déclenchement ou rencontrer un environnement bloqué — laisse la notification en place. **Quand vous la terminez** ne compte que `done` et `closed`, **Jamais** désactive l'archivage automatique, et **Personnalisé** choisit les actions une à une, y compris répondre, faire avancer le statut, réassigner ou changer la priorité, le projet, les dates ou les libellés, désactivés par défaut. Seules vos propres notifications sur cette tâche sont archivées, lues ou non. Quand quelqu'un d'autre ou un agent fait de même, ses notifications restent dans votre boîte de réception, pour que vous voyiez la nouvelle ;
 - quand c'est une notification **Exécution en échec** et que sa tâche passe à un statut qui la rend à une personne : `in_review`, un statut personnalisé de la catégorie `started`, ou n'importe quel statut des catégories `done` ou `closed`. Les notifications Exécution en échec de tout le monde sur cette tâche sont alors archivées, quelle que soit la personne qui a changé le statut, et indépendamment du réglage ci-dessus. `blocked` fait exception : il rend aussi la tâche, mais le travail reste bloqué, donc les échecs précédents méritent encore d'être lus.
 - quand votre boîte de réception dans l'espace de travail dépasse 2 000 notifications. Elle garde les 2 000 plus récentes et archive peu après les plus anciennes, lues ou non. Une notification revenue d'un report ou restaurée depuis l'archive compte à partir de son retour. Les notifications d'une tâche reportée ne comptent pas et restent en place.
 
@@ -158,7 +155,7 @@ En dessous, **Me notifier pour** active ou désactive chaque type de notificatio
 
 | Groupe | Types |
 |---|---|
-| **Vous concernant** | Assignations, Mentions, Réactions |
+| **Vous concernant** | Assignations |
 | **Tâches que vous suivez** | Changements de statut, Commentaires, Priorité et date d'échéance |
 | **Projets que vous suivez** | Nouvelles tâches |
 | **Agents** | Activité des agents (exécutions en échec, et actions d'app demandées par un agent qui sont bloquées ou expirent) |
@@ -167,6 +164,6 @@ En dessous, **Me notifier pour** active ou désactive chaque type de notificatio
 
 ## Étapes suivantes
 
-- [Commentaires](/comments) — réponses, mentions et fils de discussion.
-- [@mentionner des agents dans les commentaires](/mentioning-agents) — notifications des membres et exécutions d'agents.
+- [Commentaires](/comments) — réponses et fils de discussion.
+- [@mentionner des agents dans les commentaires](/mentioning-agents) — comment une @mention lance une exécution.
 - [Automatisations](/autopilots) — configurer la création automatique de travail et les abonnés par défaut.

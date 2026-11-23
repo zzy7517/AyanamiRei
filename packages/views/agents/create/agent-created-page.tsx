@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRight, AtSign, CircleCheck, ListPlus, Users } from "@multica/ui/icons";
+import { ArrowRight, AtSign, CircleCheck, ListPlus } from "@multica/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useModalStore } from "@multica/core/modals";
@@ -11,7 +11,6 @@ import { runtimeListOptions } from "@multica/core/runtimes/queries";
 import {
   agentDetailOptions,
   agentListOptions,
-  squadListOptions,
 } from "@multica/core/workspace/queries";
 import { MulticaStarRow } from "@multica/ui/components/common/multica-graphics";
 import { Button } from "@multica/ui/components/ui/button";
@@ -32,13 +31,10 @@ export function AgentCreatedPage({ agentId }: { agentId: string }) {
   const wsId = useWorkspaceId();
   const paths = useWorkspacePaths();
   const navigation = useNavigation();
-  const squadId = navigation.searchParams.get("squad");
 
   const { data: agent, isLoading } = useQuery(agentDetailOptions(wsId, agentId));
   const { data: runtimes = [] } = useQuery(runtimeListOptions(wsId));
-  const { data: squads = [] } = useQuery(squadListOptions(wsId));
   const runtime = runtimes.find((item) => item.id === agent?.runtime_id) ?? null;
-  const squad = squadId ? squads.find((item) => item.id === squadId) ?? null : null;
   const name = agent?.name ?? "";
   const { data: agents } = useQuery(agentListOptions(wsId));
   // One star per active agent, the newest last. Clamped so a tiny workspace
@@ -97,11 +93,6 @@ export function AgentCreatedPage({ agentId }: { agentId: string }) {
                 })}
               </p>
             ) : null}
-            {squad ? (
-              <p className="mt-3 rounded-full bg-success/10 px-2.5 py-1 text-caption text-success">
-                {t(($) => $.creation_studio.done.joined_squad, { squad: squad.name })}
-              </p>
-            ) : null}
           </div>
 
           <p className="mt-10 text-label font-medium text-muted-foreground">
@@ -124,15 +115,6 @@ export function AgentCreatedPage({ agentId }: { agentId: string }) {
               icon={AtSign}
               title={t(($) => $.creation_studio.done.mention_title)}
               href={paths.issues()}
-            />
-            <DoneAction
-              icon={Users}
-              title={
-                squad
-                  ? t(($) => $.creation_studio.done.open_squad_title, { squad: squad.name })
-                  : t(($) => $.creation_studio.done.squad_title)
-              }
-              href={squad ? paths.squadDetail(squad.id) : paths.squads()}
             />
           </div>
         </div>

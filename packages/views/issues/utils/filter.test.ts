@@ -55,10 +55,10 @@ function makeIssue(overrides: Partial<Issue> = {}): Issue {
 }
 
 const issues: Issue[] = [
-  makeIssue({ id: "1", status: "todo", priority: "high", assignee_type: "member", assignee_id: "u-1", creator_type: "member", creator_id: "u-1", project_id: "p-1" }),
+  makeIssue({ id: "1", status: "todo", priority: "high", assignee_type: "agent", assignee_id: "a-2", creator_type: "member", creator_id: "u-1", project_id: "p-1" }),
   makeIssue({ id: "2", status: "in_progress", priority: "medium", assignee_type: "agent", assignee_id: "a-1", creator_type: "agent", creator_id: "a-1", project_id: "p-2" }),
   makeIssue({ id: "3", status: "done", priority: "low", assignee_type: null, assignee_id: null, creator_type: "member", creator_id: "u-2", project_id: null }),
-  makeIssue({ id: "4", status: "todo", priority: "urgent", assignee_type: "member", assignee_id: "u-2", creator_type: "member", creator_id: "u-1", project_id: "p-1" }),
+  makeIssue({ id: "4", status: "todo", priority: "urgent", assignee_type: "agent", assignee_id: "a-3", creator_type: "member", creator_id: "u-1", project_id: "p-1" }),
 ];
 
 describe("filterIssues", () => {
@@ -82,7 +82,7 @@ describe("filterIssues", () => {
   it("filters by specific assignee", () => {
     const result = filterIssues(issues, {
       ...NO_FILTER,
-      assigneeFilters: [{ type: "member", id: "u-1" }],
+      assigneeFilters: [{ type: "agent", id: "a-2" }],
     });
     expect(result.map((i) => i.id)).toEqual(["1"]);
   });
@@ -123,7 +123,7 @@ describe("filterIssues", () => {
     const result = filterIssues(issues, {
       ...NO_FILTER,
       statusFilters: ["todo"],
-      assigneeFilters: [{ type: "member", id: "u-1" }],
+      assigneeFilters: [{ type: "agent", id: "a-2" }],
     });
     expect(result.map((i) => i.id)).toEqual(["1"]);
   });
@@ -666,7 +666,7 @@ describe("property filters", () => {
 
   it("filterAssigneeGroups applies property filters per group", () => {
     const groups: IssueAssigneeGroup[] = [
-      { id: "assignee:member:u-1", assignee_type: "member", assignee_id: "u-1", issues: [critical, minor], total: 2 },
+      { id: "assignee:agent:a-2", assignee_type: "agent", assignee_id: "a-2", issues: [critical, minor], total: 2 },
     ];
     const result = filterAssigneeGroups(groups, {
       propertyFilters: { [sevId]: ["opt-critical"] },
@@ -774,9 +774,9 @@ describe("negated filters", () => {
     expect(ids({ statusFilters: ["done"], negatedFilters: ["status"] })).toEqual(["1", "2", "4"]);
   });
 
-  it("assignee is not a member keeps unassigned issues, like the server", () => {
+  it("assignee is not a-2 keeps unassigned issues, like the server", () => {
     expect(
-      ids({ assigneeFilters: [{ type: "member", id: "u-1" }], negatedFilters: ["assignee"] }),
+      ids({ assigneeFilters: [{ type: "agent", id: "a-2" }], negatedFilters: ["assignee"] }),
     ).toEqual(["2", "3", "4"]);
   });
 
@@ -816,11 +816,10 @@ describe("relation filters", () => {
     filterIssues(issues, { ...NO_FILTER, relationContext, ...filters }).map((i) => i.id);
 
   it("ORs the selected relations", () => {
-    expect(ids({ relationFilters: ["assigned"] })).toEqual(["1"]);
     expect(ids({ relationFilters: ["my_agents"] })).toEqual(["2"]);
-    expect(ids({ relationFilters: ["assigned", "my_agents"] })).toEqual(["1", "2"]);
     // Issue 2 was created by agent a-1, not by the member u-1.
     expect(ids({ relationFilters: ["created"] })).toEqual(["1", "4"]);
+    expect(ids({ relationFilters: ["created", "my_agents"] })).toEqual(["1", "2", "4"]);
   });
 
   it("can be negated", () => {
@@ -829,7 +828,7 @@ describe("relation filters", () => {
 
   it("is a no-op until the viewer is known", () => {
     expect(
-      filterIssues(issues, { ...NO_FILTER, relationFilters: ["assigned"] }).map((i) => i.id),
+      filterIssues(issues, { ...NO_FILTER, relationFilters: ["created"] }).map((i) => i.id),
     ).toEqual(["1", "2", "3", "4"]);
   });
 
@@ -848,49 +847,39 @@ describe("relation filters", () => {
 
   it("still decides an issue a known relation matches alongside subscribed", () => {
     expect(
-      ids({ relationFilters: ["assigned", "subscribed"], negatedFilters: ["relation"] }),
-    ).toEqual(["2", "3", "4"]);
+      ids({ relationFilters: ["created", "subscribed"], negatedFilters: ["relation"] }),
+    ).toEqual(["2", "3"]);
   });
 
-  describe("my_agents with squads", () => {
-    const mine = makeIssue({ id: "mine", assignee_type: "squad", assignee_id: "my-squad", priority: "medium" });
-    const theirs = makeIssue({ id: "theirs", assignee_type: "squad", assignee_id: "their-squad", priority: "medium" });
-    const agent = makeIssue({ id: "agent", assignee_type: "agent", assignee_id: "a-1", priority: "medium" });
-    const viewer = { userId: "u-1", myAgentIds: new Set(["a-1"]), mySquadIds: new Set(["my-squad"]) };
-    const squadIds = (filters: Partial<IssueFilters>) =>
-      filterIssues([mine, theirs, agent], { ...NO_FILTER, relationContext: viewer, ...filters }).map((i) => i.id);
+  describe("my_agents", () => {
+    const mine = makeIssue({ id: "mine", assignee_type: "agent", assignee_id: "a-1", priority: "medium" });
+    const theirs = makeIssue({ id: "theirs", assignee_type: "agent", assignee_id: "a-9", priority: "medium" });
+    const viewer = { userId: "u-1", myAgentIds: new Set(["a-1"]) };
+    const agentIds = (filters: Partial<IssueFilters>) =>
+      filterIssues([mine, theirs], { ...NO_FILTER, relationContext: viewer, ...filters }).map((i) => i.id);
 
-    it("keeps the viewer's squads and drops the others", () => {
-      expect(squadIds({ relationFilters: ["my_agents"] })).toEqual(["mine", "agent"]);
+    it("keeps the viewer's agents and drops the others", () => {
+      expect(agentIds({ relationFilters: ["my_agents"] })).toEqual(["mine"]);
     });
 
-    it("negated, keeps only the other squads", () => {
-      expect(squadIds({ relationFilters: ["my_agents"], negatedFilters: ["relation"] })).toEqual(["theirs"]);
+    it("negated, keeps only the other agents", () => {
+      expect(agentIds({ relationFilters: ["my_agents"], negatedFilters: ["relation"] })).toEqual(["theirs"]);
     });
 
-    it("keeps a squad row an OR sibling does not match", () => {
+    it("keeps an agent row an OR sibling does not match", () => {
       const advancedFilter = createFilterGroup("any", [
         createFilterCondition("relation", ["my_agents"]),
         createFilterCondition("priority", ["urgent"]),
       ]);
-      expect(squadIds({ advancedFilter })).toEqual(["mine", "agent"]);
-    });
-
-    it("leaves squad rows to the server until the viewer's squads load", () => {
-      const agentsOnly = { userId: "u-1", myAgentIds: new Set(["a-1"]) };
-      expect(squadIds({ relationContext: agentsOnly, relationFilters: ["my_agents"] })).toEqual([
-        "mine",
-        "theirs",
-        "agent",
-      ]);
+      expect(agentIds({ advancedFilter })).toEqual(["mine"]);
     });
   });
 
   it("answers subscribed without the viewer's agents, leaving only agent rows of my_agents open", () => {
     const subscriptionsOnly = { userId: "u-1", subscribedIssueIds: new Set(["3"]) };
     expect(ids({ relationContext: subscriptionsOnly, relationFilters: ["subscribed"] })).toEqual(["3"]);
-    // Member and unassigned rows are never an agent's work.
-    expect(ids({ relationContext: subscriptionsOnly, relationFilters: ["my_agents"] })).toEqual(["2"]);
+    // Unassigned rows are never an agent's work.
+    expect(ids({ relationContext: subscriptionsOnly, relationFilters: ["my_agents"] })).toEqual(["1", "2", "4"]);
   });
 });
 
@@ -935,7 +924,7 @@ describe("advanced filter", () => {
   });
 
   it("negates one condition and keeps empty values", () => {
-    expect(ids(createFilterGroup("all", [createFilterCondition("assignee", ["member:u-1"], true)]))).toEqual([
+    expect(ids(createFilterGroup("all", [createFilterCondition("assignee", ["agent:a-2"], true)]))).toEqual([
       "2", "3", "4",
     ]);
     expect(ids(createFilterGroup("all", [createFilterCondition("assignee", ["none"])]))).toEqual(["3"]);
@@ -946,7 +935,7 @@ describe("advanced filter", () => {
       createFilterCondition("status", ["in_progress"]),
       createFilterCondition("label"),
       // No viewer context on this surface: the relation cannot be answered.
-      createFilterCondition("relation", ["assigned"]),
+      createFilterCondition("relation", ["subscribed"]),
     ]);
     expect(ids(tree)).toEqual(["2"]);
     expect(ids(createFilterGroup("any", [createFilterCondition("label")]))).toEqual(["1", "2", "3", "4"]);
@@ -964,7 +953,7 @@ describe("advanced filter", () => {
     const viewer = { userId: "u-1", myAgentIds: new Set(["a-1"]) };
     const subscribedNotMine = createFilterGroup("all", [
       createFilterCondition("relation", ["subscribed"]),
-      createFilterCondition("relation", ["assigned", "my_agents"], true),
+      createFilterCondition("relation", ["my_agents"], true),
     ]);
     const subscribedOrUrgent = createFilterGroup("any", [
       createFilterCondition("relation", ["subscribed"]),
@@ -981,7 +970,7 @@ describe("advanced filter", () => {
     });
 
     it("drops out without the subscriptions", () => {
-      expect(ids(subscribedNotMine, { relationContext: viewer })).toEqual(["3", "4"]);
+      expect(ids(subscribedNotMine, { relationContext: viewer })).toEqual(["1", "3", "4"]);
     });
   });
 

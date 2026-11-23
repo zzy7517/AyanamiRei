@@ -48,7 +48,6 @@ import type {
   SearchProjectsResponse,
   ListIssueStatusesResponse,
   SendChatMessageResponse,
-  Squad,
   NotificationPreferenceResponse,
   NotificationPreferences,
   TaskMessagePayload,
@@ -110,7 +109,6 @@ import {
   EMPTY_RUNTIME_LIST,
   EMPTY_SEARCH_ISSUES_RESPONSE,
   EMPTY_SEARCH_PROJECTS_RESPONSE,
-  EMPTY_SQUAD_LIST,
   EMPTY_USER,
   EMPTY_WORKSPACE_LIST,
   InboxListSchema,
@@ -127,7 +125,6 @@ import {
   SearchIssuesResponseSchema,
   SearchProjectsResponseSchema,
   SendChatMessageResponseSchema,
-  SquadListSchema,
   TaskMessageListSchema,
   EMPTY_TASK_MESSAGE_LIST,
   UserSchema,
@@ -572,12 +569,7 @@ class ApiClient {
   ): Promise<MemberWithUser[]> {
     const raw = await this.fetch<unknown>(
       `/api/workspaces/${workspaceId}/members`,
-      {
-        signal: opts?.signal,
-        // Without it the server leaves guests out of the list, and useIsGuest
-        // could not recognize a guest. Mirrors protocol.AppCapabilityWorkspaceGuestsV1.
-        headers: { "X-Client-Capabilities": "workspace-guests-v1" },
-      },
+      { signal: opts?.signal },
     );
     return parseWithFallback(raw, MemberListSchema, EMPTY_MEMBER_LIST, {
       endpoint: "listMembers",
@@ -622,15 +614,6 @@ class ApiClient {
     });
   }
 
-  async listSquads(opts?: { signal?: AbortSignal }): Promise<Squad[]> {
-    const raw = await this.fetch<unknown>("/api/squads", {
-      signal: opts?.signal,
-    });
-    return parseWithFallback(raw, SquadListSchema, EMPTY_SQUAD_LIST, {
-      endpoint: "listSquads",
-    });
-  }
-
   // --- Issues ---
   async listIssues(
     params: ListIssuesParams = {},
@@ -654,9 +637,6 @@ class ApiClient {
       `/api/issues${qs ? `?${qs}` : ""}`,
       { signal: opts?.signal },
     );
-    if (params?.created_by_user_id && (!raw || typeof raw !== "object" || !("created_by_user_id" in raw) || raw.created_by_user_id !== params.created_by_user_id)) {
-      return this.listIssues({ ...params, created_by_user_id: undefined, creator_id: params.creator_id ?? params.created_by_user_id }, opts);
-    }
     return parseWithFallback(raw, ListIssuesResponseSchema, EMPTY_LIST_ISSUES_RESPONSE, {
       endpoint: "GET /api/issues",
     });

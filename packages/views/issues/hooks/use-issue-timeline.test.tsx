@@ -12,7 +12,6 @@ const stableHandles = vi.hoisted(() => ({
   updateMutateAsync: vi.fn(async () => ({})),
   deleteMutateAsync: vi.fn(async () => ({})),
   resolveMutateAsync: vi.fn(async () => ({})),
-  toggleMutate: vi.fn(),
 }));
 
 // WS event registry — captured handlers per event name so tests can simulate
@@ -38,11 +37,6 @@ vi.mock("@multica/core/issues/mutations", () => ({
   useResolveComment: () => ({
     mutateAsync: stableHandles.resolveMutateAsync,
     mutate: vi.fn(),
-    isPending: false,
-  }),
-  useToggleCommentReaction: () => ({
-    mutateAsync: vi.fn(),
-    mutate: stableHandles.toggleMutate,
     isPending: false,
   }),
 }));
@@ -97,7 +91,6 @@ vi.mock("@tanstack/react-query", async () => {
       getQueryData: vi.fn(),
       cancelQueries: vi.fn(),
     }),
-    useMutationState: () => [],
   };
 });
 
@@ -121,7 +114,6 @@ describe("useIssueTimeline", () => {
     stableHandles.updateMutateAsync.mockClear();
     stableHandles.deleteMutateAsync.mockClear();
     stableHandles.resolveMutateAsync.mockClear();
-    stableHandles.toggleMutate.mockClear();
     queryState.data = [];
     queryState.isLoading = false;
     cacheUpdates.last = null;
@@ -134,7 +126,7 @@ describe("useIssueTimeline", () => {
   // returns a *new* mutation result wrapper on every render, so a useCallback
   // listing the whole mutation object as a dep flips its identity every time
   // — that is the exact regression this test guards against.
-  it("submitReply / editComment / deleteComment / toggleReaction keep identity across unrelated re-renders", () => {
+  it("submitReply / editComment / deleteComment keep identity across unrelated re-renders", () => {
     const { result, rerender } = renderHook(() => useIssueTimeline("issue-1", "user-1"));
 
     const first = {
@@ -142,7 +134,6 @@ describe("useIssueTimeline", () => {
       submitReply: result.current.submitReply,
       editComment: result.current.editComment,
       deleteComment: result.current.deleteComment,
-      toggleReaction: result.current.toggleReaction,
     };
 
     rerender();
@@ -151,7 +142,6 @@ describe("useIssueTimeline", () => {
     expect(result.current.submitReply).toBe(first.submitReply);
     expect(result.current.editComment).toBe(first.editComment);
     expect(result.current.deleteComment).toBe(first.deleteComment);
-    expect(result.current.toggleReaction).toBe(first.toggleReaction);
     expect(result.current.submitComment).toBe(first.submitComment);
   });
 
@@ -208,7 +198,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T05:00:00Z",
           updated_at: "2026-05-06T05:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -236,7 +225,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T02:00:00Z",
           updated_at: "2026-05-06T02:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -264,7 +252,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T01:00:00Z",
           updated_at: "2026-05-06T01:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -289,7 +276,6 @@ describe("useIssueTimeline", () => {
           created_at: "",
           updated_at: "",
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -309,7 +295,6 @@ describe("useIssueTimeline", () => {
       created_at: "2026-05-06T01:00:00Z",
       updated_at: "2026-05-06T03:00:00Z",
       revision: 3,
-      reactions: [],
       attachments: [],
     }];
     renderHook(() => useIssueTimeline("issue-1", "user-1"));
@@ -327,7 +312,6 @@ describe("useIssueTimeline", () => {
           updated_at: "2026-05-06T02:00:00Z",
           revision: 2,
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -350,7 +334,6 @@ describe("useIssueTimeline", () => {
         created_at: "2026-05-06T01:00:00Z",
         updated_at: "2026-05-06T01:00:00Z",
         revision: 1,
-        reactions: [],
         attachments: [],
       },
     ];
@@ -369,7 +352,6 @@ describe("useIssueTimeline", () => {
           updated_at: "2026-05-06T02:00:00Z",
           revision: 2,
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -395,7 +377,6 @@ describe("useIssueTimeline", () => {
       created_at: "2026-05-06T01:00:00Z",
       updated_at: "2026-05-06T03:00:00Z",
       revision: 3,
-      reactions: [],
       attachments: [],
     }];
     renderHook(() => useIssueTimeline("issue-1", "user-1"));
@@ -412,7 +393,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T01:00:00Z",
           updated_at: "2026-05-06T04:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
         },
       });
@@ -442,7 +422,6 @@ describe("useIssueTimeline", () => {
         parent_id: null,
         created_at: "2026-05-06T01:00:00Z",
         updated_at: "2026-05-06T01:00:00Z",
-        reactions: [],
         attachments: [],
         resolved_at: null,
         resolved_by_type: null,
@@ -457,7 +436,6 @@ describe("useIssueTimeline", () => {
         parent_id: null,
         created_at: "2026-05-06T02:00:00Z",
         updated_at: "2026-05-06T02:00:00Z",
-        reactions: [],
         attachments: [],
         resolved_at: null,
         resolved_by_type: null,
@@ -479,7 +457,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T01:00:00Z",
           updated_at: "2026-05-06T01:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
           resolved_at: "2026-05-06T03:00:00Z",
           resolved_by_type: "member",
@@ -518,7 +495,6 @@ describe("useIssueTimeline", () => {
         parent_id: null,
         created_at: "2026-05-06T01:00:00Z",
         updated_at: "2026-05-06T01:00:00Z",
-        reactions: [],
         attachments: [],
         resolved_at: "2026-05-06T03:00:00Z",
         resolved_by_type: "member",
@@ -540,7 +516,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T01:00:00Z",
           updated_at: "2026-05-06T01:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
           resolved_at: null,
           resolved_by_type: null,
@@ -566,7 +541,6 @@ describe("useIssueTimeline", () => {
         parent_id: null,
         created_at: "2026-05-06T01:00:00Z",
         updated_at: "2026-05-06T01:00:00Z",
-        reactions: [],
         attachments: [],
         resolved_at: null,
         resolved_by_type: null,
@@ -587,7 +561,6 @@ describe("useIssueTimeline", () => {
           created_at: "2026-05-06T01:00:00Z",
           updated_at: "2026-05-06T01:00:00Z",
           type: "comment",
-          reactions: [],
           attachments: [],
           resolved_at: "2026-05-06T03:00:00Z",
           resolved_by_type: "member",

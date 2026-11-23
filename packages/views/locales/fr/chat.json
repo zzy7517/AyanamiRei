@@ -302,7 +302,6 @@
     },
     "failure": {
       "permission_revoked": "La personne à l'origine de la demande ne peut plus exécuter cet agent",
-      "access_lost": "L'élément surveillé est passé dans un projet privé",
       "dispatch_failed": "L'agent n'a pas pu s'exécuter"
     },
     "kind": {

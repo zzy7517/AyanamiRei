@@ -16,12 +16,10 @@ describe("spaceForPath", () => {
 
   it.each([
     [ws.inbox(), "work"],
-    [ws.myIssues(), "work"],
     [ws.issues(), "work"],
     [ws.issueDetail("MUL-1" as IssueRouteRef), "work"],
     [ws.projectDetail("p-1"), "work"],
     [ws.agentDetail("a-1"), "team"],
-    [ws.squadDetail("s-1"), "team"],
     [ws.memberDetail("m-1"), "team"],
     [ws.runtimeDetail("r-1"), "team"],
     [ws.skills(), "team"],

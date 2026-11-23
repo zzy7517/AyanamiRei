@@ -145,28 +145,6 @@ export function formatActivity(
       const n = entry.coalesced_count ?? 1;
       return t("issues:activity.tasks_failed", { count: n });
     }
-    case "squad_leader_evaluated": {
-      // Copy mirrors packages/views/locales/en/issues.json
-      // (squad_leader_action / squad_leader_no_action / squad_leader_failed,
-      // each with an optional `_reason` variant).
-      const reason = details.reason?.trim();
-      switch (details.outcome) {
-        case "action":
-          return reason
-            ? t("issues:activity.squad_action_with_reason", { reason })
-            : t("issues:activity.squad_action");
-        case "no_action":
-          return reason
-            ? t("issues:activity.squad_no_action_with_reason", { reason })
-            : t("issues:activity.squad_no_action");
-        case "failed":
-          return reason
-            ? t("issues:activity.squad_failed_with_reason", { reason })
-            : t("issues:activity.squad_failed");
-        default:
-        return t("issues:activity.squad_evaluated");
-      }
-    }
     default:
       return entry.action ?? "";
   }

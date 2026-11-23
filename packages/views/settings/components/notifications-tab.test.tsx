@@ -61,8 +61,6 @@ describe("Inbox notification settings", () => {
     expect(lines).toEqual([
       "About you",
       "Assignments",
-      "Mentions",
-      "Reactions",
       "Issues you subscribe to",
       "Other people's issues",
       "Status changes",

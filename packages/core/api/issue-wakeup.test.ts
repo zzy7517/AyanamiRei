@@ -191,16 +191,18 @@ it("parses system wakeups and falls back on an unknown blocked reason", async ()
     ...rule, blocked: "", workspace_default: true, id: "", revision: 0, default_instruction: "", customized: false, paused_reason: null,
   }]);
 });
-it("reads a member target and a pause, and drops an unknown target", async () => {
+it("reads an agent target and a pause, and drops an unknown target", async () => {
   const base = { id: "r", revision: 3, rule: "child_done", enabled: false, instruction: "", default_instruction: "Advance.", customized: true,
-    staged: false, stage: null, total: 1, remaining: 1, waiting: [], blocked: "member_assignee", workspace_default: true };
+    staged: false, stage: null, total: 1, remaining: 1, waiting: [], blocked: "no_assignee", workspace_default: true };
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([
-    { ...base, paused_reason: "rate", target: { type: "member", id: "u", name: "Jiayuan" } },
+    { ...base, paused_reason: "rate", target: { type: "agent", id: "a", name: "Emacs" } },
     { ...base, paused_reason: "someday", target: { type: "robot", id: "x", name: "?" } },
+    { ...base, paused_reason: "someday", blocked: "member_assignee", target: { type: "agent", id: "a", name: "Emacs" } },
   ]))));
-  const [member, unknown] = await client.listIssueSystemWakeups("issue");
-  expect(member).toMatchObject({ paused_reason: "rate", target: { type: "member", name: "Jiayuan" }, customized: true });
+  const [agent, unknown, unknownBlock] = await client.listIssueSystemWakeups("issue");
+  expect(agent).toMatchObject({ paused_reason: "rate", target: { type: "agent", name: "Emacs" }, customized: true });
   expect(unknown).toMatchObject({ paused_reason: null, target: null });
+  expect(unknownBlock).toMatchObject({ blocked: "" });
 });
 it("reads workspace defaults and rejects a malformed list", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([{ rule: "child_done", enabled: false, customized: 2 }]))));

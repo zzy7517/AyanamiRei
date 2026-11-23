@@ -30,10 +30,6 @@ vi.mock("@multica/core/workspace/queries", () => ({
       },
     ],
   }),
-  squadListOptions: (wsId: string) => ({
-    queryKey: ["squads", wsId],
-    queryFn: async () => [],
-  }),
 }));
 
 vi.mock("@multica/core/projects/queries", () => ({
@@ -118,7 +114,10 @@ function renderCreateDialog() {
 }
 
 const createButton = () => screen.getByRole("button", { name: "Create autopilot" });
-const assigneeTrigger = () => screen.getByRole("button", { name: /Select agent or squad/ });
+const assigneeTrigger = () => screen.getByRole("button", { name: /^Select agent/ });
+// Matched by its fixed ends: this file is about when the error shows and
+// clears, not about its exact wording.
+const assigneeError = /^Choose the agent .*will run this autopilot\.$/;
 
 describe("AutopilotDialog required-field feedback", () => {
   beforeEach(() => {
@@ -153,9 +152,7 @@ describe("AutopilotDialog required-field feedback", () => {
     await user.type(screen.getByLabelText("title"), "Daily digest");
     await user.click(createButton());
 
-    expect(
-      await screen.findByText("Choose the agent or squad that will run this autopilot."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(assigneeError)).toBeInTheDocument();
     // The title error clears itself the moment the field is filled — no second
     // submit needed to retire an error the user has already fixed.
     expect(screen.queryByText("Enter a name for this autopilot.")).not.toBeInTheDocument();
@@ -171,15 +168,13 @@ describe("AutopilotDialog required-field feedback", () => {
 
     await user.type(screen.getByLabelText("title"), "Daily digest");
     await user.click(createButton());
-    await screen.findByText("Choose the agent or squad that will run this autopilot.");
+    await screen.findByText(assigneeError);
 
     await user.click(assigneeTrigger());
     await user.click(await screen.findByRole("button", { name: /Scout/ }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByText("Choose the agent or squad that will run this autopilot."),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(assigneeError)).not.toBeInTheDocument();
     });
 
     await user.click(createButton());

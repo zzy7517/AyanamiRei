@@ -10,7 +10,6 @@ import esOnboarding from "./es/onboarding.json";
 import esInvite from "./es/invite.json";
 import esLabels from "./es/labels.json";
 import esMembers from "./es/members.json";
-import esMyIssues from "./es/my-issues.json";
 import esSearch from "./es/search.json";
 import esInbox from "./es/inbox.json";
 import esWorkspace from "./es/workspace.json";
@@ -23,8 +22,8 @@ import esRuntimes from "./es/runtimes.json";
 import esLayout from "./es/layout.json";
 import esUsage from "./es/usage.json";
 import esUi from "./es/ui.json";
-import esSquads from "./es/squads.json";
 import esBilling from "./es/billing.json";
+import esTerminal from "./es/terminal.json";
 
 const resources: LocaleResources = {
   docs: esDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: esInvite,
   labels: esLabels,
   members: esMembers,
-  "my-issues": esMyIssues,
   search: esSearch,
   inbox: esInbox,
   workspace: esWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: esLayout,
   usage: esUsage,
   ui: esUi,
-  squads: esSquads,
   billing: esBilling,
+  terminal: esTerminal,
 };
 
 export default resources;

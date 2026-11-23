@@ -80,7 +80,6 @@ export function buildTimelineEntries() {
       parent_id: index === 0 ? null : rootCommentId,
       content: [...prose, ...files.map((f) => `![${f.filename}](${f.url})`)].join("\n\n"),
       resolved_at: null,
-      reactions: [],
       attachments: files,
       source_task_id: null,
     };

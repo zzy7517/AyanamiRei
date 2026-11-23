@@ -1,10 +1,7 @@
 {
   "tabs": {
     "all": "全部",
-    "created": "我建立的",
-    "assigned": "我負責的",
-    "agents": "AI 代理",
-    "members": "成員"
+    "agents": "AI 代理"
   },
   "status": {
     "queued": "排隊中",
@@ -103,13 +100,6 @@
     "duplicate_removed": "取消了 {{identifier}} 對這個任務的重複標記",
     "tasks_completed_other": "完成了 {{count}} 次執行",
     "tasks_failed_other": "有 {{count}} 次執行失敗",
-    "squad_action_with_reason": "評估後執行操作：{{reason}}",
-    "squad_action": "評估後執行操作",
-    "squad_no_action_with_reason": "評估結果：無需操作（{{reason}}）",
-    "squad_no_action": "評估結果：無需操作",
-    "squad_failed_with_reason": "評估失敗：{{reason}}",
-    "squad_failed": "評估失敗",
-    "squad_evaluated": "評估了小隊觸發器",
     "commented": "發表了評論"
   },
   "errors": {
@@ -118,11 +108,8 @@
   },
   "empty": {
     "filtered": "沒有符合當前篩選條件的任務。",
-    "assigned": "沒有分配給你的任務。",
-    "created": "你還沒有建立任務。",
-    "agents": "沒有分配給 AI 代理或小隊的任務。",
-    "all": "該工作區還沒有任務。",
-    "members": "沒有分配給成員的任務。"
+    "agents": "沒有分配給 AI 代理的任務。",
+    "all": "該工作區還沒有任務。"
   },
   "menu": {
     "pin": "固定",
@@ -166,25 +153,20 @@
     "unassigned": "未分配",
     "agent": "AI 代理",
     "needs_runtime": "需要執行時",
-    "leader_needs_runtime": "負責人需要執行時",
-    "squad": "小隊",
     "no_matches": "沒有匹配結果。",
     "no_project": "無專案",
     "no_projects": "此工作區還沒有專案。",
     "no_labels": "該工作區還沒有標籤。",
     "create_label": "建立 \"{{name}}\"",
     "no_members_agents": "該工作區還沒有成員或 AI 代理。",
-    "people": "成員",
     "agents": "AI 代理",
-    "squads": "小隊",
     "issues": "任務",
-    "everyone": "所有人（@all）",
     "unknown": "未知",
-    "search_people": "搜尋成員",
+    "search_agents": "搜尋 AI 代理",
     "search_projects": "搜尋專案",
     "search_labels": "搜尋標籤",
     "search_members_agents": "搜尋成員或 AI 代理",
-    "search_people_issues": "搜尋成員或任務",
+    "search_agents_issues": "搜尋 AI 代理或任務",
     "reference_issue": "引用任務",
     "clear": "清除"
   },
@@ -208,11 +190,8 @@
     "composer_pill": "新增評論，輸入 @ 提及…"
   },
   "suggestions": {
-    "everyone": "所有人",
-    "all": "全部",
-    "member": "成員",
     "recent": "最近",
-    "my_issues": "我的任務"
+    "created_by_me": "我建立的"
   },
   "resolved": {
     "a11y_folded_other": "由 {{authors}} 解決的討論，{{count}} 條訊息。點按展開。",

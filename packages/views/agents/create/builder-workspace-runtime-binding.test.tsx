@@ -76,7 +76,7 @@ function mount(runtimes: RuntimeDevice[] = [runtime]) {
   qc.setQueryData(runtimeModelsKeys.forRuntime(runtime.id), { models: [], supported: true, cached: false });
   const view = renderWithI18n(
     <QueryClientProvider client={qc}>
-      <BuilderWorkspace sessionId={session.session_id} squadId={null}
+      <BuilderWorkspace sessionId={session.session_id}
         session={session} sessionSettled fallbackRuntimeId="stale-runtime-from-url"
         onDiscarded={vi.fn()} onRuntimeLabel={vi.fn()} />
     </QueryClientProvider>,

@@ -109,7 +109,6 @@ export type DemoDict = {
     spaces: { inbox: string; work: string; team: string; chat: string; autopilots: string };
     views: string;
     projects: string;
-    myIssues: string;
     myAgents: string;
     allIssues: string;
     allViews: string;

@@ -14,9 +14,6 @@
  *   labels    →  issue/[id]/picker/label   (multi-select, stays open)
  *   project   →  issue/[id]/picker/project
  *   due_date  →  issue/[id]/picker/due-date
- *
- * `readOnly` (a guest, MUL-9420) renders the same chips without pickers and
- * drops the empty label / due-date placeholders, which only invite an edit.
  */
 import { useMemo } from "react";
 import { View } from "react-native";
@@ -83,13 +80,7 @@ function formatDueDate(iso: string | null): string | null {
   );
 }
 
-export function AttributeRow({
-  issue,
-  readOnly = false,
-}: {
-  issue: Issue;
-  readOnly?: boolean;
-}) {
+export function AttributeRow({ issue }: { issue: Issue }) {
   const wsId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const wsSlug = useWorkspaceStore((s) => s.currentWorkspaceSlug);
   const { getName } = useActorLookup();
@@ -119,17 +110,13 @@ export function AttributeRow({
     : null;
   const dueLabel = formatDueDate(issue.due_date);
 
-  // Undefined for a read-only row: AttributeChip then renders a plain View.
-  const pickerFor = (field: IssuePickerField) =>
-    readOnly
-      ? undefined
-      : () => {
-          if (!wsSlug) return;
-          router.push({
-            pathname: ISSUE_PICKER_PATHNAMES[field],
-            params: { workspace: wsSlug, id: issue.id },
-          });
-        };
+  const pickerFor = (field: IssuePickerField) => () => {
+    if (!wsSlug) return;
+    router.push({
+      pathname: ISSUE_PICKER_PATHNAMES[field],
+      params: { workspace: wsSlug, id: issue.id },
+    });
+  };
 
   return (
     <View className="flex-row flex-wrap gap-2">
@@ -200,7 +187,7 @@ export function AttributeRow({
           onPress={pickerFor("label")}
         />
       ))}
-      {labels.length === 0 && !readOnly ? (
+      {labels.length === 0 ? (
         <AttributeChip
           icon={<Text className="text-xs text-muted-foreground/70">◯</Text>}
           label={t("filters.label")}
@@ -229,14 +216,12 @@ export function AttributeRow({
       )}
 
       {/* Due date */}
-      {dueLabel || !readOnly ? (
-        <AttributeChip
-          icon={<Text className="text-xs text-muted-foreground/80">📅</Text>}
-          label={dueLabel ?? t("common:fields.due_date")}
-          variant={dueLabel ? "filled" : "dimmed"}
-          onPress={pickerFor("due-date")}
-        />
-      ) : null}
+      <AttributeChip
+        icon={<Text className="text-xs text-muted-foreground/80">📅</Text>}
+        label={dueLabel ?? t("common:fields.due_date")}
+        variant={dueLabel ? "filled" : "dimmed"}
+        onPress={pickerFor("due-date")}
+      />
     </View>
   );
 }

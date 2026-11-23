@@ -32,9 +32,9 @@ import { useT } from "../../i18n";
  * "Unsubscribe & archive" in the Inbox bar of an issue opened from the Inbox.
  *
  * Offered only where it is a bystander's way out: the viewer is subscribed,
- * and the issue is not assigned to them or to an agent they own. Renders
- * nothing until all of that is known, so it never flashes on an issue where
- * it does not belong.
+ * and the issue is not assigned to an agent they own. Renders nothing until
+ * all of that is known, so it never flashes on an issue where it does not
+ * belong.
  *
  * With sub-issues it asks for the scope, reusing the issue-only and subtree
  * opt-outs the Activity section offers. While the child count is still

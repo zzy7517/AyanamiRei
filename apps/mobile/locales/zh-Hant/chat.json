@@ -10,7 +10,7 @@
     "runtime_required": "AI 代理需要執行時",
     "replying_to": "回覆 {{name}}",
     "cancel_reply": "取消回覆",
-    "mention": "提及成員或任務",
+    "mention": "提及 AI 代理或任務",
     "upload_image": "上傳圖片",
     "upload_file": "上傳檔案",
     "send": "傳送",

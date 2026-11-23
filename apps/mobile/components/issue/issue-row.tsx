@@ -1,6 +1,6 @@
 /**
  * Shared issue row used by every list-style issue surface on mobile —
- * (tabs)/my-issues, more/issues (workspace-wide), and project detail's
+ * more/issues (workspace-wide), pins, and project detail's
  * related-issues bucket.
  *
  * Layout mirrors web's `packages/views/issues/components/list-row.tsx`:
@@ -23,12 +23,9 @@
  *     (root CLAUDE.md "Data identity must agree").
  *   - Mirrors web `packages/views/issues/components/list-row.tsx:52`:
  *     render the assignee whenever `assignee_type && assignee_id` are both
- *     truthy — `ActorAvatar` itself handles member / agent / squad rendering
- *     (rounded square + people glyph or `squad.avatar_url` for squads). A
- *     future fourth enum value falls through to ActorAvatar's initials
- *     fallback, which is the real "enum drift downgrades, not crashes"
- *     behavior — earlier whitelist (member/agent only) silently dropped
- *     squad assignees instead.
+ *     truthy — `ActorAvatar` handles member / agent rendering. A future
+ *     enum value falls through to ActorAvatar's initials fallback, so enum
+ *     drift downgrades instead of crashing.
  */
 import { Pressable, View } from "react-native";
 import type { Issue } from "@multica/core/types";

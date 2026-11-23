@@ -104,6 +104,22 @@
     "archive_action": "归档项目",
     "restore_action": "恢复项目"
   },
+  "scope": {
+    "add": "添加项目",
+    "project_label": "项目",
+    "branch_label": "分支",
+    "project_required": "请选择项目。",
+    "branch_required": "请输入分支。",
+    "duplicate": "该项目与此分支的组合已在列表中。",
+    "limit": "最多 {{max}} 组。",
+    "remove": "移除",
+    "move_up": "上移",
+    "move_down": "下移",
+    "section_title": "项目 + 分支",
+    "save": "保存",
+    "create_failed": "任务已创建，但没有设置 worktree：{{reason}}",
+    "create_failed_unknown": "任务已创建，但没有设置 worktree。请在任务页面添加。"
+  },
   "resources": {
     "section_header": "资源",
     "repos_group": "仓库",
@@ -164,7 +180,10 @@
     "toast_ref_update_failed": "分支更新失败",
     "ref_error_commit": "这是 commit，不是分支。需要指定某个版本时，请用 multica repo checkout --ref。",
     "ref_default_label": "默认分支",
-    "ref_running_note": "进行中的运行不受影响。"
+    "ref_running_note": "进行中的运行不受影响。",
+    "local_remote_add": "在另一台电脑上添加文件夹...",
+    "local_remote_machine_label": "电脑",
+    "local_remote_path_label": "路径"
   },
   "delete_dialog": {
     "offline_error": "当前处于离线状态，请联网后重试删除。",
@@ -220,29 +239,6 @@
       "issue_pricing": "定价页对比表",
       "issue_blog": "博客列表分页"
     }
-  },
-  "access": {
-    "agent_notice": "智能体的权限跟随其所有者。",
-    "label": "访问权限",
-    "title": "{{title}} 的访问权限",
-    "description": "控制谁能查看项目及其中的任务、评论和附件。",
-    "workspace": "整个工作区",
-    "private": "仅项目成员",
-    "members_count": "项目成员 · {{count}}",
-    "add": "添加工作区成员",
-    "search": "搜索姓名或邮箱...",
-    "no_members": "没有匹配的成员",
-    "no_selected": "暂无项目成员",
-    "members_only_notice": "只有名单里的成员可以访问，工作区所有者和管理员也需要加入名单。",
-    "manager": "管理访问权限",
-    "you": "你",
-    "remove": "移除 {{name}}",
-    "failed": "无法保存访问权限。",
-    "load_failed": "无法加载项目成员。",
-    "publish_title": "将项目设为整个工作区可见？",
-    "publish_description": "工作区所有成员都将能查看这个项目及其中的任务、评论和附件。",
-    "done": "完成",
-    "retry": "重试"
   },
   "archive": {
     "badge": "已归档",

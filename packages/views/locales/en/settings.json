@@ -125,7 +125,7 @@
     "field_name_placeholder": "Code Review",
     "field_target": "Runs as",
     "no_target": "No agent (comment only)",
-    "no_target_hint": "Posts a message without mentioning anyone.",
+    "no_target_hint": "Posts a message without mentioning an agent.",
     "field_prompt": "Prompt",
     "field_prompt_placeholder": "Review the code linked to this issue. Focus on correctness and edge cases.",
     "prompt_hint": "Sent as written. The agent already sees the issue.",
@@ -433,7 +433,7 @@
       },
       "unsubscribeArchiveInboxItem": {
         "label": "Unsubscribe & archive",
-        "description": "Leave the open notification's issue and archive it. Offered on issues that are not yours or your agents'."
+        "description": "Leave the open notification's issue and archive it. Offered on issues none of your agents are assigned to."
       },
       "snoozeInboxItem": {
         "label": "Snooze notification",
@@ -463,10 +463,6 @@
         "label": "Go to Chat",
         "description": "Open workspace chat."
       },
-      "goMyIssues": {
-        "label": "Go to My Issues",
-        "description": "Open issues assigned to you."
-      },
       "goIssues": {
         "label": "Go to Issues",
         "description": "Open the issue list."
@@ -482,10 +478,6 @@
       "goAgents": {
         "label": "Go to Agents",
         "description": "Open the agent list."
-      },
-      "goSquads": {
-        "label": "Go to Squads",
-        "description": "Open the squad list."
       },
       "goUsage": {
         "label": "Go to Usage",
@@ -854,7 +846,7 @@
     },
     "others_issues": {
       "label": "Other people's issues",
-      "description": "Issues assigned to someone else or their agent that you follow because you created, commented on, or were mentioned in them. Key updates include @mentions, replies in threads you joined, and—when Status changes is on—statuses that need attention (In Review, Blocked, Done).",
+      "description": "Issues assigned to someone else or their agent that you follow because you created or commented on them. Key updates include replies in threads you joined, and—when Status changes is on—statuses that need attention (In Review, Blocked, Done).",
       "key_updates": "Key updates only",
       "all": "All activity"
     },
@@ -910,14 +902,6 @@
       "comments": {
         "label": "Comments",
         "description": "New comments on issues you follow"
-      },
-      "mentions": {
-        "label": "Mentions",
-        "description": "When someone @mentions you, including @all and @squad"
-      },
-      "reactions": {
-        "label": "Reactions",
-        "description": "When someone reacts to an issue you created or a comment you wrote"
       },
       "updates": {
         "label": "Priority & due date",
@@ -1663,40 +1647,15 @@
       "member": {
         "label": "Member",
         "description": "Create and work on issues"
-      },
-      "guest": {
-        "label": "Guest",
-        "description": "Views and comments on the projects shared with them. Can't run agents."
       }
     },
-    "share_links_create_title": "Create share link",
-    "share_links_create_button": "Generate",
-    "share_links_creating": "Generating...",
-    "share_link_uses": "{{used}} / {{max}} uses",
-    "share_link_expires": "Expires {{date}}",
-    "share_link_copy_tooltip": "Copy link",
-    "share_link_revoke_tooltip": "Revoke link",
-    "toast_share_link_created": "Share link created",
-    "toast_share_link_failed": "Failed to create share link",
-    "toast_share_link_revoked": "Share link revoked",
-    "toast_share_link_revoke_failed": "Failed to revoke share link",
-    "toast_share_link_copied": "Link copied",
-    "toast_share_link_copy_failed": "Failed to copy link",
-    "expiry_24h": "24 hours",
-    "expiry_7d": "7 days",
-    "expiry_30d": "30 days",
-    "expiry_never": "Never",
     "members_label": "Members",
     "pending_label": "Pending invitations",
-    "share_links_label": "Share links",
-    "share_links_description": "Anyone with the link can join with the chosen role until it expires or you revoke it.",
     "search_placeholder": "Search name or email",
     "no_results": "No members match this search.",
     "no_invitations": "No pending invitations.",
-    "no_share_links": "No share links yet.",
     "email_label": "Email",
     "role_label": "Role",
-    "expiry_label": "Expires after",
     "you": "You",
     "joined": "Joined {{date}}",
     "member_actions": "Actions for {{name}}",
@@ -1717,31 +1676,6 @@
     "toast_invite_check_unavailable": "Could not check existing members and invitations. Try again in a moment.",
     "member_limit_full_description_billing": "The workspace's subscription needs attention. Restore it in Billing to add members, or remove a member first.",
     "open_billing": "Open Billing",
-    "guest_free_tag": "Free · no seat",
-    "guest_projects_label": "Projects they can access",
-    "guest_projects_add": "Add project...",
-    "guest_projects_remove": "Remove {{project}}",
-    "guest_projects_hint": "Guests can't see other projects, agents, autopilots or settings.",
-    "invite_guest_button": "Invite guest",
-    "all_label": "All",
-    "guests_label": "Guests",
-    "guest_count": "Guests: {{count}}",
-    "list_separator": ", ",
-    "takes_seat": "Takes 1 seat",
-    "frees_seat": "Frees a seat",
-    "make_member": "Make member",
-    "make_member_title": "Make {{name}} a member?",
-    "make_member_description": "{{name}} will see the whole workspace and can run agents. This takes 1 seat.",
-    "make_member_seat_description": "{{name}} will see the whole workspace and can run agents. All purchased seats are in use, so this buys 1 more.",
-    "purchase_seat_and_make_member": "Buy seat and make member",
-    "making_member": "Making member...",
-    "make_guest_title": "Make {{name}} a guest?",
-    "make_guest_description": "{{name}} will only see the projects below and frees a seat. Their agents, autopilots and runtime access are taken back.",
-    "make_guest_button": "Make guest",
-    "manage_projects": "Manage accessible projects",
-    "manage_projects_title": "Projects {{name}} can access",
-    "save_projects": "Save",
-    "toast_projects_updated": "Projects updated",
     "revoke_invitation_confirm": "Revoke invitation",
     "remove_member_confirm": "Remove member"
   },
@@ -1774,7 +1708,13 @@
   "code": {
     "hosting_title": "Code hosting",
     "pr_linking_title": "Pull requests & issues",
-    "github_actions": "GitHub actions"
+    "github_actions": "GitHub actions",
+    "task_trees_title": "Worktrees",
+    "task_tree_retention": {
+      "label": "Keep worktrees of completed tasks for",
+      "unit": "days",
+      "description": "Worktrees are then removed from the machine. Branches are kept."
+    }
   },
   "channels": {
     "breadcrumb": "Breadcrumb",
@@ -2132,26 +2072,5 @@
       "retry_failed": "Couldn't transcribe this recording",
       "show_more": "Show more"
     }
-  },
-  "private_projects": {
-    "title": "Private projects",
-    "description": "Only the members of a private project can open it. As a workspace owner you can see who is in each one, and add yourself when you need to step in.",
-    "empty": "This workspace has no private projects.",
-    "load_failed": "Could not load private projects.",
-    "retry": "Retry",
-    "no_members": "No members",
-    "lead_name": "{{name}} (lead)",
-    "more_members": "+{{count}} more",
-    "archived": "Archived",
-    "member": "You're a member",
-    "open": "Open",
-    "join": "Join",
-    "join_title": "Join “{{title}}”?",
-    "join_description": "You will be added to this project's member list and will see its issues, comments, and attachments. Its current members will be notified.",
-    "join_description_empty": "This project has no members. You will be its only member, and will see its issues, comments, and attachments.",
-    "join_confirm": "Join project",
-    "cancel": "Cancel",
-    "toast_joined": "You joined {{title}}",
-    "toast_failed": "Could not join the project."
   }
 }

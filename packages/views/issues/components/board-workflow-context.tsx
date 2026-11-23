@@ -26,7 +26,7 @@ export interface BoardWorkflowContextValue {
 
 export interface BoardDropHint {
   name: string;
-  actor: { type: "agent" | "squad" | "member"; id: string } | null;
+  actor: { type: "agent" | "member"; id: string } | null;
   run: boolean;
 }
 

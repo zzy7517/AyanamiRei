@@ -297,7 +297,6 @@
     },
     "failure": {
       "permission_revoked": "依頼者はこのエージェントを実行できなくなりました",
-      "access_lost": "監視対象が非公開プロジェクトに移動しました",
       "dispatch_failed": "エージェントを実行できませんでした"
     },
     "kind": {

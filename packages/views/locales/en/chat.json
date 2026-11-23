@@ -302,7 +302,6 @@
     },
     "failure": {
       "permission_revoked": "The person who asked can no longer run this agent",
-      "access_lost": "What it watched moved to a private project",
       "dispatch_failed": "The agent couldn't run"
     },
     "kind": {

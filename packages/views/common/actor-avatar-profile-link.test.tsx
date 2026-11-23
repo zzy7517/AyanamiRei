@@ -31,7 +31,6 @@ vi.mock("@multica/core/paths", () => ({
   useWorkspacePaths: () => ({
     memberDetail: (id: string) => `/acme/members/${id}`,
     agentDetail: (id: string) => `/acme/agents/${id}`,
-    squadDetail: (id: string) => `/acme/squads/${id}`,
   }),
   useCurrentWorkspace: () => ({ id: "ws1", slug: "acme" }),
 }));
@@ -48,9 +47,6 @@ vi.mock("../agents/components/agent-live-peek-card", () => ({
 }));
 vi.mock("../members/member-profile-card", () => ({
   MemberProfileCard: () => null,
-}));
-vi.mock("../squads/components/squad-profile-card", () => ({
-  SquadProfileCard: () => null,
 }));
 
 import { ActorAvatar } from "./actor-avatar";

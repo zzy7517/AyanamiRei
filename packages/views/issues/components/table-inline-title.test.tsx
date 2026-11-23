@@ -20,6 +20,12 @@ vi.mock("./issue-agent-activity-indicator", () => ({
   ),
 }));
 
+// Likewise the "new reply" marker, which reads a translation.
+vi.mock("./agent-reply-marker", () => ({
+  AgentReplyMarker: ({ issue }: { issue: Issue }) =>
+    issue.agent_replied_at ? <span data-testid="agent-reply-marker" /> : null,
+}));
+
 import { InlineTitle } from "./table-view";
 import type { IssueTableDisplayRow } from "./table-view-model";
 
@@ -235,6 +241,25 @@ describe("InlineTitle", () => {
     expect(screen.getByRole("textbox")).toHaveValue("Local draft");
     fireEvent.keyDown(screen.getByRole("textbox"), { key: "Escape" });
     expect(screen.getByRole("button", { name: "Remote title" })).toBeTruthy();
+  });
+
+  it("marks a reply waiting to be seen, after the title, and nothing once it is seen", () => {
+    const row = makeRow("Original");
+    const title = (next: typeof row) => (
+      <InlineTitle {...baseProps} row={next} editing={false} onEditingChange={() => {}} />
+    );
+    const view = render(title(row));
+    expect(screen.queryByTestId("agent-reply-marker")).toBeNull();
+
+    const marked = {
+      ...row,
+      issue: { ...row.issue, agent_replied_at: "2026-11-22T10:00:00Z" },
+    };
+    view.rerender(title(marked));
+
+    const marker = screen.getByTestId("agent-reply-marker");
+    const titleButton = screen.getByRole("button", { name: "Original" });
+    expect(titleButton.compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("renders the agent-activity badge for the row's issue, between the identifier and the title", () => {

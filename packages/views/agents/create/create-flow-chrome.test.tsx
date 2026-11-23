@@ -151,7 +151,6 @@ describe("create flow footer", () => {
         stepIndex={2}
         canCreate
         creating={false}
-        squad={false}
         error={null}
         onCreate={onCreate}
         onCancel={onCancel}
@@ -171,7 +170,6 @@ describe("create flow footer", () => {
       <CreateAgentFooter
         canCreate
         creating={false}
-        squad={false}
         error={null}
         onCreate={vi.fn()}
         onDiscard={vi.fn()}

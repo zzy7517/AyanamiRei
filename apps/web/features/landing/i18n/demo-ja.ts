@@ -5,7 +5,6 @@ export const jaDemoCopy: DemoDict = {
     spaces: { inbox: "受信箱", work: "作業", team: "チーム", chat: "チャット", autopilots: "自動化" },
     views: "ビュー",
     projects: "プロジェクト",
-    myIssues: "マイタスク",
     myAgents: "マイエージェントの作業",
     allIssues: "すべてのタスク",
     allViews: "すべてのビュー",

@@ -5,7 +5,6 @@ export const koDemoCopy: DemoDict = {
     spaces: { inbox: "인박스", work: "작업", team: "팀", chat: "채팅", autopilots: "자동화" },
     views: "뷰",
     projects: "프로젝트",
-    myIssues: "내 태스크",
     myAgents: "내 에이전트의 작업",
     allIssues: "전체 태스크",
     allViews: "모든 뷰",

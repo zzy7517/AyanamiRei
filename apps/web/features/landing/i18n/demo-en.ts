@@ -5,7 +5,6 @@ export const enDemoCopy: DemoDict = {
     spaces: { inbox: "Inbox", work: "Work", team: "Team", chat: "Chat", autopilots: "Auto" },
     views: "Views",
     projects: "Projects",
-    myIssues: "My Issues",
     myAgents: "My agents’ work",
     allIssues: "All issues",
     allViews: "All views",

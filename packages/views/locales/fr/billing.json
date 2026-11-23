@@ -88,7 +88,7 @@
       "billing_interval": "Intervalle de facturation",
       "period_end": "Fin de la période en cours",
       "change_plan": "Changer de forfait",
-      "business_adds": "Business ajoute les projets privés, l'accès par membre, les comptes d'applications d'équipe et des limites d'automatisation plus élevées.",
+      "business_adds": "Business ajoute l'accès par membre, les comptes d'applications d'équipe et des limites d'automatisation plus élevées.",
       "plan_change_hold": "Changement de forfait",
       "plan_change_confirming": "Passage à {{plan}} en cours. En attente de la confirmation de Stripe ; les sièges et le forfait ne peuvent pas être modifiés d'ici là.",
       "plan_change_unresolved": "Le passage à {{plan}} n'a pas pu être confirmé. Contactez l'assistance pour le régler ; les sièges et le forfait ne peuvent pas être modifiés d'ici là.",
@@ -112,7 +112,7 @@
         "pro_storage": "10 Go de stockage de pièces jointes par membre",
         "pro_dashboard": "90 jours d'historique d'analyses",
         "business_everything": "Tout ce qui est inclus dans Pro",
-        "business_access": "Projets privés et accès par membre",
+        "business_access": "Accès par membre",
         "business_apps": "Comptes d'applications d'équipe et règles d'approbation",
         "business_autopilots": "3 000 exécutions d'automatisation par membre et par mois",
         "business_reports": "Rapports d'utilisation et de coût par membre"
@@ -308,7 +308,7 @@
     "welcome": {
       "title_one": "Bienvenue ! Cet espace de travail bénéficie d’un essai gratuit de Business de {{count}} jour",
       "title_other": "Bienvenue ! Cet espace de travail bénéficie d’un essai gratuit de Business de {{count}} jours",
-      "body": "Les projets privés et les autres fonctionnalités Business sont activés. Aucune carte n'est requise ; à la fin de l'essai, l'espace de travail passe sur Free.",
+      "body": "Les fonctionnalités Business sont activées. Aucune carte n'est requise ; à la fin de l'essai, l'espace de travail passe sur Free.",
       "action": "Voir ce qui est inclus",
       "close": "Fermer"
     },
@@ -317,7 +317,6 @@
       "description": "{{workspace}} est maintenant sur Free. Rien n'a été supprimé.",
       "description_without_name": "Cet espace de travail est maintenant sur Free. Rien n'a été supprimé.",
       "kept": "Les membres, projets et paramètres existants restent tels quels.",
-      "private_projects": "Les projets privés restent privés. Leurs listes d'accès sont en lecture seule jusqu'à la mise à niveau.",
       "autopilot": "Les automatisations ont {{limit}} exécutions par mois ; {{used}} utilisées ce mois-ci.",
       "autopilot_paused": "Les automatisations ont {{limit}} exécutions par mois et {{used}} ont été utilisées ce mois-ci : elles sont en pause jusqu'au {{date}}.",
       "keep_free": "Rester sur Free",
@@ -337,18 +336,6 @@
       "ended_description": "L'essai s'est terminé le {{date}}. Choisissez un forfait ci-dessous pour retrouver les fonctionnalités Business.",
       "choose_plan": "Choisir un forfait",
       "ended_description_member": "L'essai s'est terminé le {{date}}. Demandez à un administrateur de l'espace de travail de mettre à niveau pour retrouver les fonctionnalités Business."
-    },
-    "features": {
-      "title": "Fonctionnalités Business de votre essai",
-      "description": "À la fin de l'essai, rien n'est supprimé ni désactivé — les paramètres existants restent actifs en lecture seule, et vous ne pouvez pas en ajouter de nouveaux.",
-      "private_projects": {
-        "name": "Projets privés",
-        "after": "Restent privés après l'essai. Leurs listes d'accès passent en lecture seule."
-      },
-      "guests": {
-        "name": "Invités",
-        "after": "Les invités existants gardent leur accès après l'essai. Inviter de nouveaux invités nécessite Pro ou Business."
-      }
     }
   },
   "storage_limit": {

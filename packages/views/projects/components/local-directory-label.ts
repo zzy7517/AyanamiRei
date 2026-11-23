@@ -26,3 +26,13 @@ export function localDirectoryLabel(
     ref.local_path.trim()
   );
 }
+
+/**
+ * Name for a folder attached from a typed path: the last segment, which is
+ * what the desktop picker reports for a chosen one. Either separator, as the
+ * path belongs to a machine this computer knows nothing about. Undefined for
+ * a root, which has no segment to be named by.
+ */
+export function localDirectoryNameOfPath(path: string): string | undefined {
+  return path.split(/[\\/]/).filter(Boolean).at(-1) || undefined;
+}

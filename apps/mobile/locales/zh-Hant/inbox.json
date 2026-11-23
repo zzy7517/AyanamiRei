@@ -56,9 +56,7 @@
     "start_date_changed": "開始日期已更改",
     "due_date_changed": "截止日期已更改",
     "new_comment": "新評論",
-    "mentioned": "提到了你",
     "doc_comment": "文件有新評論",
-    "doc_mentioned": "在文件中提到了你",
     "review_requested": "請求審查",
     "task_completed": "執行完成",
     "task_failed": "執行失敗",
@@ -70,7 +68,6 @@
     "quick_create_unconfirmed": "透過 AI 代理建立待確認",
     "autopilot_paused": "自動化已暫停",
     "children_done": "子任務已全部結束",
-    "project_owner_joined": "所有者加入了專案",
     "autopilot_quota_exceeded": "自動化執行次數已達上限",
     "set_status": "狀態設為",
     "set_priority": "優先順序設為",
@@ -89,7 +86,6 @@
   },
   "body": {
     "autopilot_title_limit": "自動化 \"{{title}}\" 未啟動，因為該工作區已達到當前週期 {{limit}} 次執行的上限。額度將在 {{resetAt}} 重置；工作區所有者或管理員也可以升級方案或加購執行次數。",
-    "autopilot_limit": "該工作區已達到當前週期 {{limit}} 次自動化執行的上限。此執行未啟動。額度將在 {{resetAt}} 重置；工作區所有者或管理員也可以升級方案或加購執行次數。",
-    "project_owner_joined": "{{name}} 是工作區所有者，已把自己加入這個私有專案，現在可以看到其中的任務、評論和附件。"
+    "autopilot_limit": "該工作區已達到當前週期 {{limit}} 次自動化執行的上限。此執行未啟動。額度將在 {{resetAt}} 重置；工作區所有者或管理員也可以升級方案或加購執行次數。"
   }
 }

@@ -4,7 +4,7 @@ import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildIssueStatusCatalog } from "@multica/core/issue-statuses";
-import { agentListOptions, memberListOptions, squadListOptions } from "@multica/core/workspace/queries";
+import { agentListOptions, memberListOptions } from "@multica/core/workspace/queries";
 import { projectListOptions } from "@multica/core/projects/queries";
 import type { IssueWorkflow, IssueWorkflowStep } from "@multica/core/types";
 import { renderWithI18n } from "../test/i18n";
@@ -33,12 +33,12 @@ const WORKFLOW = {
 
 function renderFields(step: IssueWorkflowStep, onPatch = vi.fn()) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  qc.setQueryData(agentListOptions("ws-1").queryKey, [{ id: "agent-1", name: "Builder", archived_at: null }] as never);
-  qc.setQueryData(memberListOptions("ws-1").queryKey, [{ user_id: "user-1", name: "Ada" }] as never);
-  qc.setQueryData(squadListOptions("ws-1").queryKey, [
-    { id: "squad-1", name: "Review team", archived_at: null },
-    { id: "squad-old", name: "Retired team", archived_at: "2026-01-01" },
+  qc.setQueryData(agentListOptions("ws-1").queryKey, [
+    { id: "agent-1", name: "Builder", archived_at: null },
+    { id: "agent-2", name: "Reviewer", archived_at: null },
+    { id: "agent-old", name: "Retired bot", archived_at: "2026-01-01" },
   ] as never);
+  qc.setQueryData(memberListOptions("ws-1").queryKey, [{ user_id: "user-1", name: "Ada" }] as never);
   renderWithI18n(
     <QueryClientProvider client={qc}>
       <HandoffFields step={step} workflow={WORKFLOW} canEdit onPatch={onPatch} />
@@ -50,7 +50,7 @@ function renderFields(step: IssueWorkflowStep, onPatch = vi.fn()) {
 afterEach(cleanup);
 
 describe("HandoffFields", () => {
-  it("keeps squads within the agent handoff option", () => {
+  it("offers no handoff, an agent or a member", () => {
     const onPatch = renderFields({ status_key: "in_progress", handler: { type: "none" }, instructions: "" });
 
     const radios = screen.getAllByRole("radio");
@@ -59,18 +59,17 @@ describe("HandoffFields", () => {
       expect.stringContaining("Hand to an agent"),
       expect.stringContaining("Hand to a member"),
     ]);
-    expect(screen.queryByText(/squad/i)).toBeNull();
     fireEvent.click(screen.getByRole("radio", { name: /Hand to an agent/ }));
 
     expect(onPatch).toHaveBeenCalledWith({ handler: { type: "agent" } });
   });
 
-  it("lists agents and squads for an agent handoff", async () => {
+  it("lists agents for an agent handoff", async () => {
     const onPatch = renderFields({ status_key: "in_progress", handler: { type: "agent" }, instructions: "" });
 
     fireEvent.click(screen.getByRole("button", { name: "Choose an agent" }));
-    expect(await screen.findByText("Review team")).toBeTruthy();
-    expect(screen.queryByText("Retired team")).toBeNull();
+    expect(await screen.findByText("Reviewer")).toBeTruthy();
+    expect(screen.queryByText("Retired bot")).toBeNull();
     fireEvent.click(await screen.findByText("Builder"));
     expect(screen.queryByText("Ada")).toBeNull();
     expect(screen.queryByText("Project lead")).toBeNull();
@@ -78,20 +77,20 @@ describe("HandoffFields", () => {
     expect(onPatch).toHaveBeenCalledWith({ handler: { type: "agent", id: "agent-1" } });
   });
 
-  it("searches and selects a squad from the agent picker", async () => {
+  it("searches and selects an agent from the agent picker", async () => {
     const onPatch = renderFields({ status_key: "in_progress", handler: { type: "agent" }, instructions: "" });
     fireEvent.click(screen.getByRole("button", { name: "Choose an agent" }));
-    await screen.findByText("Review team");
+    await screen.findByText("Reviewer");
     fireEvent.change(screen.getByPlaceholderText("Search agents"), { target: { value: "review" } });
     expect(screen.queryByText("Builder")).toBeNull();
-    fireEvent.click(screen.getByText("Review team"));
-    expect(onPatch).toHaveBeenCalledWith({ handler: { type: "squad", id: "squad-1" } });
+    fireEvent.click(screen.getByText("Reviewer"));
+    expect(onPatch).toHaveBeenCalledWith({ handler: { type: "agent", id: "agent-2" } });
   });
 
-  it("reopens a saved squad with the agent controls and stage instructions", () => {
-    renderFields({ status_key: "in_review", handler: { type: "squad", id: "squad-1" }, instructions: "Check accessibility." });
+  it("reopens a saved agent with the stage instructions", () => {
+    renderFields({ status_key: "in_review", handler: { type: "agent", id: "agent-2" }, instructions: "Check accessibility." });
     expect(screen.getByRole("radio", { name: /Hand to an agent/ }).getAttribute("aria-checked")).toBe("true");
-    expect(screen.getByRole("button", { name: "Choose an agent" }).textContent).toBe("Review team");
+    expect(screen.getByRole("button", { name: "Choose an agent" }).textContent).toBe("Reviewer");
     expect(screen.getByRole("textbox").getAttribute("readonly")).toBeNull();
     expect(screen.getByDisplayValue("Check accessibility.")).toBeTruthy();
     expect(screen.getAllByRole("combobox")).toHaveLength(2);
@@ -104,7 +103,6 @@ describe("HandoffFields", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose a member" }));
     expect(await screen.findByText("Project lead")).toBeTruthy();
     expect(screen.queryByText("Builder")).toBeNull();
-    expect(screen.queryByText("Review team")).toBeNull();
     fireEvent.click(screen.getByText("Ada"));
 
     expect(onPatch).toHaveBeenCalledWith({ handler: { type: "member", id: "user-1" } });
@@ -141,7 +139,6 @@ describe("WorkflowHandoffForm", () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     qc.setQueryData(agentListOptions("ws-1").queryKey, [{ id: "agent-1", name: "Builder", archived_at: null }] as never);
     qc.setQueryData(memberListOptions("ws-1").queryKey, [] as never);
-    qc.setQueryData(squadListOptions("ws-1").queryKey, [{ id: "squad-1", name: "Review team", archived_at: null }] as never);
     qc.setQueryData(projectListOptions("ws-1").queryKey, { projects: PROJECTS } as never);
     renderWithI18n(
       <QueryClientProvider client={qc}>
@@ -200,19 +197,19 @@ describe("WorkflowHandoffForm", () => {
     expect(mutateAsync.mock.calls[0]![0].copyForProjectId).toBeUndefined();
   });
 
-  it("saves a squad without dropping its instructions or next and back statuses", async () => {
+  it("saves a re-picked agent without dropping its instructions or next and back statuses", async () => {
     const wf = workflow(["p-pay"]);
     wf.steps = wf.steps.map((step) => step.status_key === "in_progress" ? {
-      ...step, handler: { type: "agent", id: "agent-1" }, instructions: "Review the PR.",
+      ...step, handler: { type: "agent", id: "agent-old" }, instructions: "Review the PR.",
       next_status_key: "done", back_status_key: "todo",
     } : step);
     renderForm(wf);
     fireEvent.click(screen.getByRole("button", { name: "Choose an agent" }));
-    fireEvent.click(await screen.findByText("Review team"));
+    fireEvent.click(await screen.findByText("Builder"));
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await vi.waitFor(() => expect(mutateAsync).toHaveBeenCalled());
     expect(mutateAsync.mock.calls[0]![0]).toMatchObject({
-      handler: { type: "squad", id: "squad-1" }, instructions: "Review the PR.",
+      handler: { type: "agent", id: "agent-1" }, instructions: "Review the PR.",
       next_status_key: "done", back_status_key: "todo",
     });
   });

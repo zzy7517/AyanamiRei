@@ -390,7 +390,7 @@ function StepChain({ steps }: { steps: IssueWorkflowStep[] }) {
       {path.map((step, index) => {
         const { type, id } = step.handler;
         const handler = handlerLabel(step);
-        const actor = (type === "agent" || type === "squad" || type === "member") && id ? { type, id } : null;
+        const actor = (type === "agent" || type === "member") && id ? { type, id } : null;
         // The arrow travels with the step it points to, so a wrapped line
         // starts with "→ step" instead of ending on an arrow beside the
         // row's chevron.

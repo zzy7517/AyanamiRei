@@ -1,0 +1,30 @@
+{
+  "directory_label": "Répertoire",
+  "directory_placeholder": "/home/you/project",
+  "directory_required": "Saisissez un chemin absolu.",
+  "open": "Ouvrir",
+  "end_session": "Terminer la session",
+  "agent_terminal": "Terminal de l’agent",
+  "restart": "Redémarrer",
+  "status": {
+    "connecting": "Connexion…",
+    "reconnecting": "Reconnexion…",
+    "ended": "Session terminée",
+    "ended_with_code": "Session terminée avec le code {{code}}",
+    "ended_by_signal": "Session terminée par le signal {{signal}}",
+    "reattached": "Reconnecté. L’écran reste vide jusqu’à ce que le programme écrive à nouveau."
+  },
+  "errors": {
+    "unavailable": "Le terminal n’est pas disponible sur ce serveur.",
+    "flag_disabled": "Le terminal est désactivé sur ce serveur.",
+    "bad_request": "Le serveur a refusé la requête.",
+    "terminal_root_unconfigured": "Aucun répertoire de terminal n’est configuré sur cette machine.",
+    "path_not_allowed": "Un terminal ne peut pas être ouvert dans ce répertoire.",
+    "daemon_unavailable": "La machine n’est pas connectée.",
+    "not_found": "Le terminal n’est plus en cours d’exécution.",
+    "unsupported_platform": "Le système de la machine ne prend pas en charge les terminaux.",
+    "tree_not_ready": "Le worktree n’est pas encore construit.",
+    "runtime_offline": "La machine qui a construit le worktree n’est pas connectée.",
+    "internal": "Une erreur est survenue."
+  }
+}

@@ -131,7 +131,7 @@
     "breadcrumb_title": "태스크",
     "breadcrumb_workspace_fallback": "워크스페이스",
     "empty_title": "아직 태스크가 없습니다",
-    "empty_description": "태스크는 멤버나 에이전트에게 맡기는 구체적인 작업입니다. 에이전트에게 할당하면 런타임에서 바로 시작됩니다.",
+    "empty_description": "태스크는 구체적인 작업 한 가지입니다. 에이전트에게 할당하면 런타임에서 바로 시작됩니다.",
     "break_down_with_chat": "채팅으로 나누기",
     "break_down_prompt": "다음 일을 하고 싶습니다. 필요한 것을 먼저 물어본 뒤 이 워크스페이스의 태스크로 나눠 주세요:\n\n",
     "move_failed": "태스크를 이동하지 못했습니다"
@@ -165,8 +165,6 @@
   "scope": {
     "all_label": "전체",
     "all_description": "이 워크스페이스의 모든 태스크",
-    "members_label": "멤버",
-    "members_description": "팀 멤버에게 할당된 태스크",
     "agents_label": "에이전트",
     "agents_description": "AI 에이전트에게 할당된 태스크"
   },
@@ -190,7 +188,6 @@
     "section_project_status": "프로젝트 상태",
     "section_label": "라벨",
     "section_relation": "나와의 관계",
-    "relation_assigned": "내가 담당",
     "relation_created": "내가 생성",
     "relation_my_agents": "내 에이전트의 작업",
     "relation_subscribed": "내가 구독 중",
@@ -216,7 +213,6 @@
     "date_clear": "날짜 필터 지우기",
     "members_group": "멤버",
     "agents_group": "에이전트",
-    "squads_group": "스쿼드",
     "issue_count_other": "태스크 {{count}}개",
     "reset": "필터 모두 초기화",
     "chip_remove": "{{name}} 필터 제거",
@@ -413,11 +409,11 @@
     "scope": {
       "assigned": {
         "label": "할당됨",
-        "description": "이 멤버 또는 에이전트에게 할당된 태스크"
+        "description": "이 에이전트에게 할당된 태스크"
       },
       "created": {
         "label": "생성함",
-        "description": "이 멤버 또는 에이전트가 만든 태스크"
+        "description": "이 에이전트가 만든 태스크"
       }
     },
     "empty": {
@@ -552,7 +548,7 @@
     "delegated_subscription_badge": "에이전트를 통해 구독 중",
     "delegated_subscription_hint": "에이전트가 회원님을 대신해 이 태스크를 만들었기 때문에 구독 중입니다. 상태 변경을 켜 두면 검토 필요, 완료, 차단 시 알림을 받습니다.",
     "key_updates_subscription_badge": "주요 업데이트만",
-    "key_updates_subscription_hint": "다른 사람이 맡은 태스크이며, 생성·댓글 작성 또는 멘션으로 팔로우하고 있습니다. @멘션, 참여한 스레드의 답글, 그리고 \"상태 변경\"을 켠 경우 검토가 필요하거나 막히거나 완료될 때 알림을 받습니다.",
+    "key_updates_subscription_hint": "다른 사람이 맡은 태스크이며, 생성·댓글 작성으로 팔로우하고 있습니다. 참여한 스레드의 답글, 그리고 \"상태 변경\"을 켠 경우 검토가 필요하거나 막히거나 완료될 때 알림을 받습니다.",
     "key_updates_follow_all": "모든 활동 받기",
     "key_updates_follow_all_done": "이 태스크의 모든 활동을 받습니다",
     "key_updates_settings": "기본값 변경",
@@ -597,8 +593,7 @@
     "project_directory_path_copied_with_branch": "프로젝트 디렉터리 경로를 복사했습니다 — 작업은 {{branch}} 브랜치에 있습니다",
     "workdir_path_copy_failed": "작업 디렉터리 경로를 복사하지 못했습니다",
     "workdir_path_unavailable": "아직 로컬 작업 디렉터리가 없습니다 — 이 태스크는 아직 로컬 에이전트에서 실행되지 않았습니다",
-    "pull_requests_empty_title": "연결된 PR이 없습니다.",
-    "guest_readonly_note": "게스트는 보고 댓글을 남길 수 있지만 작업 속성은 바꿀 수 없습니다."
+    "pull_requests_empty_title": "연결된 PR이 없습니다."
   },
   "timeline": {
     "loading": "불러오는 중...",
@@ -622,13 +617,6 @@
     "description_updated": "설명을 업데이트했습니다",
     "task_completed_other": "실행을 완료했습니다({{count}}회)",
     "task_failed_other": "실행이 실패했습니다({{count}}회)",
-    "squad_leader_evaluated": "스쿼드 트리거를 평가했습니다",
-    "squad_leader_action": "평가 후 작업을 수행했습니다",
-    "squad_leader_action_reason": "평가 후 작업을 수행했습니다: {{reason}}",
-    "squad_leader_no_action": "평가 완료: 필요한 작업 없음",
-    "squad_leader_no_action_reason": "평가 완료: 필요한 작업 없음({{reason}})",
-    "squad_leader_failed": "평가 실패",
-    "squad_leader_failed_reason": "평가 실패: {{reason}}",
     "coalesced_badge": "×{{count}}",
     "activity_count_other": "활동 {{count}}개",
     "show_more_activities_other": "활동 {{count}}개 더 보기",
@@ -669,7 +657,6 @@
     "wakeup_child_done_stage_single": "{{stage}}단계 하위 이슈가 완료되었습니다"
   },
   "comment": {
-    "add_reaction": "반응 추가",
     "collapse_thread": "스레드 접기",
     "expand_thread": "스레드 펼치기",
     "delete_title": "댓글 삭제",
@@ -695,7 +682,7 @@
     "posted_partial_trigger_named": "댓글이 게시되었지만 {{name}}이(가) 트리거되지 않았습니다 ({{reason}})",
     "trigger_blocked_chip_aria": "{{name}}은(는) 트리거되지 않습니다 — {{reason}}",
     "trigger_blocked_invocation_not_allowed": "이 대상을 찾을 수 없거나 사용할 권한이 없습니다",
-    "trigger_blocked_target_unavailable": "이 에이전트 또는 스쿼드를 찾을 수 없습니다 — 페이지를 새로고침하고 다시 시도하세요.",
+    "trigger_blocked_target_unavailable": "이 에이전트를 찾을 수 없습니다 — 페이지를 새로고침하고 다시 시도하세요.",
     "trigger_blocked_runtime_offline": "이 대상의 런타임이 오프라인입니다",
     "trigger_blocked_runtime_unusable": "이 대상의 CLI를 해당 기기에서 실행할 수 없습니다 — 그 기기에서 다시 설치하세요",
     "trigger_blocked_runtime_profile_missing": "이 에이전트의 CLI에 해당 머신의 런타임 설정이 없습니다 — 그 머신에 설치하세요.",
@@ -718,13 +705,10 @@
     "send_tooltip": "보내기",
     "trigger_source_issue_assignee": "담당자",
     "trigger_source_mention_agent": "@멘션",
-    "trigger_source_mention_squad_leader": "Squad",
     "trigger_source_unknown": "트리거",
     "trigger_skipped_label": "건너뜀",
     "trigger_wont_trigger": "이번에는 시작하지 않습니다",
     "trigger_none_will_trigger": "어떤 에이전트도 시작하지 않습니다",
-    "all_members_notice": "멤버 전체 공지 · @all은 에이전트를 시작하지 않습니다",
-    "trigger_reason_mention_squad_leader": "멘션된 Squad의 리더입니다.",
     "trigger_reason_unknown": "이 댓글로 시작합니다.",
     "trigger_will_start": "전송 후 작업을 시작합니다",
     "trigger_will_start_count_other": "전송 후 에이전트 {{count}}개가 작업을 시작합니다",
@@ -766,9 +750,7 @@
     "restart_failed": "현재 실행을 중지하지 못했습니다. 메시지는 보내지 않았습니다.",
     "reply_action": "답글 달기",
     "actions_label": "댓글 작업",
-    "create_issue_from_selection": "선택한 내용으로 하위 태스크 만들기",
-    "guest_placeholder": "답글… 멤버를 @ 할 수 있습니다",
-    "guest_hint": "게스트는 에이전트를 @ 하거나 작업을 배정할 수 없습니다"
+    "create_issue_from_selection": "선택한 내용으로 하위 태스크 만들기"
   },
   "reply": {
     "recipients_changed": "답글 대상이 변경되었습니다. 받는 사람을 확인한 뒤 다시 보내 주세요.",
@@ -807,6 +789,7 @@
     "unread_completed": "{{agent}} 실행 완료 · {{time}}",
     "unread_failed": "{{agent}} 실행 실패 · {{time}}",
     "unread_manual": "읽지 않음으로 표시됨",
+    "new_reply": "새 답변",
     "empty_hover": "현재 작업 중인 에이전트가 없습니다",
     "unknown_hover": "작업 중인 에이전트: 아직 불러오지 않았습니다",
     "filter_active_label": "에이전트가 작업 중인 태스크만 보는 중",
@@ -1078,8 +1061,7 @@
       "search_placeholder": "담당자 지정...",
       "recent_group": "최근",
       "members_group": "멤버",
-      "agents_group": "에이전트",
-      "squads_group": "스쿼드"
+      "agents_group": "에이전트"
     },
     "start_date": {
       "trigger_label": "시작일",
@@ -1135,14 +1117,8 @@
   },
   "save_view": {
     "scope_label_workspace": "담당자 유형",
-    "scope_label_my": "나와의 관계",
     "variant_all": "담당자 무관",
-    "variant_members": "구성원에게 할당됨",
-    "variant_agents": "에이전트에게 할당됨",
-    "variant_my_any": "모든 관련",
-    "variant_my_assigned": "나에게 할당됨",
-    "variant_my_created": "내가 생성함",
-    "variant_my_involved": "내 에이전트의 작업"
+    "variant_agents": "에이전트에게 할당됨"
   },
   "plugins": {
     "panels": "Plugins",
@@ -1189,8 +1165,6 @@
     "comment_deleted": "댓글 삭제됨",
     "comment_resolved": "스레드 해결됨",
     "comment_unresolved": "스레드 다시 열림",
-    "reaction_added": "반응 추가됨",
-    "reaction_removed": "반응 삭제됨",
     "attachment_attached": "첨부 파일 추가됨",
     "attachment_detached": "첨부 파일 삭제됨",
     "at_time": "{{time}}에 깨우기",
@@ -1258,8 +1232,6 @@
       "comment_deleted": "댓글이 삭제될 때",
       "comment_resolved": "스레드가 해결될 때",
       "comment_unresolved": "스레드가 다시 열릴 때",
-      "reaction_added": "반응이 추가될 때",
-      "reaction_removed": "반응이 삭제될 때",
       "attachment_attached": "이 작업에 첨부 파일이 추가될 때",
       "attachment_detached": "이 작업의 첨부 파일이 삭제될 때",
       "run_completed": "{{agent}}의 실행이 성공적으로 끝날 때",
@@ -1374,7 +1346,6 @@
       "choose_label": "레이블 선택",
       "choose_property": "속성 선택",
       "value_placeholder": "값",
-      "squads": "스쿼드",
       "children_all": "모든 하위 태스크",
       "children_stage": "{{stage}}단계",
       "pr_checks": "CI 종료",
@@ -1403,12 +1374,11 @@
       "wake_assignee": "담당자 {{name}} 깨우기",
       "remaining_other": "{{count}}개 남음",
       "blocked_backlog": "백로그 상태라 지금은 깨우지 않음",
-      "blocked_member": "담당자가 멤버라 받은편지함으로 알립니다",
       "blocked_none": "에이전트 담당자가 없어 깨우지 않음",
       "turned_off": "이 태스크에서 꺼짐",
       "target_title": "깨울 대상",
       "target_current": "담당자 (현재 {{name}})",
-      "target_none": "담당자: 에이전트나 스쿼드는 깨우고, 멤버에게는 알립니다",
+      "target_none": "담당자: 에이전트를 깨웁니다",
       "progress_title": "진행",
       "progress": "{{done}}/{{total}} 완료",
       "waiting_on": "남은 항목 {{ids}}",
@@ -1420,7 +1390,6 @@
       "save_error": "시스템 규칙을 저장할 수 없습니다.",
       "default_on": "워크스페이스 기본값은 켜짐입니다.",
       "default_off": "워크스페이스 기본값은 꺼짐입니다.",
-      "notify_member": "받은편지함으로 {{name}}에게 알림",
       "instruction": "깨운 뒤 할 일",
       "instruction_edit": "지시 편집",
       "instruction_default": "이 태스크에는 설정되지 않아 기본 지시를 사용합니다:",
@@ -1581,7 +1550,6 @@
     "handler": {
       "none": "담당자 유지",
       "agent": "에이전트",
-      "squad": "스쿼드",
       "member": "멤버",
       "project_lead": "프로젝트 리드",
       "creator": "태스크 작성자",
@@ -1650,12 +1618,11 @@
       "card_then": "완료 후 → {{status}}",
       "status": "상태",
       "status_hint": "상태는 라이브러리에서 가져옵니다. 이름과 색은 라이브러리에서 바꾸면 이를 쓰는 모든 워크플로에 반영됩니다.",
-      "handler_hint_on": "태스크가 이 단계에 들어오면 담당자가 이 처리자로 바뀌며, 에이전트나 스쿼드라면 바로 실행을 시작합니다.",
+      "handler_hint_on": "태스크가 이 단계에 들어오면 담당자가 이 처리자로 바뀌며, 에이전트라면 바로 실행을 시작합니다.",
       "handler_hint_off": "이 단계에 들어와도 담당자는 그대로이며 실행도 시작되지 않습니다.",
       "handler_hint_lead": "프로젝트별로 정해집니다: 각 프로젝트의 리드.",
       "handler_hint_creator": "태스크별로 정해집니다: 태스크를 만든 사람.",
       "target_agent": "에이전트",
-      "target_squad": "스쿼드 · 리더가 배분",
       "target_member": "멤버",
       "instructions_hint": "이번 실행의 지침으로 처리자에게 전달되며, 태스크 설명·댓글과 함께 맥락이 됩니다.",
       "next_hint": "담당자가 상태를 직접 업데이트하며, 막힌 경우가 아니라 재작업이 필요할 때만 되돌려 보냅니다. 실행이 끝나도 상태가 자동으로 바뀌지는 않습니다.",
@@ -1825,8 +1792,6 @@
   },
   "views": {
     "builtin": {
-      "my_issues": "내 태스크",
-      "my_agents": "내 에이전트의 작업",
       "all_issues": "전체 태스크",
       "my_work": "내 작업",
       "working": "실행 중",
@@ -2019,5 +1984,28 @@
     "focus_failed": "{{name}}(으)로 전환할 수 없습니다",
     "retry": "다시 시도",
     "dismiss": "닫기"
+  },
+  "trees": {
+    "section_title": "Worktree",
+    "state": {
+      "pending": "빌드 중",
+      "ready": "준비됨",
+      "failed": "실패",
+      "deleted": "삭제됨"
+    },
+    "copy_task_branch": "태스크 브랜치 복사",
+    "copy_path": "경로 복사",
+    "copied": "복사했습니다",
+    "copy_failed": "복사할 수 없습니다",
+    "open_agent_terminal": "에이전트 터미널",
+    "open_shell": "셸",
+    "delete": "worktree 삭제",
+    "delete_description": "worktree가 머신에서 제거됩니다. 브랜치는 유지되며, 아직 커밋되지 않은 작업은 먼저 해당 브랜치에 커밋됩니다.",
+    "delete_confirm": "삭제",
+    "cancel": "취소",
+    "delete_failed": "worktree를 삭제하지 못했습니다",
+    "rebuild": "다시 빌드",
+    "rebuild_failed": "worktree를 다시 빌드하지 못했습니다",
+    "save_failed": "조합을 저장하지 못했습니다."
   }
 }

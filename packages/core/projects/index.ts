@@ -1,3 +1,12 @@
+export {
+  PROJECT_SCOPE_MAX_ITEMS,
+  isProjectScopeValid,
+  projectScopePairError,
+  validateProjectScopeBranch,
+  type ProjectScopeBranchError,
+  type ProjectScopePair,
+  type ProjectScopePairError,
+} from "./project-scope";
 export { canDeleteProject } from "./deletion-permissions";
 export { projectLastActivityAt } from "./activity";
 export {

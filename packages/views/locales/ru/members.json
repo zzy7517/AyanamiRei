@@ -18,7 +18,6 @@
     "role": "Роль",
     "email": "Эл. почта",
     "joined": "Дата вступления",
-    "relation": "Связь",
     "breadcrumb_fallback": "Участник",
     "not_found_title": "Участник не найден",
     "not_found_description": "Возможно, этот участник покинул рабочее пространство."

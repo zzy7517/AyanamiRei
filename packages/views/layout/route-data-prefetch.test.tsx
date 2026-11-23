@@ -26,12 +26,12 @@ let fetched: unknown[][];
 const ISSUE_ID = "0b7f3c2e-5d1a-4c8e-9f6b-2a4d8e1c3b5f";
 const OTHER_ID = "7e2a9d4c-1b3f-4a6e-8c5d-9f0b2e4a6c8d";
 
-function renderLinks({ wsId, guest = false }: { wsId: string | undefined; guest?: boolean } = { wsId: "ws-1" }) {
+function renderLinks({ wsId }: { wsId: string | undefined } = { wsId: "ws-1" }) {
   return render(
     <QueryClientProvider client={qc}>
       <NavigationProvider value={adapter()}>
         <WorkspaceSlugProvider slug="acme">
-          <RouteDataPrefetch wsId={wsId} userId="user-1" guest={guest}>
+          <RouteDataPrefetch wsId={wsId} userId="user-1">
             <AppLink href="/acme/agents">Agents</AppLink>
             <AppLink href="/acme/projects?view=board">Projects</AppLink>
             <AppLink href="/acme/settings">Settings</AppLink>
@@ -168,15 +168,6 @@ describe("RouteDataPrefetch", () => {
     // The first issue was rested on long enough to fetch, not to fill in.
     expect(fetched).toEqual([[...issueKeys.detail("ws-1", ISSUE_ID)]]);
     expect(prefetched).toHaveLength(0);
-  });
-
-  it("fetches a guest only the issue", async () => {
-    renderLinks({ wsId: "ws-1", guest: true });
-    fireEvent.mouseEnter(screen.getByText("Issue by id"));
-    await vi.advanceTimersByTimeAsync(200);
-
-    expect(fetched).toEqual([[...issueKeys.detail("ws-1", ISSUE_ID)]]);
-    expect(keys().some((key) => key.includes(ISSUE_ID))).toBe(false);
   });
 
   it("leaves pages under an issue alone", async () => {

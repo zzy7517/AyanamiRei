@@ -1,7 +1,7 @@
 /**
  * Workspace Issues realtime — listing-level subscription. Mounted globally
- * (workspace-session-lifetime) alongside `useMyIssuesRealtime` so the
- * workspace-wide list stays fresh regardless of which tab is foregrounded.
+ * (workspace-session-lifetime) alongside the other listing-level hooks so
+ * the workspace-wide list stays fresh regardless of which tab is foregrounded.
  *
  * issue:created     — payload includes the full Issue object; prepend in
  *                     place. Avoids a refetch and keeps UI snappy when
@@ -13,12 +13,12 @@
  * issue_labels:changed — handled by `patchIssueLabels` in the shared
  *                     updaters (already patches `list(wsId)` too — see
  *                     `issue-ws-updaters.ts`). No subscription needed
- *                     here because `useMyIssuesRealtime` already drives
+ *                     here because `useMyListRealtime` already drives
  *                     it for every workspace surface.
  * onReconnect       — invalidate `list(wsId)` since we may have missed
  *                     a create/delete while disconnected.
  *
- * This hook is independent of `useMyIssuesRealtime` (different cache key
+ * This hook is independent of `useMyListRealtime` (different cache key
  * `list(wsId)` vs `myAll(wsId)`). Both are listing-level and run in
  * parallel — apps/mobile/CLAUDE.md "Mobile-owned updaters" / "list-level
  * global, per-record per-screen".

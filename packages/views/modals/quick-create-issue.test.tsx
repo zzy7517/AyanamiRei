@@ -25,7 +25,7 @@ vi.mock("../voice", () => ({
   VoiceMicButton: () => null,
 }));
 const mockCreateCommentSubIssue = vi.hoisted(() => vi.fn());
-const mockSetLastActor = vi.hoisted(() => vi.fn());
+const mockSetLastAgent = vi.hoisted(() => vi.fn());
 const mockSetQuickCreateFieldVisible = vi.hoisted(() => vi.fn());
 const mockSetKeepOpen = vi.hoisted(() => vi.fn());
 const mockSetLastMode = vi.hoisted(() => vi.fn());
@@ -83,15 +83,14 @@ const emptyIssueDraft = () => ({
     description: "",
     status: "todo" as const,
     startDate: null as string | null,
-    assigneeType: undefined as "agent" | "squad" | "member" | undefined,
+    assigneeType: undefined as "agent" | "member" | undefined,
     assigneeId: undefined as string | undefined,
     labelIds: [] as string[],
     propertyValues: {} as Record<string, string | number | boolean | string[]>,
   },
   agent: {
     prompt: "",
-    actorType: undefined as "agent" | "squad" | undefined,
-    actorId: undefined as string | undefined,
+    agentId: undefined as string | undefined,
   },
   activeMode: "agent" as "agent" | "manual",
 });
@@ -106,9 +105,8 @@ const mockIssueDraftStore = {
 };
 
 const mockQuickCreateStore = {
-  lastActorType: null as "agent" | "squad" | null,
-  lastActorId: null as string | null,
-  setLastActor: mockSetLastActor,
+  lastAgentId: null as string | null,
+  setLastAgent: mockSetLastAgent,
   keepOpen: false,
   setKeepOpen: mockSetKeepOpen,
   // Not part of the store's interface any more (MUL-5862), but an older
@@ -130,11 +128,17 @@ const mockProjectsQuery = vi.hoisted(() => ({
   isSuccess: true,
 }));
 
-// Per-test override for the squads list so we can flip between "squads
-// exist and one's leader is reachable" and "no squads" cases without
-// re-mocking the whole module.
-const mockSquadsData = vi.hoisted(
-  () => ({ list: [] as Array<{ id: string; name: string; leader_id: string; archived_at: string | null }> }),
+// Per-test override for the agents list, so a test can offer a second agent
+// to pick without re-mocking the whole module.
+const mockAgentsData = vi.hoisted(
+  () => ({
+    list: [{ id: "agent-1", name: "Bohan", archived_at: null, runtime_id: "runtime-1" }] as Array<{
+      id: string;
+      name: string;
+      archived_at: string | null;
+      runtime_id: string | null;
+    }>,
+  }),
 );
 
 // Per-test override for the runtimes list. Non-admin members receive a
@@ -154,18 +158,11 @@ let mockUploadIdSeq = 0;
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
-    // Workspace-scoped query keys carry the wsId as `queryKey[1]`; the
-    // discriminator is at `queryKey[2]` (e.g. ["workspaces", wsId, "squads"]).
-    if (queryKey[0] === "workspaces" && queryKey[2] === "squads") {
-      return { data: mockSquadsData.list };
-    }
     switch (queryKey[0]) {
       case "members":
         return { data: [{ user_id: "user-1", role: "admin" }] };
       case "agents":
-        return {
-          data: [{ id: "agent-1", name: "Bohan", archived_at: null, runtime_id: "runtime-1" }],
-        };
+        return { data: mockAgentsData.list };
       case "runtimes":
         return { data: mockRuntimesData.list };
       case "projects":
@@ -221,9 +218,6 @@ vi.mock("../navigation/context", () => ({
 vi.mock("@multica/core/workspace/queries", () => ({
   agentListOptions: () => ({ queryKey: ["agents"] }),
   memberListOptions: () => ({ queryKey: ["members"] }),
-  squadListOptions: (wsId: string) => ({
-    queryKey: ["workspaces", wsId, "squads"],
-  }),
 }));
 
 vi.mock("@multica/core/projects/queries", () => ({
@@ -523,20 +517,16 @@ describe("AgentCreatePanel", () => {
 
   it("selects Qoder agents without the daemon CLI version gate", () => {
     mockRuntimesData.list = [{ id: "runtime-1", provider: "qoder_cloud", metadata: {} }];
-    mockQuickCreateStore.lastActorType = "agent";
-    mockQuickCreateStore.lastActorId = "agent-1";
-    mockSquadsData.list = [{ id: "squad-1", name: "Cloud Squad", leader_id: "agent-1", archived_at: null }];
+    mockQuickCreateStore.lastAgentId = "agent-1";
     renderPanel({ onClose: vi.fn(), isExpanded: false, setIsExpanded: vi.fn() });
     expect(screen.getByRole("button", { name: /^Create$/i })).toBeEnabled();
     expect(screen.queryByText(/daemon.*version/i)).not.toBeInTheDocument();
     expect(screen.getAllByText("Bohan").length).toBeGreaterThan(0);
-    expect(screen.getByText("Cloud Squad")).toBeInTheDocument();
   });
 
   it("blocks Qoder agents when the prompt references an attachment", () => {
     mockRuntimesData.list = [{ id: "runtime-1", provider: "qoder_cloud", metadata: {} }];
-    mockQuickCreateStore.lastActorType = "agent";
-    mockQuickCreateStore.lastActorId = "agent-1";
+    mockQuickCreateStore.lastAgentId = "agent-1";
     const attachmentId = "019ec09d-6222-722b-bdfa-427b105d80be";
     mockIssueDraftStore.draft.agent.prompt = `See ![shot](/api/attachments/${attachmentId}/download)`;
     mockIssueDraftStore.draft.shared.attachments = [{
@@ -552,8 +542,7 @@ describe("AgentCreatePanel", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockQuickCreateStore.lastActorType = null;
-    mockQuickCreateStore.lastActorId = null;
+    mockQuickCreateStore.lastAgentId = null;
     mockQuickCreateStore.lastProjectId = null;
     mockCreateSettingsStore.quickCreateFields = ["project"];
     mockQuickCreateStore.keepOpen = false;
@@ -574,7 +563,7 @@ describe("AgentCreatePanel", () => {
     });
     mockProjectsQuery.data = [];
     mockProjectsQuery.isSuccess = true;
-    mockSquadsData.list = [];
+    mockAgentsData.list = [{ id: "agent-1", name: "Bohan", archived_at: null, runtime_id: "runtime-1" }];
     mockRuntimesData.list = [{ id: "runtime-1", metadata: { cli_version: "1.2.3" } }];
     mockQuickCreateIssue.mockResolvedValue(undefined);
     mockCreateCommentSubIssue.mockResolvedValue({ task_id: "task-source-child" });
@@ -627,8 +616,10 @@ describe("AgentCreatePanel", () => {
   });
 
   it("restores unfinished actor, project, priority, and due-date selections after remount", async () => {
-    mockSquadsData.list = [
-      { id: "squad-1", name: "Frontend Squad", leader_id: "agent-1", archived_at: null },
+    // A second agent, so the pick below is not the one the panel seeds by default.
+    mockAgentsData.list = [
+      { id: "agent-1", name: "Bohan", archived_at: null, runtime_id: "runtime-1" },
+      { id: "agent-2", name: "Ada", archived_at: null, runtime_id: "runtime-1" },
     ];
     mockProjectsQuery.data = [{ id: "proj-1", title: "Web", icon: null }];
     mockCreateSettingsStore.quickCreateFields = ["project", "priority", "due_date"];
@@ -640,13 +631,13 @@ describe("AgentCreatePanel", () => {
       setIsExpanded: vi.fn(),
     });
 
-    await user.click(screen.getByRole("button", { name: /Frontend Squad/ }));
+    await user.click(screen.getByRole("button", { name: /Ada/ }));
     await user.click(screen.getByTestId("project-picker"));
     await user.click(screen.getByTestId("priority-picker"));
     await user.click(screen.getByTestId("due-date-picker"));
 
     expect(mockIssueDraftStore.draft.agent).toEqual(
-      expect.objectContaining({ actorType: "squad", actorId: "squad-1" }),
+      expect.objectContaining({ agentId: "agent-2" }),
     );
     expect(mockIssueDraftStore.draft.shared).toEqual(
       expect.objectContaining({
@@ -659,7 +650,7 @@ describe("AgentCreatePanel", () => {
     firstOpen.unmount();
     renderPanel({ onClose: vi.fn(), isExpanded: false, setIsExpanded: vi.fn() });
 
-    expect(screen.getByRole("button", { name: /Frontend Squad/ })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /Ada/ })).toHaveAttribute(
       "data-selected",
       "true",
     );
@@ -692,7 +683,7 @@ describe("AgentCreatePanel", () => {
       });
     });
 
-    expect(mockSetLastActor).toHaveBeenCalledWith("agent", "agent-1");
+    expect(mockSetLastAgent).toHaveBeenCalledWith("agent-1");
     // A successful create ends the whole unified draft.
     expect(mockClearDraft).toHaveBeenCalled();
     expect(mockSetLastMode).toHaveBeenCalledWith("agent");
@@ -898,22 +889,21 @@ describe("AgentCreatePanel", () => {
     });
   });
 
-  // Picking a squad routes the submission through `squad_id` (not
-  // `agent_id`) so the backend can resolve the squad's leader agent and
-  // inject the squad-leader briefing on dispatch. The persisted preference
-  // remembers the actor type so the next open defaults back to the squad.
-  it("submits squad_id when the user picks a squad in the actor picker", async () => {
-    mockSquadsData.list = [
-      { id: "squad-1", name: "Frontend Squad", leader_id: "agent-1", archived_at: null },
+  // The agent picked in the picker is the one the request names, and a
+  // successful create remembers that pick for the next open.
+  it("submits the picked agent's id and remembers the pick", async () => {
+    mockAgentsData.list = [
+      { id: "agent-1", name: "Bohan", archived_at: null, runtime_id: "runtime-1" },
+      { id: "agent-2", name: "Ada", archived_at: null, runtime_id: "runtime-1" },
     ];
     const user = userEvent.setup();
     const onClose = vi.fn();
 
     renderPanel({ onClose, isExpanded: false, setIsExpanded: vi.fn() });
 
-    // The picker mock renders both sections inline as buttons; click the
-    // squad row directly.
-    await user.click(screen.getByRole("button", { name: /Frontend Squad/ }));
+    // The picker mock renders its list inline as buttons; click the row directly.
+    await user.click(screen.getByRole("button", { name: /Ada/ }));
+    expect(screen.getByRole("button", { name: /Ada/ })).toHaveAttribute("data-selected", "true");
 
     const editor = screen.getByPlaceholderText(
       'Tell the agent what to do, e.g. "fix the slow inbox loading in the Web project"',
@@ -925,25 +915,12 @@ describe("AgentCreatePanel", () => {
 
     await waitFor(() => {
       expect(mockQuickCreateIssue).toHaveBeenCalledWith({
-        squad_id: "squad-1",
+        agent_id: "agent-2",
         prompt: "Investigate the regression",
         project_id: undefined,
       });
     });
-    expect(mockSetLastActor).toHaveBeenCalledWith("squad", "squad-1");
-  });
-
-  // Squads whose leader agent isn't visible (archived, private, etc.) must
-  // not appear in the picker — the backend would reject the pick on
-  // validateAssigneePair, and showing them invites a confusing dead path.
-  it("hides squads whose leader agent is not in the visible-agents list", () => {
-    mockSquadsData.list = [
-      { id: "squad-orphan", name: "Orphan Squad", leader_id: "agent-missing", archived_at: null },
-    ];
-
-    renderPanel({ onClose: vi.fn(), isExpanded: false, setIsExpanded: vi.fn() });
-
-    expect(screen.queryByRole("button", { name: /Orphan Squad/ })).toBeNull();
+    expect(mockSetLastAgent).toHaveBeenCalledWith("agent-2");
   });
 
   // A successful create used to persist its project, so the NEXT open
@@ -989,8 +966,8 @@ describe("AgentCreatePanel", () => {
           expect.objectContaining({ project_id: "proj-1" }),
         );
       });
-      // The actor is still remembered — only the project memory is gone.
-      expect(mockSetLastActor).toHaveBeenCalledWith("agent", "agent-1");
+      // The agent is still remembered — only the project memory is gone.
+      expect(mockSetLastAgent).toHaveBeenCalledWith("agent-1");
     });
   });
 

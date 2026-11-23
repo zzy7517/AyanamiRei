@@ -10,7 +10,6 @@ import zhHantOnboarding from "./zh-Hant/onboarding.json";
 import zhHantInvite from "./zh-Hant/invite.json";
 import zhHantLabels from "./zh-Hant/labels.json";
 import zhHantMembers from "./zh-Hant/members.json";
-import zhHantMyIssues from "./zh-Hant/my-issues.json";
 import zhHantSearch from "./zh-Hant/search.json";
 import zhHantInbox from "./zh-Hant/inbox.json";
 import zhHantWorkspace from "./zh-Hant/workspace.json";
@@ -23,8 +22,8 @@ import zhHantRuntimes from "./zh-Hant/runtimes.json";
 import zhHantLayout from "./zh-Hant/layout.json";
 import zhHantUsage from "./zh-Hant/usage.json";
 import zhHantUi from "./zh-Hant/ui.json";
-import zhHantSquads from "./zh-Hant/squads.json";
 import zhHantBilling from "./zh-Hant/billing.json";
+import zhHantTerminal from "./zh-Hant/terminal.json";
 
 const resources: LocaleResources = {
   docs: zhHantDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: zhHantInvite,
   labels: zhHantLabels,
   members: zhHantMembers,
-  "my-issues": zhHantMyIssues,
   search: zhHantSearch,
   inbox: zhHantInbox,
   workspace: zhHantWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: zhHantLayout,
   usage: zhHantUsage,
   ui: zhHantUi,
-  squads: zhHantSquads,
   billing: zhHantBilling,
+  terminal: zhHantTerminal,
 };
 
 export default resources;

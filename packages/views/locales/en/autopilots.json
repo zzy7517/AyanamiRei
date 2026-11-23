@@ -324,7 +324,7 @@
     "section_agent": "Agent",
     "section_assignee": "Assignee",
     "select_agent": "Select agent",
-    "select_assignee": "Select agent or squad",
+    "select_assignee": "Select agent",
     "section_project": "Project",
     "project_hint": "Also sets where runs execute — the project's repository or local directory",
     "no_project": "No project",
@@ -386,7 +386,7 @@
     "schedule_empty": "No schedule — this autopilot only runs when triggered manually.",
     "schedule_add": "Add schedule",
     "error_title_required": "Enter a name for this autopilot.",
-    "error_assignee_required": "Choose the agent or squad that will run this autopilot.",
+    "error_assignee_required": "Choose the agent that will run this autopilot.",
     "output_modes": {
       "create_issue": {
         "label": "Create issue",
@@ -486,13 +486,11 @@
     }
   },
   "agent_picker": {
-    "filter_placeholder": "Filter agents or squads...",
+    "filter_placeholder": "Filter agents...",
     "select_agent": "Select agent",
-    "select_assignee": "Select agent or squad",
+    "select_assignee": "Select agent",
     "agents_group": "Agents",
-    "squads_group": "Squads",
-    "agent_runtime_required": "Bind a runtime before selecting this agent",
-    "squad_runtime_required": "Bind a runtime to this squad's leader before selecting it"
+    "agent_runtime_required": "Bind a runtime before selecting this agent"
   },
   "timezone_picker": {
     "search_placeholder": "Search timezone..."
@@ -602,7 +600,7 @@
     },
     "defaults": {
       "title": "When sub-issues finish",
-      "description": "Wakes the parent's assignee when a stage finishes and a later stage is waiting, and once more when every sub-issue is closed. A member assignee gets an inbox notification instead.",
+      "description": "Wakes the parent's assignee when a stage finishes and a later stage is waiting, and once more when every sub-issue is closed.",
       "badge": "Workspace default",
       "enabled": "On by default",
       "instruction": "Default instruction",

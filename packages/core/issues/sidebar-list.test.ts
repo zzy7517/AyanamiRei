@@ -44,10 +44,8 @@ describe("projectSidebarRequest", () => {
       projectSidebarRequest("p1", { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, assignee }, STATUSES, "u1")?.table.filters
         .relations;
     expect(relations("anyone")).toBeUndefined();
-    expect(relations("me")).toEqual(["assigned"]);
     expect(relations("my_agents")).toEqual(["my_agents"]);
-    expect(relations("me_and_my_agents")).toEqual(["assigned", "my_agents"]);
-    const settings: SidebarIssueSettings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, assignee: "me" };
+    const settings: SidebarIssueSettings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, assignee: "my_agents" };
     expect(projectSidebarRequest("p1", settings, STATUSES, undefined)).toBeNull();
   });
 
@@ -65,14 +63,14 @@ describe("projectSidebarRequest", () => {
 
 describe("No project", () => {
   it("lists issues outside every project with the project rows' settings", () => {
-    const settings: SidebarIssueSettings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, assignee: "me" };
+    const settings: SidebarIssueSettings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, assignee: "my_agents" };
     expect(noProjectSidebarRequest(settings, STATUSES, "u1")).toEqual({
       table: {
         scope: { kind: "workspace" },
         filters: {
           include_no_project: true,
           statuses: ["backlog", "todo", "in_progress", "merged"],
-          relations: ["assigned"],
+          relations: ["my_agents"],
           include_sub_issues: true,
         },
         sort: { field: "updated_at", direction: "desc" },
@@ -128,7 +126,7 @@ describe("viewSidebarRequest", () => {
       ),
     ).toEqual({
       table: {
-        scope: { kind: "workspace", assignee_types: ["agent", "squad"] },
+        scope: { kind: "workspace", assignee_types: ["agent"] },
         filters: { statuses: ["todo"], label_ids: ["l1"], include_sub_issues: false },
         sort: { field: "due_date", direction: "desc" },
       },
@@ -137,7 +135,7 @@ describe("viewSidebarRequest", () => {
 
   it("keeps the conditions the plain list endpoint could not express", () => {
     const filters = (query: Record<string, unknown>) => viewSidebarRequest({ ...workspace, query }, TODAY)?.table.filters;
-    expect(filters({ relationFilters: ["assigned"] })).toMatchObject({ relations: ["assigned"] });
+    expect(filters({ relationFilters: ["subscribed"] })).toMatchObject({ relations: ["subscribed"] });
     expect(filters({ statusFilters: ["done"], negatedFilters: ["status"] })).toMatchObject({
       statuses: ["done"],
       negate: ["statuses"],
@@ -167,22 +165,24 @@ describe("viewSidebarRequest", () => {
     expect(filters({ negatedFilters: ["status"] })).toEqual({ include_sub_issues: true });
   });
 
-  it("scopes project and my views like the page they open", () => {
+  it("scopes project and agents views like the page they open", () => {
     const base = { query: {}, display: {} };
     const scope = (view: Parameters<typeof viewSidebarRequest>[0]) => viewSidebarRequest(view, TODAY)?.table.scope;
     expect(scope({ ...base, scope_type: "project", scope_id: "p1", scope_variant: null })).toEqual({
       kind: "project",
       project_id: "p1",
     });
-    expect(scope({ ...base, scope_type: "my", scope_id: null, scope_variant: "created" })).toEqual({
-      kind: "my",
-      relation: "created",
-    });
-    expect(scope({ ...base, scope_type: "my", scope_id: null, scope_variant: null })).toEqual({
-      kind: "my",
-      relation: "any",
+    expect(scope({ ...base, scope_type: "workspace", scope_id: null, scope_variant: "agents" })).toEqual({
+      kind: "workspace",
+      assignee_types: ["agent"],
     });
     expect(scope({ ...base, scope_type: "project", scope_id: null, scope_variant: null })).toBeUndefined();
+  });
+
+  it("lists nothing for a view scoped to a surface this client does not have", () => {
+    expect(
+      viewSidebarRequest({ query: {}, display: {}, scope_type: "my", scope_id: null, scope_variant: null }, TODAY),
+    ).toBeNull();
   });
 
   it("drops the dimension the scope already fixes", () => {
@@ -191,11 +191,6 @@ describe("viewSidebarRequest", () => {
       TODAY,
     );
     expect(project?.table.filters).toEqual({ include_sub_issues: true });
-    const mine = viewSidebarRequest(
-      { query: { relationFilters: ["created"] }, display: {}, scope_type: "my", scope_id: null, scope_variant: "assigned" },
-      TODAY,
-    );
-    expect(mine?.table.filters).toEqual({ include_sub_issues: true });
   });
 });
 
@@ -209,20 +204,18 @@ describe("builtinSidebarRequest", () => {
       filters: { statuses: ["backlog", "todo", "in_progress", "merged"], include_sub_issues: true },
       sort: { field: "updated_at", direction: "desc" },
     });
-    expect(filters("my_work")).toEqual({ relations: ["assigned", "my_agents"], include_sub_issues: true });
+    expect(filters("my_work")).toEqual({ relations: ["my_agents"], include_sub_issues: true });
     expect(filters("subscribed")).toEqual({ relations: ["subscribed"], include_sub_issues: true });
     expect(filters("working", ["i2", "i1"])).toEqual({ working_issue_ids: ["i1", "i2"], include_sub_issues: true });
     expect(filters("working")).toEqual({ working_issue_ids: [], include_sub_issues: true });
   });
 
   it("ignores the project-only assignee setting and lists nothing when every status is hidden", () => {
-    for (const assignee of ["me", "my_agents", "me_and_my_agents"] as const) {
-      const settings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, hiddenStatuses: [], assignee };
-      expect(builtinSidebarRequest("subscribed", settings, STATUSES)?.table.filters).toEqual({
-        relations: ["subscribed"],
-        include_sub_issues: true,
-      });
-    }
+    const settings = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, hiddenStatuses: [], assignee: "my_agents" as const };
+    expect(builtinSidebarRequest("subscribed", settings, STATUSES)?.table.filters).toEqual({
+      relations: ["subscribed"],
+      include_sub_issues: true,
+    });
     const none = { ...DEFAULT_SIDEBAR_ISSUE_SETTINGS, hiddenStatuses: STATUSES.map((s) => s.key) };
     expect(builtinSidebarRequest("all_issues", none, STATUSES)).toBeNull();
   });

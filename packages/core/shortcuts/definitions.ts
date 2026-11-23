@@ -23,12 +23,10 @@ export type ShortcutActionId =
   | "goForward"
   | "goInbox"
   | "goChat"
-  | "goMyIssues"
   | "goIssues"
   | "goProjects"
   | "goAutopilots"
   | "goAgents"
-  | "goSquads"
   | "goUsage"
   | "goRuntimes"
   | "goSkills"
@@ -152,12 +150,10 @@ export const SHORTCUT_ACTIONS: readonly ShortcutActionDefinition[] = [
   { id: "goForward", category: "navigation", defaultShortcut: primary("]"), allowInEditable: false },
   { id: "goInbox", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goChat", category: "navigation", defaultShortcut: null, allowInEditable: false },
-  { id: "goMyIssues", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goIssues", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goProjects", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goAutopilots", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goAgents", category: "navigation", defaultShortcut: null, allowInEditable: false },
-  { id: "goSquads", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goUsage", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goRuntimes", category: "navigation", defaultShortcut: null, allowInEditable: false },
   { id: "goSkills", category: "navigation", defaultShortcut: null, allowInEditable: false },
@@ -389,6 +385,19 @@ export function isPortalLayerShortcutTarget(target: EventTarget | null): boolean
   if (typeof document === "undefined") return false;
   if (document.querySelector("[data-base-ui-inert]") !== null) return true;
   return target instanceof Element && target.closest(PORTAL_LAYER_SELECTOR) !== null;
+}
+
+/**
+ * Marks an element that reads the whole keyboard for a program, the way a
+ * terminal does, rather than taking typed text. Its keys are the program's:
+ * no shortcut fires inside it, not even one that stays live in text fields.
+ */
+export const RAW_KEYBOARD_ATTRIBUTE = "data-raw-keyboard";
+
+/** Whether `target` sits inside an element marked with {@link RAW_KEYBOARD_ATTRIBUTE}. */
+export function isRawKeyboardShortcutTarget(target: EventTarget | null): boolean {
+  if (typeof Element === "undefined") return false;
+  return target instanceof Element && target.closest(`[${RAW_KEYBOARD_ATTRIBUTE}]`) !== null;
 }
 
 /**

@@ -21,7 +21,7 @@ Open an issue and click **Assignee**.
 </Step>
 <Step>
 
-Pick an agent or a squad.
+Pick an agent.
 
 </Step>
 <Step>
@@ -34,8 +34,6 @@ Review the agent about to start in the confirmation dialog, then choose **Confir
 <AssignDemo />
 
 Whatever the agent needs to know for this work goes in the issue's description and discussion, or in the project description and agent instructions.
-
-When you assign to a squad, the squad becomes the issue's assignee and the squad leader starts first. It decides whether to hand work to other members, following how the squad operates.
 
 ## Execution after assignment
 
@@ -62,7 +60,7 @@ For a project that repeatedly passes work between people or agents, use a [workf
 
 `backlog` doesn't start a run on assignment either. Execution only follows after you move the issue out of `backlog`, or ask the assignee for something in a follow-up comment.
 
-When the issue already has an agent or squad owner, moving it out of `backlog` opens the same dialog, because that status change is what starts the run. It offers the same **Don't start yet**, which changes the status without waking the agent. The dialog appears for every target other than `backlog` itself and any status in the `done` or `closed` category.
+When the issue already has an agent owner, moving it out of `backlog` opens the same dialog, because that status change is what starts the run. It offers the same **Don't start yet**, which changes the status without waking the agent. The dialog appears for every target other than `backlog` itself and any status in the `done` or `closed` category.
 
 Only the fixed `backlog` status works this way. A [custom status](/issues#custom-statuses) in the `unstarted` category does **not** park work: assigning an agent to an issue there starts a run right away. Issues already in `done` or `cancelled` still start a run immediately when assigned or reassigned to an agent.
 
@@ -78,7 +76,7 @@ Workspace owners and admins can manage agents, but being able to see one doesn't
 
 ## Change or remove the assignee
 
-Switching the assignee to another agent starts a new run for the new assignee; picking a member only changes the assignee and doesn't invoke any AI coding tool. Removing the assignee doesn't create a run either.
+Switching the assignee to another agent starts a new run for the new assignee. Removing the assignee doesn't create a run either.
 
 <Callout type="warning">
 Changing or removing an assignee does not normally stop a run already underway. Stop it in the execution log when needed. During a [workflow handoff](/workflows), the confirmation also lets you stop or cancel the previous agent’s run as you move the issue.
@@ -93,7 +91,7 @@ multica issue status MUL-42 in_progress --no-start
 multica issue assign MUL-42 --unassign
 ```
 
-In scripts, use `--to-id <uuid>` to avoid matching the wrong object with the same name. Look up UUIDs with `multica agent list --output json` or `multica workspace member list --output json`.
+In scripts, use `--to-id <uuid>` to avoid matching the wrong object with the same name. Look up UUIDs with `multica agent list --output json`.
 
 Use `--no-start` when the assignment should record ownership without creating a new run — for example, when the same agent is already handling the issue from another run. The same flag is available on `issue update` and `issue status`. If an ownership-only flow changes both assignment and status, pass it to both commands; suppressing the assignment does not suppress a later status-triggered run.
 
@@ -103,4 +101,3 @@ If an assignment or status change starts no run — for example because the issu
 
 - [@-mention agents in comments](/mentioning-agents) — handle a new question without changing the assignee.
 - [Runs](/tasks) — queueing, retry, and stop rules.
-- [Squads](/squads) — have a leader coordinate multiple agents.

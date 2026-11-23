@@ -51,6 +51,12 @@ export function systemNotificationSuppressedByFocus(): boolean {
     typeof document !== "undefined" && document.hasFocus();
 }
 
+/** The app's own process shows banners here (the desktop app). False on the
+ *  web, where a caller may opt out of the browser fallback. */
+export function hasNativeNotificationBridge(): boolean {
+  return !!getNativeNotificationAPI()?.showNotification;
+}
+
 export function showSystemNotification(payload: SystemNotificationPayload): void {
   const desktopAPI = getNativeNotificationAPI();
   if (desktopAPI?.showNotification) desktopAPI.showNotification(payload);

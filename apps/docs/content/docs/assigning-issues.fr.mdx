@@ -21,7 +21,7 @@ Ouvrez une tâche et cliquez sur **Assigné à**.
 </Step>
 <Step>
 
-Choisissez un agent ou un squad.
+Choisissez un agent.
 
 </Step>
 <Step>
@@ -34,8 +34,6 @@ Vérifiez l'agent sur le point de démarrer dans la boîte de dialogue de confir
 <AssignDemo />
 
 Ce que l'agent doit savoir pour ce travail va dans la description et la discussion de la tâche, ou dans la description du projet et les instructions de l'agent.
-
-Lorsque vous assignez la tâche à un squad, le squad devient l'assigné de la tâche et le chef du squad démarre en premier. Il décide s'il confie le travail à d'autres membres, selon le fonctionnement du squad.
 
 ## Exécution après l'assignation
 
@@ -62,7 +60,7 @@ Si le projet passe régulièrement le travail entre plusieurs personnes ou agent
 
 `backlog` ne lance pas non plus d'exécution lors de l'assignation. L'exécution ne suit qu'une fois la tâche sortie de `backlog`, ou après une demande adressée à l'assigné dans un commentaire ultérieur.
 
-Lorsque la tâche a déjà un agent ou un squad comme responsable, la sortir de `backlog` ouvre la même boîte de dialogue, car c'est ce changement de statut qui lance l'exécution. Elle propose le même bouton **Ne pas démarrer maintenant**, qui change le statut sans réveiller l'agent. La boîte de dialogue apparaît pour toute cible autre que `backlog` lui-même et que les statuts des catégories `done` ou `closed`.
+Lorsque la tâche a déjà un agent comme responsable, la sortir de `backlog` ouvre la même boîte de dialogue, car c'est ce changement de statut qui lance l'exécution. Elle propose le même bouton **Ne pas démarrer maintenant**, qui change le statut sans réveiller l'agent. La boîte de dialogue apparaît pour toute cible autre que `backlog` lui-même et que les statuts des catégories `done` ou `closed`.
 
 Seul le statut fixe `backlog` fonctionne ainsi. Un [statut personnalisé](/issues#statuts-personnalisés) de la catégorie `unstarted` ne met **pas** le travail en attente : assigner un agent à une tâche dans ce statut lance immédiatement une exécution. Les tâches déjà en `done` ou `cancelled` lancent quand même une exécution immédiatement lorsqu'elles sont assignées ou réassignées à un agent.
 
@@ -78,7 +76,7 @@ Les propriétaires et administrateurs de l'espace de travail peuvent gérer les 
 
 ## Changer ou retirer l'assigné
 
-Passer l'assignation à un autre agent lance une nouvelle exécution pour le nouvel assigné ; choisir un membre change seulement l'assigné et ne lance aucun outil de codage IA. Retirer l'assigné ne crée pas non plus d'exécution.
+Passer l'assignation à un autre agent lance une nouvelle exécution pour le nouvel assigné. Retirer l'assigné ne crée pas non plus d'exécution.
 
 <Callout type="warning">
 Changer ou retirer le responsable n’arrête généralement pas une exécution en cours. Arrêtez-la dans le journal d’exécution si nécessaire. Lors d’un [passage de relais de workflow](/workflows), la confirmation permet aussi d’arrêter ou d’annuler l’exécution de l’agent précédent en déplaçant la tâche.
@@ -93,7 +91,7 @@ multica issue status MUL-42 in_progress --no-start
 multica issue assign MUL-42 --unassign
 ```
 
-Dans les scripts, utilisez `--to-id <uuid>` pour éviter de cibler un mauvais objet portant le même nom. Retrouvez les UUID avec `multica agent list --output json` ou `multica workspace member list --output json`.
+Dans les scripts, utilisez `--to-id <uuid>` pour éviter de cibler un mauvais objet portant le même nom. Retrouvez les UUID avec `multica agent list --output json`.
 
 Utilisez `--no-start` lorsque l'assignation doit enregistrer le responsable sans créer de nouvelle exécution — par exemple lorsque le même agent traite déjà la tâche depuis une autre exécution. La même option est disponible sur `issue update` et `issue status`. Si un flux qui ne fait qu'enregistrer le responsable modifie à la fois l'assignation et le statut, passez-la aux deux commandes : neutraliser le déclenchement de l'assignation ne neutralise pas une exécution déclenchée ensuite par le changement de statut.
 
@@ -103,4 +101,3 @@ Si une assignation ou un changement de statut ne démarre aucune exécution — 
 
 - [@mentionner des agents dans les commentaires](/mentioning-agents) — traitez une nouvelle question sans changer l'assigné.
 - [Exécutions](/tasks) — règles de mise en file, de nouvelle tentative et d'arrêt.
-- [Squads](/squads) — confiez à un chef la coordination de plusieurs agents.

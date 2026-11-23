@@ -20,14 +20,14 @@ In the web or desktop app, there are two ways to use an action:
 
 | Where | What happens |
 |---|---|
-| **Quick Actions** in the issue sidebar | Click an action to post its saved request immediately. If it has an agent or squad, it asks them to work on this issue. |
+| **Quick Actions** in the issue sidebar | Click an action to post its saved request immediately. If it has an agent, it asks that agent to work on this issue. |
 | Type `/` in the comment box | Choose an action to insert its request as a draft. Edit it for this issue, then send when ready. Nothing is posted just by choosing it. |
 
 <QuickActionDemo />
 
 Using a quick action does not change the issue's assignee or status. Follow the reply in the issue's discussion and check the [execution log](/tasks) for the agent's progress.
 
-An action with **No target** posts the saved message without @mentioning anyone. Use it for a checklist or a response you often write.
+An action with **No target** posts the saved message without @-mentioning an agent. Use it for a checklist or a response you often write.
 
 ## Create a quick action
 
@@ -49,7 +49,7 @@ Choose **Just me** for your own use, or **Team** to share it with the workspace.
 </Step>
 <Step>
 
-Choose an agent or squad under **Runs as**, or choose **No target** to save a message without a mention.
+Choose an agent under **Runs as**, or choose **No target** to save a message without a mention.
 
 </Step>
 <Step>
@@ -59,7 +59,7 @@ Write the **Prompt** as you want it sent, then save. It is sent as written; vari
 </Step>
 </Steps>
 
-Team actions that call an agent must use one everyone in the workspace can run. For a squad, this applies to its leader. Personal actions can use agents you have permission to run.
+Team actions that call an agent must use one everyone in the workspace can run. Personal actions can use agents you have permission to run.
 
 “Just me” controls who can see and use the saved action. Once you use it on an issue, its posted comment is visible to people who can see that issue.
 

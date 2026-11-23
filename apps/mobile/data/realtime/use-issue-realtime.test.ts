@@ -113,7 +113,7 @@ describe("useIssueRealtime owner issue revision on comment deletes", () => {
     ["comment:updated", tombstonePayload],
   ] as const)("%s without issue_revision refetches every loaded owner projection", (event, payload) => {
     const issue = { id: issueId, revision: 7 } as Issue;
-    const myKey = issueKeys.myList(wsId, "assigned", { assignee_id: "user-1" });
+    const myKey = issueKeys.myList(wsId, { creator_id: "user-1" });
     state.qc.setQueryData<Issue>(detailKey, issue);
     state.qc.setQueryData<Issue[]>(myKey, [issue]);
     state.qc.setQueryData<Issue[]>(issueKeys.list(wsId), [issue]);

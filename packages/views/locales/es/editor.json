@@ -104,13 +104,11 @@
     "copy_failed": "No se ha podido copiar"
   },
   "mention": {
-    "group_users": "Miembros",
+    "group_agents": "Agentes",
     "group_issues": "Tareas",
     "group_projects": "Proyectos",
     "group_docs": "Documentos",
-    "all_members": "Todos los miembros",
     "agent_badge": "Agente",
-    "squad_badge": "Squad",
     "searching": "Buscando...",
     "no_results": "Sin resultados",
     "group_current": "Página actual",

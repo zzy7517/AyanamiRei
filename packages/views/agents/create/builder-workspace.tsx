@@ -48,7 +48,6 @@ import { useT } from "../../i18n";
  */
 export function BuilderWorkspace({
   sessionId,
-  squadId,
   session,
   sessionSettled,
   fallbackRuntimeId,
@@ -56,7 +55,6 @@ export function BuilderWorkspace({
   onRuntimeLabel,
 }: {
   sessionId: string;
-  squadId: string | null;
   /** This conversation's row from the list, once it has arrived. */
   session: AgentBuilderSessionSummary | undefined;
   /** The list query answered — either data or an error. */
@@ -159,7 +157,6 @@ export function BuilderWorkspace({
     draft,
     runtimeId: selectedRuntime?.id ?? null,
     runtimeProvider: selectedRuntime?.provider,
-    squadId,
     template: "agent_builder",
     // The agent is already committed here, so builder cleanup must never turn
     // a successful create into a retryable create error.
@@ -386,7 +383,6 @@ export function BuilderWorkspace({
           <CreateAgentFooter
             canCreate={canCreate}
             creating={submit.creating}
-            squad={!!squadId}
             error={submit.formError}
             onCreate={() => void submit.create()}
             onDiscard={() => setConfirmingDiscard(true)}

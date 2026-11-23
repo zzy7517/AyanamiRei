@@ -58,7 +58,7 @@ In the issue below, Ops helper has asked suppliers for quotes and is waiting for
 | Runs and sub-issues | Sub-issues finish | Every sub-issue is closed (`done` or `cancelled`), or every stage up to the one you pick is. An issue without sub-issues never fires. |
 | Linked | A linked PR's CI finishes | Or the PR merges, or it has merge conflicts. Only PRs linked directly to this issue count; with several, any one is enough. CI and conflicts work only for GitHub pull requests. |
 | Linked | Another issue's status | Another issue is done, done or cancelled, or moves to In Review. |
-| | Custom events | Pick from the 25 raw events, such as reactions, attachments, edited comments, or resolved threads. |
+| | Custom events | Pick from the 23 raw events, such as attachments, edited comments, or resolved threads. |
 
 Multica checks field, sub-issue, PR, and other-issue conditions itself. If the condition already holds when you create the rule, the next check (within about 30 seconds) wakes the agent. CI is the exception: it only counts checks that finish after the rule was created.
 
@@ -122,8 +122,8 @@ To see every wakeup in the workspace, open **Autopilot** and switch to the **Iss
 When an issue has sub-issues, its Wakeups section shows a rule marked **System**. Nobody needs to create it:
 
 - When every sub-issue in a stage is closed and a later stage is still waiting, it wakes the parent's assignee, and it wakes them once more when every sub-issue is closed. Sub-issues without stages wake the parent once, when the last one closes.
-- Adding or reopening a sub-issue does not wake anyone, including a stage added after every sub-issue closed: move it out of `backlog` to start it, or mention the assignee to organize it.
-- An agent assignee is woken; for a squad, its leader is woken; a member assignee gets an inbox notification instead. Without an assignee, nobody is woken.
+- Adding or reopening a sub-issue does not wake anyone, including a stage added after every sub-issue closed: move it out of `backlog` to start it, or @-mention an agent assignee to have it organize the work.
+- The agent assignee is woken. Without an assignee, nobody is woken.
 - While the parent is in `backlog`, nothing is woken; it catches up once the parent leaves `backlog`.
 - The default instruction tells the agent which stage closed and which comes next: check its dependencies, then move the next stage's sub-issues out of `backlog`. When every sub-issue is closed, it brings their results together on the parent.
 

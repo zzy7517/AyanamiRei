@@ -10,7 +10,6 @@ import frOnboarding from "./fr/onboarding.json";
 import frInvite from "./fr/invite.json";
 import frLabels from "./fr/labels.json";
 import frMembers from "./fr/members.json";
-import frMyIssues from "./fr/my-issues.json";
 import frSearch from "./fr/search.json";
 import frInbox from "./fr/inbox.json";
 import frWorkspace from "./fr/workspace.json";
@@ -23,8 +22,8 @@ import frRuntimes from "./fr/runtimes.json";
 import frLayout from "./fr/layout.json";
 import frUsage from "./fr/usage.json";
 import frUi from "./fr/ui.json";
-import frSquads from "./fr/squads.json";
 import frBilling from "./fr/billing.json";
+import frTerminal from "./fr/terminal.json";
 
 const resources: LocaleResources = {
   docs: frDocs,
@@ -38,7 +37,6 @@ const resources: LocaleResources = {
   invite: frInvite,
   labels: frLabels,
   members: frMembers,
-  "my-issues": frMyIssues,
   search: frSearch,
   inbox: frInbox,
   workspace: frWorkspace,
@@ -51,8 +49,8 @@ const resources: LocaleResources = {
   layout: frLayout,
   usage: frUsage,
   ui: frUi,
-  squads: frSquads,
   billing: frBilling,
+  terminal: frTerminal,
 };
 
 export default resources;
