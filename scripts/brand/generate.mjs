@@ -15,8 +15,8 @@ import { INK, PAPER, loadBrand, svgs, sync } from "./sync.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
 const brand = await loadBrand(root);
-const { WORDMARK, WORDMARK_STROKE, STAR_GRAPHIC_STROKE, starPath } = brand;
-const { tile, wordmark } = svgs(brand);
+const { WORDMARK, WORDMARK_STROKE } = brand;
+const { tile } = svgs(brand);
 
 function run(cmd, args) {
   const r = spawnSync(cmd, args, { stdio: "inherit" });
@@ -57,12 +57,8 @@ try {
     if (+s <= 256) await png(join(out, `ico-${s}.png`), [+s, +s], at(tile(px), px, off));
   }
   await png(repo("apps/desktop/build/icon.png"), [1024, 1024], at(tile(824), 824, 100));
-  await png(repo("apps/web/public/icons/icon-192.png"), [192, 192], at(tile(156), 156, 18));
-  await png(repo("apps/web/public/icons/icon-512.png"), [512, 512], at(tile(412), 412, 50));
 
-  // iOS, Android and Expo mask these themselves, so they are full-bleed and opaque.
-  await png(repo("apps/web/public/icons/apple-touch-icon.png"), [180, 180], tile(180, { bleed: true }), { alpha: false });
-  await png(repo("apps/web/public/icons/icon-maskable-512.png"), [512, 512], tile(512, { bleed: true }), { alpha: false });
+  // iOS, Android and Expo mask this themselves, so it is full-bleed and opaque.
   await png(repo("apps/mobile/assets/icon.png"), [1024, 1024], tile(1024, { bleed: true }), { alpha: false });
 
   // macOS: the tile on Apple's 1024 grid (body 100..924) with the standard soft shadow.
@@ -76,19 +72,6 @@ try {
     await png(join(iconset, `icon_${name}.png`), [S, S], macOS(S));
   }
 
-  // OG card: the wordmark and headline beside a team of thin stars, one per
-  // teammate. The lit one is the newest to join.
-  const TEAM = { cols: 3, rows: 4, size: 96, gap: 36, right: 76, lit: 7 };
-  const pitch = TEAM.size + TEAM.gap;
-  const teamLeft = 1200 - TEAM.right - (TEAM.cols * pitch - TEAM.gap);
-  const teamTop = (630 - (TEAM.rows * pitch - TEAM.gap)) / 2;
-  const thinStar = starPath(STAR_GRAPHIC_STROKE);
-  const team = Array.from({ length: TEAM.cols * TEAM.rows }, (_, i) =>
-    `<svg viewBox="0 0 100 100" style="position:absolute;width:${TEAM.size}px;height:${TEAM.size}px;left:${teamLeft + (i % TEAM.cols) * pitch}px;top:${teamTop + Math.floor(i / TEAM.cols) * pitch}px"><path fill="${i === TEAM.lit ? PAPER : "#2c2c30"}" d="${thinStar}"/></svg>`).join("");
-  await png(repo("apps/web/app/opengraph-image.png"), [1200, 630], `<div style="position:relative;width:1200px;height:630px;background:${INK};overflow:hidden;font-family:Inter">
-  ${team}
-  <div style="position:absolute;left:64px;top:72px;height:52px">${wordmark(PAPER, ` height="52"`)}</div>
-  <div style="position:absolute;left:64px;bottom:70px;color:#fff;font:600 60px/1.12 Inter;letter-spacing:-.02em;white-space:nowrap">People and agents,<br>working as one team.</div></div>`, { alpha: false });
   await page.close();
 
   // README hero: the write-on from MulticaWordmark (timings in multica-wordmark.tsx,

@@ -35,11 +35,9 @@ coverage
 /docs/
 *.md
 
-# Dockerfile.web and Dockerfile.collab need their workspaces and root
-# dependency patch inputs. Default-exclude other app files so they do not
-# enter the build context.
+# Dockerfile.collab needs its workspace and root dependency patch inputs.
+# Default-exclude other app files so they do not enter the build context.
 /apps/*
-!/apps/web/
 !/apps/collab/
 !/apps/mobile
 /apps/mobile/*

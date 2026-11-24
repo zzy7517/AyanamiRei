@@ -16,7 +16,7 @@ import { DocsSearchDialog } from "@/components/search-dialog";
 // Inter (Latin UI face) is exposed under `--font-inter`. The full `--font-sans`
 // stack — Inter + the per-locale CJK fallback chain, including the Japanese-first
 // override scoped to `<html lang="ja">` — is composed in static CSS in
-// ./global.css (CSP-safe, no inline <style>). Mirrors apps/web/app/layout.tsx.
+// ./global.css (CSP-safe, no inline <style>).
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -31,7 +31,7 @@ const geistMono = Geist_Mono({
 // Editorial serif used for headings and showpiece elements. Italic style is
 // deliberately NOT loaded — italic in CJK is a synthetic slant that breaks
 // glyph design. Emphasis in docs is carried by brand color + weight, never
-// font-style. Mirrors apps/web/app/layout.tsx for the upright family.
+// font-style.
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   style: ["normal"],

@@ -4,8 +4,7 @@ import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 import { MulticaWordmark } from "@multica/ui/components/common/multica-wordmark";
 
 // GitHub mark — inlined SVG (lucide-react dropped the Github icon for brand
-// trademark reasons). Path matches apps/web/features/landing/components/
-// shared.tsx GitHubMark.
+// trademark reasons).
 function GitHubMark() {
   return (
     <svg

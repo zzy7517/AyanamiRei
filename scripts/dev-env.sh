@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Local development environments as named, listable, deletable objects.
 #
-#   make up                      # start this checkout's environment (api + collab + web)
-#   make up C=api,web,daemon     # pick the components
+#   make up                      # start this checkout's environment (api + collab)
+#   make up C=api,daemon         # pick the components
 #   make status                  # what is running, and is it mine
 #   make list                    # every environment on this machine
 #   make down                    # stop the processes, keep the data
@@ -40,8 +40,8 @@ DEV_PROFILES_HOME="${MULTICA_DEV_PROFILES_HOME:-$HOME/.multica/profiles}"
 DEV_EMAIL=dev@localhost
 WORKSPACE_SLUG=dev
 
-ALL_COMPONENTS="api collab web daemon desktop"
-DEFAULT_COMPONENTS="api collab web"
+ALL_COMPONENTS="api collab daemon desktop"
+DEFAULT_COMPONENTS="api collab"
 
 # An agent runs with TMPDIR=/tmp/multica-task-<id>, deleted when the run ends.
 # Anything the Go toolchain builds there goes with it, so a binary started from
@@ -873,60 +873,6 @@ Run 'make down' here first — a leftover instance answers /health with 200 and 
   die "api never became healthy. Log: $(log_file api)"
 }
 
-# Next compiles routes on demand and holds `/` until the compile finishes, which
-# after a file change can take longer than one probe. Our own listener gets the
-# same 300s a fresh launch does before it counts as hung.
-wait_for_owned_web() {
-  local deadline
-  deadline=$(($(now_epoch) + 300))
-  curl -sf --max-time 15 "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1 && return 0
-  info "web on :$FRONTEND_PORT is ours but not answering yet (likely compiling); waiting for it."
-  while [ "$(now_epoch)" -lt "$deadline" ]; do
-    listener_belongs_to_component web "$FRONTEND_PORT" || return 1
-    sleep 2
-    curl -sf --max-time 15 "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1 && return 0
-  done
-  return 1
-}
-
-start_web() {
-  local waited=0 listener
-  if listener_belongs_to_component web "$FRONTEND_PORT"; then
-    if wait_for_owned_web; then
-      listener="$(record_component_listener web "$FRONTEND_PORT" || true)"
-      if [ -n "$listener" ]; then
-        ok "web already running on :$FRONTEND_PORT (pid $listener)"
-        return 0
-      fi
-    elif listener_belongs_to_component web "$FRONTEND_PORT"; then
-      warn "web on :$FRONTEND_PORT is ours but did not answer within 300s; restarting it."
-      stop_component web
-    fi
-  fi
-  if ! port_free "$FRONTEND_PORT"; then
-    die "Port $FRONTEND_PORT is busy: $(describe_port_owner "$FRONTEND_PORT"). Run 'make down' here first."
-  fi
-
-  launch_detached web make -C "$REPO_ROOT" -s web-dev ENV_FILE="$ENV_FILE"
-  info "web launching (pid $(cat "$(pid_file web)")), log: $(log_file web)"
-
-  while [ "$waited" -lt 300 ]; do
-    if curl -sf --max-time 15 "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
-      listener="$(record_component_listener web "$FRONTEND_PORT" || true)"
-      if [ -z "$listener" ]; then
-        stop_component web
-        die "Web on :$FRONTEND_PORT is not descended from the process this environment launched."
-      fi
-      ok "web serving http://localhost:$FRONTEND_PORT (pid ${listener:-?})"
-      return 0
-    fi
-    component_pid web >/dev/null || { tail -20 "$(log_file web)" | sed 's/^/    /' >&2; die "web exited during startup. Log: $(log_file web)"; }
-    sleep 2
-    waited=$((waited + 2))
-  done
-  die "web never came up. Log: $(log_file web)"
-}
-
 collab_healthy() {
   curl -sf --max-time 3 "http://localhost:${COLLAB_PORT}/health" >/dev/null 2>&1
 }
@@ -1347,7 +1293,6 @@ stop_component() {
   case "$name" in
     api) port="$BACKEND_PORT" ;;
     collab) port="$COLLAB_PORT" ;;
-    web) port="$FRONTEND_PORT" ;;
     desktop) port="$DESKTOP_RENDERER_PORT" ;;
   esac
   recorded_listener="$(cat "$(listener_pid_file "$name")" 2>/dev/null || true)"
@@ -1478,23 +1423,6 @@ component_state() {
         printf 'busy|ws://localhost:%s|pid %s is ours but not answering /health' "$COLLAB_PORT" "$listener"
       fi
       ;;
-    web)
-      local listener
-      listener="$(port_listener_pid "$FRONTEND_PORT")"
-      if [ -z "$listener" ]; then
-        printf 'stopped|http://localhost:%s|' "$FRONTEND_PORT"
-      elif ! listener_pid_belongs_to_component web "$listener"; then
-        printf 'mismatch|http://localhost:%s|listener pid %s is not owned by this environment' \
-          "$FRONTEND_PORT" "$listener"
-      elif curl -sf --max-time 10 "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
-        printf 'running|http://localhost:%s|pid %s' "$FRONTEND_PORT" "$listener"
-      else
-        # Next dev serializes compiles, so a probe can time out behind a slow
-        # route compile even though the listener is ours.
-        printf 'busy|http://localhost:%s|pid %s is ours but not responding (likely compiling); re-run make status' \
-          "$FRONTEND_PORT" "$listener"
-      fi
-      ;;
     daemon)
       local status state pid running_commit reason
       if [ -x "$MULTICA_BIN" ]; then
@@ -1598,9 +1526,7 @@ print_handoff() {
   else
     live_docs="off (collab is not running); docs save through the API"
   fi
-  if component_selected web; then
-    entrypoint="Open        http://localhost:${FRONTEND_PORT}/${WORKSPACE_SLUG}/issues"
-  elif component_selected desktop; then
+  if component_selected desktop; then
     entrypoint="Desktop     renderer http://localhost:${DESKTOP_RENDERER_PORT} → backend :${BACKEND_PORT}"
   else
     entrypoint="API only    http://localhost:${BACKEND_PORT}"
@@ -1723,7 +1649,7 @@ cmd_up() {
     *) [ -z "$cdp_request" ] \
          || die "--cdp, --remote-debugging-port and --no-cdp need the desktop component (C=desktop)." ;;
   esac
-  # collab, web, daemon and desktop are all clients of the backend; selecting one
+  # collab, daemon and desktop are all clients of the backend; selecting one
   # without api would produce an environment that cannot serve a single request.
   case " $requested " in *" api "*) ;; *) requested="api $requested" ;; esac
   COMPONENTS="$requested"
@@ -1736,7 +1662,7 @@ cmd_up() {
   local missing=() tool needed="node go curl"
   # pnpm is only required by the components that actually build JavaScript, so
   # `up C=api` works on a checkout that has never run an install.
-  if component_selected web || component_selected desktop || component_selected collab; then needed="$needed pnpm"; fi
+  if component_selected desktop || component_selected collab; then needed="$needed pnpm"; fi
   for tool in $needed; do
     command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
   done
@@ -1866,7 +1792,7 @@ cmd_up() {
   # sees the same values the registry recorded.
   export PORT="$BACKEND_PORT" FRONTEND_PORT DATABASE_URL POSTGRES_DB="$DB_NAME"
 
-  if [ ! -d "$REPO_ROOT/node_modules" ] && { component_selected web || component_selected desktop || component_selected collab; }; then
+  if [ ! -d "$REPO_ROOT/node_modules" ] && { component_selected desktop || component_selected collab; }; then
     step "Dependencies"
     (cd "$REPO_ROOT" && pnpm install) || die "pnpm install failed."
   fi
@@ -1882,7 +1808,6 @@ cmd_up() {
   component_selected api && start_api
   component_selected collab && start_collab
   seed_dev_workspace
-  component_selected web && start_web
   component_selected daemon && start_daemon
   component_selected desktop && start_desktop
 
@@ -2176,7 +2101,7 @@ usage() {
   cat <<'EOF'
 Local development environments: named, listable, deletable.
 
-  dev-env.sh up      [--components api,collab,web,daemon,desktop] [--all]
+  dev-env.sh up      [--components api,collab,daemon,desktop] [--all]
                      [--name N] [--ephemeral] [--ttl HOURS]
                      [--cdp | --remote-debugging-port N | --no-cdp]
   dev-env.sh status  [name] [--json]
@@ -2186,10 +2111,12 @@ Local development environments: named, listable, deletable.
   dev-env.sh gc      [--dry-run]
   dev-env.sh exec    [name] -- <command> [args...]
 
-Components: api (Go backend), collab (live doc co-editing), web (Next.js),
+Components: api (Go backend), collab (live doc co-editing),
 daemon (agent daemon), desktop (Electron). Anything selected implies api.
-The default is api,collab,web. Without a running collab, docs save through
-the API instead of being edited live.
+The default is api,collab. Without a running collab, docs save through
+the API instead of being edited live. FRONTEND_PORT stays allocated: the
+API's FRONTEND_ORIGIN and the desktop appUrl are built from it, and nothing
+listens on it.
 
 Every environment has an onboarded workspace with two issues, served to every
 client as one local user with no sign-in; scripts/dev-fixtures.mjs adds chat,

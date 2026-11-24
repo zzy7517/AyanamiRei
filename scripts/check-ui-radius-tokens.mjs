@@ -6,9 +6,7 @@
  * bypassing our `--radius-*` scale. Fixed arbitrary lengths create the same
  * drift. The few 2–3px data-visualization marks below are intentional
  * micro-geometry, not product surfaces, and are allowlisted by exact file so
- * the exception cannot spread silently. The landing page's phone mockup is
- * the one other exception: its status-bar glyphs and its hardware frame copy
- * a device's geometry, which no product radius describes.
+ * the exception cannot spread silently.
  *
  * Run: node scripts/check-ui-radius-tokens.mjs
  */
@@ -19,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const repoRoot = resolve(import.meta.dirname, "..");
-const roots = ["apps/web", "apps/desktop", "apps/mobile", "packages/ui", "packages/views"];
+const roots = ["apps/desktop", "apps/mobile", "packages/ui", "packages/views"];
 const extensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".mdx"]);
 const skippedDirectories = new Set(["node_modules", ".next", ".turbo", "dist", "build", "out"]);
 const radiusNames = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl"];

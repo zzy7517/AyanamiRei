@@ -9,8 +9,7 @@ import { absoluteDocsUrl } from "@/lib/site";
  * are declared as hreflang alternates so Google treats them as the same
  * article, not as duplicates.
  *
- * Served at `/docs/sitemap.xml` (because of basePath). The root
- * `apps/web/app/robots.ts` references this URL so crawlers discover it.
+ * Served at `/docs/sitemap.xml` (because of basePath).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   // Group pages by canonical slug so multiple locales collapse to one entry.

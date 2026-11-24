@@ -12,7 +12,7 @@
  * size-adjusted fallback), set on <html> by inter.variable in app/[lang]/layout.tsx.
  * `--font-sans` is composed here in static CSS so it can be overridden per
  * `<html lang>` and stays CSP-safe (no inline <style>). Tailwind's `font-sans`
- * utility resolves `var(--font-sans)`. Mirrors apps/web/app/globals.css.
+ * utility resolves `var(--font-sans)`.
  *
  * Default (en / zh / ko): Latin → Inter, CJK → Chinese then Korean. Chinese MUST
  * stay before Korean so zh users don't get Korean Hanja glyph shapes.
@@ -40,7 +40,7 @@ html[lang|="ja"] {
 /* Traditional Chinese: the default stack is Simplified-first, which hands
    zh-Hant readers Simplified glyph shapes for every ideograph the two share a
    code point for. Promote the Traditional families only for those docs
-   (`<html lang="zh-Hant">`). Mirrors the `zh-TW` rule in apps/web/app/globals.css. */
+   (`<html lang="zh-Hant">`). */
 html[lang="zh-Hant"] {
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
     "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "PingFang SC",

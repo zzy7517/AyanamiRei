@@ -12,8 +12,9 @@ import { extendTailwindMerge } from "tailwind-merge"
  *
  * Registering the steps as font-size restores the real conflict groups: size
  * beats size, colour beats colour, and the two coexist. Keep this list in sync
- * with the `--text-*` steps in `packages/ui/styles/tokens.css` and the
- * marketing-site `--text-site-*` steps in `apps/web/app/landing.css`.
+ * with the `--text-*` steps in `packages/ui/styles/tokens.css`.
+ * `text-site-*` is registered the same way so those size steps do not
+ * collapse into colour utilities.
  */
 const twMerge = extendTailwindMerge({
   extend: {
