@@ -17,7 +17,6 @@ import (
 
 	"github.com/multica-ai/multica/server/internal/cli"
 	"github.com/multica-ai/multica/server/internal/daemon/execenv"
-	dterminal "github.com/multica-ai/multica/server/internal/daemon/terminal"
 	"github.com/multica-ai/multica/server/pkg/agent"
 )
 
@@ -96,6 +95,14 @@ const (
 // task trees live in when MULTICA_TASK_ROOT is not set.
 const DefaultTaskTreeRootName = "ayanami-tasks"
 
+// DefaultProjectRootName is the directory under the home directory that is the
+// default project folder when ProjectRootEnv is not set. A terminal opens
+// there with no project added, and the daemon creates it on first use.
+const DefaultProjectRootName = "ayanami-projects"
+
+// ProjectRootEnv overrides where the default project folder is.
+const ProjectRootEnv = "MULTICA_PROJECT_ROOT"
+
 // DefaultGCArtifactPatterns lists basename matches that the GC loop treats as
 // regenerable build artifacts. Kept conservative: only directories that are
 // always cheap to recreate (`pnpm install`, `next build`, `turbo build`). Things
@@ -117,7 +124,7 @@ type Config struct {
 	Profile                        string                // profile name (empty = default)
 	Agents                         map[string]AgentEntry // keyed by provider: claude, codebuddy, codex, copilot, opencode, codearts, deveco, openclaw, hermes, pi, cursor, kimi, reasonix, dsh, kiro, antigravity, qoder, qoderclicn, traecli, grok, qwen, qwenpaw, droid, amp, mcode, muse, devin, dim, zeroclaw, museapp (plus built-in runtime identities from agent.BuiltinRuntimes, e.g. omp)
 	WorkspacesRoot                 string                // base path for execution envs (default: ~/multica_workspaces)
-	TerminalRoot                   string                // absolute directory web terminals may open in; empty disables terminals on this daemon (MULTICA_TERMINAL_ROOT)
+	ProjectRoot                    string                // where the default project folder lives (default: ~/ayanami-projects); the daemon owns it, like TaskRoot
 	TaskRoot                       string                // where the task trees (git worktrees) task sessions run in live (default: ~/ayanami-tasks); the daemon owns it
 	HealthPort                     int                   // local HTTP port for health checks (default: 19514)
 	MaxConcurrentTasks             int                   // max tasks running in parallel (default: 20)
@@ -554,20 +561,16 @@ func LoadConfig(overrides Overrides) (Config, error) {
 		return Config{}, err
 	}
 
-	// Task trees: env > default (~/ayanami-tasks). A root inside a git
-	// checkout is refused when the worker starts, not here: LoadConfig does
-	// not run git.
-	taskRoot := strings.TrimSpace(os.Getenv("MULTICA_TASK_ROOT"))
-	if taskRoot == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return Config{}, fmt.Errorf("resolve home directory: %w (set MULTICA_TASK_ROOT to override)", err)
-		}
-		taskRoot = filepath.Join(home, DefaultTaskTreeRootName)
-	}
-	taskRoot, err = filepath.Abs(taskRoot)
+	// Task trees and the default project folder: env > a directory under the
+	// home directory. A task root inside a git checkout is refused when the
+	// worker starts, not here: LoadConfig does not run git.
+	taskRoot, err := homeDirectoryRoot("MULTICA_TASK_ROOT", DefaultTaskTreeRootName)
 	if err != nil {
-		return Config{}, fmt.Errorf("resolve absolute task root: %w", err)
+		return Config{}, fmt.Errorf("task root: %w", err)
+	}
+	projectRoot, err := homeDirectoryRoot(ProjectRootEnv, DefaultProjectRootName)
+	if err != nil {
+		return Config{}, fmt.Errorf("project root: %w", err)
 	}
 
 	// Health port: override > default
@@ -676,7 +679,7 @@ func LoadConfig(overrides Overrides) (Config, error) {
 		Profile:                         profile,
 		Agents:                          agents,
 		WorkspacesRoot:                  workspacesRoot,
-		TerminalRoot:                    strings.TrimSpace(os.Getenv(dterminal.RootEnv)),
+		ProjectRoot:                     projectRoot,
 		TaskRoot:                        taskRoot,
 		GCEnabled:                       gcEnabled,
 		GCInterval:                      gcInterval,
@@ -797,6 +800,25 @@ func ResolveWorkspacesRoot(profile, override string) (string, error) {
 	abs, err := filepath.Abs(root)
 	if err != nil {
 		return "", fmt.Errorf("resolve absolute workspaces root: %w", err)
+	}
+	return abs, nil
+}
+
+// homeDirectoryRoot returns the absolute path of a directory the daemon owns:
+// envVar when it is set, and the directory name under the home directory
+// otherwise.
+func homeDirectoryRoot(envVar, name string) (string, error) {
+	root := strings.TrimSpace(os.Getenv(envVar))
+	if root == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("resolve home directory: %w (set %s to override)", err, envVar)
+		}
+		root = filepath.Join(home, name)
+	}
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return "", fmt.Errorf("resolve absolute path: %w", err)
 	}
 	return abs, nil
 }

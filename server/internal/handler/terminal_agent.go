@@ -28,7 +28,7 @@ import (
 func (h *Handler) ResolveAgent(ctx context.Context, userID string, ref protocol.BrowserAgentRef) (*terminal.AgentLaunch, *protocol.TerminalError) {
 	// An agent terminal is a terminal in a task tree: it needs both features.
 	if !featureflags.TerminalV1Enabled(ctx, h.FeatureFlags) || !featureflags.TaskSessionsV1Enabled(ctx, h.FeatureFlags) {
-		return nil, agentRefusal(protocol.TerminalErrFlagDisabled, "agent terminals are off")
+		return nil, terminalRefusal(protocol.TerminalErrFlagDisabled, "agent terminals are off")
 	}
 	issueID, errIssue := util.ParseUUID(ref.IssueID)
 	treeID, errTree := util.ParseUUID(ref.TreeID)
@@ -70,7 +70,7 @@ func (h *Handler) ResolveAgent(ctx context.Context, userID string, ref protocol.
 
 	// Only a tree that is on disk, on a daemon, can be worked in.
 	if tree.State != projectTreeReady || tree.Path == "" || !tree.DaemonID.Valid || tree.DaemonID.String == "" {
-		return nil, agentRefusal(protocol.TerminalErrTreeNotReady, "the tree is not built on its daemon yet")
+		return nil, terminalRefusal(protocol.TerminalErrTreeNotReady, "the tree is not built on its daemon yet")
 	}
 	scopes, err := h.Queries.ListIssueProjectScopes(ctx, db.ListIssueProjectScopesParams{IssueID: issueID, WorkspaceID: workspaceID})
 	if err != nil {
@@ -99,7 +99,7 @@ func (h *Handler) ResolveAgent(ctx context.Context, userID string, ref protocol.
 		DescriptionMaxBytes: taskbrief.DefaultDescriptionMaxBytes,
 	})
 	if len(brief) > protocol.MaxTerminalBrief {
-		return nil, agentRefusal(protocol.TerminalErrInternal, "the task is too large to hand to the agent")
+		return nil, terminalRefusal(protocol.TerminalErrInternal, "the task is too large to hand to the agent")
 	}
 	return &terminal.AgentLaunch{
 		DaemonID: tree.DaemonID.String,
@@ -144,6 +144,6 @@ var (
 	errAgentInternal = &protocol.TerminalError{Code: protocol.TerminalErrInternal, Message: "the task tree could not be loaded"}
 )
 
-func agentRefusal(code, message string) *protocol.TerminalError {
+func terminalRefusal(code, message string) *protocol.TerminalError {
 	return &protocol.TerminalError{Code: code, Message: message}
 }

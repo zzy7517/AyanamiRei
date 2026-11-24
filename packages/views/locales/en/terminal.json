@@ -1,8 +1,9 @@
 {
-  "directory_label": "Directory",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "Enter an absolute path.",
-  "open": "Open",
+  "title": "Terminal",
+  "default_project": "Default project",
+  "all_projects": "All projects",
+  "add_project": "Add project",
+  "no_project_folders": "No project has a local folder yet.",
   "end_session": "End session",
   "agent_terminal": "Agent terminal",
   "restart": "Restart",
@@ -25,6 +26,7 @@
     "unsupported_platform": "The machine's system does not support terminals.",
     "tree_not_ready": "The worktree is not built yet.",
     "runtime_offline": "The machine that built the worktree is not connected.",
+    "project_not_found": "This project folder no longer exists.",
     "internal": "Something went wrong."
   }
 }

@@ -131,4 +131,38 @@ func TestLoadConfigTaskTrees(t *testing.T) {
 	if cfg.TaskRoot != filepath.Join(home, "elsewhere") {
 		t.Errorf("TaskRoot = %q, want the MULTICA_TASK_ROOT cleaned", cfg.TaskRoot)
 	}
+	if want := filepath.Join(home, "ayanami-projects"); cfg.ProjectRoot != want {
+		t.Errorf("ProjectRoot = %q, want %q: the task root does not move the default project folder", cfg.ProjectRoot, want)
+	}
+}
+
+// The default project folder follows the same rule as the task trees: the
+// environment variable, else a directory under the home directory.
+func TestLoadConfigProjectRoot(t *testing.T) {
+	stageFakeAgent(t)
+	home := t.TempDir()
+	redirectTestHome(t, home)
+	t.Setenv("SHELL", filepath.Join(t.TempDir(), "missing-shell"))
+	t.Setenv(ProjectRootEnv, "")
+	base := Overrides{ServerURL: "http://localhost:0", WorkspacesRoot: t.TempDir()}
+
+	cfg, err := LoadConfig(base)
+	if err != nil {
+		t.Fatalf("LoadConfig default: %v", err)
+	}
+	if want := filepath.Join(home, DefaultProjectRootName); cfg.ProjectRoot != want {
+		t.Errorf("ProjectRoot = %q, want %q", cfg.ProjectRoot, want)
+	}
+
+	t.Setenv(ProjectRootEnv, filepath.Join(home, "code")+string(os.PathSeparator))
+	cfg, err = LoadConfig(base)
+	if err != nil {
+		t.Fatalf("LoadConfig override: %v", err)
+	}
+	if cfg.ProjectRoot != filepath.Join(home, "code") {
+		t.Errorf("ProjectRoot = %q, want the %s cleaned", cfg.ProjectRoot, ProjectRootEnv)
+	}
+	if want := filepath.Join(home, "ayanami-tasks"); cfg.TaskRoot != want {
+		t.Errorf("TaskRoot = %q, want %q: the project root does not move the task trees", cfg.TaskRoot, want)
+	}
 }

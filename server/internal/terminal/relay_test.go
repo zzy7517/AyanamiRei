@@ -472,8 +472,12 @@ func TestInvalidControlMessages(t *testing.T) {
 			func(b *testSocket) {
 				b.send(protocol.BrowserTerminalMessage{Type: protocol.TerminalMsgAttach, TerminalID: "t1"})
 			},
+			func(b *testSocket) { b.send(projectOpenMsg(protocol.TerminalProjectDefault, "daemon-a")) },
+			func(b *testSocket) { b.send(projectOpenMsg("folder-1", "daemon-a")) },
 		} {
-			h := startHarness(t, true)
+			h := startHarness(t, true, func(o *Options) {
+				o.Project = &fakeProjectResolver{launch: &ProjectLaunch{DaemonID: "daemon-a", Cwd: "/srv/app"}}
+			})
 			d := h.daemon("user-a", "daemon-a")
 			b := h.browser("user-a")
 			openTerminal(t, b, d, "daemon-a", "t1")

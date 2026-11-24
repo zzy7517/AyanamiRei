@@ -7,14 +7,19 @@
 // Host is the set of shells opened over one such connection; a Link speaks
 // the connection's protocol and ServeWS binds it to the WebSocket.
 //
-// A shell may only start below the terminal root (MULTICA_TERMINAL_ROOT),
-// which this side enforces: the server relays a request, it does not decide.
+// A shell starts in one of three places: a directory the browser named, which
+// has to be inside this daemon's task trees or its default project folder; a
+// project's registered folder, which the server looked up and may be anywhere
+// on this machine; or the default project folder itself. Which of the three an
+// open is, this side decides: the server relays a request, it does not decide.
 package terminal
 
 import (
 	"errors"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -57,9 +62,12 @@ const (
 
 // Config configures a Host.
 type Config struct {
-	// Root is MULTICA_TERMINAL_ROOT: the only tree shells may run in. Empty
-	// refuses every open with terminal_root_unconfigured.
-	Root string
+	// TaskRoot is where this daemon's task trees live. A shell the browser
+	// names a directory for may start in one of them.
+	TaskRoot string
+	// ProjectRoot is the default project folder: a shell may start in it, and
+	// it is created when a terminal is first opened there.
+	ProjectRoot string
 	// Shell is the program a terminal runs. Empty picks DefaultShell.
 	Shell string
 	// Logger receives the host's warnings; empty means slog.Default.
@@ -83,27 +91,30 @@ type ExitEvent struct {
 
 // Host owns the shells of one terminal connection.
 type Host struct {
-	root     string
-	shell    string
-	log      *slog.Logger
-	output   OutputSink
-	exits    chan ExitEvent
-	launcher Launcher
+	taskRoot    string
+	projectRoot string
+	shell       string
+	log         *slog.Logger
+	output      OutputSink
+	exits       chan ExitEvent
+	launcher    Launcher
 
 	mu        sync.Mutex
 	terminals map[string]*Session
 }
 
-// NewHost returns a host whose shells run below cfg.Root.
+// NewHost returns a host whose shells run below cfg.TaskRoot and
+// cfg.ProjectRoot.
 func NewHost(cfg Config, output OutputSink) *Host {
 	h := &Host{
-		root:      cfg.Root,
-		shell:     cfg.Shell,
-		log:       cfg.Logger,
-		output:    output,
-		launcher:  cfg.Launcher,
-		exits:     make(chan ExitEvent, exitQueue),
-		terminals: map[string]*Session{},
+		taskRoot:    cfg.TaskRoot,
+		projectRoot: cfg.ProjectRoot,
+		shell:       cfg.Shell,
+		log:         cfg.Logger,
+		output:      output,
+		launcher:    cfg.Launcher,
+		exits:       make(chan ExitEvent, exitQueue),
+		terminals:   map[string]*Session{},
 	}
 	if h.shell == "" {
 		h.shell = DefaultShell()
@@ -144,15 +155,51 @@ type Session struct {
 	repaintMu sync.Mutex
 }
 
-// Open starts a login shell in cwd at cols by rows. The terminal is served
-// once Serve is called.
+// Open starts a login shell in cwd at cols by rows, a directory the browser
+// named: it has to be in this daemon's task trees or its default project
+// folder. The terminal is served once Serve is called.
 func (h *Host) Open(cwd string, cols, rows int) (*Session, *Refusal) {
+	dir, refusal := ResolveCwd([]string{h.taskRoot, h.projectRoot}, cwd)
+	if refusal != nil {
+		return nil, refusal
+	}
+	return h.openShell(dir, cols, rows)
+}
+
+// OpenProject starts a login shell in cwd, the local directory a project
+// registered, which the server looked up. This daemon's trees do not apply:
+// the folder is wherever the project keeps it. It still has to be a directory
+// on this machine. The terminal is served once Serve is called.
+func (h *Host) OpenProject(cwd string, cols, rows int) (*Session, *Refusal) {
+	if !filepath.IsAbs(cwd) || strings.ContainsRune(cwd, 0) {
+		return nil, refuse(protocol.TerminalErrBadRequest, "cwd must be an absolute path")
+	}
+	if info, err := os.Stat(cwd); err != nil || !info.IsDir() {
+		return nil, refuse(protocol.TerminalErrBadRequest, "not an existing directory: "+cwd)
+	}
+	return h.openShell(cwd, cols, rows)
+}
+
+// OpenDefaultProject starts a login shell in the default project folder,
+// creating the folder if no terminal was opened there before. The terminal is
+// served once Serve is called.
+func (h *Host) OpenDefaultProject(cols, rows int) (*Session, *Refusal) {
+	// Before the folder is created: a size the daemon cannot serve must leave
+	// nothing behind.
 	if !protocol.ValidTerminalSize(cols, rows) {
 		return nil, refuse(protocol.TerminalErrBadRequest, badSizeMessage)
 	}
-	dir, refusal := ResolveCwd(h.root, cwd)
-	if refusal != nil {
-		return nil, refusal
+	if err := os.MkdirAll(h.projectRoot, 0o755); err != nil {
+		h.log.Warn("terminal: the default project folder could not be created", "path", h.projectRoot, "error", err)
+		return nil, refuse(protocol.TerminalErrInternal, "the default project folder could not be created: "+err.Error())
+	}
+	return h.openShell(h.projectRoot, cols, rows)
+}
+
+// openShell runs the shell in dir, which the caller has judged.
+func (h *Host) openShell(dir string, cols, rows int) (*Session, *Refusal) {
+	if !protocol.ValidTerminalSize(cols, rows) {
+		return nil, refuse(protocol.TerminalErrBadRequest, badSizeMessage)
 	}
 	return h.start([]string{h.shell}, dir, terminalEnv(), cols, rows, "the shell")
 }

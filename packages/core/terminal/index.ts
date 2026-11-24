@@ -10,6 +10,7 @@ export type {
   TerminalTicket,
 } from "./protocol";
 export {
+  TERMINAL_DEFAULT_PROJECT,
   TERMINAL_ERROR_CODES,
   TERMINAL_SOCKET_PATH,
   TERMINAL_TICKET_DEFAULT_TTL_SECONDS,

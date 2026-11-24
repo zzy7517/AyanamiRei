@@ -1,8 +1,9 @@
 {
-  "directory_label": "Каталог",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "Введите абсолютный путь.",
-  "open": "Открыть",
+  "title": "Терминал",
+  "default_project": "Проект по умолчанию",
+  "all_projects": "Все проекты",
+  "add_project": "Добавить проект",
+  "no_project_folders": "Пока ни у одного проекта нет локальной папки.",
   "end_session": "Завершить сеанс",
   "agent_terminal": "Терминал агента",
   "restart": "Перезапустить",
@@ -25,6 +26,7 @@
     "unsupported_platform": "Система машины не поддерживает терминалы.",
     "tree_not_ready": "Рабочая копия ещё не создана.",
     "runtime_offline": "Машина, на которой создана рабочая копия, не подключена.",
+    "project_not_found": "Папка этого проекта больше не существует.",
     "internal": "Что-то пошло не так."
   }
 }

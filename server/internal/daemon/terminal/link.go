@@ -34,7 +34,8 @@ type Link struct {
 	once sync.Once
 }
 
-// NewLink returns a link whose terminals run below cfg.Root.
+// NewLink returns a link whose terminals run below cfg.TaskRoot and
+// cfg.ProjectRoot, and in the project folders the server names.
 func NewLink(cfg Config) *Link {
 	l := &Link{
 		out:  wsoutbox.New(linkQueueFrames, linkQueueReserve, linkQueueBytes),
@@ -82,10 +83,10 @@ func (l *Link) Handle(msg *protocol.DaemonTerminalMessage) {
 	}
 }
 
-// open answers an open with a shell below the root, or, when it carries an
-// agent part, with whatever the launcher makes of that. The terminal is
-// served once the answer is queued: output that came first would reach the
-// server for a terminal it does not know yet, and be dropped there.
+// open answers an open with a shell in the folder it names, or, when it
+// carries an agent part, with whatever the launcher makes of that. The
+// terminal is served once the answer is queued: output that came first would
+// reach the server for a terminal it does not know yet, and be dropped there.
 func (l *Link) open(msg *protocol.DaemonTerminalMessage) {
 	s, cleanup, refusal := l.start(msg)
 	if refusal != nil {
@@ -106,11 +107,31 @@ func (l *Link) open(msg *protocol.DaemonTerminalMessage) {
 // start returns the unserved terminal an open asks for, and what is to be
 // released once it has ended (nil for a shell).
 func (l *Link) start(msg *protocol.DaemonTerminalMessage) (*Session, func(), *Refusal) {
-	agent := msg.Agent
-	if agent == nil {
+	switch {
+	case msg.Agent != nil && msg.Project != "":
+		return nil, nil, refuse(protocol.TerminalErrBadRequest, "open takes an agent or a project, not both")
+	case msg.Agent != nil:
+		return l.startAgent(msg)
+	case msg.Project == protocol.DaemonTerminalProjectFolder:
+		if msg.Cwd == "" {
+			return nil, nil, refuse(protocol.TerminalErrBadRequest, "a project folder names no directory")
+		}
+		s, refusal := l.host.OpenProject(msg.Cwd, msg.Cols, msg.Rows)
+		return s, nil, refusal
+	case msg.Project == protocol.DaemonTerminalProjectDefault:
+		s, refusal := l.host.OpenDefaultProject(msg.Cols, msg.Rows)
+		return s, nil, refusal
+	case msg.Project != "":
+		return nil, nil, refuse(protocol.TerminalErrBadRequest, "unknown project "+msg.Project)
+	default:
 		s, refusal := l.host.Open(msg.Cwd, msg.Cols, msg.Rows)
 		return s, nil, refusal
 	}
+}
+
+// startAgent returns the unserved terminal of an open that starts an agent.
+func (l *Link) startAgent(msg *protocol.DaemonTerminalMessage) (*Session, func(), *Refusal) {
+	agent := msg.Agent
 	if l.host.launcher == nil {
 		return nil, nil, refuse(protocol.TerminalErrInternal, "this daemon cannot start agent sessions")
 	}

@@ -1,8 +1,9 @@
 {
-  "directory_label": "ディレクトリ",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "絶対パスを入力してください。",
-  "open": "開く",
+  "title": "ターミナル",
+  "default_project": "デフォルトプロジェクト",
+  "all_projects": "すべてのプロジェクト",
+  "add_project": "プロジェクトを追加",
+  "no_project_folders": "ローカルフォルダを持つプロジェクトはまだありません。",
   "end_session": "セッションを終了",
   "agent_terminal": "エージェントターミナル",
   "restart": "再起動",
@@ -25,6 +26,7 @@
     "unsupported_platform": "このマシンの OS ではターミナルを利用できません。",
     "tree_not_ready": "worktree はまだ構築されていません。",
     "runtime_offline": "worktree を構築したマシンが接続されていません。",
+    "project_not_found": "このプロジェクトのフォルダは存在しなくなりました。",
     "internal": "問題が発生しました。"
   }
 }

@@ -59,7 +59,9 @@ func TestLinkRunsWhatTheLauncherReturns(t *testing.T) {
 	}
 	f := newFakeLauncher([]string{script}, []string{"AGENT_TOKEN=from-env", "PATH=/usr/bin:/bin"})
 	root := t.TempDir()
-	l := NewLink(Config{Root: root, Shell: "/bin/sh", Logger: quietLogger(), Launcher: f})
+	cfg := newTestConfig(root, t.TempDir(), "/bin/sh")
+	cfg.Launcher = f
+	l := NewLink(cfg)
 	t.Cleanup(l.Close)
 	tree := t.TempDir() // next to the root, not inside it
 
@@ -108,7 +110,9 @@ func TestLinkRefusesAnAgentOpenItCannotRun(t *testing.T) {
 	t.Run("the launcher refuses", func(t *testing.T) {
 		f := newFakeLauncher(nil, nil)
 		f.refusal = refuse(protocol.TerminalErrInternal, "no hook receiver")
-		l := NewLink(Config{Root: t.TempDir(), Shell: "/bin/sh", Logger: quietLogger(), Launcher: f})
+		cfg := newTestConfig(t.TempDir(), t.TempDir(), "/bin/sh")
+		cfg.Launcher = f
+		l := NewLink(cfg)
 		t.Cleanup(l.Close)
 		l.Handle(agentOpen("r2", tree))
 		if answer := nextControl(t, l); answer.Code != protocol.TerminalErrInternal || answer.Message != "no hook receiver" {
@@ -119,7 +123,9 @@ func TestLinkRefusesAnAgentOpenItCannotRun(t *testing.T) {
 	t.Run("the tree is not on this machine", func(t *testing.T) {
 		// Never started, so what was prepared for it is released at once.
 		f := newFakeLauncher([]string{"/bin/sh"}, nil)
-		l := NewLink(Config{Root: t.TempDir(), Shell: "/bin/sh", Logger: quietLogger(), Launcher: f})
+		cfg := newTestConfig(t.TempDir(), t.TempDir(), "/bin/sh")
+		cfg.Launcher = f
+		l := NewLink(cfg)
 		t.Cleanup(l.Close)
 		l.Handle(agentOpen("r3", filepath.Join(tree, "gone")))
 		if answer := nextControl(t, l); answer.Code != protocol.TerminalErrPathNotAllowed {
@@ -130,7 +136,9 @@ func TestLinkRefusesAnAgentOpenItCannotRun(t *testing.T) {
 
 	t.Run("the open is malformed", func(t *testing.T) {
 		f := newFakeLauncher([]string{"/bin/sh"}, nil)
-		l := NewLink(Config{Root: t.TempDir(), Shell: "/bin/sh", Logger: quietLogger(), Launcher: f})
+		cfg := newTestConfig(t.TempDir(), t.TempDir(), "/bin/sh")
+		cfg.Launcher = f
+		l := NewLink(cfg)
 		t.Cleanup(l.Close)
 		for _, mutate := range []func(*protocol.DaemonTerminalMessage){
 			func(m *protocol.DaemonTerminalMessage) {

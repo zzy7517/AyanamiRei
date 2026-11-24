@@ -1,8 +1,9 @@
 {
-  "directory_label": "目錄",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "請輸入絕對路徑。",
-  "open": "開啟",
+  "title": "終端",
+  "default_project": "預設專案",
+  "all_projects": "所有專案",
+  "add_project": "新增專案",
+  "no_project_folders": "還沒有帶本地資料夾的專案。",
   "end_session": "結束工作階段",
   "agent_terminal": "AI 代理終端",
   "restart": "重新啟動",
@@ -25,6 +26,7 @@
     "unsupported_platform": "該機器的系統不支援終端。",
     "tree_not_ready": "worktree 尚未建立完成。",
     "runtime_offline": "建立該 worktree 的機器未連線。",
+    "project_not_found": "這個專案的資料夾已經不存在了。",
     "internal": "發生未知錯誤。"
   }
 }

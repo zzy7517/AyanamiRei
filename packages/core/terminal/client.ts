@@ -70,7 +70,11 @@ export interface TerminalSessionOptions {
 }
 
 type Intent =
-  | { kind: "open"; target: { cwd: string } | { agent: TerminalAgentTarget }; daemonId?: string }
+  | {
+      kind: "open";
+      target: { cwd: string } | { agent: TerminalAgentTarget } | { project: string };
+      daemonId?: string;
+    }
   | { kind: "attach"; terminalId: string };
 
 /** The size asked for until the viewport reports its own. */
@@ -185,6 +189,19 @@ export class TerminalSession {
    */
   openAgent(agent: TerminalAgentTarget, size?: Partial<TerminalSize>): void {
     this.start({ kind: "open", target: { agent } }, size);
+  }
+
+  /**
+   * Start a shell in a project's folder: `project` is `TERMINAL_DEFAULT_PROJECT`
+   * or the id of the local folder a project registered. The shell runs on the
+   * machine the folder is on; `daemonId` is only for the default project, when
+   * several machines could run it.
+   */
+  openProject(project: string, size?: Partial<TerminalSize>, daemonId?: string): void {
+    this.start(
+      { kind: "open", target: { project }, ...(daemonId ? { daemonId } : {}) },
+      size,
+    );
   }
 
   /** Stream the output of a running terminal. What is already on screen is not replayed. */
@@ -303,10 +320,14 @@ export class TerminalSession {
     if (this.intent.kind === "open") {
       const { target, daemonId } = this.intent;
       const size = { cols: this.size.cols, rows: this.size.rows };
-      // An open names a directory or a task's tree, never both.
+      // An open names a directory, a task's tree or a project, never two of them.
       if ("cwd" in target) {
         socket.send(
           encodeClientMessage({ type: "open", cwd: target.cwd, ...size, ...(daemonId ? { daemonId } : {}) }),
+        );
+      } else if ("project" in target) {
+        socket.send(
+          encodeClientMessage({ type: "open", project: target.project, ...size, ...(daemonId ? { daemonId } : {}) }),
         );
       } else {
         socket.send(encodeClientMessage({ type: "open", agent: target.agent, ...size }));
@@ -508,9 +529,13 @@ export function useTerminalSessionState(session: TerminalSession): TerminalSessi
 
 export type TerminalSessionIntent =
   | {
-      /** Directory the shell starts in. Another directory is another session. */
+      /**
+       * A directory of a task the shell starts in. Another directory is
+       * another session.
+       */
       cwd: string;
       agent?: undefined;
+      project?: undefined;
       /**
        * Rejoin the terminal with this id when the session for `cwd` starts,
        * instead of opening a shell. It is read at that moment only: the id
@@ -524,23 +549,40 @@ export type TerminalSessionIntent =
       /** The task tree the agent's command line runs in. Another task or tree is another session. */
       agent: TerminalAgentTarget;
       cwd?: undefined;
+      project?: undefined;
       /** Rejoin the terminal with this id, as a shell's session does. */
       terminalId?: string;
       // The server runs the agent where the tree was built; no machine is chosen here.
       daemonId?: undefined;
+    }
+  | {
+      /**
+       * The project whose folder the shell starts in: `TERMINAL_DEFAULT_PROJECT`
+       * or the id of the local folder a project registered. Another project is
+       * another session.
+       */
+      project: string;
+      cwd?: undefined;
+      agent?: undefined;
+      /** Rejoin the terminal with this id, as a shell's session does. */
+      terminalId?: string;
+      // Only the default project can run on more than one machine: a project's
+      // folder is on the machine it was registered on.
+      daemonId?: string;
     };
 
 /**
  * A session tied to the component's lifetime: it opens or attaches on mount
  * and detaches, leaving the process running, on unmount or when the intent
  * changes. A session that has ended is not started again until `cwd`,
- * `agent` or `daemonId` changes; call `open` on it to start another terminal.
+ * `agent`, `project` or `daemonId` changes; call `open` on it to start another
+ * terminal.
  */
 export function useTerminalSession(
   intent: TerminalSessionIntent,
   options?: TerminalSessionOptions,
 ): TerminalSession {
-  const { cwd, terminalId, daemonId } = intent;
+  const { cwd, terminalId, daemonId, project } = intent;
   // Primitives, so that an intent object rebuilt on every render of its caller
   // is not read as another session.
   const agentIssueId = intent.agent?.issue_id;
@@ -548,11 +590,11 @@ export function useTerminalSession(
   const { createTicket, socketUrl, logger } = options ?? {};
   const session = useMemo(
     () => new TerminalSession({ createTicket, socketUrl, logger }),
-    // `cwd`, `daemonId` and the tree are not read above: they key the session,
-    // so another directory, machine or tree is another session and this one
-    // is disposed of.
+    // `cwd`, `daemonId`, `project` and the tree are not read above: they key
+    // the session, so another directory, machine, project or tree is another
+    // session and this one is disposed of.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [createTicket, socketUrl, logger, cwd, daemonId, agentIssueId, agentTreeId],
+    [createTicket, socketUrl, logger, cwd, daemonId, project, agentIssueId, agentTreeId],
   );
   // Through a ref, because the id is an input to the start of a session and
   // not a reason to start one over (see TerminalSessionIntent).
@@ -564,8 +606,9 @@ export function useTerminalSession(
     if (target.current) session.attach(target.current);
     else if (agentIssueId !== undefined && agentTreeId !== undefined) {
       session.openAgent({ issue_id: agentIssueId, tree_id: agentTreeId });
-    } else session.open(cwd ?? "", undefined, daemonId);
+    } else if (project !== undefined) session.openProject(project, undefined, daemonId);
+    else session.open(cwd ?? "", undefined, daemonId);
     return () => session.dispose();
-  }, [session, cwd, daemonId, agentIssueId, agentTreeId]);
+  }, [session, cwd, daemonId, project, agentIssueId, agentTreeId]);
   return session;
 }

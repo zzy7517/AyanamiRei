@@ -162,7 +162,9 @@ func (d *Daemon) runTerminalConnection(ctx context.Context) error {
 		return err
 	}
 	defer conn.Close()
-	dterminal.ServeWS(ctx, conn, dterminal.Config{Root: d.cfg.TerminalRoot, Logger: d.logger, Launcher: d.agentLauncher()})
+	dterminal.ServeWS(ctx, conn, dterminal.Config{
+		TaskRoot: d.cfg.TaskRoot, ProjectRoot: d.cfg.ProjectRoot, Logger: d.logger, Launcher: d.agentLauncher(),
+	})
 	if !d.terminalServer.Load() {
 		return errTerminalStopped
 	}

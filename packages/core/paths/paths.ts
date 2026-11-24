@@ -98,10 +98,17 @@ function workspaceScoped(slug: string) {
     settings: () => `${ws}/settings`,
     attachmentPreview: (id: string) => `${ws}/attachments/${encode(id)}/preview`,
     terminal: () => `${ws}/terminal`,
-    // The terminal page for a directory. `terminalId` names one that is
-    // already running, which the page rejoins instead of opening a shell.
+    // The terminal page for a shell in one of a task's directories.
+    // `terminalId` names a terminal that is already running, which the page
+    // rejoins instead of opening a shell.
     terminalIn: (cwd: string, terminalId?: string) =>
       `${ws}/terminal?cwd=${encode(cwd)}${terminalId ? `&t=${encode(terminalId)}` : ""}`,
+    // The terminal page for a project. `project` is the default project
+    // (`TERMINAL_DEFAULT_PROJECT`) or the id of the local folder a project
+    // registered. `terminalId` names a terminal that is already running, as
+    // for a task's directory.
+    terminalProject: (project: string, terminalId?: string) =>
+      `${ws}/terminal?project=${encode(project)}${terminalId ? `&t=${encode(terminalId)}` : ""}`,
     // The terminal page for an agent session in a tree of a task, both by
     // UUID. `terminalId` names a session that is already running, which the
     // page rejoins instead of starting the agent again.

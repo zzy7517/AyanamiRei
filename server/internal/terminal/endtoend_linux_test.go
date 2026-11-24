@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -62,15 +63,16 @@ func processGone(t *testing.T, pid int) {
 }
 
 // realDaemon connects a daemon and runs the daemon's real terminal side on
-// the connection: the PTY host behind the relay, with real shells.
-func (h *harness) realDaemon(t *testing.T, userID, daemonID, root string) (*testSocket, <-chan struct{}) {
+// the connection: the PTY host behind the relay, with real shells. root is
+// where it keeps its task trees and projectRoot its default project folder.
+func (h *harness) realDaemon(t *testing.T, userID, daemonID, root, projectRoot string) (*testSocket, <-chan struct{}) {
 	h.t.Helper()
 	d := h.daemon(userID, daemonID)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
 		dterminal.ServeWS(context.Background(), d.conn, dterminal.Config{
-			Root: root, Shell: "/bin/sh", Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+			TaskRoot: root, ProjectRoot: projectRoot, Shell: "/bin/sh", Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		})
 	}()
 	t.Cleanup(func() {
@@ -102,10 +104,38 @@ func openShell(t *testing.T, b *testSocket, daemonID, root string) (string, int)
 	return terminalID, pid
 }
 
+func openProjectShell(t *testing.T, b *testSocket, msg protocol.BrowserTerminalMessage) (string, int) {
+	t.Helper()
+	b.send(msg)
+	ready := b.nextControl()
+	wantControl(t, ready, map[string]any{"type": protocol.TerminalMsgReady, "cols": 120, "rows": 40})
+	terminalID, _ := ready["terminalId"].(string)
+	pid := int(ready["pid"].(float64))
+	if terminalID == "" || pid <= 0 {
+		t.Fatalf("ready = %v", ready)
+	}
+	if _, err := os.Stat("/proc/" + strconv.Itoa(pid)); err != nil {
+		t.Fatalf("ready named process %d, which is not running here: %v", pid, err)
+	}
+	return terminalID, pid
+}
+
+// shellIsIn has the shell report where it is, and fails unless that is dir.
+// The marker cannot occur in the echo of the typed line.
+func shellIsIn(t *testing.T, b *testSocket, dir string) {
+	t.Helper()
+	resolved, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b.sendBinary([]byte("printf 'in-'; pwd\n"))
+	b.untilOutput("in-" + resolved + "\r\n")
+}
+
 func TestBrowserRunsAShellOnTheDaemon(t *testing.T) {
 	h := startHarness(t, true)
 	root := t.TempDir()
-	h.realDaemon(t, "user-a", "daemon-a", root)
+	h.realDaemon(t, "user-a", "daemon-a", root, t.TempDir())
 
 	b := h.browser("user-a")
 	terminalID, pid := openShell(t, b, "daemon-a", root)
@@ -148,7 +178,7 @@ func TestBrowserRunsAShellOnTheDaemon(t *testing.T) {
 func TestDaemonDisconnectEndsTheShellsItRuns(t *testing.T) {
 	h := startHarness(t, true)
 	root := t.TempDir()
-	d, _ := h.realDaemon(t, "user-a", "daemon-a", root)
+	d, _ := h.realDaemon(t, "user-a", "daemon-a", root, t.TempDir())
 
 	b := h.browser("user-a")
 	_, pid := openShell(t, b, "daemon-a", root)
@@ -159,6 +189,51 @@ func TestDaemonDisconnectEndsTheShellsItRuns(t *testing.T) {
 	// are gone too, and the socket is told rather than left waiting.
 	d.conn.Close()
 	wantControl(t, b.nextControl(), map[string]any{"type": protocol.TerminalMsgError, "code": protocol.TerminalErrDaemonUnavailable})
+	b.wantClosed()
+	processGone(t, pid)
+}
+
+// The default project's folder is the daemon's own: the browser names the
+// project, and the shell starts where the daemon keeps that folder, which is
+// made when the first terminal opens there.
+func TestBrowserRunsAShellInTheDefaultProject(t *testing.T) {
+	h := startHarness(t, true)
+	projects := filepath.Join(t.TempDir(), "ayanami-projects")
+	h.realDaemon(t, "user-a", "daemon-a", t.TempDir(), projects)
+
+	b := h.browser("user-a")
+	terminalID, pid := openProjectShell(t, b, protocol.BrowserTerminalMessage{
+		Type: protocol.TerminalMsgOpen, Project: protocol.TerminalProjectDefault, Cols: 120, Rows: 40,
+	})
+	shellIsIn(t, b, projects)
+
+	b.send(protocol.BrowserTerminalMessage{Type: protocol.TerminalMsgClose, TerminalID: terminalID})
+	wantControl(t, b.nextControl(), map[string]any{"type": protocol.TerminalMsgExit, "terminalId": terminalID})
+	b.wantClosed()
+	processGone(t, pid)
+}
+
+// A project's folder is wherever the project keeps it. Asked for by the
+// browser as a directory, the daemon refuses it; named as the project's, the
+// daemon opens it, because the server looked it up.
+func TestBrowserRunsAShellInAProjectsFolder(t *testing.T) {
+	folder := t.TempDir()
+	h := startHarness(t, true, func(o *Options) {
+		o.Project = &fakeProjectResolver{launch: &ProjectLaunch{DaemonID: "daemon-a", Cwd: folder}}
+	})
+	h.realDaemon(t, "user-a", "daemon-a", t.TempDir(), t.TempDir())
+
+	typed := h.browser("user-a")
+	typed.send(protocol.BrowserTerminalMessage{Type: protocol.TerminalMsgOpen, Cwd: folder, Cols: 120, Rows: 40, DaemonID: "daemon-a"})
+	wantControl(t, typed.nextControl(), map[string]any{"type": protocol.TerminalMsgError, "code": protocol.TerminalErrPathNotAllowed})
+	typed.wantClosed()
+
+	b := h.browser("user-a")
+	terminalID, pid := openProjectShell(t, b, projectOpenMsg("folder-1", "daemon-a"))
+	shellIsIn(t, b, folder)
+
+	b.send(protocol.BrowserTerminalMessage{Type: protocol.TerminalMsgClose, TerminalID: terminalID})
+	wantControl(t, b.nextControl(), map[string]any{"type": protocol.TerminalMsgExit, "terminalId": terminalID})
 	b.wantClosed()
 	processGone(t, pid)
 }

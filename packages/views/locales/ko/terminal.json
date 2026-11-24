@@ -1,8 +1,9 @@
 {
-  "directory_label": "디렉터리",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "절대 경로를 입력하세요.",
-  "open": "열기",
+  "title": "터미널",
+  "default_project": "기본 프로젝트",
+  "all_projects": "모든 프로젝트",
+  "add_project": "프로젝트 추가",
+  "no_project_folders": "로컬 폴더가 있는 프로젝트가 아직 없습니다.",
   "end_session": "세션 종료",
   "agent_terminal": "에이전트 터미널",
   "restart": "재시작",
@@ -25,6 +26,7 @@
     "unsupported_platform": "머신의 운영체제가 터미널을 지원하지 않습니다.",
     "tree_not_ready": "worktree가 아직 빌드되지 않았습니다.",
     "runtime_offline": "worktree를 빌드한 머신이 연결되어 있지 않습니다.",
+    "project_not_found": "이 프로젝트의 폴더는 더 이상 존재하지 않습니다.",
     "internal": "문제가 발생했습니다."
   }
 }

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +20,7 @@ import (
 
 func newTestLink(t *testing.T, root string) *Link {
 	t.Helper()
-	l := NewLink(Config{Root: root, Shell: "/bin/sh", Logger: quietLogger()})
+	l := NewLink(newTestConfig(root, t.TempDir(), "/bin/sh"))
 	t.Cleanup(l.Close)
 	return l
 }
@@ -128,7 +130,7 @@ func TestLinkAnswersTheServer(t *testing.T) {
 		msg  protocol.DaemonTerminalMessage
 		code string
 	}{
-		{"an open outside the root", protocol.DaemonTerminalMessage{
+		{"an open outside the daemon's folders", protocol.DaemonTerminalMessage{
 			Type: protocol.TerminalMsgOpen, RequestID: "r3", Cwd: t.TempDir(), Cols: 80, Rows: 24,
 		}, protocol.TerminalErrPathNotAllowed},
 		{"an attach to a terminal that does not exist", protocol.DaemonTerminalMessage{
@@ -155,13 +157,91 @@ func TestLinkAnswersTheServer(t *testing.T) {
 	waitForGone(t, ready.PID)
 }
 
-func TestLinkRefusesEveryOpenWithoutARoot(t *testing.T) {
-	l := newTestLink(t, "")
+// A daemon with neither a task tree root nor a default project folder opens
+// nothing the browser names a directory for.
+func TestLinkRefusesEveryOpenForAFolderTheDaemonDoesNotOwn(t *testing.T) {
+	l := NewLink(newTestConfig("", "", "/bin/sh"))
+	t.Cleanup(l.Close)
 	cwd := t.TempDir()
 	l.Handle(&protocol.DaemonTerminalMessage{Type: protocol.TerminalMsgOpen, RequestID: "r1", Cwd: cwd, Cols: 80, Rows: 24})
 	answer := nextControl(t, l)
-	if answer.Type != protocol.TerminalMsgError || answer.RequestID != "r1" || answer.Code != protocol.TerminalErrTerminalRootUnconfigured {
+	if answer.Type != protocol.TerminalMsgError || answer.RequestID != "r1" || answer.Code != protocol.TerminalErrPathNotAllowed {
 		t.Fatalf("answered with %+v", answer)
+	}
+}
+
+// A project's folder is the server's to name: the link does not judge it
+// against the daemon's own folders, as it does a directory the browser named.
+func TestLinkOpensTheProjectFoldersTheServerNames(t *testing.T) {
+	tasks := t.TempDir()
+	projects := filepath.Join(t.TempDir(), "ayanami-projects")
+	l := NewLink(newTestConfig(tasks, projects, "/bin/sh"))
+	t.Cleanup(l.Close)
+	folder := t.TempDir()
+
+	l.Handle(&protocol.DaemonTerminalMessage{
+		Type: protocol.TerminalMsgOpen, RequestID: "r1", Cwd: folder, Cols: 80, Rows: 24,
+		Project: protocol.DaemonTerminalProjectFolder,
+	})
+	answer := nextControl(t, l)
+	if answer.Type != protocol.TerminalMsgReady || answer.RequestID != "r1" || answer.PID <= 0 {
+		t.Fatalf("open in a project's folder answered with %+v", answer)
+	}
+	l.HandleBinary(protocol.EncodeTerminalBinary(answer.TerminalID, []byte("printf 'in-'; pwd\n")))
+	outputUntil(t, l, answer.TerminalID, "in-"+folder)
+
+	// Opening a project's folder does not make the default project folder.
+	if _, err := os.Stat(projects); !os.IsNotExist(err) {
+		t.Fatalf("a project's folder was opened and the default project folder exists anyway (Stat error %v)", err)
+	}
+
+	// The first shell is ended, so that nothing it still writes is read as the
+	// second's.
+	l.Handle(&protocol.DaemonTerminalMessage{Type: protocol.TerminalMsgClose, TerminalID: answer.TerminalID})
+	if exited := nextControl(t, l); exited.Type != protocol.TerminalMsgExit || exited.TerminalID != answer.TerminalID {
+		t.Fatalf("after the close the link sent %+v", exited)
+	}
+
+	l.Handle(&protocol.DaemonTerminalMessage{
+		Type: protocol.TerminalMsgOpen, RequestID: "r2", Cols: 80, Rows: 24,
+		Project: protocol.DaemonTerminalProjectDefault,
+	})
+	answer = nextControl(t, l)
+	if answer.Type != protocol.TerminalMsgReady || answer.RequestID != "r2" || answer.PID <= 0 {
+		t.Fatalf("open in the default project folder answered with %+v", answer)
+	}
+	l.HandleBinary(protocol.EncodeTerminalBinary(answer.TerminalID, []byte("printf 'in-'; pwd\n")))
+	outputUntil(t, l, answer.TerminalID, "in-"+projects)
+}
+
+func TestLinkRefusesAProjectOpenItCannotPlace(t *testing.T) {
+	l := newTestLink(t, t.TempDir())
+	for _, tc := range []struct {
+		name string
+		msg  protocol.DaemonTerminalMessage
+		code string
+	}{
+		{"a project folder without a directory", protocol.DaemonTerminalMessage{
+			Type: protocol.TerminalMsgOpen, RequestID: "r1", Cols: 80, Rows: 24, Project: protocol.DaemonTerminalProjectFolder,
+		}, protocol.TerminalErrBadRequest},
+		{"a project folder that is not on this machine", protocol.DaemonTerminalMessage{
+			Type: protocol.TerminalMsgOpen, RequestID: "r2", Cols: 80, Rows: 24,
+			Cwd: filepath.Join(t.TempDir(), "moved-away"), Project: protocol.DaemonTerminalProjectFolder,
+		}, protocol.TerminalErrBadRequest},
+		{"a default project folder in a size the daemon cannot serve", protocol.DaemonTerminalMessage{
+			Type: protocol.TerminalMsgOpen, RequestID: "r3", Cols: 0, Rows: 24, Project: protocol.DaemonTerminalProjectDefault,
+		}, protocol.TerminalErrBadRequest},
+		{"a project the daemon does not know", protocol.DaemonTerminalMessage{
+			Type: protocol.TerminalMsgOpen, RequestID: "r4", Cols: 80, Rows: 24, Project: "elsewhere",
+		}, protocol.TerminalErrBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			l.Handle(&tc.msg)
+			answer := nextControl(t, l)
+			if answer.Type != protocol.TerminalMsgError || answer.RequestID != tc.msg.RequestID || answer.Code != tc.code {
+				t.Fatalf("answered with %+v, want %s under %s", answer, tc.code, tc.msg.RequestID)
+			}
+		})
 	}
 }
 
@@ -221,7 +301,7 @@ func startLinkServer(t *testing.T, root string) (*websocket.Conn, func()) {
 		if err != nil {
 			return
 		}
-		ServeWS(ctx, conn, Config{Root: root, Shell: "/bin/sh", Logger: quietLogger()})
+		ServeWS(ctx, conn, newTestConfig(root, t.TempDir(), "/bin/sh"))
 	}))
 	t.Cleanup(srv.Close)
 	conn, resp, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(srv.URL, "http"), nil)

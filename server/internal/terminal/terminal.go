@@ -96,6 +96,10 @@ type Options struct {
 	// Agent resolves an open that names a task tree instead of a directory
 	// (see AgentResolver). Nil refuses every such open.
 	Agent AgentResolver
+	// Project resolves an open that names one of a project's registered
+	// folders (see ProjectResolver). Nil refuses every such open. The default
+	// project needs none: its folder is the daemon's to place.
+	Project ProjectResolver
 }
 
 // Terminal relays browser sockets to daemons. The zero value is not usable;
@@ -106,6 +110,7 @@ type Terminal struct {
 	ticketTTL   time.Duration
 	openTimeout time.Duration
 	agent       AgentResolver
+	project     ProjectResolver
 	newID       func() string
 
 	tickets *ticketStore
@@ -130,6 +135,7 @@ func New(opts Options) *Terminal {
 		ticketTTL:   opts.TicketTTL,
 		openTimeout: opts.OpenTimeout,
 		agent:       opts.Agent,
+		project:     opts.Project,
 		newID:       newID,
 		tickets:     newTicketStore(time.Now),
 		daemons:     map[daemonKey]*daemonConn{},
@@ -277,8 +283,10 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
-// validCwd is the server's lexical check of an open request's directory. The
-// daemon decides whether the directory is inside its terminal root.
+// validCwd is the server's lexical check of the directory an open names. The
+// daemon decides whether a shell may start there: in one of its task trees or
+// its default project folder. A project's registered folder is not held to
+// this, since it is written for the daemon's machine (see ProjectLaunch).
 func validCwd(cwd string) bool {
 	return filepath.IsAbs(cwd) && filepath.Clean(cwd) == cwd && !strings.ContainsRune(cwd, 0)
 }

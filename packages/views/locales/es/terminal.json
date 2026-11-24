@@ -1,8 +1,9 @@
 {
-  "directory_label": "Directorio",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "Introduce una ruta absoluta.",
-  "open": "Abrir",
+  "title": "Terminal",
+  "default_project": "Proyecto por defecto",
+  "all_projects": "Todos los proyectos",
+  "add_project": "Añadir proyecto",
+  "no_project_folders": "Ningún proyecto tiene todavía una carpeta local.",
   "end_session": "Finalizar sesión",
   "agent_terminal": "Terminal del agente",
   "restart": "Reiniciar",
@@ -25,6 +26,7 @@
     "unsupported_platform": "El sistema de la máquina no admite terminales.",
     "tree_not_ready": "El worktree aún no se ha construido.",
     "runtime_offline": "La máquina que construyó el worktree no está conectada.",
+    "project_not_found": "La carpeta de este proyecto ya no existe.",
     "internal": "Algo ha ido mal."
   }
 }

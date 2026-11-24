@@ -98,9 +98,12 @@ func (b *browserConn) handleControl(data []byte) bool {
 		return false
 	}
 
-	if msg.Type == protocol.TerminalMsgOpen && msg.Agent != nil {
+	switch {
+	case msg.Type == protocol.TerminalMsgOpen && msg.Agent != nil:
 		// Resolving the tree reads the database, which is not done under the lock.
 		return b.openAgent(&msg)
+	case msg.Type == protocol.TerminalMsgOpen && msg.Project != "":
+		return b.openProject(&msg)
 	}
 
 	t.mu.Lock()
@@ -130,9 +133,10 @@ func (b *browserConn) fail(code, msg string) {
 	b.relay.failLocked(b, code, msg)
 }
 
-// openLocked starts a shell in a directory on one of the user's daemons and
-// binds the socket to it once the daemon answers ready. An open that names a
-// task tree instead is openAgent.
+// openLocked starts a shell in a directory the browser named, on one of the
+// user's daemons, and binds the socket to it once the daemon answers ready.
+// An open that names a task tree instead is openAgent; one that names a
+// project is openProject.
 func (t *Terminal) openLocked(b *browserConn, msg *protocol.BrowserTerminalMessage) {
 	if b.terminal != nil {
 		t.failLocked(b, protocol.TerminalErrBadRequest, "socket is already bound to a terminal")
@@ -146,17 +150,25 @@ func (t *Terminal) openLocked(b *browserConn, msg *protocol.BrowserTerminalMessa
 		t.failLocked(b, protocol.TerminalErrBadRequest, badSizeMessage)
 		return
 	}
-	d := t.pickDaemonLocked(b.userID, msg.DaemonID)
-	if d == nil {
-		t.failLocked(b, protocol.TerminalErrDaemonUnavailable, "no connected daemon of yours hosts terminals")
-		return
-	}
-	t.requestLocked(d, &pendingRequest{browser: b, kind: pendingOpen}, protocol.DaemonTerminalMessage{
+	t.requestOpenLocked(b, msg.DaemonID, protocol.DaemonTerminalMessage{
 		Type: protocol.TerminalMsgOpen,
 		Cwd:  msg.Cwd,
 		Cols: msg.Cols,
 		Rows: msg.Rows,
 	})
+}
+
+// requestOpenLocked asks a daemon to start what open describes for the socket:
+// the daemon named in the open, else the user's only one. The socket is bound
+// to the terminal once the daemon answers ready. The caller holds t.mu, and has
+// already checked that the socket is free and the size valid.
+func (t *Terminal) requestOpenLocked(b *browserConn, daemonID string, open protocol.DaemonTerminalMessage) {
+	d := t.pickDaemonLocked(b.userID, daemonID)
+	if d == nil {
+		t.failLocked(b, protocol.TerminalErrDaemonUnavailable, "no connected daemon of yours hosts terminals")
+		return
+	}
+	t.requestLocked(d, &pendingRequest{browser: b, kind: pendingOpen}, open)
 }
 
 // attachLocked binds the socket to a terminal that already exists.

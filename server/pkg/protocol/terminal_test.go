@@ -208,7 +208,7 @@ func TestKnownTerminalError(t *testing.T) {
 	for _, code := range []string{TerminalErrFlagDisabled, TerminalErrBadRequest, TerminalErrTerminalRootUnconfigured,
 		TerminalErrPathNotAllowed, TerminalErrDaemonUnavailable, TerminalErrNotFound,
 		TerminalErrUnsupportedPlatform, TerminalErrInternal,
-		TerminalErrTreeNotReady, TerminalErrRuntimeOffline} {
+		TerminalErrTreeNotReady, TerminalErrRuntimeOffline, TerminalErrProjectNotFound} {
 		if !KnownTerminalError(code) {
 			t.Fatalf("%q should be a known code", code)
 		}
@@ -255,5 +255,51 @@ func TestTerminalAgentOpenWireShape(t *testing.T) {
 	}
 	if back.Agent == nil || back.Agent.StartTreeID != "t-1" || len(back.Agent.OtherDirs) != 1 || back.Agent.Brief != "MUL-1" {
 		t.Fatalf("decoded %+v", back)
+	}
+}
+
+func TestTerminalProjectOpenWireShape(t *testing.T) {
+	// What the browser sends, as the relay decodes it: the default project by
+	// name, a registered folder by the id of the resource that holds it.
+	for in, want := range map[string]string{
+		`{"type":"open","project":"default","cols":120,"rows":40}`:         TerminalProjectDefault,
+		`{"type":"open","project":"6d1f0e3a-0000-4000-8000-000000000001"}`: "6d1f0e3a-0000-4000-8000-000000000001",
+	} {
+		var open BrowserTerminalMessage
+		if err := json.Unmarshal([]byte(in), &open); err != nil || open.Project != want || open.Cwd != "" || open.Agent != nil {
+			t.Fatalf("decode %s: %v, %+v", in, err, open)
+		}
+	}
+	// An open for a directory or an agent mentions no project key.
+	for _, plain := range []BrowserTerminalMessage{
+		{Type: TerminalMsgOpen, Cwd: "/srv", Cols: 120, Rows: 40},
+		{Type: TerminalMsgOpen, Cols: 120, Rows: 40, Agent: &BrowserAgentRef{IssueID: "i-1", TreeID: "t-1"}},
+	} {
+		got, err := json.Marshal(plain)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(got), "project") {
+			t.Fatalf("%+v mentions project: %s", plain, got)
+		}
+	}
+
+	// What the server sends the daemon, pinned like the other daemon frames: a
+	// registered folder with its path, the default project without one.
+	for open, want := range map[DaemonTerminalMessage]string{
+		{Type: TerminalMsgOpen, RequestID: "r1", Cwd: "/home/me/code/app", Cols: 120, Rows: 40, Project: DaemonTerminalProjectFolder}: `{"type":"open","request_id":"r1","cwd":"/home/me/code/app","cols":120,"rows":40,"project":"folder"}`,
+		{Type: TerminalMsgOpen, RequestID: "r2", Cols: 120, Rows: 40, Project: DaemonTerminalProjectDefault}:                          `{"type":"open","request_id":"r2","cols":120,"rows":40,"project":"default"}`,
+	} {
+		got, err := json.Marshal(open)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != want {
+			t.Fatalf("project open = %s, want %s", got, want)
+		}
+		var back DaemonTerminalMessage
+		if err := json.Unmarshal(got, &back); err != nil || back.Project != open.Project || back.Cwd != open.Cwd {
+			t.Fatalf("decode %s: %v, %+v", got, err, back)
+		}
 	}
 }

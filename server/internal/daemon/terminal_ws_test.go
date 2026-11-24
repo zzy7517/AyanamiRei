@@ -69,7 +69,7 @@ func (r *fakeTerminalRelay) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 	r.connected <- struct{}{}
-	dterminal.ServeWS(req.Context(), conn, dterminal.Config{Root: r.root, Shell: "/bin/sh", Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
+	dterminal.ServeWS(req.Context(), conn, dterminal.Config{TaskRoot: r.root, ProjectRoot: r.root, Shell: "/bin/sh", Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
 	r.dropped <- struct{}{}
 }
 
@@ -94,7 +94,7 @@ func TestTerminalLoopFollowsWhatTheServerOffers(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	d := &Daemon{
-		cfg:          Config{ServerBaseURL: srv.URL, DaemonID: "daemon-1", TerminalRoot: t.TempDir()},
+		cfg:          Config{ServerBaseURL: srv.URL, DaemonID: "daemon-1", TaskRoot: t.TempDir(), ProjectRoot: t.TempDir()},
 		client:       NewClient(srv.URL),
 		logger:       slog.New(slog.NewTextHandler(io.Discard, nil)),
 		terminalWake: make(chan struct{}, 1),

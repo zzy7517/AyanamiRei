@@ -482,7 +482,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		slog.Error("live doc editing disabled", "error", err)
 	}
 	h.Collab = collabClient
-	h.Terminal = terminal.New(terminal.Options{FeatureFlags: opts.FeatureFlags, Agent: h})
+	h.Terminal = terminal.New(terminal.Options{FeatureFlags: opts.FeatureFlags, Agent: h, Project: h})
 	h.ThemeStore = themeStoreFromEnv()
 	h.TaskService.FeatureFlags = opts.FeatureFlags
 	h.TaskService.Metrics = opts.BusinessMetrics

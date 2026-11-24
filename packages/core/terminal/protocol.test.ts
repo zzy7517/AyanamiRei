@@ -80,6 +80,7 @@ describe("parseServerMessage", () => {
       "not_found",
       "tree_not_ready",
       "runtime_offline",
+      "project_not_found",
       "unsupported_platform",
       "internal",
     ]) {

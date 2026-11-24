@@ -8,6 +8,7 @@ import {
   useTerminalSessionState,
   type TerminalSessionIntent,
 } from "./client";
+import { TERMINAL_DEFAULT_PROJECT } from "./protocol";
 
 const READY = JSON.stringify({ type: "ready", terminalId: "t-1", pid: 1, cols: 80, rows: 24 });
 
@@ -188,6 +189,37 @@ describe("useTerminalSession", () => {
     expect(FakeWebSocket.instances).toHaveLength(2);
     act(() => FakeWebSocket.last.open());
     expect(FakeWebSocket.last.sent).toEqual([`{"type":"open","agent":{"issue_id":"issue-1","tree_id":"tree-2"},"cols":80,"rows":24}`]);
+  });
+
+  it("opens a shell in a project's folder on mount, and another one when the project changes", async () => {
+    const { rerender } = render(<Probe intent={{ project: "folder-1" }} />);
+    await flush();
+    act(() => {
+      FakeWebSocket.last.open();
+      FakeWebSocket.last.onmessage?.({ data: READY });
+    });
+    const socket = FakeWebSocket.last;
+    expect(socket.sent).toEqual(['{"type":"open","project":"folder-1","cols":80,"rows":24}']);
+
+    // The page records the id once `ready` names it; that is not a new intent.
+    rerender(<Probe intent={{ project: "folder-1", terminalId: "t-1" }} />);
+    expect(screen.getByTestId("status").textContent).toBe("ready:t-1");
+    expect(FakeWebSocket.instances).toHaveLength(1);
+    expect(socket.closeCalls).toBe(0);
+
+    rerender(<Probe intent={{ project: TERMINAL_DEFAULT_PROJECT }} />);
+    expect(socket.closeCalls).toBe(1);
+    await flush();
+    expect(FakeWebSocket.instances).toHaveLength(2);
+    act(() => FakeWebSocket.last.open());
+    expect(FakeWebSocket.last.sent).toEqual(['{"type":"open","project":"default","cols":80,"rows":24}']);
+  });
+
+  it("attaches to the terminal an id names for a project's session", async () => {
+    render(<Probe intent={{ project: "folder-1", terminalId: "t-9" }} />);
+    await flush();
+    act(() => FakeWebSocket.last.open());
+    expect(FakeWebSocket.last.sent).toEqual(['{"type":"attach","terminalId":"t-9"}']);
   });
 
   it("under StrictMode ends up with one shell and no socket left open", async () => {

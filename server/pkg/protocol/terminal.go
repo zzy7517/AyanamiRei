@@ -8,7 +8,9 @@ import (
 
 // DaemonCapabilityTerminalV1 advertises that the daemon hosts interactive
 // shells for the web terminal and keeps a dedicated connection open to the
-// server (GET /api/daemon/terminal/ws).
+// server (GET /api/daemon/terminal/ws). It says nothing about which folders
+// shells may open in: a daemon that predates project folders accepts the same
+// messages and answers an open it cannot place with a refusal.
 //
 // The server lists it in heartbeat acks only while the terminal_v1 flag is on,
 // and the daemon dials the terminal connection only after an ack lists it: a
@@ -70,14 +72,20 @@ const (
 // vocabulary when it refuses an open or an attach, so the relay can pass the
 // code through.
 const (
-	TerminalErrFlagDisabled             = "flag_disabled"
-	TerminalErrBadRequest               = "bad_request"
+	TerminalErrFlagDisabled = "flag_disabled"
+	TerminalErrBadRequest   = "bad_request"
+	// TerminalErrTerminalRootUnconfigured is sent by a daemon older than
+	// project folders, which opened terminals below MULTICA_TERMINAL_ROOT only
+	// and refused every open while that was unset.
 	TerminalErrTerminalRootUnconfigured = "terminal_root_unconfigured"
 	TerminalErrPathNotAllowed           = "path_not_allowed"
 	TerminalErrDaemonUnavailable        = "daemon_unavailable"
 	TerminalErrNotFound                 = "not_found"
-	TerminalErrUnsupportedPlatform      = "unsupported_platform"
-	TerminalErrInternal                 = "internal"
+	// TerminalErrProjectNotFound answers an open that names a project folder
+	// the server cannot read for the user who asked.
+	TerminalErrProjectNotFound     = "project_not_found"
+	TerminalErrUnsupportedPlatform = "unsupported_platform"
+	TerminalErrInternal            = "internal"
 	// Agent terminals: the task tree is not built, or the daemon that holds
 	// it has no terminal connection to the server.
 	TerminalErrTreeNotReady   = "tree_not_ready"
@@ -91,6 +99,7 @@ func KnownTerminalError(code string) bool {
 	switch code {
 	case TerminalErrFlagDisabled, TerminalErrBadRequest, TerminalErrTerminalRootUnconfigured,
 		TerminalErrPathNotAllowed, TerminalErrDaemonUnavailable, TerminalErrNotFound,
+		TerminalErrProjectNotFound,
 		TerminalErrUnsupportedPlatform, TerminalErrInternal,
 		TerminalErrTreeNotReady, TerminalErrRuntimeOffline:
 		return true
@@ -105,18 +114,27 @@ type BrowserAgentRef struct {
 	TreeID  string `json:"tree_id"`
 }
 
+// TerminalProjectDefault is what a browser's open names to start a shell in
+// the default project folder. The daemon that runs the shell knows where that
+// folder is on its machine; the browser does not.
+const TerminalProjectDefault = "default"
+
 // BrowserTerminalMessage is the decode envelope for everything a browser may
 // send, and for the messages the server sends back. Which fields matter
 // depends on Type; the per-type structs below are what the server encodes.
 type BrowserTerminalMessage struct {
 	Type string `json:"type"`
 
-	// open: Cwd for a shell, Agent for an agent session; never both
-	Cwd      string           `json:"cwd,omitempty"`
-	Agent    *BrowserAgentRef `json:"agent,omitempty"`
-	Cols     int              `json:"cols,omitempty"`
-	Rows     int              `json:"rows,omitempty"`
-	DaemonID string           `json:"daemonId,omitempty"`
+	// open: Cwd for a shell, Agent for an agent session, Project for a shell in
+	// a project folder; exactly one of the three
+	Cwd   string           `json:"cwd,omitempty"`
+	Agent *BrowserAgentRef `json:"agent,omitempty"`
+	// Project is TerminalProjectDefault, or the id of the local directory a
+	// project registered, which the server looks up.
+	Project  string `json:"project,omitempty"`
+	Cols     int    `json:"cols,omitempty"`
+	Rows     int    `json:"rows,omitempty"`
+	DaemonID string `json:"daemonId,omitempty"`
 
 	// attach, close; the id of the terminal on ready and exit
 	TerminalID string `json:"terminalId,omitempty"`
@@ -190,7 +208,23 @@ type DaemonTerminalMessage struct {
 	// Agent is set on an open that starts an agent CLI instead of a shell.
 	// Cwd is then the start tree's path.
 	Agent *DaemonTerminalAgent `json:"agent,omitempty"`
+
+	// Project is set on an open that starts the shell in a project folder, so
+	// the daemon does not judge the directory against its own trees:
+	// DaemonTerminalProjectFolder with Cwd, or DaemonTerminalProjectDefault
+	// without one.
+	Project string `json:"project,omitempty"`
 }
+
+// What an open's project says to the daemon.
+const (
+	// DaemonTerminalProjectFolder starts the shell in Cwd, the local directory
+	// a project registered, which the server looked up.
+	DaemonTerminalProjectFolder = "folder"
+	// DaemonTerminalProjectDefault starts the shell in the daemon's own default
+	// project folder. The open carries no directory.
+	DaemonTerminalProjectDefault = TerminalProjectDefault
+)
 
 // DaemonTerminalAgent is the agent part of an open: what the daemon needs to
 // launch the agent CLI for a task, resolved and rendered by the server.

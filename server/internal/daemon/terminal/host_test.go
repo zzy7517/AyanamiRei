@@ -88,12 +88,18 @@ func (r *recorder) staysWithout(t *testing.T, terminalID, unwanted string, d tim
 	}
 }
 
+// newTestHost returns a host whose task trees are below root, with a default
+// project folder of its own.
 func newTestHost(t *testing.T, root string) (*Host, *recorder) {
 	t.Helper()
 	rec := newRecorder()
-	h := NewHost(Config{Root: root, Shell: "/bin/sh", Logger: quietLogger()}, rec.sink)
+	h := NewHost(newTestConfig(root, t.TempDir(), "/bin/sh"), rec.sink)
 	t.Cleanup(h.CloseAll)
 	return h, rec
+}
+
+func newTestConfig(taskRoot, projectRoot, shell string) Config {
+	return Config{TaskRoot: taskRoot, ProjectRoot: projectRoot, Shell: shell, Logger: quietLogger()}
 }
 
 func mustOpen(t *testing.T, h *Host, cwd string, cols, rows int) *Session {
@@ -104,6 +110,153 @@ func mustOpen(t *testing.T, h *Host, cwd string, cols, rows int) *Session {
 	}
 	s.Serve()
 	return s
+}
+
+// mustStart serves a session the host started, or fails on its refusal.
+func mustStart(t *testing.T, s *Session, refusal *Refusal, what string) *Session {
+	t.Helper()
+	if refusal != nil {
+		t.Fatalf("%s: %v", what, refusal)
+	}
+	s.Serve()
+	return s
+}
+
+// shellIsIn asks the shell for its directory and fails unless it answers dir.
+// The path cannot occur in the echo of the typed line, so it is the shell's
+// answer that is read.
+func shellIsIn(t *testing.T, rec *recorder, s *Session, dir string) {
+	t.Helper()
+	// pwd prints the directory without its symlinks, as the host names it.
+	want, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.host.Write(s.ID, []byte("printf 'in-'; pwd\n"))
+	rec.waitFor(t, s.ID, "in-"+want)
+}
+
+func TestHostOpenRefusesWhatTheDaemonDoesNotOwn(t *testing.T) {
+	root := t.TempDir()
+	h, _ := newTestHost(t, root)
+	outside := t.TempDir()
+
+	for _, tc := range []struct {
+		name, cwd  string
+		cols, rows int
+		code       string
+	}{
+		{"outside the task and project folders", outside, 80, 24, protocol.TerminalErrPathNotAllowed},
+		{"a missing directory", filepath.Join(root, "missing"), 80, 24, protocol.TerminalErrBadRequest},
+		{"a relative path", "app", 80, 24, protocol.TerminalErrBadRequest},
+		{"zero columns", root, 0, 24, protocol.TerminalErrBadRequest},
+		{"too many rows", root, 80, protocol.MaxTerminalRows + 1, protocol.TerminalErrBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if s, refusal := h.Open(tc.cwd, tc.cols, tc.rows); refusal == nil || refusal.Code != tc.code || s != nil {
+				t.Fatalf("open = %v, %v; want %s", s, refusal, tc.code)
+			}
+		})
+	}
+
+	// A daemon with neither folder answers the same, for any directory.
+	none, _ := newTestHost(t, "")
+	if _, refusal := none.Open(outside, 80, 24); refusal == nil || refusal.Code != protocol.TerminalErrPathNotAllowed {
+		t.Fatalf("open without a folder of this daemon's = %v, want %s", refusal, protocol.TerminalErrPathNotAllowed)
+	}
+}
+
+// A project keeps its folder wherever it is: not below a tree of this daemon's.
+func TestHostOpensAShellWhereAProjectKeepsItsFolder(t *testing.T) {
+	h, rec := newTestHost(t, t.TempDir())
+	folder := t.TempDir()
+	if _, refusal := h.Open(folder, 80, 24); refusal == nil || refusal.Code != protocol.TerminalErrPathNotAllowed {
+		t.Fatalf("a directory the browser names outside the daemon's folders = %v, want %s", refusal, protocol.TerminalErrPathNotAllowed)
+	}
+
+	s, refusal := h.OpenProject(folder, 80, 24)
+	mustStart(t, s, refusal, "open in a project's folder")
+	shellIsIn(t, rec, s, folder)
+	if _, refusal := h.Attach(s.ID); refusal != nil {
+		t.Fatalf("attach: %v", refusal)
+	}
+}
+
+func TestHostOpenProjectRefusesWhatIsNotAFolderOnThisMachine(t *testing.T) {
+	h, _ := newTestHost(t, t.TempDir())
+	file := filepath.Join(t.TempDir(), "notes.txt")
+	if err := os.WriteFile(file, []byte("notes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range []struct {
+		name, cwd  string
+		cols, rows int
+		code       string
+	}{
+		{"a folder that was moved or deleted", filepath.Join(t.TempDir(), "moved-away"), 80, 24, protocol.TerminalErrBadRequest},
+		{"a file", file, 80, 24, protocol.TerminalErrBadRequest},
+		{"a relative path", "project", 80, 24, protocol.TerminalErrBadRequest},
+		{"no directory", "", 80, 24, protocol.TerminalErrBadRequest},
+		{"zero columns", t.TempDir(), 0, 24, protocol.TerminalErrBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if s, refusal := h.OpenProject(tc.cwd, tc.cols, tc.rows); refusal == nil || refusal.Code != tc.code || s != nil {
+				t.Fatalf("open = %v, %v; want %s", s, refusal, tc.code)
+			}
+		})
+	}
+}
+
+// The default project folder exists once a terminal is opened in it, and not
+// before: nothing is made for a daemon that only starts.
+func TestHostOpensTheDefaultProjectFolder(t *testing.T) {
+	base := t.TempDir()
+	projects := filepath.Join(base, "ayanami-projects")
+	rec := newRecorder()
+	h := NewHost(newTestConfig(filepath.Join(base, "ayanami-tasks"), projects, "/bin/sh"), rec.sink)
+	t.Cleanup(h.CloseAll)
+	if _, err := os.Stat(projects); !os.IsNotExist(err) {
+		t.Fatalf("the default project folder exists before any terminal: %v", err)
+	}
+
+	s, refusal := h.OpenDefaultProject(80, 24)
+	mustStart(t, s, refusal, "open in the default project folder")
+	shellIsIn(t, rec, s, projects)
+	if _, err := os.Stat(projects); err != nil {
+		t.Fatalf("the default project folder was not created: %v", err)
+	}
+
+	// From then on it is a folder of this daemon's, like a task tree.
+	nested := filepath.Join(projects, "clone")
+	if err := os.Mkdir(nested, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	shellIsIn(t, rec, mustOpen(t, h, nested, 80, 24), nested)
+}
+
+func TestHostDefaultProjectFolderRefusesWhatItCannotServe(t *testing.T) {
+	base := t.TempDir()
+	projects := filepath.Join(base, "ayanami-projects")
+	h, _ := newTestHost(t, t.TempDir())
+	h.projectRoot = projects
+
+	if s, refusal := h.OpenDefaultProject(0, 24); refusal == nil || refusal.Code != protocol.TerminalErrBadRequest || s != nil {
+		t.Fatalf("open = %v, %v, want %s", s, refusal, protocol.TerminalErrBadRequest)
+	}
+	if _, err := os.Stat(projects); !os.IsNotExist(err) {
+		t.Fatalf("a size the daemon cannot serve left a folder behind: %v", err)
+	}
+
+	// A file where the folder should be is not something to replace.
+	blocker := filepath.Join(base, "blocked")
+	if err := os.WriteFile(blocker, []byte("not a folder"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h.projectRoot = filepath.Join(blocker, "projects")
+	if s, refusal := h.OpenDefaultProject(80, 24); refusal == nil || refusal.Code != protocol.TerminalErrInternal || s != nil {
+		t.Fatalf("open = %v, %v, want %s", s, refusal, protocol.TerminalErrInternal)
+	}
 }
 
 func nextExit(t *testing.T, h *Host) ExitEvent {
@@ -126,36 +279,6 @@ func nextExit(t *testing.T, h *Host) ExitEvent {
 	case <-time.After(shellDeadline):
 		t.Fatal("no exit was reported")
 		return ExitEvent{}
-	}
-}
-
-func TestHostOpenRefusesWhatTheRootForbids(t *testing.T) {
-	root := t.TempDir()
-	h, _ := newTestHost(t, root)
-	outside := t.TempDir()
-
-	for _, tc := range []struct {
-		name, cwd  string
-		cols, rows int
-		code       string
-	}{
-		{"outside the root", outside, 80, 24, protocol.TerminalErrPathNotAllowed},
-		{"a missing directory", filepath.Join(root, "missing"), 80, 24, protocol.TerminalErrBadRequest},
-		{"a relative path", "app", 80, 24, protocol.TerminalErrBadRequest},
-		{"zero columns", root, 0, 24, protocol.TerminalErrBadRequest},
-		{"too many rows", root, 80, protocol.MaxTerminalRows + 1, protocol.TerminalErrBadRequest},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			if s, refusal := h.Open(tc.cwd, tc.cols, tc.rows); refusal == nil || refusal.Code != tc.code || s != nil {
-				t.Fatalf("open = %v, %v; want %s", s, refusal, tc.code)
-			}
-		})
-	}
-
-	unconfigured, _ := newTestHost(t, "")
-	if _, refusal := unconfigured.Open(root, 80, 24); refusal == nil || refusal.Code != protocol.TerminalErrTerminalRootUnconfigured ||
-		!strings.Contains(refusal.Message, RootEnv) {
-		t.Fatalf("open without a root = %v, want %s naming %s", refusal, protocol.TerminalErrTerminalRootUnconfigured, RootEnv)
 	}
 }
 
@@ -354,7 +477,7 @@ func TestHostAttachMakesAFullScreenProgramDrawAgain(t *testing.T) {
 
 	root := t.TempDir()
 	rec := newRecorder()
-	h := NewHost(Config{Root: root, Shell: program, Logger: quietLogger()}, rec.sink)
+	h := NewHost(newTestConfig(root, t.TempDir(), program), rec.sink)
 	t.Cleanup(h.CloseAll)
 	s := mustOpen(t, h, root, 80, 24)
 	// READY is noted once the first screen is drawn. Waiting for the screen

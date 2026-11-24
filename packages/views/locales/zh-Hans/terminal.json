@@ -1,8 +1,9 @@
 {
-  "directory_label": "目录",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "请输入绝对路径。",
-  "open": "打开",
+  "title": "终端",
+  "default_project": "默认项目",
+  "all_projects": "全部项目",
+  "add_project": "添加项目",
+  "no_project_folders": "还没有带本地文件夹的项目。",
   "end_session": "结束会话",
   "agent_terminal": "智能体终端",
   "restart": "重启",
@@ -25,6 +26,7 @@
     "unsupported_platform": "该机器的系统不支持终端。",
     "tree_not_ready": "worktree 尚未构建完成。",
     "runtime_offline": "构建该 worktree 的机器未连接。",
+    "project_not_found": "这个项目的文件夹已经不存在了。",
     "internal": "出现未知错误。"
   }
 }

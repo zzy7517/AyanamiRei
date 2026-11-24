@@ -60,8 +60,8 @@ func (b *browserConn) openAgent(msg *protocol.BrowserTerminalMessage) bool {
 		return false
 	case b.terminal != nil:
 		t.failLocked(b, protocol.TerminalErrBadRequest, "socket is already bound to a terminal")
-	case msg.Cwd != "":
-		t.failLocked(b, protocol.TerminalErrBadRequest, "open takes cwd or agent, not both")
+	case msg.Cwd != "" || msg.Project != "":
+		t.failLocked(b, protocol.TerminalErrBadRequest, "open takes a directory, a task tree or a project, not two of them")
 	case !validAgentRef(msg.Agent):
 		t.failLocked(b, protocol.TerminalErrBadRequest, "agent needs an issue_id and a tree_id")
 	case !protocol.ValidTerminalSize(msg.Cols, msg.Rows):

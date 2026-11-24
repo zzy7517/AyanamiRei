@@ -1,8 +1,9 @@
 {
-  "directory_label": "Répertoire",
-  "directory_placeholder": "/home/you/project",
-  "directory_required": "Saisissez un chemin absolu.",
-  "open": "Ouvrir",
+  "title": "Terminal",
+  "default_project": "Projet par défaut",
+  "all_projects": "Tous les projets",
+  "add_project": "Ajouter un projet",
+  "no_project_folders": "Aucun projet n’a encore de dossier local.",
   "end_session": "Terminer la session",
   "agent_terminal": "Terminal de l’agent",
   "restart": "Redémarrer",
@@ -25,6 +26,7 @@
     "unsupported_platform": "Le système de la machine ne prend pas en charge les terminaux.",
     "tree_not_ready": "Le worktree n’est pas encore construit.",
     "runtime_offline": "La machine qui a construit le worktree n’est pas connectée.",
+    "project_not_found": "Le dossier de ce projet n’existe plus.",
     "internal": "Une erreur est survenue."
   }
 }

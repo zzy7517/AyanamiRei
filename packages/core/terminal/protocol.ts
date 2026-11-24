@@ -29,7 +29,9 @@ export const TERMINAL_TICKET_DEFAULT_TTL_SECONDS = 120;
  * Codes an `error` message can carry. The server reports any code it does not
  * know as `internal`, so this is the whole set a client has to understand.
  * `not_found` also answers an `open` that names a task or a tree the server
- * cannot find; `tree_not_ready` one whose tree is not built.
+ * cannot find; `tree_not_ready` one whose tree is not built; and
+ * `project_not_found` one that names a project's folder the server cannot
+ * find for this user.
  */
 export const TERMINAL_ERROR_CODES = [
   "flag_disabled",
@@ -41,6 +43,7 @@ export const TERMINAL_ERROR_CODES = [
   "unsupported_platform",
   "tree_not_ready",
   "runtime_offline",
+  "project_not_found",
   "internal",
 ] as const;
 
@@ -158,9 +161,22 @@ export interface TerminalAgentTarget {
   tree_id: string;
 }
 
+/**
+ * What an open names to start a shell in the default project, the one every
+ * install has without adding a project. Its folder is on the machine that runs
+ * the shell, which is the only one that knows where.
+ */
+export const TERMINAL_DEFAULT_PROJECT = "default";
+
 export type TerminalClientMessage =
-  /** Start a shell in `cwd`. `daemonId` picks the machine among several. */
+  /** Start a shell in `cwd`, a directory of a task. `daemonId` picks the machine among several. */
   | ({ type: "open"; cwd: string; daemonId?: string } & TerminalSize)
+  /**
+   * Start a shell in a project's folder: `project` is `TERMINAL_DEFAULT_PROJECT`
+   * or the id of the local folder a project registered, which the server looks
+   * up. `daemonId` picks the machine among several, for the default project.
+   */
+  | ({ type: "open"; project: string; daemonId?: string } & TerminalSize)
   /** Run the agent's command line in a tree of a task. */
   | ({ type: "open"; agent: TerminalAgentTarget } & TerminalSize)
   /** Stream the output of a terminal that is already running; nothing is replayed. */

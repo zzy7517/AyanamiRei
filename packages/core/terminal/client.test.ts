@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClient, ApiError, setApiInstance } from "../api";
 import { noopLogger } from "../logger";
 import { TerminalSession, type TerminalSessionState } from "./client";
-import type { TerminalTicket } from "./protocol";
+import { TERMINAL_DEFAULT_PROJECT, type TerminalTicket } from "./protocol";
 
 const READY = JSON.stringify({ type: "ready", terminalId: "t-1", pid: 4242, cols: 120, rows: 40 });
 
@@ -158,6 +158,38 @@ describe("TerminalSession lifecycle", () => {
     expect(reconnected.sent).toEqual(['{"type":"attach","terminalId":"t-1"}']);
     reconnected.receiveText(READY);
     expect(session.getState()).toMatchObject({ status: "ready", terminalId: "t-1" });
+  });
+
+  it("opens a shell in a project's folder, and reattaches to it after a drop", async () => {
+    const { session } = setup();
+    session.openProject("folder-1", { cols: 100, rows: 30 });
+    await flush();
+    const socket = FakeWebSocket.last;
+    socket.open();
+    expect(socket.sent).toEqual(['{"type":"open","project":"folder-1","cols":100,"rows":30}']);
+    socket.receiveText(READY);
+
+    socket.drop();
+    await vi.advanceTimersByTimeAsync(1000);
+    const reconnected = FakeWebSocket.last;
+    reconnected.open();
+    expect(reconnected.sent).toEqual(['{"type":"attach","terminalId":"t-1"}']);
+    reconnected.receiveText(READY);
+    expect(session.getState()).toMatchObject({ status: "ready", terminalId: "t-1" });
+  });
+
+  it("opens the default project, naming a machine only when one was chosen", async () => {
+    const { session } = setup();
+    session.openProject(TERMINAL_DEFAULT_PROJECT);
+    await flush();
+    FakeWebSocket.last.open();
+    expect(FakeWebSocket.last.sent).toEqual(['{"type":"open","project":"default","cols":80,"rows":24}']);
+
+    session.dispose();
+    session.openProject(TERMINAL_DEFAULT_PROJECT, undefined, "d-1");
+    await flush();
+    FakeWebSocket.last.open();
+    expect(FakeWebSocket.last.sent).toEqual(['{"type":"open","project":"default","cols":80,"rows":24,"daemonId":"d-1"}']);
   });
 
   it("attaches to a running terminal instead of opening one, then brings it to the viewport's size", async () => {

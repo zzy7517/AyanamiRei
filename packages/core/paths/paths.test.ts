@@ -71,6 +71,8 @@ describe("terminal addresses", () => {
       "/acme/terminal?issue=issue-1&tree=tree-1&t=t-1",
     );
     expect(ws.terminalAgent("a/b", "c d")).toBe("/acme/terminal?issue=a%2Fb&tree=c%20d");
+    expect(ws.terminalProject("default")).toBe("/acme/terminal?project=default");
+    expect(ws.terminalProject("folder id", "t-1")).toBe("/acme/terminal?project=folder%20id&t=t-1");
   });
 });
 
