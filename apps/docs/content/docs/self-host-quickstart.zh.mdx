@@ -109,7 +109,7 @@ Backend 容器每次启动时都会先运行数据库 migration，再启动服�
 <Tabs items={["本机访问", "远程访问"]}>
 <Tab value="本机访问">
 
-直接打开 [http://localhost:3000](http://localhost:3000)。后面运行 `multica setup self-host` 时也不需要传 URL。
+API 在 [http://localhost:8080](http://localhost:8080)。打开桌面端。没有浏览器界面。后面运行 `multica setup self-host` 时也不需要传 URL。
 
 </Tab>
 <Tab value="远程访问" id="remote-access">
@@ -227,7 +227,7 @@ curl -fsS https://app.example.com/api/config | grep -o '"daemon_server_url":"[^"
 
 ## 打开 Multica [#4-打开-multica]
 
-打开本机的 `http://localhost:3000`，或刚才配置的 `https://app.example.com`。这里没有注册和登录：服务器只服务一个本地用户，并在首次启动时为该用户创建了默认工作区 `dev`。打开网页根路径会直接进入这个工作区。
+打开桌面端。没有浏览器界面，也没有注册和登录：服务器只服务一个本地用户，并在首次启动时为该用户创建了默认工作区 `dev`。
 
 </Step>
 <Step>

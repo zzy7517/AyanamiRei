@@ -5,7 +5,7 @@ description: Multica のローカル開発環境を構築し、テストを実�
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-Multica は Go バックエンドと pnpm monorepo で構成されています。ローカルで起動する最も簡単な方法は `make dev` です。現在の checkout 用に環境、データベース、migration を準備し、Web と API を起動します。
+Multica は Go バックエンドと pnpm monorepo で構成されています。ローカルで起動する最も簡単な方法は `make dev` です。現在の checkout 用に環境、データベース、migration を準備し、API を起動します。
 
 ## 必要な環境
 
@@ -25,12 +25,11 @@ cd multica
 make dev
 ```
 
-メイン checkout は `.env` を使用します。ファイルがなければ `make dev` が `.env.example` から作成し、共有 PostgreSQL を起動して依存関係をインストールし、migration を実行して API と Web を起動します。
+メイン checkout は `.env` を使用します。ファイルがなければ `make dev` が `.env.example` から作成し、共有 PostgreSQL を起動して依存関係をインストールし、migration を実行して API を起動します。
 
 デフォルトのアドレス:
 
 ```text
-Web: http://localhost:3000
 API: http://localhost:8080
 ```
 
@@ -53,7 +52,7 @@ make start-worktree
 make start-worktree
 ```
 
-現在の worktree の Web と API を停止するには:
+現在の worktree の API を停止するには:
 
 ```bash
 make stop-worktree
@@ -70,7 +69,7 @@ worktree 間で共有するのは PostgreSQL コンテナであり、データ�
 ### 全体フロー
 
 ```bash
-make up               # 現在の checkout の環境を起動（C=api,collab,web,daemon,desktop）
+make up               # 現在の checkout の環境を起動（C=api,collab,daemon,desktop）
 make status           # 稼働中のコンポーネントとこの環境への帰属を表示
 make list             # このマシン上のすべての環境を一覧表示
 make down             # プロセスを停止し、データベースは保持
@@ -82,13 +81,12 @@ make check            # ローカルの完全な検証フローを実行
 make build            # server、CLI、migrate バイナリをビルド
 ```
 
-`make up` は環境を名前付きオブジェクトとして扱います。ロック下で API、Web、Desktop レンダラーのポート、データベース名、CLI プロファイルを割り当てて `~/.multica/dev/` に記録するため、2 つの checkout が気づかずに同じスロットへ衝突することはありません。データベースは `DATABASE_URL` で検証し、バックエンドは `pid`、`commit`、`started_at` を返す `GET /health` で検証します（200 だけでは同じポートに残ったプロセスと区別できないためです）。`make destroy` はデータベース、CLI プロファイル、デーモンのワークスペース、Desktop の userData、レジストリ項目を削除します。削除に失敗した項目は再試行できるようレジストリに残ります。一時環境は TTL 経過後の次の `make up` でベストエフォートに回収されます。
+`make up` は環境を名前付きオブジェクトとして扱います。ロック下で API、公開オリジン、Desktop レンダラーのポート、データベース名、CLI プロファイルを割り当てて `~/.multica/dev/` に記録するため、2 つの checkout が気づかずに同じスロットへ衝突することはありません。データベースは `DATABASE_URL` で検証し、バックエンドは `pid`、`commit`、`started_at` を返す `GET /health` で検証します（200 だけでは同じポートに残ったプロセスと区別できないためです）。`make destroy` はデータベース、CLI プロファイル、デーモンのワークスペース、Desktop の userData、レジストリ項目を削除します。削除に失敗した項目は再試行できるようレジストリに残ります。一時環境は TTL 経過後の次の `make up` でベストエフォートに回収されます。
 
 ### フロントエンド
 
 ```bash
 pnpm install
-pnpm dev:web
 pnpm dev:desktop
 pnpm build
 pnpm typecheck
@@ -123,15 +121,15 @@ make sqlc
 make cli ARGS="issue list"
 ```
 
-## フロントエンド機能の変更
+## 製品機能の変更
 
-Web と Desktop の両方で必要な機能は、責務に応じて配置します。
+Desktop の機能は、責務に応じて配置します。
 
 1. API 型、query、mutation、プラットフォーム非依存のロジックは `packages/core/` に置きます。
 2. 基礎 UI は `packages/ui/` に置き、ビジネスコードへ依存させません。
 3. ビジネスページとコンポーネントは `packages/views/` に置きます。
-4. Next.js、Electron、ルーティングアダプターは対応する app に残します。
-5. 共有ページは Web と Desktop の両方へ接続します。
+4. Electron とルーティングアダプターは `apps/desktop/` に残します。
+5. 共有ページはデスクトップのルーターまたは overlay に接続します。
 
 サーバーデータは TanStack Query、フィルター、下書き、レイアウトなどのクライアント状態は Zustand が管理します。具体的な境界は[プロジェクトアーキテクチャ](/developers/architecture)とルートの `AGENTS.md` を参照してください。
 

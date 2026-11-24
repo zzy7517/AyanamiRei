@@ -12,7 +12,7 @@ All configuration is done via environment variables. Copy `.env.example` as a st
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgres://multica:multica@localhost:5432/multica?sslmode=disable` |
 | `JWT_SECRET` | **Required — no safe default.** Secret key for signing JWT tokens. A production backend refuses to boot if this is empty or a known placeholder. Generate with `openssl rand -hex 32`. | `openssl rand -hex 32` |
-| `FRONTEND_ORIGIN` | URL where the frontend is served (used for CORS) | `https://app.example.com` |
+| `FRONTEND_ORIGIN` | Public app origin (CORS, invitation links) | `https://app.example.com` |
 
 ### Database Pool Tuning (Optional)
 
@@ -152,12 +152,6 @@ existed are fixed without a backfill.
 > `make selfhost` and both installers read the published port back from
 > `docker compose port`, so the health check and the printed URL always match
 > what Compose actually published.
-
-The web development server is one intentional exception to the generic `PORT`
-fallback: Next uses `PORT` for its own frontend listener before it evaluates the
-rewrite configuration. Its backend fallback therefore accepts
-`BACKEND_PORT` → `API_PORT` → `SERVER_PORT` → `8080`, while an explicit
-`REMOTE_API_URL` or `NEXT_PUBLIC_API_URL` still takes priority.
 
 ### Feature Flags (Optional)
 
@@ -302,7 +296,7 @@ These are configured on each user's machine, not on the server:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MULTICA_SERVER_URL` | `ws://localhost:8080/ws` | WebSocket URL for daemon → server connection |
-| `MULTICA_APP_URL` | `http://localhost:3000` | Frontend URL; the default for `multica setup self-host --app-url` |
+| `MULTICA_APP_URL` | `http://localhost:3000` | Public app URL; the default for `multica setup self-host --app-url` |
 | `MULTICA_DAEMON_POLL_INTERVAL` | `30s` | Catch-up poll for tasks; WebSocket wake signals normally deliver work sooner |
 | `MULTICA_DAEMON_WS_CLAIM_POLL_INTERVAL` | `3m` | Upper bound for healthy WebSocket claim safety polls, configured independently of `MULTICA_DAEMON_POLL_INTERVAL`; downward jitter keeps normal polls at `2m30s`–`2m45s`, while old servers and uncertain claims retain the ordinary poll interval |
 | `MULTICA_DAEMON_HEARTBEAT_INTERVAL` | `15s` | Heartbeat frequency |
@@ -476,49 +470,27 @@ DATABASE_URL="your-database-url" ./server/bin/migrate up
 DATABASE_URL="your-database-url" PORT=8080 JWT_SECRET="your-secret" ./server/bin/server
 ```
 
-For the frontend:
-
-```bash
-pnpm install
-pnpm build
-
-# Start the frontend (production mode)
-cd apps/web
-REMOTE_API_URL=http://localhost:8080 pnpm start
-```
-
 ## Reverse Proxy
 
-In production, put a reverse proxy in front of both the backend and frontend to handle TLS and routing.
+In production, put a reverse proxy in front of the backend to handle TLS. Desktop is the client; the stack does not serve a browser UI.
 
 ### Caddy (Recommended)
 
-**Single-domain layout** — frontend and backend served on the same hostname (this is what `docker-compose.selfhost.yml` defaults to):
+**Single-domain layout** — the API on one hostname:
 
 ```
 multica.example.com {
-    # WebSocket route — must come before the catch-all
-    @multica_ws path /ws /ws/* /collab
-    handle @multica_ws {
-        reverse_proxy localhost:8080 {
-            flush_interval -1
-        }
+    reverse_proxy localhost:8080 {
+        flush_interval -1
     }
-
-    # Everything else → frontend
-    reverse_proxy localhost:3000
 }
 ```
 
 > Even on a single domain, set `FRONTEND_ORIGIN` / `CORS_ALLOWED_ORIGINS` to that public origin (e.g. `https://multica.example.com`) on the backend. The backend's default origin allowlist is `localhost` only, so without this it rejects the WebSocket upgrade from the public URL with `403` and real-time updates silently stop working. See [LAN / Non-localhost Access](#lan--non-localhost-access).
 
-**Separate-domain layout** — frontend and backend on different hostnames:
+**Separate-domain layout** — the public app origin and the API on different hostnames. `app.example.com` is `FRONTEND_ORIGIN` (CORS and links). It does not serve a browser UI; Desktop uses that origin for shared links.
 
 ```
-app.example.com {
-    reverse_proxy localhost:3000
-}
-
 api.example.com {
     @multica_ws path /ws /ws/* /collab
     handle @multica_ws {
@@ -533,30 +505,13 @@ api.example.com {
 
 Two non-obvious bits inside the `/ws` block are worth calling out — both are common reasons real-time updates "stop working" on a Caddy-fronted self-host. `/collab` is the WebSocket for [live doc co-editing](#live-doc-co-editing-optional) and needs the same treatment; it is harmless when collab is off:
 
-- **`path /ws /ws/*` (not `/ws*`)** — bare `handle /ws` is an exact match, so future path variants under `/ws/` fall through to the frontend block. The obvious shortcut `handle /ws*` overcorrects in the other direction: Caddy's `*` is a glob without a path-segment boundary, so it would also catch unrelated paths like `/ws-foo`, which is a legitimate workspace URL (only the exact slug `ws` is reserved). Listing `/ws` and `/ws/*` explicitly covers both real cases without overreach.
+- **`path /ws /ws/*` (not `/ws*`)** — Caddy's `*` is a glob without a path-segment boundary, so `/ws*` would also catch unrelated paths like `/ws-foo`, which is a legitimate workspace URL (only the exact slug `ws` is reserved). Listing `/ws` and `/ws/*` explicitly covers both real cases without overreach.
 - **`flush_interval -1`** — disables response buffering so WebSocket frames are forwarded as soon as they arrive. Without it, frames can sit behind Caddy's default flush window, which looks like delayed comments, missing typing indicators, or "comments only appear after a page refresh."
 
 ### Nginx
 
 ```nginx
-# Frontend
-server {
-    listen 443 ssl;
-    server_name app.example.com;
-
-    ssl_certificate     /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
-# Backend API
+# API
 server {
     listen 443 ssl;
     server_name api.example.com;
@@ -594,64 +549,21 @@ server {
 }
 ```
 
-When using separate domains for frontend and backend, set these environment variables accordingly:
+When the public app origin and the API differ, set the backend accordingly:
 
 ```bash
-# Backend
 FRONTEND_ORIGIN=https://app.example.com
 CORS_ALLOWED_ORIGINS=https://app.example.com
-
-# Frontend (only if you are building the web image from source via docker-compose.selfhost.build.yml)
-REMOTE_API_URL=https://api.example.com
-NEXT_PUBLIC_API_URL=https://api.example.com
-NEXT_PUBLIC_WS_URL=wss://api.example.com/ws
 ```
-
-> **`NEXT_PUBLIC_API_URL` and `REMOTE_API_URL` take the backend's origin — scheme + host (+ port) — and no path.** Write `https://api.example.com`, never `https://api.example.com/api`. The browser client appends its own prefixes, so an `/api` suffix is doubled: requests go to `/api/api/...` instead of the backend's `/api/...` endpoints, breaking data calls and avatar loads. A trailing `/api` is now stripped defensively, but any other path is kept, because a reverse proxy may legitimately mount the whole backend under a prefix.
->
-> This bites on upgrade: before v0.4.10 `NEXT_PUBLIC_API_URL` was inert in the published images, so a wrong value sat in `.env` doing nothing. v0.4.10 wired it through, and the stale value took effect. If you upgraded and the UI loads but nothing else does, check this variable first, then recreate the frontend container (`docker compose ... up -d --force-recreate frontend`) so the new value is picked up.
 
 ### Same Origin (Recommended)
 
-A separate API domain is not required. Leave `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` at their defaults and the browser calls `/api` and `/ws` on the page's own origin, so nothing
-has to be shared between two hostnames:
+A separate API domain is not required. Point `FRONTEND_ORIGIN` at the same origin the proxy publishes:
 
 ```bash
-# Backend
-FRONTEND_ORIGIN=https://app.example.com
-CORS_ALLOWED_ORIGINS=https://app.example.com
-
-# Frontend
-NEXT_PUBLIC_API_URL=                 # empty: the client uses relative /api paths on the page origin
-NEXT_PUBLIC_WS_URL=                  # empty
-REMOTE_API_URL=http://backend:8080   # upstream for /v1, /api, /auth and /health
+FRONTEND_ORIGIN=https://multica.example.com
+CORS_ALLOWED_ORIGINS=https://multica.example.com
 ```
-
-Serve everything from the single `app.example.com` vhost. HTTP works out of the box, because the frontend forwards `/v1`, `/api`, `/auth` and `/health` to `REMOTE_API_URL`. WebSockets do **not** go through those rewrites, so add a block for `/ws` and `/collab` to the frontend vhost that reaches the backend directly:
-
-```nginx
-# Add to the app.example.com server block above
-location /ws {
-    proxy_pass http://localhost:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-    proxy_read_timeout 86400;
-}
-
-# Live doc co-editing (same WebSocket settings)
-location /collab {
-    proxy_pass http://localhost:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-    proxy_read_timeout 86400;
-}
-```
-
-See [WebSocket for LAN / Non-localhost Access](#websocket-for-lan--non-localhost-access) for why the rewrites cannot carry the `Upgrade` handshake.
 
 This keeps CORS and the WebSocket origin check on a single origin, which is
 the configuration least likely to break. An `api.example.com` vhost can still
@@ -659,12 +571,12 @@ be kept for CLI and daemon use: those clients send no credential.
 
 ## LAN / Non-localhost Access
 
-By default, Multica works on `localhost`. If you access it from another machine on the LAN (e.g. `http://192.168.1.100:3000`), you need to tell the backend to accept that origin:
+By default, Multica accepts `localhost`. If Desktop or another client reaches the API from another machine on the LAN, tell the backend to accept that origin:
 
 ```bash
-# .env — replace with your server's LAN IP
-FRONTEND_ORIGIN=http://192.168.1.100:3000
-CORS_ALLOWED_ORIGINS=http://192.168.1.100:3000
+# .env — replace with the origin the client actually uses
+FRONTEND_ORIGIN=http://192.168.1.100:8080
+CORS_ALLOWED_ORIGINS=http://192.168.1.100:8080
 ```
 
 Then restart the stack:
@@ -675,25 +587,9 @@ docker compose -f docker-compose.selfhost.yml up -d
 
 ### WebSocket for LAN / Non-localhost Access
 
-HTTP requests (issues, comments, file uploads) work on LAN out of the box — the frontend forwards `/api`, `/auth`, and `/health` to the backend. **WebSockets do not**: Next.js rewrites only forward HTTP requests, not the `Upgrade` handshake a WebSocket needs. If you open the app on `http://<lan-ip>:3000`, real-time features (chat streaming, live issue updates, notifications) will fail to connect until you do one of the following:
+The backend validates the WebSocket `Origin` header against an allowlist that defaults to `localhost` only. When a client connects from any other origin — a LAN IP or a public domain behind a reverse proxy — set `CORS_ALLOWED_ORIGINS` (or `FRONTEND_ORIGIN`) on the backend to that exact origin and restart, as shown under [LAN / Non-localhost Access](#lan--non-localhost-access). Otherwise the upgrade is refused with `403`: the backend logs `websocket: request origin not allowed by Upgrader.CheckOrigin`. The same value covers HTTP CORS and the WebSocket origin check.
 
-1. **Put a reverse proxy in front of the stack (recommended).** Nginx or Caddy terminates the WebSocket upgrade and forwards it to the backend on port 8080. See the [Reverse Proxy](#reverse-proxy) section above — the Nginx example already includes a `location /ws { ... }` block with the correct `Upgrade` / `Connection` headers. Once a proxy is in place the browser connects directly through it, so no frontend rebuild is needed.
-
-2. **Bake a WebSocket URL into the web image.** If you are not running a reverse proxy, rebuild the web image with `NEXT_PUBLIC_WS_URL` pointing straight at the backend (port 8080 must be reachable from the browser):
-
-   ```bash
-   # In .env
-   NEXT_PUBLIC_WS_URL=ws://<lan-ip>:8080/ws
-
-   # Rebuild the web image so the build-time value is baked in
-   docker compose -f docker-compose.selfhost.yml -f docker-compose.selfhost.build.yml up -d --build
-   ```
-
-   `NEXT_PUBLIC_WS_URL` is a build-time variable (see `Dockerfile.web`), so setting it only in `environment:` on the pre-built image has no effect — you must use the `selfhost.build.yml` override that rebuilds the image.
-
-**Also required: allowlist the browser origin.** The two options above fix the WebSocket *upgrade proxying*, but a second, independent setting gates the connection: the backend validates the WebSocket `Origin` header against an allowlist that defaults to `localhost` only. When you open Multica from any other origin — a LAN IP **or a public domain behind a reverse proxy** — set `CORS_ALLOWED_ORIGINS` (or `FRONTEND_ORIGIN`) on the backend to that exact origin and restart, exactly as shown under [LAN / Non-localhost Access](#lan--non-localhost-access) above. Otherwise the upgrade is refused with `403`: the backend logs `websocket: request origin not allowed by Upgrader.CheckOrigin` and the browser console loops `disconnected, reconnecting in 3s`, while HTTP requests (and manual page refreshes) keep working because they are same-origin to the page. The single value covers both HTTP CORS and the WebSocket origin check.
-
-> **Note:** If you need to hard-code a different public API / WebSocket endpoint into the web image for any other reason, use the same source-build override: `docker compose -f docker-compose.selfhost.yml -f docker-compose.selfhost.build.yml up -d --build`.
+The Nginx example above includes a `location /ws` block with `Upgrade` and `Connection` headers. Caddy's `flush_interval -1` does the same job.
 
 ## Health Check
 

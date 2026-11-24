@@ -26,33 +26,31 @@ Pour une explication orientée produit, consultez [Fonctionnement de Multica](/h
 | Répertoire | Responsabilité | Technologies principales |
 | --- | --- | --- |
 | `server/` | API, authentification, ordonnancement des tasks, intégrations, CLI et daemon | Go, Chi, sqlc, gorilla/websocket |
-| `apps/web/` | Client navigateur et page d'accueil | Next.js App Router |
 | `apps/desktop/` | Client de bureau et gestion des processus locaux | Electron, electron-vite |
 | `apps/mobile/` | Client iOS autonome | Expo, React Native |
 | `apps/docs/` | Site de documentation multilingue | Next.js, Fumadocs |
 | `packages/core/` | Client API, types, queries, mutations et logique métier indépendante de la plateforme | TanStack Query, Zustand |
 | `packages/ui/` | UI de base sans logique métier | shadcn, Base UI |
-| `packages/views/` | Pages et composants métier partagés par Web et Desktop | React |
+| `packages/views/` | Pages et composants métier de Desktop | React |
 | `packages/tsconfig/`, `packages/eslint-config/` | Configuration d'outillage partagée | TypeScript, ESLint |
 
 Les packages partagés exportent directement des fichiers source `.ts` et `.tsx`, compilés par les applications qui les consomment. Le sens des dépendances est `views → core + ui` ; `core` et `ui` ne dépendent pas l'un de l'autre.
 
-## Partage de code entre Web et Desktop
+## Interface partagée
 
-Web et Desktop partagent trois couches :
+L'interface produit de Desktop tient en trois couches :
 
 1. `packages/core` gère les API, le cache, les permissions et l'état indépendant de la plateforme.
 2. `packages/ui` fournit les composants de base.
 3. `packages/views` compose les pages métier.
 
-Les capacités propres à chaque plateforme, comme le routage, les cookies et l'IPC Electron, restent dans la couche applicative. Les pages partagées naviguent via `NavigationAdapter` et n'importent pas directement `next/*` ni `react-router-dom`.
+Les capacités propres à la plateforme, comme le routage et l'IPC Electron, restent dans la couche applicative. Les pages partagées naviguent via `NavigationAdapter` et n'importent pas directement `next/*` ni `react-router-dom`.
 
-Par exemple, une fonctionnalité liée aux tâches dont Web et Desktop ont tous deux besoin touche généralement :
+Une fonctionnalité liée aux tâches touche généralement :
 
 ```text
 packages/core/issues/      queries, mutations, mises à jour du cache
 packages/views/issues/     pages et composants métier
-apps/web/platform/         adaptateur de routage Next.js
 apps/desktop/.../platform/ adaptateur de routage Electron
 ```
 

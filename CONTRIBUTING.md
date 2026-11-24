@@ -11,7 +11,7 @@ It covers:
 - isolated worktree development
 - the shared PostgreSQL model
 - testing and verification
-- full-stack isolated testing (backend + frontend + daemon from source)
+- full-stack isolated testing (backend + daemon from source)
 - troubleshooting and destructive reset options
 
 ## Contribution Terms
@@ -37,7 +37,7 @@ Local development uses one shared PostgreSQL container and one database per chec
 - each Git worktree uses its own `.env.worktree`
 - every checkout connects to the same PostgreSQL host: `localhost:5432`
 - isolation happens at the database level, not by starting a separate Docker Compose project
-- backend and frontend ports are still unique per worktree
+- the API port and the allocated `FRONTEND_PORT` are still unique per worktree
 
 This keeps Docker simple while still isolating schema and data.
 
@@ -135,7 +135,7 @@ Notes:
 
 - `POSTGRES_DB` is unique per worktree
 - `POSTGRES_PORT` stays fixed at `5432`
-- backend and frontend ports are derived from the worktree path hash
+- the API port and `FRONTEND_PORT` are derived from the worktree path hash. Nothing listens on `FRONTEND_PORT`; the API's `FRONTEND_ORIGIN` and the desktop `appUrl` are built from it
 - `make worktree-env` refuses to overwrite an existing `.env.worktree`
 
 To regenerate a worktree env file:
@@ -150,8 +150,8 @@ An environment is the database, ports, CLI profile and processes that belong to
 one checkout. It is a named object: it can be listed, inspected and deleted.
 
 ```bash
-make up                      # start this checkout's environment (api + collab + web)
-make up C=api,collab,web,daemon  # choose the components
+make up                      # start this checkout's environment (api + collab)
+make up C=api,collab,daemon      # choose the components
 make status                  # what is running, and whether it is yours
 make list                    # every environment on this machine
 make down                    # stop the processes, keep the data
@@ -160,17 +160,17 @@ make destroy                 # stop, then drop the database and free the slot
 make gc                      # collect expired environments or ones whose checkout is gone
 ```
 
-Components are `api` (Go backend), `collab` (live doc co-editing), `web`
-(Next.js), `daemon` (agent daemon) and `desktop` (Electron). Selecting any of
+Components are `api` (Go backend), `collab` (live doc co-editing),
+`daemon` (agent daemon) and `desktop` (Electron). Selecting any of
 them implies `api`. `collab` gets its own port and a secret generated for the
 environment, and the API is wired to it only while it runs, so leaving it out
-(`make up C=api,web`) just turns docs back to saving through the API. `make up` is
+(`make up C=api`) just turns docs back to saving through the API. `make up` is
 idempotent: re-running it against a live environment reuses the database, the
 profile and any component already healthy.
 
 Three properties are worth knowing because the old flow lacked them:
 
-- **API, Web and Desktop renderer ports, database names and profiles are allocated, not recomputed.** The
+- **API, public-origin and Desktop renderer ports, database names and profiles are allocated, not recomputed.** The
   allocator starts from this directory's path hash, so a checkout keeps the
   numbers it has always had, and moves only when the registry or a live
   listener says the slot is taken. The registry lives in `~/.multica/dev/`;
@@ -193,10 +193,10 @@ Three properties are worth knowing because the old flow lacked them:
 Run any command inside an environment's variables without repeating them:
 
 ```bash
-make env-exec ARGS="-- pnpm exec playwright test"
+make env-exec ARGS="-- node scripts/dev-fixtures.mjs --help"
 ```
 
-`make dev` (below) still runs backend and frontend in the foreground of your
+`make dev` (below) still runs the backend in the foreground of your
 terminal, which is the right thing when you want Ctrl-C to stop everything.
 
 ## First-Time Setup
@@ -218,7 +218,7 @@ This single command:
 - ensures the shared PostgreSQL container is running
 - creates the application database if it does not exist
 - runs all migrations
-- starts both backend and frontend
+- starts the backend
 
 ### Explicit Setup (advanced)
 
@@ -339,11 +339,11 @@ Example:
 - main checkout
   - database: `multica`
   - backend: `8080`
-  - frontend: `3000`
+  - `FRONTEND_PORT`: `3000` (allocated; nothing listens)
 - worktree checkout
   - database: `multica_my_feature_702`
   - backend: generated worktree port such as `18782`
-  - frontend: generated worktree port such as `13702`
+  - `FRONTEND_PORT`: generated worktree port such as `13702` (allocated; nothing listens)
 
 Both checkouts use:
 
@@ -419,13 +419,13 @@ Before `make test`, `make check`, or `make check-worktree`, stop any development
 
 ### Dev Toolbar
 
-Set `VITE_DEV_TOOLBAR=1` to pin a status bar to the bottom of the Web and Desktop dev builds. It shows the client, backend host, workspace, your role, and route, plus live JS heap, last navigation time, main-thread long-task share, in-flight requests, and WebSocket state. Production builds never render it.
+Set `VITE_DEV_TOOLBAR=1` to pin a status bar to the bottom of the Desktop dev build. It shows the client, backend host, workspace, your role, and route, plus live JS heap, last navigation time, main-thread long-task share, in-flight requests, and WebSocket state. Production builds never render it.
 
 ```bash
-VITE_DEV_TOOLBAR=1 make up          # or: VITE_DEV_TOOLBAR=1 pnpm dev:web / pnpm dev:desktop
+VITE_DEV_TOOLBAR=1 make up          # or: VITE_DEV_TOOLBAR=1 pnpm dev:desktop
 ```
 
-To keep it on, add the line to the env file `make` loads (`.env` / `.env.worktree`), or to `apps/web/.env.local` / `apps/desktop/.env.development.local` for a direct `pnpm dev:*`. The minimize button at its right end collapses it to a small handle. In Desktop, **View → Show Dev Toolbar** turns it off and on without a restart, and the choice is remembered; while it is off, nothing is recorded, and turning it back on starts a new recording.
+To keep it on, add the line to the env file `make` loads (`.env` / `.env.worktree`), or to `apps/desktop/.env.development.local` for a direct `pnpm dev:desktop`. The minimize button at its right end collapses it to a small handle. In Desktop, **View → Show Dev Toolbar** turns it off and on without a restart, and the choice is remembered; while it is off, nothing is recorded, and turning it back on starts a new recording.
 
 Each reading opens the last five minutes behind it, kept in memory in that tab only: the heap curve and Query cache size (Mem), route changes and their timings (Nav), long tasks and the route they hit (Jank), every API request with its status, `X-Request-ID`, body and a copyable curl (Net), WebSocket state changes (Sync), and console errors, uncaught exceptions and unhandled rejections (Errors).
 
@@ -470,13 +470,10 @@ This runs:
 1. TypeScript typecheck
 2. TypeScript unit tests
 3. Go tests
-4. Playwright E2E tests
 
 Notes:
 
 - Go tests create their own fixture data
-- E2E tests create their own workspace and issue fixtures
-- the check flow starts backend/frontend only if they are not already running
 
 ## Local Codex Daemon
 
@@ -491,11 +488,11 @@ runtimes for all watched workspaces from the CLI config.
 
 ## Full-Stack Isolated Testing
 
-Running the complete stack — backend, frontend and daemon — from source, with
+Running the complete stack — backend and daemon — from source, with
 its own database and CLI profile, is one command:
 
 ```bash
-make up C=api,web,daemon
+make up C=api,daemon
 ```
 
 It creates the environment if needed, writes the CLI profile for the local
@@ -519,7 +516,7 @@ Two constraints are enforced rather than documented:
   CLI profile, or the `desktop-localhost-<backend port>` profile its Desktop
   signs in), pointed at that environment's API, from a process the task's
   `MULTICA_*` identity was stripped from. `make up` launches the daemon and
-  Desktop exactly that way, so an agent can run `make up C=api,web,daemon` and
+  Desktop exactly that way, so an agent can run `make up C=api,daemon` and
   test a real agent run. `make destroy` stops the daemon and removes its profile.
 
 ### An environment that outlives the agent's run
@@ -529,37 +526,30 @@ Multica task starts an environment this repository declares in
 `.multica/environments.toml`:
 
 ```bash
-multica env start web          # make up C=api,web
 multica env start desktop      # make up C=desktop ARGS=--cdp
-multica env stop web
+multica env stop desktop
 ```
 
-The daemon lists each one in the issue sidebar and stops it after 24 hours.
+The daemon lists it in the issue sidebar and stops it after 24 hours.
 
-- `web` has the URL `http://localhost:$MULTICA_PORT`, which redirects to the web
-  app on the port `make up` allocated.
-- `desktop` has no URL. The sidebar shows it as an app, and Desktop on the same
-  machine brings its window forward.
-
-Both are this checkout's `make up` environment, so they share one API and
-database, and `make status` and `make env-exec` work as usual. Stopping one
-leaves the other running; stopping the last one, or the last one's app going
-away, runs `make destroy`. A component started with a plain `make up` counts
-as in use too, and an environment that existed before `multica env start` is
-left in place, with its own owner and TTL. See
+`desktop` has no URL. The sidebar shows it as an app, and Desktop on the same
+machine brings its window forward. It is this checkout's `make up` environment,
+so `make status` and `make env-exec` work as usual. Stopping it, or the app
+going away, runs `make destroy`, unless the environment already existed before
+`multica env start`. That borrowed environment keeps its owner and TTL. See
 [Local Environments](CLI_AND_DAEMON.md#local-environments) for the file format.
 
-### Web with realistic content
+### Realistic content
 
 Every `make up`, whatever components it starts, marks `dev@localhost`
-onboarded and seeds the `dev` workspace with two issues. There is no sign-in,
-so a Playwright script can open `/dev/issues` directly.
+onboarded and seeds the `dev` workspace with two issues. There is no sign-in:
+the API serves every request as this local user.
 
 For chat and Agent Builder content without a model or a daemon, add one-shot
 fixtures:
 
 ```bash
-make up C=api,web ARGS="--ephemeral"
+make up C=api ARGS="--ephemeral"
 make env-exec ARGS="-- node scripts/dev-fixtures.mjs all"      # or: chat builder issue task sidebar, --json
 make destroy ARGS="--yes"
 ```
@@ -772,7 +762,7 @@ That is expected.
 - `make stop-main`
 - `make stop-worktree`
 
-only stop backend/frontend processes.
+only stop the backend process.
 
 To stop the shared PostgreSQL container:
 
@@ -792,7 +782,7 @@ If you want a fresh database for the current checkout only (drops the
 database named in `POSTGRES_DB`, recreates it, and runs all migrations):
 
 ```bash
-make stop        # stop backend/frontend first
+make stop        # stop the backend first
 make db-reset
 make start
 ```
