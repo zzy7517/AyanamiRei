@@ -483,9 +483,9 @@ func TestErrorKindString(t *testing.T) {
 }
 
 // TestFormatErrorRejectedTaskTokenDoesNotSuggestAnotherCredential is GH #7522
-// in one assertion. The generic 401 copy tells the reader to run `multica
-// login` or ask an administrator for valid credentials. That is right for a
-// person and wrong for an agent: after its task token stopped working mid-run,
+// in one assertion. The generic 401 copy sends the reader off to check their
+// own setup. That is right for a person and wrong for an agent: after its task
+// token stopped working mid-run,
 // one read the daemon owner's profile PAT and kept working under the member's
 // identity. A 401 on a task token has to read as "stop", never as "find a
 // working credential".
@@ -541,11 +541,12 @@ func TestFormatErrorRejectedTaskTokenDoesNotSuggestAnotherCredential(t *testing.
 		t.Errorf("zh copy dropped the `task` term entirely: %q", zh)
 	}
 
-	// A member 401 is unchanged: that really is an expired login.
+	// A 401 outside a task gets the server-refused copy, never sign-in
+	// advice: there is no sign-in to repeat.
 	withLang(t, "en_US.UTF-8")
 	member := FormatError(&HTTPError{Method: "GET", Path: "/api/me", StatusCode: 401}, false)
-	if !strings.Contains(member, "multica login") {
-		t.Errorf("a member 401 should still point at sign-in, got %q", member)
+	if !strings.Contains(member, "refused the request") || strings.Contains(member, "multica login") {
+		t.Errorf("a 401 outside a task must name the refused request, not a sign-in, got %q", member)
 	}
 
 	// Exit classification is unchanged — still an auth failure.
@@ -563,7 +564,7 @@ func TestFormatErrorActionableHints(t *testing.T) {
 		enWant []string
 		zhWant []string
 	}{
-		{401, []string{"multica login", "self-hosted", "administrator"}, []string{"multica login", "自托管", "管理员"}},
+		{401, []string{"refused the request", "multica config show"}, []string{"拒绝了请求", "multica config show"}},
 		{403, []string{"permission", "workspace"}, []string{"无权", "workspace"}},
 		{404, []string{"not found", "list"}, []string{"未找到", "list"}},
 		{409, []string{"conflict", "again"}, []string{"冲突", "重新获取"}},
@@ -597,22 +598,22 @@ func TestFormatErrorActionableHints(t *testing.T) {
 // TestUserMessageError proves the command-level user-facing wrapper: the
 // custom message is shown by default (overriding the generic kind copy),
 // ExitCodeFor still classifies by the underlying typed error, and --debug
-// still exposes the full original chain. This is the mechanism that makes the
-// `multica login` failure guidance visible without losing classification.
+// still exposes the full original chain. This is the mechanism that makes a
+// command's own guidance visible without losing classification.
 func TestUserMessageError(t *testing.T) {
 	withLang(t, "en_US.UTF-8")
-	const hint = "Could not sign in with that token — make sure it is valid and not expired, then run `multica login --token <token>` again."
+	const hint = "Could not delete the agent — it still has queued tasks."
 
-	t.Run("wrapped HTTPError (invalid token -> 401)", func(t *testing.T) {
+	t.Run("wrapped HTTPError", func(t *testing.T) {
 		underlying := &HTTPError{Method: "GET", Path: "/api/me", StatusCode: 401, Body: `{"error":"unauthorized"}`}
 		err := WithUserMessage(hint, underlying)
 
 		// Default output shows the command hint, not the generic 401 line.
 		got := FormatError(err, false)
 		if got != hint {
-			t.Errorf("FormatError(false) = %q, want the login hint", got)
+			t.Errorf("FormatError(false) = %q, want the command hint", got)
 		}
-		if strings.Contains(got, "session has expired") {
+		if strings.Contains(got, "refused the request") {
 			t.Errorf("default output leaked the generic 401 copy: %q", got)
 		}
 
@@ -636,14 +637,14 @@ func TestUserMessageError(t *testing.T) {
 
 	t.Run("wrapped NetworkError classifies as network", func(t *testing.T) {
 		underlying := &NetworkError{Kind: KindNetworkTimeout, Op: "GET /api/me", Err: errors.New("context deadline exceeded")}
-		err := WithUserMessage("Sign-in did not complete: the server did not accept the new credential. Run `multica login` again.", underlying)
+		err := WithUserMessage("Could not delete the agent — the server did not answer.", underlying)
 
 		if code := ExitCodeFor(err); code != ExitNetwork {
 			t.Errorf("ExitCodeFor = %d, want ExitNetwork(%d)", code, ExitNetwork)
 		}
 		got := FormatError(err, false)
-		if !strings.Contains(got, "Sign-in did not complete") {
-			t.Errorf("FormatError(false) = %q, want the sign-in hint", got)
+		if !strings.Contains(got, "Could not delete the agent") {
+			t.Errorf("FormatError(false) = %q, want the command hint", got)
 		}
 		if strings.Contains(got, "timed out") {
 			t.Errorf("default output leaked the generic network copy: %q", got)
@@ -723,44 +724,4 @@ func TestFormatErrorTLSHandshakeTimeoutHint(t *testing.T) {
 			t.Errorf("ZH %q missing %q", zh, sub)
 		}
 	}
-}
-
-// TestWithUserMessageUnlessNetwork pins what `multica login` relies on: its
-// sign-in copy explains an HTTP refusal and must not paper over a transport
-// failure, whose kind copy is the only text that names the remedy.
-func TestWithUserMessageUnlessNetwork(t *testing.T) {
-	withLang(t, "en_US.UTF-8")
-	const hint = "Could not sign in with that token — make sure it is valid and not expired, then run `multica login --token <token>` again."
-
-	t.Run("HTTP refusal keeps the command copy", func(t *testing.T) {
-		underlying := &HTTPError{Method: "GET", Path: "/api/me", StatusCode: 401, Body: `{"error":"unauthorized"}`}
-		err := WithUserMessageUnlessNetwork(hint, underlying)
-		if got := FormatError(err, false); got != hint {
-			t.Errorf("FormatError = %q, want the login hint", got)
-		}
-		if code := ExitCodeFor(err); code != ExitAuth {
-			t.Errorf("ExitCodeFor = %d, want ExitAuth(%d)", code, ExitAuth)
-		}
-	})
-
-	t.Run("transport failure keeps the network copy", func(t *testing.T) {
-		underlying := wrapTransport(nil, errors.New("Get \"https://api.multica.ai/api/me\": net/http: TLS handshake timeout"))
-		err := WithUserMessageUnlessNetwork(hint, underlying)
-		if err != underlying {
-			t.Fatalf("expected the *NetworkError to pass through unchanged, got %T", err)
-		}
-		got := FormatError(err, false)
-		if strings.Contains(got, "valid and not expired") {
-			t.Errorf("token copy masked a transport failure: %q", got)
-		}
-		if !strings.Contains(got, "GODEBUG=tlsmlkem=0") {
-			t.Errorf("network remedy missing from %q", got)
-		}
-	})
-
-	t.Run("nil error returns nil", func(t *testing.T) {
-		if WithUserMessageUnlessNetwork("x", nil) != nil {
-			t.Errorf("WithUserMessageUnlessNetwork(_, nil) should be nil")
-		}
-	})
 }

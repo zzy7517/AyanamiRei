@@ -114,15 +114,13 @@ context:
   profile.
 - `config show` and `config set` operate only on task-local Multica state. A
   missing task config root fails closed.
-- `auth status` may verify the task identity but omits all token material from
-  its output.
 - `daemon status` and `daemon disk-usage` report on the runtime hosting this
   task: `status` probes the daemon-injected health port, and `disk-usage` scans
   the daemon-injected workspaces root. Both refuse `--profile`, `disk-usage`
   also refuses `--all-profiles` and `--workspaces-root`, and its STATUS column
   stays blank because filling it would spend the Owner's credential.
-- Human/local profile and daemon commands — including `login`, `logout`,
-  `setup`, `workspace switch`, local runtime profile path mutation,
+- Human/local profile and daemon commands — including `setup`,
+  `workspace switch`, local runtime profile path mutation,
   `daemon start` / `stop` / `restart`, `daemon logs`, and
   `daemon probe-runtimes` — are unavailable. `daemon stop` in particular would
   terminate the daemon running this task and every sibling task on it.

@@ -261,7 +261,7 @@ func TestHelperStatusErrorsAreClassified(t *testing.T) {
 		wantExit int
 		wantCopy string
 	}{
-		{http.StatusUnauthorized, ExitAuth, "multica login"},
+		{http.StatusUnauthorized, ExitAuth, "refused the request"},
 		{http.StatusForbidden, ExitAuth, "permission"},
 		{http.StatusNotFound, ExitNotFound, "not found"},
 		{http.StatusUnprocessableEntity, ExitValidation, "title is required"},
@@ -405,11 +405,11 @@ func TestAPITimeoutRespectsEnv(t *testing.T) {
 			t.Errorf("AtLeastAPITimeout = %v, want %v", got, want)
 		}
 	})
-	// The login workspace-creation poll uses a short 10s floor to stay
-	// responsive, but it must still honor MULTICA_HTTP_TIMEOUT (it is not a
-	// silent exception to the env-override promise). With the env unset the
-	// budget is at least the 10s floor; with the env raised it scales up.
-	t.Run("login poll 10s floor honors env override", func(t *testing.T) {
+	// A caller that asks for a short 10s floor to stay responsive must still
+	// honor MULTICA_HTTP_TIMEOUT (it is not a silent exception to the
+	// env-override promise). With the env unset the budget is at least the
+	// 10s floor; with the env raised it scales up.
+	t.Run("10s floor honors env override", func(t *testing.T) {
 		t.Setenv("MULTICA_HTTP_TIMEOUT", "")
 		if got := AtLeastAPITimeout(10 * time.Second); got < 10*time.Second {
 			t.Errorf("AtLeastAPITimeout(10s) = %v, want >= 10s floor", got)

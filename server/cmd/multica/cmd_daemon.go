@@ -397,7 +397,7 @@ func (e *unknownProfileError) Error() string {
 	if len(e.Known) == 0 {
 		// The command is left unquoted so the shell-quoted profile name below
 		// stays the only quoting in the line and the hint pastes cleanly.
-		return fmt.Sprintf("unknown profile %q: no named profiles exist yet.\nCreate one with: multica login --profile %s", e.Profile, shellQuoteArg(e.Profile))
+		return fmt.Sprintf("unknown profile %q: no named profiles exist yet.\nCreate one with: multica --profile %s setup", e.Profile, shellQuoteArg(e.Profile))
 	}
 	return fmt.Sprintf("unknown profile %q\nKnown profiles: %s", e.Profile, strings.Join(e.Known, ", "))
 }
@@ -644,12 +644,12 @@ func runDaemonBackground(cmd *cobra.Command) error {
 	pid := child.Process.Pid
 
 	// Watch for early death instead of Release()ing right away: a child that
-	// fails preflight (unreachable server, token rejected with 401, ...) exits
-	// within seconds, and without this signal the readiness poll below would
-	// blindly run out its full window before printing a vague warning. The
-	// goroutine leaks Wait() for the (short) remainder of this process when
-	// the daemon starts fine — the child is never killed by it and keeps
-	// running independently, same as with Release().
+	// fails preflight (unreachable server, ...) exits within seconds, and
+	// without this signal the readiness poll below would blindly run out its
+	// full window before printing a vague warning. The goroutine leaks Wait()
+	// for the (short) remainder of this process when the daemon starts fine —
+	// the child is never killed by it and keeps running independently, same as
+	// with Release().
 	waitCh := make(chan error, 1)
 	go func() { waitCh <- child.Wait() }()
 
@@ -681,16 +681,16 @@ func runDaemonBackground(cmd *cobra.Command) error {
 func waitForDaemonStartup(waitCh <-chan error, pid int, profile string, startupTimeout time.Duration, logs daemonStartupLogs, serverURL string) (bool, error) {
 	// Poll the health endpoint until the daemon reports ready ("running") or we
 	// time out. The daemon binds the health port almost immediately but reports
-	// status:"starting" until preflight finishes (PAT renew + initial workspace
-	// sync, which exec's every configured agent for version detection and can
-	// take ~20s on a cold cache). Wait long enough to cover that so a healthy
-	// cold start is not misreported as a failure.
+	// status:"starting" until preflight finishes (initial workspace sync, which
+	// exec's every configured agent for version detection and can take ~20s on
+	// a cold cache). Wait long enough to cover that so a healthy cold start is
+	// not misreported as a failure.
 	deadline := time.Now().Add(startupTimeout)
 	lastStatus := ""
 	for time.Now().Before(deadline) {
 		select {
 		case waitErr := <-waitCh:
-			return false, daemonStartupFailureError(logs, waitErr, profile, serverURL)
+			return false, daemonStartupFailureError(logs, waitErr, serverURL)
 		case <-time.After(500 * time.Millisecond):
 		}
 		// The child publishes the port only after it has bound the listener.
@@ -747,31 +747,19 @@ type daemonStartupLogs struct {
 }
 
 // daemonStartupFailureError turns a daemon child that exited before ever
-// reporting ready into a friendly, actionable error. The two failure modes
-// users actually hit — stored token rejected by the server, server not
-// reachable — are recognized from what this startup attempt appended to the
-// structured log and the crash sink, and rendered as one reason line plus a
-// next step. Anything else falls back to a log excerpt with DBG/INF noise
-// dropped.
-func daemonStartupFailureError(logs daemonStartupLogs, waitErr error, profile, serverURL string) error {
+// reporting ready into a friendly, actionable error. An unreachable server is
+// recognized from what this startup attempt appended to the structured log and
+// the crash sink, and rendered as one reason line plus a next step. Anything
+// else falls back to a log excerpt with DBG/INF noise dropped.
+func daemonStartupFailureError(logs daemonStartupLogs, waitErr error, serverURL string) error {
 	lines := readLogTailSince(logs.logPath, logs.logOffset, 40)
 	crashLines := readLogTailSince(logs.errLogPath, logs.errLogOffset, 40)
 	joined := strings.Join(append(append([]string{}, lines...), crashLines...), "\n")
 
-	loginHint := "multica login"
-	if profile != "" {
-		loginHint += " --profile " + profile
-	}
-
-	switch {
-	case strings.Contains(joined, "auth token rejected") ||
-		strings.Contains(joined, "returned 401") ||
-		strings.Contains(joined, "not authenticated"):
-		return fmt.Errorf("daemon failed to start: the server rejected your login token (it may have expired or been revoked).\nRun '%s' to sign in again, then rerun 'multica daemon start'.\nFull log: %s", loginHint, logs.logPath)
-	case strings.Contains(joined, "connection refused") ||
+	if strings.Contains(joined, "connection refused") ||
 		strings.Contains(joined, "no such host") ||
 		strings.Contains(joined, "i/o timeout") ||
-		strings.Contains(joined, "network is unreachable"):
+		strings.Contains(joined, "network is unreachable") {
 		target := "the Multica server"
 		if serverURL != "" {
 			target += " at " + serverURL
@@ -1296,12 +1284,11 @@ func runDaemonRestart(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		// Validate the restart can succeed BEFORE the stop phase, not just
-		// inside the start phase: an unreachable
-		// server would otherwise kill the running daemon and then fail to
-		// start a replacement, leaving no daemon at all. When nothing is
-		// running there is nothing to lose, so the cheaper start-path checks
-		// (empty-token guard + early child-exit detection) handle it without
-		// this extra server round-trip.
+		// inside the start phase: an unreachable server would otherwise kill
+		// the running daemon and then fail to start a replacement, leaving no
+		// daemon at all. When nothing is running there is nothing to lose, so
+		// the cheaper start-path check (early child-exit detection) handles it
+		// without this extra server round-trip.
 		if err := requireDaemonRestartPreflight(cmd, profile); err != nil {
 			return err
 		}

@@ -54,6 +54,25 @@ func startBlockingChild(t *testing.T) int {
 	return child.Process.Pid
 }
 
+// stubDaemonChild makes `daemon start` spawn `false` instead of the resolved
+// executable, which in a test run is the test binary: the child exits at once,
+// so a start that gets as far as spawning reports "daemon exited during
+// startup". Autostart registration is silenced so the test never touches the
+// developer's login entries.
+func stubDaemonChild(t *testing.T) {
+	t.Helper()
+	falseBin, err := exec.LookPath("false")
+	if err != nil {
+		t.Skipf("false binary unavailable: %v", err)
+	}
+	originalExecutable := daemonExecutable
+	daemonExecutable = func() (string, error) { return falseBin, nil }
+	t.Cleanup(func() { daemonExecutable = originalExecutable })
+	originalSync := syncDaemonAutostart
+	syncDaemonAutostart = func(string, bool) {}
+	t.Cleanup(func() { syncDaemonAutostart = originalSync })
+}
+
 // stubDaemon is a fake daemon on a real health port. It serves /shutdown as
 // well as /health so `daemon stop` can complete through its graceful path:
 // without that endpoint stop falls back to process.Kill() on whatever PID the
@@ -210,15 +229,26 @@ func TestDaemonLifecycleRefusesForeignDaemon(t *testing.T) {
 	}
 }
 
+// Unlike stop and restart, start does not refuse a live daemon of another
+// profile on its health port: the foreground child can use a fallback port, so
+// start announces the collision and still spawns the child.
 func TestDaemonStartCanFallBackFromForeignProfilePort(t *testing.T) {
 	clearDaemonTaskEnv(t)
 	mkProfiles(t, "collide-ab", "collide-ba")
+	// Same bytes, so the same hashed port: the shape of a real collision
+	// without depending on a lucky pair of names.
 	serveHealthAs(t, "collide-ab", map[string]any{"profile": "collide-ab"})
-	cmd := daemonStatusCmdFor(t, "collide-ba", "")
-	cmd.Flags().Bool("foreground", false, "")
-	err := runDaemonBackground(cmd)
-	if err == nil || !strings.Contains(err.Error(), "not logged in") {
-		t.Fatalf("start error = %v, want auth check after allowing a fallback port", err)
+	stubDaemonChild(t)
+
+	stderr := captureStderr(t)
+	defer stderr.restore()
+	err := runDaemonBackground(daemonStatusCmdFor(t, "collide-ba", ""))
+	out := stderr.read()
+	if err == nil || !strings.Contains(err.Error(), "daemon exited during startup") {
+		t.Fatalf("start error = %v, want the stub child's exit, which proves start spawned past the port collision", err)
+	}
+	if !strings.Contains(out, "belongs to another profile; trying a fallback port") {
+		t.Fatalf("stderr = %q, want the fallback-port notice", out)
 	}
 }
 

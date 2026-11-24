@@ -5,12 +5,73 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+func TestDaemonStartupFailureError(t *testing.T) {
+	t.Parallel()
+
+	writeLog := func(t *testing.T, name, content string) string {
+		t.Helper()
+		logPath := filepath.Join(t.TempDir(), name)
+		if err := os.WriteFile(logPath, []byte(content), 0o644); err != nil {
+			t.Fatalf("write log: %v", err)
+		}
+		return logPath
+	}
+
+	t.Run("server unreachable via crash sink", func(t *testing.T) {
+		t.Parallel()
+		// The detached child routes slog into daemon.log, but its final cobra
+		// error line goes to raw stderr — the crash sink. The "connection
+		// refused" reason may therefore exist ONLY there.
+		logPath := writeLog(t, "daemon.log", "18:40:46.588 DBG syncing workspaces component=daemon\n")
+		errLogPath := writeLog(t, "daemon.err.log", `Error: list workspaces: Get "http://localhost:8080/api/workspaces": dial tcp [::1]:8080: connect: connection refused
+`)
+		err := daemonStartupFailureError(daemonStartupLogs{logPath: logPath, errLogPath: errLogPath}, nil, "http://localhost:8080")
+		msg := err.Error()
+		if !strings.Contains(msg, "cannot reach the Multica server at http://localhost:8080") {
+			t.Fatalf("error = %q, want server-unreachable reason with URL", msg)
+		}
+		if strings.Contains(msg, "dial tcp") || strings.Contains(msg, "component=daemon") {
+			t.Fatalf("error = %q, want no raw log lines for a classified failure", msg)
+		}
+	})
+
+	t.Run("unrecognized failure keeps filtered excerpt plus crash output", func(t *testing.T) {
+		t.Parallel()
+		logPath := writeLog(t, "daemon.log", `18:00:00.001 DBG some debug detail component=daemon
+18:00:00.002 INF starting daemon component=daemon
+18:00:00.003 ERR something exploded component=daemon
+`)
+		errLogPath := writeLog(t, "daemon.err.log", "open /nope: permission denied\n")
+		err := daemonStartupFailureError(daemonStartupLogs{logPath: logPath, errLogPath: errLogPath}, nil, "http://localhost:8080")
+		msg := err.Error()
+		if !strings.Contains(msg, "something exploded") || !strings.Contains(msg, "permission denied") {
+			t.Fatalf("error = %q, want WRN/ERR and crash lines kept", msg)
+		}
+		if strings.Contains(msg, "some debug detail") || strings.Contains(msg, "starting daemon") {
+			t.Fatalf("error = %q, want DBG/INF noise dropped", msg)
+		}
+		if !strings.Contains(msg, errLogPath) {
+			t.Fatalf("error = %q, want pointer to the crash sink", msg)
+		}
+	})
+
+	t.Run("empty logs", func(t *testing.T) {
+		t.Parallel()
+		logPath := writeLog(t, "daemon.log", "")
+		err := daemonStartupFailureError(daemonStartupLogs{logPath: logPath}, nil, "")
+		if !strings.Contains(err.Error(), "daemon exited during startup") || !strings.Contains(err.Error(), logPath) {
+			t.Fatalf("error = %q, want generic failure pointing at the log file", err)
+		}
+	})
+}
 
 func TestWaitForDaemonStartup(t *testing.T) {
 	const pid = 12345

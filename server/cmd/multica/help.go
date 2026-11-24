@@ -135,7 +135,7 @@ USAGE
 FLAGS
 {{.LocalFlags.FlagUsages}}
 EXAMPLES
-  $ multica login
+  $ multica setup
   $ multica issue list --output json
   $ multica daemon start
   $ multica agent list --output json

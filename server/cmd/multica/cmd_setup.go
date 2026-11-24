@@ -361,7 +361,7 @@ func saveSetupTarget(profile, serverURL, appURL string, expected cli.CLIConfig) 
 // the caller uses it to decide whether a remote host needs an explicit app_url.
 //
 // Falling back to existing.ServerURL means re-running setup self-host (e.g. to
-// re-login or restart the daemon) keeps a configured remote deployment instead
+// restart the daemon) keeps a configured remote deployment instead
 // of silently resetting it to http://localhost:8080. An explicit --port opts
 // back into the localhost path for the local-dev case.
 //
@@ -424,8 +424,8 @@ func serverHostIsLocal(serverURL string) bool {
 
 // promptAppURL asks the user for the frontend URL interactively. We can't
 // derive it from a remote server_url — api.example.com ≠ app.example.com in
-// most production setups — so guessing would just defer the failure to the
-// browser login step. Returns an empty string if the user hits enter.
+// most production setups — so guessing would only store a wrong address.
+// Returns an empty string if the user hits enter.
 func promptAppURL(serverURL string) (string, error) {
 	fmt.Fprintf(os.Stderr, "No --app-url provided, and --server-url (%s) is remote.\n", serverURL)
 	fmt.Fprint(os.Stderr, "Enter the frontend app URL (e.g. https://app.internal.co): ")

@@ -121,7 +121,7 @@ func TestRequireKnownProfile(t *testing.T) {
 		}
 	})
 
-	t.Run("login hint quotes an awkward profile name", func(t *testing.T) {
+	t.Run("setup hint quotes an awkward profile name", func(t *testing.T) {
 		mkProfiles(t)
 
 		err := requireKnownProfile("my profile")
@@ -129,12 +129,12 @@ func TestRequireKnownProfile(t *testing.T) {
 		if !errors.As(err, &unknown) {
 			t.Fatalf("requireKnownProfile = %v, want *unknownProfileError", err)
 		}
-		if !strings.Contains(unknown.Error(), "--profile 'my profile'") {
+		if !strings.Contains(unknown.Error(), "multica --profile 'my profile' setup") {
 			t.Fatalf("error message %q should shell-quote the name so the hint is copy-pasteable", unknown.Error())
 		}
 	})
 
-	t.Run("no profiles root yet points at login", func(t *testing.T) {
+	t.Run("no profiles root yet points at setup", func(t *testing.T) {
 		mkProfiles(t)
 
 		err := requireKnownProfile("staging")
@@ -145,7 +145,7 @@ func TestRequireKnownProfile(t *testing.T) {
 		if len(unknown.Known) != 0 {
 			t.Fatalf("Known = %v, want empty", unknown.Known)
 		}
-		if !strings.Contains(unknown.Error(), "multica login --profile staging") {
+		if !strings.Contains(unknown.Error(), "multica --profile staging setup") {
 			t.Fatalf("error message %q should tell the user how to create it", unknown.Error())
 		}
 	})
@@ -269,24 +269,22 @@ func TestDaemonStatusDefaultProfileNeverValidated(t *testing.T) {
 	}
 }
 
-// `daemon start` is deliberately NOT validated: creating a brand-new profile
-// still goes through the existing login flow, which needs to accept a name
-// that does not exist on disk yet.
+// `daemon start` is not validated against the profiles on disk, unlike the
+// other lifecycle commands: an unknown --profile still spawns the daemon.
 func TestDaemonStartAcceptsUnknownProfile(t *testing.T) {
 	clearDaemonTaskEnv(t)
 	mkProfiles(t)
+	stubDaemonChild(t)
 
-	cmd := daemonStatusCmdFor(t, "brand-new-profile", "")
-	cmd.Flags().Bool("foreground", false, "")
-	err := runDaemonBackground(cmd)
+	err := runDaemonBackground(daemonStatusCmdFor(t, "brand-new-profile", ""))
 
 	var unknown *unknownProfileError
 	if errors.As(err, &unknown) {
-		t.Fatal("daemon start must not reject an unknown profile; it is how new profiles are created")
+		t.Fatal("daemon start must not reject an unknown profile")
 	}
-	// It fails for the pre-existing reason instead: nobody is logged in.
-	if err == nil || !strings.Contains(err.Error(), "not logged in") {
-		t.Fatalf("runDaemonBackground = %v, want the not-logged-in error", err)
+	// The stub child's exit is only reported once start has spawned it.
+	if err == nil || !strings.Contains(err.Error(), "daemon exited during startup") {
+		t.Fatalf("runDaemonBackground = %v, want the stub child's exit", err)
 	}
 }
 

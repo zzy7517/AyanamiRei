@@ -154,9 +154,9 @@ func (e *NetworkError) Unwrap() error { return e.Err }
 // UserMessageError attaches a command-specific, user-facing message to an
 // underlying error. FormatError shows Msg verbatim (in preference to the
 // generic kind-based copy it would otherwise derive from a wrapped
-// *NetworkError / *HTTPError), so command-level guidance — e.g. a `multica
-// login` failure that is more helpful than the generic 401/timeout line — is
-// visible in the default (non-debug) output.
+// *NetworkError / *HTTPError), so command-level guidance that is more
+// helpful than the generic 401/timeout line is visible in the default
+// (non-debug) output.
 //
 // It preserves Unwrap(), so ExitCodeFor still classifies by the underlying
 // typed error and --debug still prints the full original chain.
@@ -180,28 +180,6 @@ func (e *UserMessageError) Unwrap() error { return e.Err }
 func WithUserMessage(msg string, err error) error {
 	if err == nil {
 		return nil
-	}
-	return &UserMessageError{Msg: msg, Err: err}
-}
-
-// WithUserMessageUnlessNetwork is WithUserMessage for a command whose custom
-// copy explains an HTTP-level refusal — a rejected token, a server that would
-// not issue one — and would be wrong for a transport failure. When err is a
-// *NetworkError it is returned unchanged, so FormatError renders the
-// kind-based copy, which is the only place that names the actual remedy
-// (DNS, proxy, TLS handshake).
-//
-// `multica login` needs this: with WithUserMessage, a TLS handshake that
-// never completed was reported as "the server could not issue an access
-// token" and "make sure the token is valid and not expired", and nothing in
-// the default output pointed at the network (GH #8654).
-func WithUserMessageUnlessNetwork(msg string, err error) error {
-	if err == nil {
-		return nil
-	}
-	var netErr *NetworkError
-	if errors.As(err, &netErr) {
-		return err
 	}
 	return &UserMessageError{Msg: msg, Err: err}
 }
@@ -440,8 +418,8 @@ var kindMessages = map[ErrorKind][2]string{
 		"无法访问 Multica 服务器。请检查网络连接。",
 	},
 	KindAuthRequired: {
-		"Your session has expired or you are not signed in. Run `multica login` to sign in again. On a self-hosted or non-OAuth setup, ask your administrator for valid credentials.",
-		"登录已过期或尚未登录。请运行 `multica login` 重新登录。自托管或非 OAuth 场景请联系管理员获取有效凭证。",
+		"The Multica server refused the request (401). This CLI sends no credential and needs none. Check that the server address shown by `multica config show` is the intended server.",
+		"Multica 服务器拒绝了请求（401）。此 CLI 不发送凭证，也不需要凭证。请检查 `multica config show` 显示的服务器地址是否正确。",
 	},
 	KindTaskTokenRejected: {
 		"This task token was rejected and is no longer usable. Stop here: do not retry, and do not fall back to a profile or member credential, because anything done with one would run as that person rather than as this task. Only the runtime that started this task can supply a valid task token.",
@@ -547,7 +525,8 @@ func FormatError(err error, debug bool) string {
 // userMessage produces the friendly message for the root cause of err.
 func userMessage(err error, lang Language) string {
 	// A command-supplied user-facing message takes precedence over the generic
-	// kind-based copy, so command-specific guidance (e.g. sign-in failures) is
+	// kind-based copy, so command-specific guidance (e.g. a refusal only that
+	// command can explain) is
 	// visible by default. Unwrap() is preserved, so ExitCodeFor and --debug
 	// still see the underlying typed error.
 	var um *UserMessageError
@@ -565,9 +544,9 @@ func userMessage(err error, lang Language) string {
 	var httpErr *HTTPError
 	if errors.As(err, &httpErr) {
 		kind := httpErr.Kind()
-		// A 401 on a task token is not a login problem, and the generic copy
-		// below is the wrong instruction for whoever reads it: it says to sign
-		// in again or ask an administrator for valid credentials. An
+		// A 401 on a task token is not something another credential can fix,
+		// and the generic copy below is the wrong instruction for whoever
+		// reads it: it sends a person off to check things on their machine. An
 		// autonomous agent can act on that, and one did — after its task token
 		// stopped working mid-run it read the daemon owner's profile PAT and
 		// kept going under the member's identity (GH #7522).
