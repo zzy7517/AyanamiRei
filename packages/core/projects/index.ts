@@ -29,6 +29,7 @@ export { isProjectArchived, selectableProjects } from "./archive";
 export {
   projectFolderLabel,
   projectFolderPlace,
+  sshFolderReady,
   useProjectFolders,
   type ProjectFolder,
   type ProjectFolders,

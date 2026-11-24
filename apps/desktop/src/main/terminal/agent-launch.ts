@@ -184,7 +184,7 @@ function sshAgentSpec(input: AgentSpecInput & { host: string; port: number }): A
   });
   const start =
     `env ${AGENT_START_VARIABLE}=${shellQuote(script)} ` +
-    '"$SHELL" -l -i -c \'exec sh -c "$AYANMI_AGENT_START"\'';
+    `"$SHELL" -l -i -c 'exec sh -c "$${AGENT_START_VARIABLE}"'`;
   return {
     spec: {
       file: "ssh",

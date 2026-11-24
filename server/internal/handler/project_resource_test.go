@@ -1879,3 +1879,32 @@ func TestProjectResourceRejectsInvalidCheckoutRef(t *testing.T) {
 		t.Fatalf("url after clearing the ref = %q, want it preserved", clearedRef.URL)
 	}
 }
+
+// TestValidateSshDirectoryRef checks the ref of a folder on an SSH host: both
+// of its fields are required, the path is absolute, and whitespace around
+// them is dropped.
+func TestValidateSshDirectoryRef(t *testing.T) {
+	normalized, err := validateAndNormalizeResourceRef("ssh_directory", json.RawMessage(`{"host":" box ","path":" /srv/app ","label":" App "}`))
+	if err != nil {
+		t.Fatalf("a ref with both fields: %v", err)
+	}
+	var got sshDirectoryRef
+	if err := json.Unmarshal(normalized, &got); err != nil {
+		t.Fatalf("the normalized ref does not parse: %v", err)
+	}
+	if got.Host != "box" || got.Path != "/srv/app" || got.Label != "App" {
+		t.Fatalf("the normalized ref is %+v, want host box, path /srv/app and label App", got)
+	}
+
+	for name, ref := range map[string]string{
+		"no host":             `{"host":"","path":"/srv/app"}`,
+		"a host of two words": `{"host":"me box","path":"/srv/app"}`,
+		"no path":             `{"host":"box","path":""}`,
+		"a relative path":     `{"host":"box","path":"srv/app"}`,
+		"not a JSON object":   `["box","/srv/app"]`,
+	} {
+		if _, err := validateAndNormalizeResourceRef("ssh_directory", json.RawMessage(ref)); err == nil {
+			t.Fatalf("%s: accepted %s", name, ref)
+		}
+	}
+}

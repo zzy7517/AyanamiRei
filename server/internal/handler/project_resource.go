@@ -80,6 +80,8 @@ func validateAndNormalizeResourceRef(resourceType string, ref json.RawMessage) (
 		return validateGithubRepoRef(ref)
 	case "local_directory":
 		return validateLocalDirectoryRef(ref)
+	case "ssh_directory":
+		return validateSshDirectoryRef(ref)
 	default:
 		return nil, fmt.Errorf("unknown resource_type %q", resourceType)
 	}
@@ -302,6 +304,48 @@ func validateLocalDirectoryRef(ref json.RawMessage) (json.RawMessage, error) {
 		return nil, fmt.Errorf("local_directory: execution_mode must be %q or %q, got %q",
 			localDirectoryModeInPlace, localDirectoryModeWorktree, payload.ExecutionMode)
 	}
+	out, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// sshDirectoryRef is the ref of an ssh_directory resource: a folder on a host
+// that the system `ssh` reaches. Nothing on the server opens it. The desktop
+// app does, with the `ssh` of the person at it.
+type sshDirectoryRef struct {
+	// Host is what `ssh` takes for a destination: a name from ~/.ssh/config,
+	// or user@machine.
+	Host  string `json:"host"`
+	Path  string `json:"path"`
+	Label string `json:"label,omitempty"`
+}
+
+// validateSshDirectoryRef checks an ssh_directory ref. The server cannot look
+// at the host, so this is a typo guard: the desktop app says whether the
+// folder is there when a terminal is asked to open in it.
+func validateSshDirectoryRef(ref json.RawMessage) (json.RawMessage, error) {
+	var payload sshDirectoryRef
+	if err := json.Unmarshal(ref, &payload); err != nil {
+		return nil, fmt.Errorf("invalid ssh_directory payload: %w", err)
+	}
+	payload.Host = strings.TrimSpace(payload.Host)
+	if payload.Host == "" {
+		return nil, errors.New("ssh_directory: host is required")
+	}
+	if strings.ContainsAny(payload.Host, " \t") {
+		return nil, errors.New("ssh_directory: host must be one word, as ssh takes it")
+	}
+	payload.Path = strings.TrimSpace(payload.Path)
+	if payload.Path == "" {
+		return nil, errors.New("ssh_directory: path is required")
+	}
+	// The folder is on a host taken to run a POSIX system.
+	if !strings.HasPrefix(payload.Path, "/") {
+		return nil, errors.New("ssh_directory: path must be an absolute path, starting with /")
+	}
+	payload.Label = strings.TrimSpace(payload.Label)
 	out, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err

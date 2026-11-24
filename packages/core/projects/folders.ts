@@ -39,6 +39,16 @@ export function projectFolderPlace(resource: ProjectResource): { place: Terminal
   return null;
 }
 
+/**
+ * Whether a typed host and path name a folder the server accepts: a host that
+ * is one word, as `ssh` takes it, and an absolute path. Whether the folder is
+ * there is learned when a terminal opens in it.
+ */
+export function sshFolderReady(host: string, path: string): boolean {
+  const trimmedHost = host.trim();
+  return trimmedHost !== "" && !/\s/.test(trimmedHost) && path.trim().startsWith("/");
+}
+
 /** The folder's path as a person writes it: `host:path` on an SSH host. */
 export function projectFolderLabel(folder: Pick<ProjectFolder, "place" | "path">): string {
   return folder.place.kind === "ssh" ? `${folder.place.host}:${folder.path}` : folder.path;

@@ -13,12 +13,14 @@ import {
   Pencil,
   Plus,
   Search,
+  Server,
   Trash2,
   TriangleAlert,
 } from "@multica/ui/icons";
 import { toast } from "sonner";
 import {
   projectResourcesOptions,
+  sshFolderReady,
   useCreateProjectResource,
   useDeleteProjectResource,
   useUpdateProjectResource,
@@ -32,6 +34,7 @@ import type {
   LocalDirectoryExecutionMode,
   LocalDirectoryResourceRef,
   ProjectResource,
+  SshDirectoryResourceRef,
 } from "@multica/core/types";
 import {
   runtimeAdvertisesLocalWorktree,
@@ -83,13 +86,17 @@ import { githubShortLabel } from "../../common/github-url";
 //
 // Grouped by what a resource applies to: repositories apply to every run on
 // every machine, while a local folder only applies to runs on the one machine
-// it is pinned to (at most one per machine). Add a new resource_type by:
+// it is pinned to (at most one per machine). A folder on an SSH host is typed,
+// since no machine here can browse it. Add a new resource_type by:
 //   (1) extending the server validator
 //   (2) extending ProjectResourceType in @multica/core/types
 //   (3) giving it a group here; unknown types fall through to a plain row
 type GithubResource = ProjectResource & { resource_ref: GithubRepoResourceRef };
 type LocalDirectoryResource = ProjectResource & {
   resource_ref: LocalDirectoryResourceRef;
+};
+type SshDirectoryResource = ProjectResource & {
+  resource_ref: SshDirectoryResourceRef;
 };
 
 function isGithubRef(r: ProjectResource): r is GithubResource {
@@ -98,6 +105,10 @@ function isGithubRef(r: ProjectResource): r is GithubResource {
 
 function isLocalDirectoryRef(r: ProjectResource): r is LocalDirectoryResource {
   return r.resource_type === "local_directory";
+}
+
+function isSshDirectoryRef(r: ProjectResource): r is SshDirectoryResource {
+  return r.resource_type === "ssh_directory";
 }
 
 /**
@@ -148,8 +159,9 @@ export function ProjectResourcesSection({ projectId }: { projectId: string }) {
 
   const repos = resources.filter(isGithubRef);
   const folders = resources.filter(isLocalDirectoryRef);
+  const sshFolders = resources.filter(isSshDirectoryRef);
   const others = resources.filter(
-    (r) => !isGithubRef(r) && !isLocalDirectoryRef(r),
+    (r) => !isGithubRef(r) && !isLocalDirectoryRef(r) && !isSshDirectoryRef(r),
   );
   // Picking a folder needs the desktop's daemon_id, so web cannot add one. It
   // still lists existing folders, and changing their mode or removing them
@@ -176,6 +188,14 @@ export function ProjectResourcesSection({ projectId }: { projectId: string }) {
               wsId={wsId}
               projectId={projectId}
               folders={folders}
+              desktopMode={desktopMode}
+            />
+          )}
+          {(desktopMode || sshFolders.length > 0) && (
+            <SshFolderGroup
+              wsId={wsId}
+              projectId={projectId}
+              folders={sshFolders}
               desktopMode={desktopMode}
             />
           )}
@@ -1300,6 +1320,152 @@ function RemoteFolderEntry({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SSH folders
+
+/**
+ * Folders on hosts the system `ssh` reaches. This computer cannot browse
+ * those, so a folder is typed: the host as `ssh` takes it, and an absolute
+ * path. The desktop app is what opens them, so only it offers to add one.
+ */
+function SshFolderGroup({
+  wsId,
+  projectId,
+  folders,
+  desktopMode,
+}: {
+  wsId: string;
+  projectId: string;
+  folders: SshDirectoryResource[];
+  desktopMode: boolean;
+}) {
+  const { t } = useT("projects");
+  const createResource = useCreateProjectResource(wsId, projectId);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const handleAdd = async (host: string, path: string) => {
+    try {
+      await createResource.mutateAsync({
+        resource_type: "ssh_directory",
+        resource_ref: { host, path },
+      });
+      toast.success(t(($) => $.resources.ssh_toast_added));
+      setAddOpen(false);
+    } catch (err) {
+      toast.error(errorMessage(err, t(($) => $.resources.toast_attach_failed)));
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <GroupHeader
+        label={t(($) => $.resources.ssh_group)}
+        action={
+          desktopMode && (
+            <Popover open={addOpen} onOpenChange={setAddOpen}>
+              <PopoverTrigger
+                render={
+                  <IconButton
+                    size="icon-xs"
+                    label={t(($) => $.resources.ssh_add)}
+                  >
+                    <Plus />
+                  </IconButton>
+                }
+              />
+              <PopoverContent align="end" className="w-72 p-2">
+                <SshFolderForm busy={createResource.isPending} onAdd={handleAdd} />
+              </PopoverContent>
+            </Popover>
+          )
+        }
+      />
+      {folders.map((resource) => (
+        <SshFolderRow key={resource.id} resource={resource} />
+      ))}
+    </div>
+  );
+}
+
+function SshFolderForm({
+  busy,
+  onAdd,
+}: {
+  busy: boolean;
+  onAdd: (host: string, path: string) => Promise<void>;
+}) {
+  const { t } = useT("projects");
+  const [host, setHost] = useState("");
+  const [path, setPath] = useState("");
+  const ready = sshFolderReady(host, path);
+  const inputClassName =
+    "h-8 w-full rounded-md border bg-transparent px-2 text-caption outline-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring";
+
+  return (
+    <form
+      className="space-y-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!ready || busy) return;
+        void onAdd(host.trim(), path.trim());
+      }}
+    >
+      <input
+        type="text"
+        value={host}
+        autoFocus
+        onChange={(e) => setHost(e.target.value)}
+        spellCheck={false}
+        aria-label={t(($) => $.resources.ssh_host_label)}
+        placeholder={t(($) => $.resources.ssh_host_placeholder)}
+        className={inputClassName}
+      />
+      <input
+        type="text"
+        value={path}
+        onChange={(e) => setPath(e.target.value)}
+        spellCheck={false}
+        aria-label={t(($) => $.resources.ssh_path_label)}
+        placeholder={t(($) => $.resources.ssh_path_placeholder)}
+        className={cn(inputClassName, "font-mono placeholder:font-sans")}
+      />
+      <Button type="submit" size="sm" className="w-full" disabled={!ready || busy}>
+        <Plus />
+        <span className="truncate">{t(($) => $.resources.ssh_add)}</span>
+      </Button>
+    </form>
+  );
+}
+
+function SshFolderRow({ resource }: { resource: SshDirectoryResource }) {
+  const { remove, removing } = useRemoveResource(resource);
+  const { host, path } = resource.resource_ref;
+  const address = `${host}:${path}`;
+  // The folder's own name leads; the path to it is in the tooltip, where it
+  // stays whole however narrow the panel is.
+  const name = resource.label || path.split("/").filter(Boolean).at(-1) || path;
+
+  return (
+    <div className="group text-caption">
+      <div className="flex items-center gap-2">
+        <Server className="size-3.5 shrink-0 text-muted-foreground" />
+        <Tooltip>
+          <TooltipTrigger
+            render={<span className="min-w-0 flex-1 truncate">{name}</span>}
+          />
+          <TooltipContent side="top">
+            <span className="font-mono text-micro">{address}</span>
+          </TooltipContent>
+        </Tooltip>
+        <RemoveButton onRemove={remove} removing={removing} />
+      </div>
+      <div className="truncate pl-[1.375rem] pt-0.5 text-micro text-muted-foreground">
+        {host}
+      </div>
+    </div>
   );
 }
 

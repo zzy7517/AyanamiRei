@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CalendarClock, CalendarDays, ChevronRight, FolderOpen, GitBranch, Maximize2, Minimize2, MoreHorizontal, Pencil, Search, X as XIcon, User, UserMinus } from "@multica/ui/icons";
+import { CalendarClock, CalendarDays, ChevronRight, FolderOpen, GitBranch, Maximize2, Minimize2, MoreHorizontal, Pencil, Search, Server, X as XIcon, User, UserMinus } from "@multica/ui/icons";
 
 /**
  * GitHub mark — lucide-react v1 dropped brand icons, so we inline the
@@ -23,6 +23,7 @@ function GithubIcon({ className }: { className?: string }) {
 }
 import { useQuery } from "@tanstack/react-query";
 import { useCreateProject } from "@multica/core/projects/mutations";
+import { sshFolderReady } from "@multica/core/projects";
 import { useProjectDraftStore } from "@multica/core/projects";
 import {
   PROJECT_STATUS_CONFIG,
@@ -142,6 +143,8 @@ function RepoUrlText({
   );
 }
 
+type SourceMode = "repos" | "local" | "ssh";
+
 export function CreateProjectModal({
   onClose,
   data,
@@ -202,15 +205,20 @@ export function CreateProjectModal({
     repo.url.toLowerCase().includes(repoQuery),
   );
 
-  // A project's source is binary: either a set of GitHub repos OR a local
-  // working directory — never both. Mode is the source of truth for what
-  // gets persisted on submit; switching mode does NOT clear the other
-  // side's stash, so toggling back and forth restores the user's prior
-  // selection. Only the mode-matching side is sent to the API. Local mode
-  // is hidden entirely on web (no daemon to bind the path to).
+  // A project's source is one of: a set of GitHub repos, a local working
+  // directory, or a folder on an SSH host — never two of them. Mode is the
+  // source of truth for what gets persisted on submit; switching mode does
+  // NOT clear the other side's stash, so toggling back and forth restores the
+  // user's prior selection. Only the mode-matching side is sent to the API.
+  // Local mode is hidden entirely on web (no daemon to bind the path to).
   const desktop = isDesktopShell();
   const daemonStatus = useLocalDaemonStatus();
-  const [sourceMode, setSourceMode] = useState<"repos" | "local">("repos");
+  const [sourceMode, setSourceMode] = useState<SourceMode>("repos");
+  // A folder on an SSH host is typed rather than picked: this computer cannot
+  // browse that machine. Nothing is installed on the host, so nothing is
+  // checked here either; a terminal is where a wrong host or path shows.
+  const [sshHost, setSshHost] = useState("");
+  const [sshPath, setSshPath] = useState("");
   const [selectedLocalPath, setSelectedLocalPath] = useState<string | null>(null);
   const [selectedLocalLabel, setSelectedLocalLabel] = useState<string | null>(null);
   const [localPickError, setLocalPickError] = useState<string | null>(null);
@@ -277,7 +285,7 @@ export function CreateProjectModal({
       ? "in_place"
       : (localMode ?? preselectedLocalMode);
 
-  const handleSourceModeChange = (mode: "repos" | "local") => {
+  const handleSourceModeChange = (mode: SourceMode) => {
     setSourceMode(mode);
     setLocalPickError(null);
   };
@@ -351,7 +359,12 @@ export function CreateProjectModal({
   const leadLabel =
     leadType && leadId ? getActorName(leadType, leadId) : t(($) => $.create_project.lead);
   const hasLead = !!(leadType && leadId);
-  const hasSource = sourceMode === "local" ? !!selectedLocalPath : selectedRepos.length > 0;
+  const hasSource =
+    sourceMode === "local"
+      ? !!selectedLocalPath
+      : sourceMode === "ssh"
+        ? sshFolderReady(sshHost, sshPath)
+        : selectedRepos.length > 0;
 
   const createProject = useCreateProject();
 
@@ -368,11 +381,12 @@ export function CreateProjectModal({
     // directly, so a disabled button alone leaves the keyboard path open.
     if (!title.trim() || submitting) return;
     if (sourceMode === "repos" && hasRejectedRepoRef) return;
+    if (sourceMode === "ssh" && !sshFolderReady(sshHost, sshPath)) return;
     // `sourceMode` decides which side's stash gets persisted — the other
     // side is silently dropped, so repos picked then abandoned for local
     // mode don't leak into the project.
     let resources:
-      | Array<{ resource_type: "github_repo" | "local_directory"; resource_ref: Record<string, unknown> }>
+      | Array<{ resource_type: "github_repo" | "local_directory" | "ssh_directory"; resource_ref: Record<string, unknown> }>
       | undefined;
     if (sourceMode === "repos" && selectedRepos.length > 0) {
       resources = selectedRepos.map((url) => {
@@ -398,6 +412,13 @@ export function CreateProjectModal({
             label: selectedLocalLabel,
             mode: effectiveLocalMode,
           }),
+        },
+      ];
+    } else if (sourceMode === "ssh") {
+      resources = [
+        {
+          resource_type: "ssh_directory" as const,
+          resource_ref: { host: sshHost.trim(), path: sshPath.trim() },
         },
       ];
     }
@@ -779,6 +800,15 @@ export function CreateProjectModal({
                             : t(($) => $.create_project.source_pill_local)}
                         </span>
                       </>
+                    ) : sourceMode === "ssh" ? (
+                      <>
+                        <Server className="size-3" />
+                        <span className="max-w-[12rem] truncate">
+                          {sshFolderReady(sshHost, sshPath)
+                            ? `${sshHost.trim()}:${sshPath.trim()}`
+                            : t(($) => $.create_project.source_pill_ssh)}
+                        </span>
+                      </>
                     ) : (
                       <>
                         <GithubIcon className="size-3" />
@@ -793,37 +823,29 @@ export function CreateProjectModal({
                 }
               />
             )}
-            <PopoverContent side="top" align="start" className="w-72 p-2 space-y-2" finalFocus={hasSource ? undefined : moreOptionsRef}>
-              {/* Source mode is binary — repo OR local directory, never both.
-                  Local option is desktop-only because a local_directory
-                  resource has to be pinned to a daemon_id, which doesn't
-                  exist on the web. */}
+            <PopoverContent side="top" align="start" className="w-80 p-2 space-y-2" finalFocus={hasSource ? undefined : moreOptionsRef}>
+              {/* Source mode picks one — repos, a local folder, or a folder on
+                  an SSH host. Both folder kinds are desktop-only: terminals
+                  and tasks open there, and the desktop app is what reaches
+                  those machines. */}
               {desktop && (
-                <div className="grid grid-cols-2 gap-1 rounded-md bg-muted/60 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleSourceModeChange("repos")}
-                    className={cn(
-                      "rounded-xs px-2 py-1 text-caption transition-colors",
-                      sourceMode === "repos"
-                        ? "bg-background shadow-sm font-medium"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {t(($) => $.create_project.source_tab_repos)}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSourceModeChange("local")}
-                    className={cn(
-                      "rounded-xs px-2 py-1 text-caption transition-colors",
-                      sourceMode === "local"
-                        ? "bg-background shadow-sm font-medium"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {t(($) => $.create_project.source_tab_local)}
-                  </button>
+                <div className="grid grid-cols-3 gap-1 rounded-md bg-muted/60 p-0.5">
+                  {(["repos", "local", "ssh"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleSourceModeChange(mode)}
+                      aria-pressed={sourceMode === mode}
+                      className={cn(
+                        "rounded-xs px-1.5 py-1 text-caption leading-tight transition-colors",
+                        sourceMode === mode
+                          ? "bg-background shadow-sm font-medium"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {t(($) => $.create_project[`source_tab_${mode}`])}
+                    </button>
+                  ))}
                 </div>
               )}
 
@@ -981,6 +1003,33 @@ export function CreateProjectModal({
                     </div>
                   )}
                 </>
+              ) : sourceMode === "ssh" ? (
+                <>
+                  <div className="text-caption font-medium text-muted-foreground">
+                    {t(($) => $.create_project.ssh_heading)}
+                  </div>
+                  <input
+                    type="text"
+                    value={sshHost}
+                    onChange={(e) => setSshHost(e.target.value)}
+                    spellCheck={false}
+                    aria-label={t(($) => $.create_project.ssh_host_label)}
+                    placeholder={t(($) => $.create_project.ssh_host_placeholder)}
+                    className="h-8 w-full rounded-md border bg-transparent px-2 text-caption outline-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <input
+                    type="text"
+                    value={sshPath}
+                    onChange={(e) => setSshPath(e.target.value)}
+                    spellCheck={false}
+                    aria-label={t(($) => $.create_project.ssh_path_label)}
+                    placeholder={t(($) => $.create_project.ssh_path_placeholder)}
+                    className="h-8 w-full rounded-md border bg-transparent px-2 font-mono text-caption outline-none placeholder:font-sans placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <p className="text-micro text-muted-foreground leading-snug">
+                    {t(($) => $.create_project.ssh_hint)}
+                  </p>
+                </>
               ) : (
                 <>
                   <div className="text-caption font-medium text-muted-foreground">
@@ -1126,8 +1175,18 @@ export function CreateProjectModal({
                 )}
                 {!hasSource && (
                   <DropdownMenuItem onClick={() => setRepoPopoverOpen(true)}>
-                    {sourceMode === "local" ? <FolderOpen className="size-3.5" /> : <GithubIcon className="size-3.5" />}
-                    {sourceMode === "local" ? t(($) => $.create_project.source_pill_local) : t(($) => $.create_project.repos_pill)}
+                    {sourceMode === "local" ? (
+                      <FolderOpen className="size-3.5" />
+                    ) : sourceMode === "ssh" ? (
+                      <Server className="size-3.5" />
+                    ) : (
+                      <GithubIcon className="size-3.5" />
+                    )}
+                    {sourceMode === "repos"
+                      ? t(($) => $.create_project.repos_pill)
+                      : sourceMode === "local"
+                        ? t(($) => $.create_project.source_pill_local)
+                        : t(($) => $.create_project.source_pill_ssh)}
                   </DropdownMenuItem>
                 )}
                 {!dueDate && (
@@ -1156,7 +1215,8 @@ export function CreateProjectModal({
             disabled={
               !title.trim() ||
               submitting ||
-              (sourceMode === "repos" && hasRejectedRepoRef)
+              (sourceMode === "repos" && hasRejectedRepoRef) ||
+              (sourceMode === "ssh" && !sshFolderReady(sshHost, sshPath))
             }
             className="shrink-0"
           >
