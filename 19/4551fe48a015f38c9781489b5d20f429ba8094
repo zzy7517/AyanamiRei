@@ -1,0 +1,83 @@
+server/cmd/server/chat_realtime_privacy_test.go
+  s_fc0852876b2926::t_5402f159c02588 92
+server/cmd/server/chat_reply_notifications_test.go
+  s_fc0852876b2926::t_fa979314a97868 129
+server/cmd/server/chat_submission_contract_test.go
+  s_fc0852876b2926::t_ea485ddd3e8f87 127,175,261
+server/cmd/server/chat_submission_race_test.go
+  s_fc0852876b2926::t_2c222a5bf57c38 113,161,212,242
+server/cmd/server/dingtalk_reactions_integration_test.go
+  s_fc0852876b2926::t_f0b4a1fe40f61c 104
+server/cmd/server/guests_release_router_test.go
+  s_fc0852876b2926::t_42b5cb1d49c107 31
+server/cmd/server/inbox_owner_gate_routes_test.go
+  s_fc0852876b2926::t_e2c2d6e4453ad8 121
+server/cmd/server/local_uploads_test.go
+  s_fc0852876b2926::t_97b8ac31df595d 33,81
+server/cmd/server/private_project_routes_test.go
+  s_fc0852876b2926::t_58a8cbccdcc97b 495
+server/cmd/server/rerun_session_test.go
+  s_fc0852876b2926::t_d4990cce4aed7e 43
+server/cmd/server/runtime_sweeper_test.go
+  s_fc0852876b2926::t_24951b184ea9e2 49,53,837,841,918,922,993,1202
+server/internal/handler/comment_self_mention_test.go
+  s_fc0852876b2926::t_15517285e7fa7b 67
+server/internal/handler/connected_apps_boundary_test.go
+  s_fc0852876b2926::t_98033ae08661c9 52
+server/internal/handler/handler_test.go
+  s_fc0852876b2926::t_c10a9a2fa4d40a 102
+server/internal/handler/inbox_access_test.go
+  s_fc0852876b2926::t_6f2dad7c2aeb7b 46
+server/internal/handler/inbox_write_access_test.go
+  s_fc0852876b2926::t_01dc5b41c6dc86 93,235
+server/internal/handler/workspace_test.go
+  s_fc0852876b2926::t_cc23b0f49e26ce 1599
+server/internal/middleware/auth.go
+  s_fc0852876b2926::t_487b2ef0dce6ee 21-23,51,53,78-79
+server/internal/middleware/daemon_auth.go
+  s_fc0852876b2926::t_89d65d90a120ab 87-88,96,98
+server/internal/middleware/daemon_auth_test.go
+  s_fc0852876b2926::t_44076824cc2d9d 75,119,130
+server/internal/middleware/task_token_workspace_test.go
+  s_fc0852876b2926::t_a0a320e8ee3e0a 186
+server/cmd/server/integration_test.go
+  s_469cf115a6f71d::t_64411cbf08a50e 16,22,38-43,79,95-103,109-110,112-116,136-138,146,156,163-175,186,303-304,327-328,348-349,355-379
+server/cmd/server/plugin_action_routes_test.go
+  s_e983fda2d78021::t_497750a1a4e13b 28,40
+server/cmd/server/router.go
+  s_fc0852876b2926::t_88a3aebc8b8c4b 277-281,423-426,1619,1730,1817,1827
+server/cmd/server/weixin_routes_test.go
+  s_e983fda2d78021::t_f45c57370175f5 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "194551fe48a015f38c9781489b5d20f429ba8094",
+  "prompts": {},
+  "sessions": {
+    "s_469cf115a6f71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ae0ca73ee8907fef3",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_e983fda2d78021": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a26b034d49c0752b2",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
