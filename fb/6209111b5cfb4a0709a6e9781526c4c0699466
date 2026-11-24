@@ -1,0 +1,24 @@
+packages/views/onboarding/steps/step-workspace.test.tsx
+  s_fc0852876b2926::t_69c0f73e85dc0c 88-89
+  s_fc0852876b2926::t_e5bf01b23d274e 111-113
+packages/views/onboarding/steps/step-workspace.tsx
+  s_fc0852876b2926::t_0d2b92c9d7f918 439-441
+apps/desktop/src/shared/main-renderer-messages.test.ts
+  s_fc0852876b2926::t_046974bed0678c 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "fb6209111b5cfb4a0709a6e9781526c4c0699466",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
