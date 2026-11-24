@@ -1,0 +1,115 @@
+apps/desktop/src/main/index.ts
+  s_fc0852876b2926::t_3097916f344806 26,1046-1047
+apps/desktop/src/main/tasktrees/create.ts
+  s_fc0852876b2926::t_d12990a0928e6d 1-318
+apps/desktop/src/main/tasktrees/git.ts
+  s_fc0852876b2926::t_8e7ceedbe1a0b6 1-254
+apps/desktop/src/main/tasktrees/host.test.ts
+  s_fc0852876b2926::t_e961ce11b2c7bb 1-280
+apps/desktop/src/main/tasktrees/host.ts
+  s_fc0852876b2926::t_e1d541624a4245 1-6,8-9,11-15,17,19-34,36-39,41-68,70-83,85-94,96-98,100-134,136-138,140-143
+apps/desktop/src/main/tasktrees/index.ts
+  s_fc0852876b2926::t_387f04989ca188 1-70
+apps/desktop/src/main/tasktrees/layout.ts
+  s_fc0852876b2926::t_29066bcc4412b7 1-151
+apps/desktop/src/main/tasktrees/place.ts
+  s_fc0852876b2926::t_8e83cc36265ec9 1-377
+apps/desktop/src/main/tasktrees/remove.ts
+  s_fc0852876b2926::t_6f1ab46769a78b 1-350
+apps/desktop/src/preload/index.d.ts
+  s_fc0852876b2926::t_4ecf60c794b004 4,138-139
+apps/desktop/src/preload/index.ts
+  s_fc0852876b2926::t_3ae65ebf410dd9 59,62-68,324-333
+apps/desktop/src/renderer/src/App.tsx
+  s_fc0852876b2926::t_494050c4f31807 35,362
+apps/desktop/src/renderer/src/pages/issue-detail-page.tsx
+  s_fc0852876b2926::t_58bff4fc113828 20
+apps/desktop/src/renderer/src/platform/task-tree-bridge.tsx
+  s_fc0852876b2926::t_b3da1db8217aa9 1-54
+apps/desktop/src/shared/tasktrees.ts
+  s_fc0852876b2926::t_b2e8cef16d7b29 1-11
+packages/core/api/client.ts
+  s_fc0852876b2926::t_ffbdc84813eab0 247,249,498-499,1793-1823,1825-1827
+packages/core/api/project-scope-client.test.ts
+  s_fc0852876b2926::t_73e20835f21bc5 76,88-141
+packages/core/api/schemas.ts
+  s_fc0852876b2926::t_c5a64f2406e2b9 121,4924-4942
+packages/core/issues/project-scope.test.tsx
+  s_fc0852876b2926::t_c92871a9067eeb 9,150-152,206,219
+packages/core/issues/project-scope.ts
+  s_fc0852876b2926::t_febb97e4fa18f0 9,31,60-61,73,92-96
+packages/core/package.json
+  s_fc0852876b2926::t_4611590e431648 182-183
+packages/core/tasktrees/ensure.ts
+  s_fc0852876b2926::t_7b351a20ec330a 1-134
+packages/core/tasktrees/host.ts
+  s_fc0852876b2926::t_f00ff70b704399 1-101
+packages/core/tasktrees/index.ts
+  s_fc0852876b2926::t_df5ad13df38b89 1-28
+packages/core/tasktrees/reconcile.ts
+  s_fc0852876b2926::t_6b36f2cde72662 1-115
+packages/core/tasktrees/work.ts
+  s_fc0852876b2926::t_501da655b27740 1-29
+packages/core/types/index.ts
+  s_fc0852876b2926::t_35fca5717b7687 235-238
+packages/core/types/project-scope.ts
+  s_fc0852876b2926::t_2982a452dfe726 41-72
+packages/views/issues/components/issue-trees-section.tsx
+  s_fc0852876b2926::t_ea5c9ed4d1fa83 20,52-55,57,237
+packages/views/locales/en/terminal.json
+  s_fc0852876b2926::t_5afb1b8bd9142b 10-11
+packages/views/locales/es/terminal.json
+  s_fc0852876b2926::t_088e4ea01c4e9f 10-11
+packages/views/locales/fr/terminal.json
+  s_fc0852876b2926::t_da839e7a603bdc 10-11
+packages/views/locales/ja/terminal.json
+  s_fc0852876b2926::t_6e172f21185fe6 10-11
+packages/views/locales/ko/terminal.json
+  s_fc0852876b2926::t_84d66ca5065604 10-11
+packages/views/locales/ru/terminal.json
+  s_fc0852876b2926::t_b3d8e608550d1a 10-11
+packages/views/locales/zh-Hans/terminal.json
+  s_fc0852876b2926::t_5dba50ad485ff4 10-11
+packages/views/locales/zh-Hant/terminal.json
+  s_fc0852876b2926::t_68844bb0e62118 10-11
+packages/views/modals/create-issue.tsx
+  s_fc0852876b2926::t_7b3b14b39ea212 1539-1542,1544-1547
+packages/views/settings/components/code-tab.tsx
+  s_fc0852876b2926::t_56867f380e9f55 26,264-268
+packages/views/settings/components/use-settings-search-index.ts
+  s_fc0852876b2926::t_8ad12218db5734 365-370,399
+packages/views/terminal/terminal-page.tsx
+  s_fc0852876b2926::t_b3b00f0934b864 23,53-54,124,254-255,258,260,267-278,281,285,325-420,423-453,456-461,465,467,481,483
+server/cmd/server/private_project_routes_test.go
+  s_fc0852876b2926::t_07efa1d8905aec 489
+server/cmd/server/router.go
+  s_fc0852876b2926::t_3fbd42fd39813f 2226-2227
+server/internal/handler/project_scope_daemon.go
+  s_fc0852876b2926::t_5e6fb553cd6fd1 36-37,227
+server/internal/handler/project_scope_state.go
+  s_fc0852876b2926::t_a240d3d598f85b 1,4,8-9,11-16,20-21,23-27,30-38,41-47,49-51,53-62,65-125,128-165
+server/internal/handler/task_tree.go
+  s_fc0852876b2926::t_77028d8bfa3590 23-25,48-65,87-92,94-102,106,110-121,124-140
+server/internal/handler/task_tree_routes.go
+  s_fc0852876b2926::t_205469a5103095 8-10,13
+server/internal/handler/task_tree_test.go
+  s_fc0852876b2926::t_fec0f69dc96312 18,83-98,177-178,195,211,214,217,245-249,260,262-266,272,275,277-284,286,315,317,704-748
+server/pkg/db/queries/task_tree.sql
+  s_fc0852876b2926::t_13d7bff8568ac8 76-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "f3356cd859bcf01c7b1f06e799d26433adcbe481",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
