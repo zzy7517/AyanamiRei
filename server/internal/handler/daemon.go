@@ -24,7 +24,6 @@ import (
 	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/daemonws"
 	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/integrations/lark"
 	"github.com/multica-ai/multica/server/internal/integrations/slack"
 	"github.com/multica-ai/multica/server/internal/issuestatus"
@@ -1807,10 +1806,6 @@ func (h *Handler) processHeartbeat(ctx context.Context, runtimeID string, req pr
 		RuntimeID:          runtimeID,
 		Status:             "ok",
 		ServerCapabilities: []string{protocol.DaemonCapabilityRPCV1},
-	}
-	if featureflags.TerminalV1Enabled(ctx, h.FeatureFlags) {
-		// Daemons open the terminal relay only once an ack lists this.
-		ack.ServerCapabilities = append(ack.ServerCapabilities, protocol.DaemonCapabilityTerminalV1)
 	}
 
 	probeUpdateCtx, cancelProbeUpdate := context.WithTimeout(ctx, heartbeatHasPendingTimeout)

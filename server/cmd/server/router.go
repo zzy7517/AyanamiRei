@@ -49,7 +49,6 @@ import (
 	"github.com/multica-ai/multica/server/internal/seatcapacity"
 	"github.com/multica-ai/multica/server/internal/service"
 	"github.com/multica-ai/multica/server/internal/storage"
-	"github.com/multica-ai/multica/server/internal/terminal"
 	"github.com/multica-ai/multica/server/internal/themestore"
 	"github.com/multica-ai/multica/server/internal/util"
 	"github.com/multica-ai/multica/server/internal/util/secretbox"
@@ -482,7 +481,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		slog.Error("live doc editing disabled", "error", err)
 	}
 	h.Collab = collabClient
-	h.Terminal = terminal.New(terminal.Options{FeatureFlags: opts.FeatureFlags, Agent: h, Project: h})
 	h.ThemeStore = themeStoreFromEnv()
 	h.TaskService.FeatureFlags = opts.FeatureFlags
 	h.TaskService.Metrics = opts.BusinessMetrics
@@ -1623,11 +1621,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		}
 		realtime.HandleWebSocket(hub, mc, userID, slugResolver, w, r)
 	})
-	// Web terminal (terminal_v1). Sibling of /ws for the same reason: the
-	// browser opens it as a WebSocket and authenticates with a ticket from
-	// POST /api/terminal/ticket instead of a header.
-	r.Get("/terminal/ws", h.TerminalWebSocket)
-
 	// Live doc editing. Editors authenticate with a ticket from
 	// POST /api/docs/{id}/collab-ticket; the service calls back with the
 	// shared secret.
@@ -1733,10 +1726,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		r.Post("/deregister", h.DaemonDeregister)
 		r.Post("/heartbeat", h.DaemonHeartbeat)
 		r.Get("/ws", h.DaemonWebSocket)
-		// The daemon's terminal connection (terminal_v1): a daemon that
-		// implements the terminal dials this next to /ws, and it carries no
-		// task traffic.
-		r.Get("/terminal/ws", h.DaemonTerminalWebSocket)
 		r.Get("/workspaces", h.ListDaemonWorkspaces)
 		r.Get("/workspaces/{workspaceId}/repos", h.GetDaemonWorkspaceRepos)
 		r.Get("/workspaces/{workspaceId}/runtime-profiles", h.DaemonListRuntimeProfiles)
@@ -1853,12 +1842,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		r.Post("/api/upload-file", h.UploadFile)
 		r.Post("/api/feedback", h.CreateFeedback)
 		r.With(handler.RequireHumanActor).Post("/api/client-usage", h.UpsertClientUsage)
-		// Web terminal (terminal_v1): a single-use ticket for /terminal/ws.
-		// Human-only for the reason /api/cli-token is: a task token is
-		// scoped to one run on one machine, and a terminal would reach every
-		// daemon its owner has.
-		r.With(handler.RequireHumanActor).Post("/api/terminal/ticket", h.CreateTerminalTicket)
-
 		// Note (MUL-4309): the generic OpenAI-compatible passthrough endpoints
 		// (POST /api/llm/v1/chat/completions[/stream]) were intentionally
 		// removed. Exposing a general LLM proxy backed by the deployment's own

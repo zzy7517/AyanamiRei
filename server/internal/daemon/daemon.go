@@ -30,7 +30,6 @@ import (
 	"golang.org/x/sync/singleflight"
 
 	"github.com/multica-ai/multica/server/internal/cli"
-	"github.com/multica-ai/multica/server/internal/daemon/agenthooks"
 	"github.com/multica-ai/multica/server/internal/daemon/execenv"
 	"github.com/multica-ai/multica/server/internal/daemon/localenv"
 	"github.com/multica-ai/multica/server/internal/daemon/repocache"
@@ -621,16 +620,6 @@ type Daemon struct {
 	// bounces the connection re-probes the batch route (MUL-4257).
 	batchClaimUnsupported atomic.Bool
 
-	// terminalServer mirrors the latest heartbeat ack's terminal capability;
-	// terminalWake tells terminalLoop that it changed.
-	terminalServer atomic.Bool
-	terminalWake   chan struct{}
-	terminalMu     sync.Mutex
-	terminalCancel context.CancelFunc // ends the connection terminalLoop is holding
-
-	// agentHooks receives the lifecycle of the agent sessions the terminal
-	// starts. Nil when the daemon could not start it.
-	agentHooks *agenthooks.Manager
 	// wsClaimHTTPFallbackAfter is set after an uncertain WS claim outcome. Once
 	// the safety delay elapses, the next claim bypasses WS once and uses HTTP so
 	// a flaky reconnecting WS cannot starve queued tasks indefinitely.
@@ -842,7 +831,6 @@ func New(cfg Config, logger *slog.Logger) *Daemon {
 		reconcile:                   newReconcileBroadcaster(),
 		workspaceChanges:            newWorkspaceChangeSignal(),
 		wsRPC:                       newWSRPCClient(wsRPCResponseGrace),
-		terminalWake:                make(chan struct{}, 1),
 		environments:                newEnvironmentService(cfg, client, environmentIgnoreCommands(cfg.Agents), logger),
 	}
 	d.activeEnvRootsCond = sync.NewCond(&d.activeEnvRootsMu)
@@ -2120,15 +2108,6 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	}
 	defer healthLn.Close()
 
-	// One hook receiver per daemon: every agent session the terminal starts
-	// reports its turns to it. Without one the terminal hosts shells only.
-	if hooks, err := agenthooks.New(agenthooks.Options{Logger: d.logger}); err != nil {
-		d.logger.Warn("agent hooks: receiver not started; the terminal starts no agent sessions", "error", err)
-	} else {
-		d.agentHooks = hooks
-		defer hooks.Close()
-	}
-
 	agentNames := make([]string, 0, len(d.agents()))
 	for name := range d.agents() {
 		agentNames = append(agentNames, name)
@@ -2208,8 +2187,6 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	taskWakeups := make(chan taskWakeup, 256)
 	go d.taskWakeupLoop(ctx, taskWakeups)
 	go d.heartbeatLoop(ctx)
-	go d.terminalLoop(ctx)
-	go d.reportTurnEnds(ctx)
 	go d.gcLoop(ctx)
 	go d.treeWorkerLoop(ctx)
 	go d.autoUpdateLoop(ctx)
@@ -4628,7 +4605,6 @@ func (d *Daemon) handleHeartbeatActions(ctx context.Context, runtimeID string, r
 	if resp == nil {
 		return
 	}
-	d.noteTerminalServer(terminalServerOffered(resp))
 	if resp.PendingUpdate != nil || resp.PendingModelList != nil || resp.PendingLocalSkills != nil || resp.PendingLocalSkillImport != nil {
 		d.logger.Debug("heartbeat: pending actions",
 			"runtime_id", runtimeID,
