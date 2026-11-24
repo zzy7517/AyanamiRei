@@ -1,0 +1,91 @@
+apps/desktop/package.json
+  s_fc0852876b2926::t_c246e79a6d3026 52-53,57
+apps/desktop/src/main/daemon-spawn-env.ts
+  s_fc0852876b2926::t_f88d97e68a2d22 32-34,43,45-46,66-70
+apps/desktop/src/main/terminal/agent-hooks.ts
+  s_fc0852876b2926::t_7a109f590376f7 1-171
+apps/desktop/src/main/terminal/agent-launch.ts
+  s_fc0852876b2926::t_07013772075038 1-28,31-112,114-119,123-164,166-173,177-183,185-200,202-208,210-224,226-269
+apps/desktop/src/main/terminal/host.ts
+  s_fc0852876b2926::t_185ac545a72ae3 1-384
+apps/desktop/src/main/terminal/index.ts
+  s_fc0852876b2926::t_08bc9329734bd5 1-152
+apps/desktop/src/main/terminal/pty.ts
+  s_fc0852876b2926::t_820313a482380b 1-77
+apps/desktop/src/main/terminal/shell.ts
+  s_fc0852876b2926::t_fcdc1bbe704bdd 1-47
+apps/desktop/src/main/terminal/ssh.ts
+  s_fc0852876b2926::t_9eefb516770bb6 1-44
+apps/desktop/src/main/terminal/task-brief.ts
+  s_fc0852876b2926::t_9f893af5d6c62e 1-90
+apps/desktop/src/preload/index.d.ts
+  s_fc0852876b2926::t_71b820597b7049 3,134-136
+apps/desktop/src/preload/index.ts
+  s_fc0852876b2926::t_ac0fd5ab9bfc2d 47-60,297-315
+apps/desktop/src/shared/terminal.ts
+  s_fc0852876b2926::t_6395570e53bc50 1-23
+package.json
+  s_fc0852876b2926::t_a048daa6480550 48-49
+packages/core/api/client.ts
+  s_fc0852876b2926::t_f3d1265589470c 1823-1834
+packages/core/package.json
+  s_fc0852876b2926::t_6a660acc84f698 181
+packages/core/paths/paths.test.ts
+  s_fc0852876b2926::t_80a36a6728c2e3 68-69
+packages/core/paths/paths.ts
+  s_fc0852876b2926::t_3168796f1910bf 101-108
+packages/core/projects/folders.ts
+  s_fc0852876b2926::t_e4281ef9f2b28d 2-3,8-9,11-13,16,21,26-46,48-51,53,63-66
+packages/core/projects/index.ts
+  s_fc0852876b2926::t_e84e30a39b4a1b 29-35
+packages/core/terminal/client.ts
+  s_fc0852876b2926::t_e8ec1de3facc76 1-4,6,8-11,13,15,18,24,27-29,31,35-52,55-58,60-61,64,70,72,74-87,90-95,97-110,112-114,116-121,124-126,129,131-132,134,138-139,141-145,147-149,152-154,157-174,176-178,181-184,187,189-190,193,195-198,201,204-206,209-217,219-224,226-229,232,235-246,248-252,255-261,263,265-266,269-273,276-278,281,283,288-291,295,297-318,320-321,323-332
+packages/core/terminal/host.ts
+  s_fc0852876b2926::t_769bfd9b1ae58c 2-4,8-9,11,18-33,37-39,41-52,54-61,64-84,87-89,91-112,115-121
+packages/core/terminal/index.ts
+  s_fc0852876b2926::t_8615c94bd4e843 2-3,5-11,13-14
+packages/core/types/project.ts
+  s_fc0852876b2926::t_cd3470c375af05 94,96-98,133-139,143
+packages/views/issues/components/issue-trees-section.tsx
+  s_fc0852876b2926::t_d7c1b2e3ec9440 24-29,116,176,183,188-189,192-195,236-243,288,295-296,325-328
+packages/views/locales/en/terminal.json
+  s_fc0852876b2926::t_3cb7f8c3a6c3ac 6,11,14,17-19,21
+packages/views/locales/es/terminal.json
+  s_fc0852876b2926::t_a49b4751a70c5e 6,11,14,17-19,21
+packages/views/locales/fr/terminal.json
+  s_fc0852876b2926::t_cac95fb0b15085 6,11,14,17-19,21
+packages/views/locales/ja/terminal.json
+  s_fc0852876b2926::t_81ef482bdf6dcd 6,11,14,17-19,21
+packages/views/locales/ko/terminal.json
+  s_fc0852876b2926::t_f03a6c435117c6 6,11,14,17-19,21
+packages/views/locales/ru/terminal.json
+  s_fc0852876b2926::t_f42cefeed0995e 6,11,14,17-19,21
+packages/views/locales/zh-Hans/terminal.json
+  s_fc0852876b2926::t_1237380164e526 6,11,14,17-19,21
+packages/views/locales/zh-Hant/terminal.json
+  s_fc0852876b2926::t_88eb96b6e75779 6,11,14,17-19,21
+packages/views/terminal/terminal-page.tsx
+  s_fc0852876b2926::t_fe329c2baf7115 5-6,10-18,23,33,36-43,48-50,54,63-66,74,78,80-81,85,91,93-95,104-105,115,118-119,121,123-125,143-189,192,198-200,215,220-231,234-236,241,243,247-365,379,382,384-405,408-409,413,423,443,445-446,448,481,490-492,494-495,497,500,509-511,515,529
+packages/views/terminal/terminal.tsx
+  s_fc0852876b2926::t_c4958de55b8720 30-31,39-40,55,77,102,104-112,170,179,184-185,189,191
+server/internal/handler/agent_reply.go
+  s_fc0852876b2926::t_e97776f65a8f07 19-22,71-93,156-157,159
+server/internal/handler/agent_reply_test.go
+  s_fc0852876b2926::t_5bb7c10d610f17 30-33,280,289
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "5e7bda6897309a5952c514065e17faffcbd55280",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
