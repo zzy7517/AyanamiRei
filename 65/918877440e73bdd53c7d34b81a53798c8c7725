@@ -1,0 +1,19 @@
+packages/views/terminal/terminal-page.tsx
+  s_fc0852876b2926::t_ffc19180f3b204 200,210-215,254,370-373,406,414-415,423-426,430,440,443,447,453,467,517,649-650,652-655,662-674
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "65918877440e73bdd53c7d34b81a53798c8c7725",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
