@@ -8,7 +8,7 @@ import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { DesktopTabsDemo } from "@/components/demos/desktop-tabs-demo";
 
-Multica Desktop 提供 macOS、Windows 和 Linux 版本。它和 Web 版使用相同的帳號與工作區資料，但會在本機自動管理守護程式，併為不同工作區保留各自的標籤頁。
+Multica Desktop 提供 macOS、Windows 和 Linux 版本。它和 Web 版使用相同的工作區資料，但會在本機自動管理守護程式，併為不同工作區保留各自的標籤頁。
 
 ## Desktop 與 Web
 
@@ -16,12 +16,12 @@ Multica Desktop 提供 macOS、Windows 和 Linux 版本。它和 Web 版使用�
 | --- | --- | --- |
 | 開啟方式 | 瀏覽器 | 安裝桌面應用 |
 | 工作區標籤頁 | 使用瀏覽器標籤頁 | 每個工作區保留獨立的一組標籤頁 |
-| 守護程式 | 需要單獨安裝並啟動 CLI | 登入後由應用自動啟動 |
+| 守護程式 | 需要單獨安裝並啟動 CLI | 由應用自動啟動 |
 | 更新 | 重新整理頁面 | 透過桌面應用更新 |
 
 臨時檢視或在公共電腦上使用時，Web 更方便。
 
-兩者可以同時登入。只要連線的是同一個 Multica 服務，看到的資料就是共享的。
+兩者可以同時使用。只要連線的是同一個 Multica 服務，看到的資料就是共享的。
 
 ## 安裝
 
@@ -36,7 +36,7 @@ Multica Desktop 提供 macOS、Windows 和 Linux 版本。它和 Web 版使用�
 | Linux | `.AppImage`、`.deb` 或 `.rpm` |
 </Step>
 <Step>
-安裝後使用和 Web 版相同的信箱登入。登入後，Desktop 會啟動自己內建的 Multica CLI，並檢測本機已有的 AI 程式設計工具。
+安裝後開啟 Desktop：它會直接進入所連線伺服器的工作區，啟動自己內建的 Multica CLI，並檢測本機已有的 AI 程式設計工具。
 </Step>
 </Steps>
 
@@ -53,8 +53,6 @@ Desktop 會為每個工作區單獨儲存標籤頁。例如，你在工作區 A 
 同一資源只會在當前工作區開啟一次。標籤頁可以重新排序、固定、關閉，也會保留各自的前進、後退和捲動位置。固定的標籤頁排在最左邊，沒有關閉按鈕，要先取消固定才能關；在它裡面開啟別的頁面時會新開一個標籤頁，它自己停在原頁面。點選或貼上本部署的應用連結會直接在標籤頁中開啟，不會跳轉到瀏覽器。
 
 在同一個標籤頁切換看板、列表、表格、泳道和甘特圖時，各檢視會保留上次的捲動位置，包括看板的水平位置和各欄內的捲動位置。
-
-退出登入會清除本機儲存的所有標籤頁，避免下一位登入者看到上一個帳號留下的頁面。
 
 ## 語音輸入
 
@@ -78,7 +76,7 @@ Desktop 可以在本機把語音轉成文字，填入聊天、評論、回覆和
 
 ## 內建守護程式
 
-登入後，Desktop 會為當前 Multica 服務建立一個專用 CLI profile，並用它啟動守護程式。這個 profile 位於：
+Desktop 會為所連線的 Multica 伺服器建立一個專用 CLI profile，並用它啟動守護程式。這個 profile 位於：
 
 ```text
 ~/.multica/profiles/desktop-<host>/
@@ -179,20 +177,6 @@ $json = @'
 <Callout type="warning">
 Desktop 只能連線瀏覽器和執行電腦都能訪問的地址。遠端自託管例項未使用 HTTPS 或未代理 WebSocket 時，Desktop 無法建立連線；完整配置見[自託管快速上手](/self-host-quickstart#remote-access)。
 </Callout>
-
-### 免登入直接進入
-
-如果這個部署只有你自己使用，加上 `authToken` 即可略過登入頁：
-
-```json
-{
-  "schemaVersion": 1,
-  "apiUrl": "https://api.example.com",
-  "authToken": "<伺服器的 MULTICA_AUTH_TOKEN>"
-}
-```
-
-填入與伺服器 `MULTICA_AUTH_TOKEN` 相同的值，並在伺服器設定 `MULTICA_AUTH_TOKEN_EMAIL`；參閱[預共享權杖](/environment-variables#預共享權杖)。此後 Desktop 會直接進入工作區。伺服器拒絕該權杖時，Desktop 會顯示登入頁並給出提示：修正檔案後重新啟動，或照常使用信箱或 Google 登入。未設定 `authToken` 時，行為不變。
 
 ### Windows：檢查檔名和編碼
 

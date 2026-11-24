@@ -1,6 +1,6 @@
 ---
 title: Démarrage rapide en auto-hébergement
-description: Démarrez Multica avec Docker Compose, connectez-vous, puis reliez votre premier ordinateur.
+description: Démarrez Multica avec Docker Compose, ouvrez-le, puis reliez votre premier ordinateur.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -129,7 +129,7 @@ MULTICA_APP_URL=https://app.example.com
 MULTICA_PUBLIC_URL=https://api.example.com
 ```
 
-Avec cette configuration, tout le trafic du navigateur reste sur le domaine de l'application : les cookies ne passent jamais d'un domaine à l'autre et `COOKIE_DOMAIN` n'est pas nécessaire. Si le navigateur communique plutôt directement avec le domaine de l'API, vous devez la définir ; consultez [Variables d'environnement](/environment-variables).
+Avec cette configuration, tout le trafic du navigateur reste sur le domaine de l'application : rien n'a à être partagé entre les deux noms d'hôte. Si le navigateur communique plutôt directement avec le domaine de l'API, c'est `FRONTEND_ORIGIN` qui autorise cette origine ; consultez [Variables d'environnement](/environment-variables).
 
 Configurez ensuite le DNS et placez Caddy en proxy devant les ports locaux. Caddy obtient les certificats TLS et relaie les WebSockets.
 
@@ -146,7 +146,7 @@ app.example.com {
         }
     }
 
-    # Tout le reste va au frontend, qui relaie les requêtes d'API et de connexion
+    # Tout le reste va au frontend, qui relaie les requêtes d'API
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -186,7 +186,7 @@ multica.example.com {
         }
     }
 
-    # Tout le reste va au frontend, qui relaie les requêtes d'API et de connexion
+    # Tout le reste va au frontend, qui relaie les requêtes d'API
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -226,28 +226,9 @@ La dernière commande affiche `daemon_server_url`, l'URL que les daemons utilise
 </Step>
 <Step>
 
-## Se connecter et créer un espace de travail [#4-se-connecter-et-créer-un-espace-de-travail]
+## Ouvrir Multica [#4-ouvrir-multica]
 
-Ouvrez `http://localhost:3000` en local, ou le `https://app.example.com` que vous venez de configurer, puis saisissez votre adresse e-mail pour demander un code de vérification.
-
-Aucun service d'e-mail n'est configuré par défaut. Après avoir demandé un code, lisez-le dans les journaux du backend :
-
-```bash
-docker compose -f docker-compose.selfhost.yml logs backend \
-  | grep "Verification code"
-```
-
-Les journaux contiennent une ligne comme celle-ci :
-
-```text
-[DEV] Verification code for you@example.com: 123456
-```
-
-Saisissez le code et créez votre premier espace de travail. Une fois Resend ou SMTP configuré, les codes sont envoyés par e-mail et les membres n'ont plus besoin de lire les journaux des conteneurs ; consultez [Configuration de l'authentification](/auth-setup).
-
-<Callout type="warning">
-Les déploiements auto-hébergés utilisent par défaut `APP_ENV=production`, qui désactive les codes de vérification fixes. Ne définissez pas `MULTICA_DEV_VERIFICATION_CODE` sur une instance publique.
-</Callout>
+Ouvrez `http://localhost:3000` en local, ou le `https://app.example.com` que vous venez de configurer. Il n'y a ni inscription ni connexion : le serveur sert un seul utilisateur local et, à son premier démarrage, il a créé l'espace de travail par défaut de cet utilisateur, `dev`. La racine du site ouvre directement ce workspace.
 
 </Step>
 <Step>
@@ -300,7 +281,7 @@ multica setup self-host \
 </Tab>
 </Tabs>
 
-Si le service tourne sur une autre machine, passez les deux URL configurées précédemment. La commande vérifie d'abord `<server-url>/health`, puis ouvre un navigateur pour terminer la connexion. Une fois la connexion effectuée, elle enregistre les identifiants en local et démarre le daemon. Une erreur `Server not reachable` à cette étape signifie que la sonde n'a pas obtenu de 200 sur `/health`. Trois causes sont possibles : le proxy transmet tout à une version web qui ne relaie pas ce chemin ; le proxy ne route pas du tout `/health` vers le backend ; ou une défaillance de plus bas niveau (DNS, TLS, pare-feu, délai d'attente dépassé, 5xx renvoyé par le backend). Consultez [Dépannage](/troubleshooting#multica-setup-reports-the-server-is-not-reachable).
+Si le service tourne sur une autre machine, passez les deux URL configurées précédemment. La commande vérifie d'abord `<server-url>/health`, puis enregistre les deux adresses dans le profil CLI et démarre le daemon. Aucune authentification n'est nécessaire. Une erreur `Server not reachable` à cette étape signifie que la sonde n'a pas obtenu de 200 sur `/health`. Trois causes sont possibles : le proxy transmet tout à une version web qui ne relaie pas ce chemin ; le proxy ne route pas du tout `/health` vers le backend ; ou une défaillance de plus bas niveau (DNS, TLS, pare-feu, délai d'attente dépassé, 5xx renvoyé par le backend). Consultez [Dépannage](/troubleshooting#multica-setup-reports-the-server-is-not-reachable).
 
 Vérifiez la connexion :
 
@@ -465,7 +446,6 @@ Helm a son propre chemin de mise à niveau : définissez `images.backend.tag` / 
 | Symptôme | À vérifier en premier |
 |---|---|
 | `/readyz` ne renvoie pas `ok` | Exécutez `docker compose -f docker-compose.selfhost.yml logs backend postgres`. |
-| Aucun code de vérification n'arrive | Demandez un code, puis cherchez `Verification code` dans les journaux du backend. |
 | `setup self-host` signale que le serveur est injoignable | Depuis l'ordinateur, envoyez une requête à `https://api.example.com/health` pour confirmer que le DNS, le TLS et le proxy inverse sont tous joignables. Un 404 signifie que le proxy envoie `/health` à une ancienne version web qui ne le relaie pas : routez-le vers le backend ([Dépannage](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)). |
 | Le daemon n'affiche rien sous `Agents` | Vérifiez que les outils de codage IA sont dans le `PATH` et connectés, puis exécutez `multica daemon restart`. |
 | Les tâches restent en file d'attente | Exécutez `multica daemon status` pour confirmer que le daemon tourne et qu'il est connecté à l'espace de travail. |
@@ -474,7 +454,6 @@ Pour d'autres scénarios, consultez [Dépannage](/troubleshooting).
 
 ## Étapes suivantes
 
-- [Configuration de l'authentification](/auth-setup) — configurer l'e-mail, la connexion Google et le périmètre d'inscription.
 - [Variables d'environnement](/environment-variables) — la référence complète de configuration du serveur.
 - [Guide d'auto-hébergement](https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md) — Kubernetes, mises à niveau et déploiement manuel.
 - [Application de bureau](/desktop-app) — connecter l'application de bureau à un service auto-hébergé.

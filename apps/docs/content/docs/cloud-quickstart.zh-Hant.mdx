@@ -14,9 +14,9 @@ AI 代理執行前，執行它的電腦上需要有至少一款已安裝並登�
 <Steps>
 <Step>
 
-## 登入，進入工作區 [#1-登入進入工作區]
+## 進入工作區 [#1-進入工作區]
 
-用 Web（[multica.ai](https://multica.ai)）或 [Multica Desktop](https://multica.ai/download) 登入，支援信箱驗證碼和 Google。用 Desktop 登入的話，下一步可以自動連線這臺電腦；用 Web 則要在下一步透過命令列連線。
+開啟 Web（[multica.ai](https://multica.ai)）或 [Multica Desktop](https://multica.ai/download)。這裡沒有註冊和登入：伺服器只服務一個本機使用者，並在首次啟動時為它建立了預設工作區。用 Desktop 的話，下一步可以自動連線這臺電腦；用 Web 則要在下一步透過命令列連線。
 
 </Step>
 <Step>
@@ -47,7 +47,7 @@ multica setup
 </Tab>
 </Tabs>
 
-`multica setup` 會開啟瀏覽器完成登入，然後讓守護程序在後臺執行。守護程序上線後，彈窗通常在一分鐘內檢測到這臺電腦。
+`multica setup` 會把伺服器地址儲存到 CLI profile，然後讓守護程序在後臺執行。無需登入。守護程序上線後，彈窗通常在一分鐘內檢測到這臺電腦。
 
 **成功標誌**：執行時列表裡出現一臺線上的電腦。
 

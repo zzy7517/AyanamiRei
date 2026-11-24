@@ -53,13 +53,13 @@ La page de la tâche signale un tel abonnement par **Mises à jour clés**. Son 
 
 ## Les agents et la boîte de réception
 
-Les notifications appartiennent aux membres de l'espace de travail. Un agent peut lire et traiter les notifications du propriétaire du runtime uniquement si le serveur vérifie que ce propriétaire est la personne à l'origine de l'exécution. Cette identité est transmise dans les chaînes de délégation entre agents. La règle couvre toutes les actions de la boîte de réception : la liste active, les archives, la liste reportée, les compteurs de non-lus et toutes les modifications. Les exécutions déclenchées par une autre personne ou sans personne vérifiable, ainsi que les identifiants de nœud cloud sans liaison à une exécution, sont refusés. Les compteurs de non-lus lus par un agent ne couvrent que l'espace de travail de son exécution, jamais les autres espaces du propriétaire. Seules les personnes peuvent supprimer des notifications. Le serveur journalise chaque modification faite par un agent, avec l'agent, l'exécution et la personne pour qui il agissait.
+Les notifications appartiennent aux membres de l'espace de travail. Un agent peut lire et traiter les notifications du propriétaire du runtime uniquement si le serveur vérifie que ce propriétaire est la personne à l'origine de l'exécution. Cette identité est transmise dans les chaînes de délégation entre agents. La règle couvre toutes les actions de la boîte de réception : la liste active, les archives, la liste reportée, les compteurs de non-lus et toutes les modifications. Les exécutions déclenchées par une autre personne ou sans personne vérifiable sont refusées. Les compteurs de non-lus lus par un agent ne couvrent que l'espace de travail de son exécution, jamais les autres espaces du propriétaire. Seules les personnes peuvent supprimer des notifications. Le serveur journalise chaque modification faite par un agent, avec l'agent, l'exécution et la personne pour qui il agissait.
 
 @mentionner un agent dans un commentaire, lui assigner une tâche ou déclencher une automatisation crée directement une exécution ; aucune notification n'est laissée à l'agent.
 
 ## Gérer depuis le CLI
 
-Utilisez votre connexion CLI existante pour lire et traiter vos notifications. Lister ne marque rien comme lu :
+Utilisez le CLI pour lire et traiter vos notifications. Lister ne marque rien comme lu :
 
 ```sh
 multica inbox count
@@ -83,7 +83,7 @@ Comme dans l'application, marquer comme lue, archiver ou reporter une notificati
 
 Les actions groupées correspondent au menu de la boîte de réception : `multica inbox read --all`, et `multica inbox archive` avec `--all`, `--read` (tâches dont la notification la plus récente est lue) ou `--completed` (tâches dans un statut `done` ou `closed`). Elles exigent `--yes`, ou une confirmation saisie lors d'une exécution manuelle, et laissent de côté les tâches reportées, sauf `--completed` : comme dans l'application, il archive aussi une tâche terminée ou fermée même reportée, ce qui met fin au report. Chaque modification affiche le nombre de notifications réellement modifiées, tâches entières comprises ; une notification déjà dans cet état compte pour 0. `--output json` renvoie ce même nombre, avec le résultat de chaque ID. Le CLI ne permet pas de supprimer des notifications.
 
-Une exécution d'agent autorisée utilise son identifiant d'exécution pour tout cela, sans revenir à la connexion d'une personne.
+Une exécution d'agent autorisée utilise son identifiant d'exécution pour tout cela, sans revenir à agir en tant que personne.
 
 ## Traiter les notifications
 

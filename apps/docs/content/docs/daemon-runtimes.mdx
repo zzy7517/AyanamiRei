@@ -63,15 +63,14 @@ The daemon needs at least one built-in supported AI coding tool detected before 
 
 ### Run in a Linux container [#linux-container]
 
-Install the Multica CLI and at least one supported coding tool in the image. Run the container as a non-root user. Set `MULTICA_SERVER_URL` to the API URL reachable from inside the container. Mount a personal access token as a secret and pass it to login on standard input. Replace `my-workspace` with your workspace slug.
+Install the Multica CLI and at least one supported coding tool in the image. Run the container as a non-root user. Set `MULTICA_SERVER_URL` to the API URL reachable from inside the container. The daemon needs no credential. Replace `my-workspace` with your workspace slug.
 
 ```bash
-multica --profile container login --token < /run/secrets/multica-pat
 multica --profile container workspace switch my-workspace
 exec multica --profile container daemon start --foreground --no-auto-update
 ```
 
-Run login and workspace selection when provisioning the profile. For a long-lived runtime, mount the container user's `~/.multica` on writable persistent storage. It stores the profile's access token and the daemon ID. If the directory is lost when the container is replaced, you must log in again and the daemon registers a new runtime. Agents assigned to the original runtime cannot pick up tasks in the replacement container.
+Run workspace selection when provisioning the profile. For a long-lived runtime, mount the container user's `~/.multica` on writable persistent storage. It stores the profile's configuration and the daemon ID. If the directory is lost when the container is replaced, you must run workspace selection again, and the daemon registers a new runtime. Agents assigned to the original runtime cannot pick up tasks in the replacement container.
 
 To preserve run directories and the `.repos` cache across container replacements, mount the workspaces root on writable persistent storage. With `--profile container`, the default workspaces root is `~/multica_workspaces_container`.
 
@@ -372,7 +371,7 @@ For standalone bridge setup and operational limitations, see the [Qoder runtime 
 Check in this order:
 
 1. Run `multica daemon status` to confirm the daemon is running.
-2. Run `multica daemon logs -f` to look for login, network, or tool-detection errors.
+2. Run `multica daemon logs -f` to look for network or tool-detection errors.
 3. Run `command -v <tool-command>` in the same environment to confirm the daemon can find it.
 4. Open Multica's **Runtimes** page and check whether the target computer and the matching AI coding tool show as online.
 5. After a tool install, a path change, or a profile update, run `multica daemon restart`.

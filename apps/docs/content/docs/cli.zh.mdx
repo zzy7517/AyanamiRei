@@ -1,9 +1,8 @@
 ---
 title: 使用 CLI
-description: 安装并登录 Multica CLI，在终端中管理工作区、任务、智能体和运行时。
+description: 安装并配置 Multica CLI，在终端中管理工作区、任务、智能体和运行时。
 ---
 
-import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 Multica CLI 既负责连接本机运行时，也可以在终端中管理工作区、任务、智能体和自动化。这里介绍常用路径；当前版本支持的参数始终以命令自身的 `--help` 为准。
@@ -64,20 +63,12 @@ multica setup self-host \
 </Tab>
 </Tabs>
 
-`setup` 会保存服务地址、打开浏览器完成登录，并启动守护进程。完成后检查：
+`setup` 会把服务地址保存到当前 profile，并启动守护进程。无需登录：服务器只服务一个本地用户。完成后检查：
 
 ```bash
-multica auth status
+multica config show
 multica daemon status
 ```
-
-如果只需要重新登录，不想覆盖其他配置，运行 `multica login`。没有浏览器的环境可以先在 Web 设置中创建个人访问令牌，再输入：
-
-```bash
-multica login --token
-```
-
-命令会在终端中提示粘贴令牌，避免把完整值留在 shell history 中。
 
 ## 选择工作区
 
@@ -423,7 +414,7 @@ multica autopilot trigger-update <autopilot-id> <trigger-id> --clear-event-filte
 | `env` | 启动、停止和列出仓库声明的环境（只能在智能体的运行中使用） |
 | `attachment` | 上传或下载附件 |
 | `user profile` | 查看或更新当前用户资料 |
-| `auth`、`login`、`setup` | 登录、查看认证状态和初始化连接 |
+| `setup` | 保存服务地址并启动守护进程 |
 | `config` | 查看或修改当前 CLI profile 的本地配置 |
 | `update`、`version` | 更新 CLI 或查看版本 |
 
@@ -446,7 +437,7 @@ multica agent list --output json
 
 ## Profile 与配置
 
-默认配置保存在 `~/.multica/config.json`。使用 `--profile <name>` 可以隔离另一套服务地址、令牌、默认工作区和守护进程状态：
+默认配置保存在 `~/.multica/config.json`。使用 `--profile <name>` 可以隔离另一套服务地址、默认工作区和守护进程状态：
 
 ```bash
 multica setup self-host --profile staging \
@@ -462,10 +453,6 @@ multica issue list --profile staging
 multica config show
 multica config show --profile staging
 ```
-
-<Callout type="warning">
-CLI 配置文件包含可代表你访问 Multica 的令牌。不要提交到仓库、上传到日志或与他人共享。
-</Callout>
 
 ## 命令参考
 
@@ -568,10 +555,8 @@ CLI 配置文件包含可代表你访问 Multica 的令牌。不要提交到仓�
 
 | 命令 | 子命令 | 用途 | 关键 flag |
 | --- | --- | --- | --- |
-| `auth` | `status` / `logout` | 查看认证状态；`logout` 只删除本地保存的令牌，不吊销服务端令牌 | |
 | `user` | `profile get/update` | 查看或更新当前用户资料 | |
-| `login` | — | 浏览器登录并自动配置全部工作区 | `--token`（不带值时在终端交互式输入） |
-| `setup` | `cloud`（默认）、`self-host` | 保存服务地址、完成登录并启动守护进程 | `self-host`：`--server-url`、`--app-url`、`--port`、`--frontend-port` |
+| `setup` | `cloud`（默认）、`self-host` | 保存服务地址并启动守护进程 | `self-host`：`--server-url`、`--app-url`、`--port`、`--frontend-port` |
 | `attachment` | `download <attachment-id>`、`upload <path>` | 下载或上传附件 | `download`：`--output-dir`；`upload`：`--task` |
 | `config` | `show`、`set <key> <value>` | 查看或修改当前 profile 的本地配置 | 优先级：命令行 flag > 环境变量 > `config.json` > 内置默认；设为空串可清除 |
 | `update` | — | 更新 CLI 到最新版本 | |
@@ -581,11 +566,11 @@ CLI 配置文件包含可代表你访问 Multica 的令牌。不要提交到仓�
 
 如果你的工作大多发生在 Codex、Claude Code 或 Cursor 里，可以直接在那里操作 Multica，不必切回终端。[Multica CLI skill](https://github.com/multica-ai/multica-cli) 会教这些智能体安全地使用本页的命令：读任务和评论线程时少耗 token、通过文件写评论，以及正确处理 mention、状态变更和指派带来的副作用。
 
-它完全通过你已认证的 CLI 运行，本身不授予任何权限，权限仍然只来自你的登录、所选 profile 和工作区。要求 CLI 版本不低于 v0.4.26。该仓库的 README 说明了 Claude Code 插件市场、Codex skill 安装器、Cursor 以及其他任何加载 Markdown 指令的工具的安装方式。
+它完全通过你的 CLI 运行，本身不授予任何权限，权限仍然只来自所选 profile 和工作区。要求 CLI 版本不低于 v0.4.26。该仓库的 README 说明了 Claude Code 插件市场、Codex skill 安装器、Cursor 以及其他任何加载 Markdown 指令的工具的安装方式。
 
 ## 接下来
 
 - [Multica CLI skill](https://github.com/multica-ai/multica-cli) — 在 Codex、Claude Code 或 Cursor 里操作 Multica。
-- [认证与令牌](/auth-tokens) — PAT 的创建、续期和吊销。
+- [任务令牌](/auth-tokens) — 智能体执行任务时使用的临时令牌。
 - [故障排查](/troubleshooting) — 命令报错和运行不开始的排查路径。
 - [创建和配置智能体](/agents-create) — `agent create` 各字段的完整语义。

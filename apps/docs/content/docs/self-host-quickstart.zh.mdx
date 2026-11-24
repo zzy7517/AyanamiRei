@@ -1,6 +1,6 @@
 ---
 title: 自托管快速上手
-description: 用 Docker Compose 启动 Multica，完成登录，并连接第一台执行电脑。
+description: 用 Docker Compose 启动 Multica，打开它，并连接第一台执行电脑。
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -129,7 +129,7 @@ MULTICA_APP_URL=https://app.example.com
 MULTICA_PUBLIC_URL=https://api.example.com
 ```
 
-按这份配置，浏览器流量全部走 app 域，cookie 不跨域，因此不需要配置 `COOKIE_DOMAIN`。如果改为让浏览器直接访问 api 域，则必须配置它，见[环境变量](/environment-variables)。
+按这份配置，浏览器流量全部走 app 域，不需要在两个域名之间共享任何内容。如果改为让浏览器直接访问 api 域，由 `FRONTEND_ORIGIN` 放行该来源，见[环境变量](/environment-variables)。
 
 然后配置 DNS，并用 Caddy 代理本机端口。Caddy 会申请 TLS 证书并转发 WebSocket。
 
@@ -146,7 +146,7 @@ app.example.com {
         }
     }
 
-    # 其余路径交给 frontend；它会转发 API 和登录请求
+    # 其余路径交给 frontend；它会转发 API 请求
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -185,7 +185,7 @@ multica.example.com {
         }
     }
 
-    # 其余路径交给 frontend；它会转发 API 和登录请求
+    # 其余路径交给 frontend；它会转发 API 请求
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -225,28 +225,9 @@ curl -fsS https://app.example.com/api/config | grep -o '"daemon_server_url":"[^"
 </Step>
 <Step>
 
-## 登录并创建工作区 [#4-登录并创建工作区]
+## 打开 Multica [#4-打开-multica]
 
-打开本机的 `http://localhost:3000`，或刚才配置的 `https://app.example.com`，输入邮箱获取验证码。
-
-默认没有配置邮件服务。请求验证码后，可以从 backend 日志中读取：
-
-```bash
-docker compose -f docker-compose.selfhost.yml logs backend \
-  | grep "Verification code"
-```
-
-日志中会出现类似内容：
-
-```text
-[DEV] Verification code for you@example.com: 123456
-```
-
-输入验证码并创建第一个工作区。配置 Resend 或 SMTP 后，验证码通过邮件发送，成员无需读取容器日志，具体见[登录与注册配置](/auth-setup)。
-
-<Callout type="warning">
-自托管部署默认使用 `APP_ENV=production`，不会启用固定验证码。不要在公网实例上设置 `MULTICA_DEV_VERIFICATION_CODE`。
-</Callout>
+打开本机的 `http://localhost:3000`，或刚才配置的 `https://app.example.com`。这里没有注册和登录：服务器只服务一个本地用户，并在首次启动时为该用户创建了默认工作区 `dev`。打开网页根路径会直接进入这个工作区。
 
 </Step>
 <Step>
@@ -299,7 +280,7 @@ multica setup self-host \
 </Tab>
 </Tabs>
 
-服务在另一台机器上时，传入的是刚才配置的两个地址。这条命令会先检查 `<server-url>/health`，再打开浏览器完成登录。登录完成后，它会保存本机凭据并启动守护进程。这一步报 `Server not reachable`，说明 `/health` 没有通过探测拿到 200，可能的原因有三种：代理把所有流量转给了不转发该路径的旧版 frontend；代理根本没把 `/health` 路由到 backend；更底层的问题（DNS、TLS、防火墙、超时、backend 返回 5xx）。见[故障排查](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)。
+服务在另一台机器上时，传入的是刚才配置的两个地址。这条命令会先检查 `<server-url>/health`，再把这两个地址保存到 CLI profile 并启动守护进程。无需登录。这一步报 `Server not reachable`，说明 `/health` 没有通过探测拿到 200，可能的原因有三种：代理把所有流量转给了不转发该路径的旧版 frontend；代理根本没把 `/health` 路由到 backend；更底层的问题（DNS、TLS、防火墙、超时、backend 返回 5xx）。见[故障排查](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)。
 
 确认连接状态：
 
@@ -464,7 +445,6 @@ Helm 有自己的升级路径：在 values 文件里把 `images.backend.tag` / `
 | 现象 | 先检查什么 |
 |---|---|
 | `/readyz` 没有返回 `ok` | 运行 `docker compose -f docker-compose.selfhost.yml logs backend postgres`。 |
-| 收不到验证码 | 请求一次验证码，再从 backend 日志中查找 `Verification code`。 |
 | `setup self-host` 提示 server 不可达 | 在执行电脑上请求 `https://api.example.com/health`，确认 DNS、TLS 和反向代理都可达。返回 404 说明代理把 `/health` 转给了不转发该路径的旧版 frontend，改为直通 backend（见[故障排查](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)）。 |
 | 守护进程没有列出 `Agents` | 确认 AI 编程工具在 `PATH` 中并已登录，然后运行 `multica daemon restart`。 |
 | 任务一直排队 | 运行 `multica daemon status`，确认守护进程正在运行并连接了工作区。 |
@@ -473,7 +453,6 @@ Helm 有自己的升级路径：在 values 文件里把 `images.backend.tag` / `
 
 ## 接下来
 
-- [登录与注册配置](/auth-setup) — 配置邮件、Google 登录和注册范围。
 - [环境变量](/environment-variables) — 查看完整的服务端配置。
 - [Self-hosting guide](https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md) — Kubernetes、升级和手动部署。
 - [桌面应用](/desktop-app) — 让 Desktop 连接自托管服务。

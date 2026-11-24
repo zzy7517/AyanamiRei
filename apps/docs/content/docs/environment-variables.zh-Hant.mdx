@@ -21,10 +21,10 @@ MULTICA_APP_URL=https://multica.example.com
 MULTICA_PUBLIC_URL=https://api.multica.example.com
 ```
 
-還需要選擇一種郵件服務，否則驗證碼和邀請只會寫入服務端日誌。
+郵件不是必需的：它只用於工作區邀請。不設定郵件服務時，邀請只會寫入服務端日誌。
 
 <Callout type="warning">
-`JWT_SECRET` 在生產環境為必填：當 `APP_ENV=production` 時，後端會在金鑰為空或等於已知佔位值時拒絕啟動（用 `openssl rand -hex 32` 生成）。也不要在生產環境設定 `MULTICA_DEV_VERIFICATION_CODE`。
+`JWT_SECRET` 在生產環境為必填：當 `APP_ENV=production` 時，後端會在金鑰為空或等於已知佔位值時拒絕啟動（用 `openssl rand -hex 32` 生成）。
 </Callout>
 
 ## API 與資料庫
@@ -41,9 +41,8 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 | `MULTICA_DATABASE_STARTUP_TIMEOUT` | `3m` | 容器啟動過程中，migration 與 API 共享的暫時性資料庫故障重試時長；設為 `0` 時每個階段只嘗試一次 |
 | `MULTICA_DATABASE_CONNECT_TIMEOUT` | `5s` | 啟動期間單次資料庫連線的兜底超時；pgx 原生 `connect_timeout`、`PGCONNECT_TIMEOUT` 或 service 配置優先 |
 | `PORT` | `8080` | API 監聽埠 |
-| `JWT_SECRET` | 生產環境必填 | 登入 JWT、部分簽名流程使用的金鑰；生產環境對空值或已知佔位值拒絕啟動 |
+| `JWT_SECRET` | 生產環境必填 | 為 AI 代理工作令牌與部分簽名流程使用的金鑰；生產環境對空值或已知佔位值拒絕啟動 |
 | `APP_ENV` | 空 | 生產環境設為 `production` |
-| `AUTH_TOKEN_TTL` | `720h`（30 天） | 瀏覽器 JWT 與 cookie 有效期；接受 Go duration 或正整數秒數。會話會滑動續期：剩餘有效期過半後，持續使用的會話會被續期而不是到期。低於 `60s` 的取值會按 `60s` 處理 |
 | `LOG_LEVEL` | 應用預設 | 日誌級別 |
 | `MULTICA_SHUTDOWN_HOLD_DURATION` | `0` | 收到終止訊號後，開始優雅退出前等待多久 |
 | `MULTICA_RUNTIME_RECONNECT_GRACE` | `3h` | 執行時離線後可重新連線且不終止在途執行的寬限時間；低於 `150s` 時按 `150s` 處理 |
@@ -58,25 +57,22 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 
 | 變數 | 預設值 | 說明 |
 |---|---|---|
-| `FRONTEND_ORIGIN` | 空 | 使用者訪問的前端 origin；用於 CORS、cookie 和邀請連結 |
-| `MULTICA_APP_URL` | 回退到 `FRONTEND_ORIGIN` | 使用者可訪問的 Web 地址；CLI 登入和帳號繫結連結使用它 |
+| `FRONTEND_ORIGIN` | 空 | 使用者訪問的前端 origin；用於 CORS 和邀請連結 |
+| `MULTICA_APP_URL` | 回退到 `FRONTEND_ORIGIN` | 使用者可訪問的 Web 地址；用於 Web 應用顯示的 `multica setup` 指令和聊天整合回覆中的連結 |
 | `MULTICA_PUBLIC_URL` | 空 | 公網 API 地址；用於 webhook URL 和執行時連線說明 |
 | `MULTICA_DAEMON_SERVER_URL` | 回退到 `MULTICA_PUBLIC_URL`，再回退到 `MULTICA_APP_URL` / `FRONTEND_ORIGIN` | API 程序寫入 `multica setup self-host` 命令的服務端地址；守護程序訪問 API 的地址與公網 webhook 地址不同時設定 |
 | `CORS_ALLOWED_ORIGINS` | 空 | 額外允許的 HTTP origin，逗號分隔 |
 | `ALLOWED_ORIGINS` | 回退到 CORS / 前端地址 | WebSocket origin 白名單，逗號分隔 |
-| `COOKIE_DOMAIN` | 空 | 前後端不同 host 且瀏覽器直接訪問 API 域時必須設定；單域部署保持為空 |
 
 <Callout type="warning">
 `MULTICA_DAEMON_SERVER_URL` 會由無需認證的 `/api/config` 介面返回，客戶端可以讀取。請將它視為公開配置，切勿填入憑據、令牌或其他金鑰。
 </Callout>
 
-前端和 API 使用不同 host、且瀏覽器直接訪問 API 域時，必須設定 `COOKIE_DOMAIN`，否則瀏覽器讀不到 CSRF cookie——所有寫請求返回 `403 CSRF validation failed`，而讀請求一切正常。取值用能同時覆蓋兩個 host 的最窄父域（`.agent.example.com` 優於 `.example.com`）。它會把登入會話 cookie 擴散到該域下的所有 host，只有這些 host 都由同一可信主體運維時才可用。修改後需要在兩個 host 上清除舊 cookie 並重新登入。若採用[自託管快速上手](/self-host-quickstart#remote-access)的同源配方（瀏覽器只訪問 app 域），保持為空即可。不要填寫 IP 地址，瀏覽器會忽略帶 IP Domain 的 cookie。
-
 <Callout type="warning">
-自託管部署需要設定 `FRONTEND_ORIGIN`。缺少它時，邀請連結、cookie 安全屬性和 WebSocket origin 校驗都可能與實際網域不一致。
+自託管部署需要設定 `FRONTEND_ORIGIN`。缺少它時，邀請連結和 WebSocket origin 校驗都可能與實際網域不一致。
 </Callout>
 
-## 郵件與登入
+## 郵件
 
 ### Resend
 
@@ -100,35 +96,14 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 | `SMTP_TLS_INSECURE` | `false` | 跳過憑證校驗，僅用於可信內網 |
 | `SMTP_EHLO_NAME` | 主機名 | 嚴格 relay 要求的 EHLO/FQDN |
 
-### Google OAuth
+### 新建工作區的限制
 
 | 變數 | 預設值 | 說明 |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | 空 | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | 空 | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/callback` | 必須與 Google Console 中的回撥地址完全一致 |
-
-### 註冊範圍
-
-| 變數 | 預設值 | 說明 |
-|---|---|---|
-| `ALLOW_SIGNUP` | `true` | 未配置任何白名單時是否允許建立新帳號 |
-| `ALLOWED_EMAILS` | 空 | 允許註冊的完整信箱，逗號分隔 |
-| `ALLOWED_EMAIL_DOMAINS` | 空 | 允許註冊的信箱網域，逗號分隔 |
 | `DISABLE_WORKSPACE_CREATION` | `false` | 禁止所有使用者新建工作區；沒有 owner/admin 例外 |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | 空 | 允許新建工作區的完整信箱地址，逗號分隔。設定後其他使用者新建會返回 403。`DISABLE_WORKSPACE_CREATION=true` 優先。不授予訪問其他工作區的權限 |
-| `MULTICA_DEV_VERIFICATION_CODE` | 空 | 非 production 環境使用的固定 6 位測試驗證碼 |
 
-白名單的準確判斷順序見[登入與註冊](/auth-setup#註冊範圍控制)。
-
-### 預共享權杖
-
-一組固定密鑰，讓客戶端直接以某個帳號登入，不需要驗證碼，也不需要 Google。[Desktop](/desktop-app#免登入直接進入)在設定檔設定了 `authToken` 時會傳送它；CLI 與 daemon 接受把它填在設定的 `token` 欄位中。
-
-| 變數 | 預設值 | 說明 |
-|---|---|---|
-| `MULTICA_AUTH_TOKEN` | 空 | 在所有接受個人存取權杖的地方都被接受：`/api/**` 與 WebSocket 端點。未設定則關閉 |
-| `MULTICA_AUTH_TOKEN_EMAIL` | 空 | 權杖所屬帳號的信箱。設定了 `MULTICA_AUTH_TOKEN` 時必填，否則伺服器會記錄一則錯誤並拒絕該權杖。帳號還不存在時，啟動時會建立它並建立第一個工作區 |
+伺服器只有一個本機使用者 `dev@localhost`，所以它是 `WORKSPACE_CREATION_ALLOWED_EMAILS` 唯一能匹配的地址。
 
 ## 附件儲存
 
@@ -174,8 +149,6 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 | `REDIS_URL` | 空 | 所有 Redis 功能共用的唯一連線地址，包括共享限流、實時事件、頻道 WebSocket 租約和 token cache |
 | `REDIS_CLUSTER_MODE` | `false` | 設為 `true` 後強制使用 Redis Cluster 客戶端，單配置地址也適用；叢集模式只能使用資料庫 0，且要求 `REALTIME_RELAY_MODE=sharded` |
 | `REDIS_DISABLE_CLIENT_NAME` | `false` | 託管 Redis 禁止 `CLIENT SETNAME` 時設為 `true` |
-| `RATE_LIMIT_AUTH` | `5` | 單 IP 每分鐘傳送驗證碼或發起 Google 登入的次數 |
-| `RATE_LIMIT_AUTH_VERIFY` | `20` | 單 IP 每分鐘驗證驗證碼的次數 |
 | `RATE_LIMIT_INVITATION_ACTOR_10M` | `10` | 每位邀請人在 10 分鐘滑動視窗內可建立的工作區邀請數；設為 `0` 可關閉此項限流 |
 | `RATE_LIMIT_INVITATION_WORKSPACE_24H` | `50` | 同一工作區內所有管理員在 24 小時滑動視窗內可建立的邀請總數；設為 `0` 可關閉此項限流 |
 | `RATE_LIMIT_INVITATION_RECIPIENT_24H` | `6` | 同一規範化收件信箱跨工作區在 24 小時滑動視窗內可收到的邀請數；設為 `0` 可關閉此項限流 |
@@ -184,7 +157,7 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 
 反向代理後的部署需要填寫真實代理網段。不要直接信任所有來源，否則客戶端可以偽造轉發 IP。
 
-認證限流需要配置 `REDIS_URL`；未配置時，啟動日誌會提示認證限流已關閉。邀請限流在沒有 Redis 時仍使用程序記憶體，配置 Redis 後則在多個副本間共享額度。如果已配置的 Redis 臨時不可用，認證限流仍選擇放行，而邀請建立會返回可重試的 `503`，不會在失去防護時傳送郵件。
+邀請限流在沒有 Redis 時使用程序記憶體，配置 Redis 後則在多個副本間共享額度。如果已配置的 Redis 臨時不可用，邀請建立會返回可重試的 `503`，不會在失去防護時傳送郵件。
 
 ## 外部整合
 
@@ -384,7 +357,7 @@ multica config show
 | 鍵 | 預設值 | 說明 |
 |---|---|---|
 | `server_url` | `ws://localhost:8080/ws` | Multica API / WebSocket 地址 |
-| `app_url` | 空 | 瀏覽器登入使用的 Web 地址 |
+| `app_url` | 空 | Web 應用程式的地址；`multica setup` 會把它儲存到 CLI 設定檔中 |
 | `workspace_id` | 空 | 預設工作區 |
 | `device_name` | 主機名 | 執行時列表中的裝置名 |
 | `runtime_name` | `Local Agent` | 執行時顯示名 |
@@ -420,12 +393,11 @@ multica config show
 | `METRICS_ADDR` | 空 | Prometheus metrics 監聽地址；空表示不啟動 |
 | `REALTIME_METRICS_TOKEN` | 空 | 保護 `/health/realtime` 的 bearer token |
 
-首方自託管遙測每天按 UTC 傳送一份部署級快照，固定且不可配置的地址為 `https://telemetry.multica.ai/v1/telemetry/events`。快照只包含正式釋出版本、工作區數/去重成員數/活躍 AI 代理數/過去 24 小時活躍守護程序數的分桶，過去 24 小時執行的開始、完成、失敗和取消總數，以及過去 1、7、28 個完整 UTC 日內登入後開啟過網頁端或桌面端的成員數、親自發起過 AI 代理執行（分配、@、評論、聊天、手動執行或重跑；不含 autopilot 和 AI 代理之間的委派）的成員數的分桶。成員只在本部署內計數，不會被識別。不會傳送名稱、信箱或網域、IP、業務識別符號、主機或裝置資訊、程式碼倉庫、模型或 plugin、prompt/output、評論或聊天、檔案路徑、token/費用、憑據、錯誤文字、stack 或日誌。此資料只用於瞭解自託管版本採用、部署規模區間、聚合使用量與成員活躍情況，不用於計費、授權、認證或安全決策。
+首方自託管遙測每天按 UTC 傳送一份部署級快照，固定且不可配置的地址為 `https://telemetry.multica.ai/v1/telemetry/events`。快照只包含正式釋出版本、工作區數/去重成員數/活躍 AI 代理數/過去 24 小時活躍守護程序數的分桶，過去 24 小時執行的開始、完成、失敗和取消總數，以及過去 1、7、28 個完整 UTC 日內親自發起過 AI 代理執行（分配、@、評論、聊天、手動執行或重跑；不含 autopilot 和 AI 代理之間的委派）的成員數的分桶。成員只在本部署內計數，不會被識別。不會傳送名稱、信箱或網域、IP、業務識別符號、主機或裝置資訊、程式碼倉庫、模型或 plugin、prompt/output、評論或聊天、檔案路徑、token/費用、憑據、錯誤文字、stack 或日誌。此資料只用於瞭解自託管版本採用、部署規模區間、聚合使用量與成員活躍情況，不用於計費、授權、認證或安全決策。
 
 `DO_NOT_TRACK` 與 `ANALYTICS_DISABLED` 相互獨立：前者控制這份首方匿名快照，後者控制可選的 PostHog 整合。
 
 ## 接下來
 
-- [登入與註冊](/auth-setup) — 登入方式與註冊限制。
 - [故障排查](/troubleshooting) — 部署問題的症狀排查。
 - [守護程序與執行時](/daemon-runtimes) — 守護程序側的對應配置。

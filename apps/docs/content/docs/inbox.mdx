@@ -53,13 +53,13 @@ The issue page marks such a subscription **Key updates only**. Its menu offers *
 
 ## Agents and the inbox
 
-Inbox notifications belong to workspace members. An agent may read and change the runtime owner's notifications only when the server verifies that the owner is the upstream human who triggered the run. This identity follows agent delegation chains. The rule covers every inbox action: the active, archived and snoozed lists, unread counts, and every change. Runs triggered by another person or without a verifiable human, and cloud-node credentials without a task binding, are refused. An agent's unread counts cover only the workspace its run belongs to, never the owner's other workspaces. Only people can delete notifications. The server logs each change an agent makes, with the agent, the run and the person it acted for.
+Inbox notifications belong to workspace members. An agent may read and change the runtime owner's notifications only when the server verifies that the owner is the upstream human who triggered the run. This identity follows agent delegation chains. The rule covers every inbox action: the active, archived and snoozed lists, unread counts, and every change. Runs triggered by another person or without a verifiable human are refused. An agent's unread counts cover only the workspace its run belongs to, never the owner's other workspaces. Only people can delete notifications. The server logs each change an agent makes, with the agent, the run and the person it acted for.
 
 @-mentioning an agent in a comment, assigning an issue to it, or triggering an autopilot creates a run directly; no notification is left for the agent.
 
 ## Manage from the CLI
 
-Use your existing CLI login to read and handle your notifications. Listing never marks anything read:
+Use the CLI to read and handle your notifications. Listing never marks anything read:
 
 ```sh
 multica inbox count
@@ -83,7 +83,7 @@ As in the app, reading, archiving or snoozing a notification on an issue applies
 
 The bulk actions match the inbox menu: `multica inbox read --all`, and `multica inbox archive` with `--all`, `--read` (issues whose newest notification is read) or `--completed` (issues in a `done` or `closed` status). They need `--yes`, or a typed confirmation when run by hand, and leave snoozed issues alone, except `--completed`: as in the app, it also archives a done or closed issue while it's snoozed, ending the snooze. Every change reports how many notifications it actually changed, whole issues included; one already in that state counts 0. `--output json` returns the same count, with the result for each ID. Notifications can't be deleted from the CLI.
 
-An authorized agent run uses its task credential for all of this; it never falls back to a person's login.
+An authorized agent run uses its task credential for all of this; it never falls back to acting as a person.
 
 ## Handle notifications
 

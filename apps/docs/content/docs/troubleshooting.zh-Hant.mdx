@@ -3,7 +3,6 @@ title: 故障排查
 description: 排查連線、執行、實時更新、郵件和自託管服務中的常見問題。
 ---
 
-import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 
@@ -14,7 +13,6 @@ import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 
 ```bash
 multica version
-multica auth status
 multica daemon status --output json
 multica daemon logs --lines 100
 ```
@@ -32,7 +30,7 @@ curl -i https://api.example.com/readyz
 
 `/health` 只說明 API 程序正在響應；`/readyz` 還會檢查資料庫和 migration。反饋問題時附上報錯、相關日誌、CLI 版本和作業系統，提交前刪掉令牌、信箱等敏感資訊。
 
-## 連線與登入
+## 連線
 
 <Accordions>
 <Accordion title="守護程序連線失敗" id="daemon-fails-to-connect" value="daemon-fails-to-connect">
@@ -40,25 +38,20 @@ curl -i https://api.example.com/readyz
 先執行：
 
 ```bash
-multica auth status
 multica daemon status --output json
 multica daemon logs --lines 100
 ```
 
-如果 CLI 無法驗證權杖，請先檢查提示中的錯誤，再決定是否重新登入。
-
 常見原因包括：
 
-- CLI 尚未登入，或本機儲存的令牌已經失效；
 - 守護程序連線了錯誤的 Multica 服務；
 - 執行電腦無法訪問 API，或 DNS、TLS、防火牆攔截了連線；
 - 當前帳號已經不在目標工作區中；
 - 本機沒有安裝任何受支援的 AI 程式設計工具，守護程序因此無法啟動。
 
-重新登入並重啟守護程序：
+重啟守護程序：
 
 ```bash
-multica login
 multica daemon restart
 ```
 
@@ -82,9 +75,9 @@ curl -fsS <server-url>/health
 ```
 
 </Accordion>
-<Accordion title={<><code>multica login</code> 報告 TLS 握手超時</>} id="multica-login-fails-with-a-tls-handshake-timeout" value="multica-login-fails-with-a-tls-handshake-timeout">
+<Accordion title={<><code>multica</code> 報告 TLS 握手超時</>} id="multica-fails-with-a-tls-handshake-timeout" value="multica-fails-with-a-tls-handshake-timeout">
 
-`multica login` 能開啟瀏覽器、網頁登入也能完成，但 CLI 仍以 "Sign-in did not complete" 或 "TLS 握手超時" 失敗。`multica --debug login` 在 `POST /api/tokens` 上顯示 `net/http: TLS handshake timeout`，而同一臺機器上的 `curl.exe -I https://api.multica.ai` 或瀏覽器都能正常連線。
+需要訪問伺服器的指令（例如 `multica workspace list`）以 "TLS 握手超時" 失敗。`multica --debug workspace list` 顯示 `net/http: TLS handshake timeout`，而同一臺機器上的 `curl -I <server-url>` 或瀏覽器都能正常連線。
 
 TCP 連線已建立，但 TLS 握手始終沒有完成。Go 客戶端（包括 Multica CLI 和守護程序）預設在 TLS ClientHello 中攜帶後量子金鑰交換，報文約 1.5 KB，會拆成兩個包傳送。部分安全軟體、VPN、路由器和防火牆會丟棄這種握手；curl 的 ClientHello 小得多，所以能透過。
 
@@ -94,7 +87,7 @@ TCP 連線已建立，但 TLS 握手始終沒有完成。Go 客戶端（包括 M
 <Tab value="macOS / Linux">
 
 ```bash
-GODEBUG=tlsmlkem=0 multica --debug login
+GODEBUG=tlsmlkem=0 multica --debug workspace list
 ```
 
 </Tab>
@@ -102,7 +95,7 @@ GODEBUG=tlsmlkem=0 multica --debug login
 
 ```powershell
 $env:GODEBUG = 'tlsmlkem=0'
-multica --debug login
+multica --debug workspace list
 ```
 
 </Tab>
@@ -206,7 +199,6 @@ multica issue runs <issue-id>
 - `FRONTEND_ORIGIN` 是否和瀏覽器實際開啟的地址一致；
 - HTTPS 頁面是否透過 `wss://` 連線；
 - 反向代理是否轉發 WebSocket 的 Upgrade 請求；
-- 瀏覽器登入是否已經過期。
 
 直接用 `curl` 訪問 `/ws` 返回 HTTP 400 是正常現象：該端點要求帶 workspace 相關的查詢引數，裸握手在進入 WebSocket 升級之前就會被拒。所以 backend 日誌裡出現 400/401 記錄，只能說明普通 HTTP 路由已經到達 backend，並不能證明代理保留了 WebSocket `Upgrade` 頭。要驗證真正的連線，請開啟瀏覽器開發者工具的 Network → WS 面板（或用支援 WebSocket 的客戶端），看是否出現 `101` 握手。
 
@@ -221,7 +213,7 @@ docker compose -f docker-compose.selfhost.yml up -d
 完整的反向代理示例見[自託管快速上手](/self-host-quickstart#remote-access)。
 
 </Accordion>
-<Accordion title="驗證碼與邀請郵件未送達" id="verification-code-and-invitation-emails-not-delivered" value="verification-code-and-invitation-emails-not-delivered">
+<Accordion title="邀請郵件未送達" id="invitation-emails-not-delivered" value="invitation-emails-not-delivered">
 
 先檢視 backend 啟動日誌。日誌會說明當前使用 `SMTP relay`、`Resend API` 還是 `DEV mode`：
 
@@ -230,15 +222,11 @@ docker compose -f docker-compose.selfhost.yml logs backend \
   | grep "EmailService:"
 ```
 
-- **DEV mode**：郵件不會發出，驗證碼和邀請連結只寫入 backend 日誌；
+- **DEV mode**：郵件不會發出，邀請連結只寫入 backend 日誌；
 - **Resend**：確認 API key 有效，且發件地址的網域已經驗證；
 - **SMTP**：確認主機、埠、憑據和發件地址，並從錯誤日誌判斷失敗發生在連線、TLS、認證還是投遞階段。
 
-`SMTP_HOST` 和 Resend 同時配置時，Multica 會優先使用 SMTP。配置方式見[登入與註冊](/auth-setup#信箱驗證碼)。
-
-<Callout type="warning">
-生產環境不要依賴日誌中的驗證碼，也不要啟用固定本地測試驗證碼。
-</Callout>
+`SMTP_HOST` 和 Resend 同時配置時，Multica 會優先使用 SMTP。配置方式見[環境變數](/environment-variables)。
 
 </Accordion>
 <Accordion title="附件上傳或下載失敗" id="attachment-uploads-or-downloads-fail" value="attachment-uploads-or-downloads-fail">

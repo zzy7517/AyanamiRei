@@ -15,7 +15,7 @@ Si vous écrivez du code Multica, modifiez une traduction ou rédigez des textes
 
 Les routes pré-espace de travail (celles qui existent avant que l'utilisateur n'entre dans un espace de travail) DOIVENT utiliser soit un seul mot, soit le motif `/{noun}/{verb}`.
 
-- ✅ `/login`, `/inbox`, `/workspaces/new`
+- ✅ `/onboarding`, `/inbox`, `/workspaces/new`
 - ❌ `/new-workspace`, `/create-team`, `/accept-invite`
 
 Les groupes de mots reliés par des traits d'union à la racine entrent en collision avec les slugs d'espace de travail choisis par les utilisateurs et imposent des audits sans fin des slugs réservés. Réserver le nom (`workspaces`) protège automatiquement tout le sous-arbre `/workspaces/*`.
@@ -62,7 +62,7 @@ Si une logique apparaît dans les deux applications, elle DOIT être extraite da
 ### Go
 
 - `gofmt` + `go vet` standard. Sans exception.
-- Les fichiers de handler reflètent le domaine : `agent.go`, `auth.go`, `runtime.go`
+- Les fichiers de handler reflètent le domaine : `agent.go`, `issue.go`, `runtime.go`
 - Tests : `<file>_test.go` placé à côté du fichier
 - Pour le parsing des UUID dans les handlers, suivez la règle du `AGENTS.md` racine — `parseUUIDOrBadRequest` pour les entrées aux frontières, `parseUUID` (qui panique) pour les allers-retours de confiance, et jamais `util.ParseUUID` directement sans vérifier l'erreur.
 
@@ -326,9 +326,8 @@ Les composants de paramètres partagés acceptent déjà des descriptions facult
 Lorsque le glossaire ne couvre pas un terme, consultez :
 
 1. `apps/docs/content/docs/*.zh.mdx` — la norme de fait pour le ton en chinois, plus de 20 pages de traduction cohérente
-2. `packages/views/locales/zh-Hans/auth.json` et `editor.json` — structure JSON + modèles d'API de sélecteur
-3. `packages/views/auth/login-page.tsx` — point d'appel de l'API de sélecteur au niveau d'un composant
-4. `packages/views/settings/components/preferences-tab.tsx` — référence pour le sélecteur de langue
+2. `packages/views/locales/zh-Hans/common.json` et `editor.json` — structure JSON + modèles d'API de sélecteur
+3. `packages/views/settings/components/preferences-tab.tsx` — référence pour le sélecteur de langue
 
 ---
 

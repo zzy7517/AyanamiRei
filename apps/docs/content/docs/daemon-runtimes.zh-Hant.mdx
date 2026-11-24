@@ -63,15 +63,14 @@ multica daemon start
 
 ### 在 Linux 容器中執行 [#linux-container]
 
-在映像檔中安裝 Multica CLI 和至少一種支援的程式開發工具。以非 root 使用者執行容器。將 `MULTICA_SERVER_URL` 設為容器內可存取的 API 網址。將個人存取權杖以密鑰掛載，並透過標準輸入傳給登入指令。將 `my-workspace` 換成你的工作區 slug。
+在映像檔中安裝 Multica CLI 和至少一種支援的程式開發工具。以非 root 使用者執行容器。將 `MULTICA_SERVER_URL` 設為容器內可存取的 API 網址。守護程序不需要任何憑據。將 `my-workspace` 換成你的工作區 slug。
 
 ```bash
-multica --profile container login --token < /run/secrets/multica-pat
 multica --profile container workspace switch my-workspace
 exec multica --profile container daemon start --foreground --no-auto-update
 ```
 
-初始化 profile 時執行登入及工作區選擇。若要在更換容器後繼續使用同一個執行時，必須將容器使用者的 `~/.multica` 掛載到可寫入的持久儲存空間。此目錄儲存 profile 的存取權杖及守護程序 ID。若更換容器時遺失此目錄，你需要重新登入，守護程序也會註冊新的執行時。指派給原執行時的 AI 代理無法在新容器中領取任務。
+初始化 profile 時執行工作區選擇。若要在更換容器後繼續使用同一個執行時，必須將容器使用者的 `~/.multica` 掛載到可寫入的持久儲存空間。此目錄儲存 profile 的配置及守護程序 ID。若更換容器時遺失此目錄，你需要重新執行工作區選擇，守護程序也會註冊新的執行時。指派給原執行時的 AI 代理無法在新容器中領取任務。
 
 將工作目錄根路徑掛載到可寫入的持久儲存空間，即可在更換容器後保留執行目錄及 `.repos` 快取。使用 `--profile container` 時，預設的工作目錄根路徑是 `~/multica_workspaces_container`。
 
@@ -371,7 +370,7 @@ Qoder Cloud Agents 透過遠端會話執行分配的任務。Multica 服務端�
 按以下順序檢查：
 
 1. 執行 `multica daemon status`，確認守護程序已經啟動。
-2. 執行 `multica daemon logs -f`，檢視登入、網路或工具檢測錯誤。
+2. 執行 `multica daemon logs -f`，檢視網路或工具檢測錯誤。
 3. 在同一執行環境中執行 `command -v <工具命令>`，確認守護程序能夠找到它。
 4. 開啟 Multica 的**執行時**頁面，檢查目標電腦和對應的 AI 程式設計工具是否顯示線上。
 5. 工具剛安裝、路徑剛修改或配置剛更新時，執行 `multica daemon restart`。

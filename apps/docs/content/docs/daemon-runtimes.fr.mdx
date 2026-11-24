@@ -63,15 +63,14 @@ Pour démarrer, le daemon a besoin de détecter au moins un outil de codage IA i
 
 ### Exécuter dans un conteneur Linux [#linux-container]
 
-Installez le CLI Multica et au moins un outil de développement pris en charge dans l’image. Exécutez le conteneur avec un utilisateur non root. Définissez `MULTICA_SERVER_URL` sur l’URL de l’API accessible depuis le conteneur. Montez un jeton d’accès personnel comme secret et transmettez-le à la commande de connexion par l’entrée standard. Remplacez `my-workspace` par le slug de votre espace de travail.
+Installez le CLI Multica et au moins un outil de développement pris en charge dans l’image. Exécutez le conteneur avec un utilisateur non root. Définissez `MULTICA_SERVER_URL` sur l’URL de l’API accessible depuis le conteneur. Le daemon n’a besoin d’aucun identifiant. Remplacez `my-workspace` par le slug de votre espace de travail.
 
 ```bash
-multica --profile container login --token < /run/secrets/multica-pat
 multica --profile container workspace switch my-workspace
 exec multica --profile container daemon start --foreground --no-auto-update
 ```
 
-Connectez-vous et sélectionnez l’espace de travail lors de l’initialisation du profil. Pour conserver le même runtime dans la durée, montez le répertoire `~/.multica` de l’utilisateur du conteneur sur un stockage persistant accessible en écriture. Ce répertoire contient le jeton d’accès du profil et l’identifiant du daemon. Si le répertoire est perdu lors du remplacement du conteneur, vous devrez vous reconnecter et le daemon enregistrera un nouveau runtime. Les agents affectés au runtime d’origine ne pourront pas récupérer de tâches dans le nouveau conteneur.
+Sélectionnez l’espace de travail lors de l’initialisation du profil. Pour conserver le même runtime dans la durée, montez le répertoire `~/.multica` de l’utilisateur du conteneur sur un stockage persistant accessible en écriture. Ce répertoire contient la configuration du profil et l’identifiant du daemon. Si le répertoire est perdu lors du remplacement du conteneur, vous devrez refaire la sélection de l’espace de travail, et le daemon enregistrera un nouveau runtime. Les agents affectés au runtime d’origine ne pourront pas récupérer de tâches dans le nouveau conteneur.
 
 Pour conserver les répertoires d’exécution et le cache `.repos` après le remplacement du conteneur, montez la racine des répertoires de travail sur un stockage persistant accessible en écriture. Avec `--profile container`, la racine par défaut est `~/multica_workspaces_container`.
 
@@ -370,7 +369,7 @@ Pour le déploiement du pont autonome et ses limites opérationnelles, consultez
 Vérifiez dans cet ordre :
 
 1. Exécutez `multica daemon status` pour confirmer que le daemon tourne.
-2. Exécutez `multica daemon logs -f` pour rechercher des erreurs d'authentification, de réseau ou de détection d'outils.
+2. Exécutez `multica daemon logs -f` pour rechercher des erreurs de réseau ou de détection d'outils.
 3. Exécutez `command -v <tool-command>` dans le même environnement pour confirmer que le daemon peut trouver l'outil.
 4. Ouvrez la page **Runtimes** de Multica et vérifiez que l'ordinateur cible et l'outil de codage IA correspondant apparaissent en ligne.
 5. Après l'installation d'un outil, une modification du chemin ou la mise à jour d'un profil, exécutez `multica daemon restart`.

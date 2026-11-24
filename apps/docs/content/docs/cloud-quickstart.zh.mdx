@@ -14,9 +14,9 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 <Steps>
 <Step>
 
-## 登录，进入工作区 [#1-登录进入工作区]
+## 进入工作区 [#1-进入工作区]
 
-用 Web（[multica.ai](https://multica.ai)）或 [Multica Desktop](https://multica.ai/download) 登录，支持邮箱验证码和 Google。用 Desktop 登录的话，下一步可以自动连接这台电脑；用 Web 则要在下一步通过命令行连接。
+打开 Web（[multica.ai](https://multica.ai)）或 [Multica Desktop](https://multica.ai/download)。这里没有注册和登录：服务器只服务一个本地用户，并在首次启动时为它创建了默认工作区。用 Desktop 的话，下一步可以自动连接这台电脑；用 Web 则要在下一步通过命令行连接。
 
 </Step>
 <Step>
@@ -47,7 +47,7 @@ multica setup
 </Tab>
 </Tabs>
 
-`multica setup` 会打开浏览器完成登录，然后让守护进程在后台运行。守护进程上线后，弹窗通常在一分钟内检测到这台电脑。
+`multica setup` 会把服务器地址保存到 CLI profile，然后让守护进程在后台运行。无需登录。守护进程上线后，弹窗通常在一分钟内检测到这台电脑。
 
 **成功标志**：运行时列表里出现一台在线的电脑。
 

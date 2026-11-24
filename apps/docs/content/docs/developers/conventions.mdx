@@ -15,7 +15,7 @@ If you write Multica code, change a translation, or write Chinese product copy, 
 
 Pre-workspace routes (the routes that exist before the user is in a workspace) MUST use either a single word or the `/{noun}/{verb}` pattern.
 
-- ✅ `/login`, `/inbox`, `/workspaces/new`
+- ✅ `/onboarding`, `/inbox`, `/workspaces/new`
 - ❌ `/new-workspace`, `/create-team`, `/accept-invite`
 
 Hyphenated word groups at the root collide with user-chosen workspace slugs and force endless reserved-slug audits. Reserving the noun (`workspaces`) automatically protects the entire `/workspaces/*` subtree.
@@ -62,7 +62,7 @@ If logic appears in both apps, it MUST be extracted to a shared package. There a
 ### Go
 
 - Standard `gofmt` + `go vet`. No exceptions.
-- Handler files mirror domain: `agent.go`, `auth.go`, `runtime.go`
+- Handler files mirror domain: `agent.go`, `issue.go`, `runtime.go`
 - Tests: `<file>_test.go` colocated
 - For UUID parsing in handlers, follow the rule in the root `AGENTS.md` — `parseUUIDOrBadRequest` for boundary input, `parseUUID` (panicking) for trusted round-trips, never `util.ParseUUID` directly without checking the error.
 
@@ -332,9 +332,8 @@ Shared settings components already accept optional descriptions. Examples and ne
 When the glossary doesn't cover a term, look at:
 
 1. `apps/docs/content/docs/*.zh.mdx` — the de facto Chinese voice standard, 20+ pages of consistent translation
-2. `packages/views/locales/zh-Hans/auth.json` and `editor.json` — JSON structure + selector API patterns
-3. `packages/views/auth/login-page.tsx` — component-level selector API call site
-4. `packages/views/settings/components/preferences-tab.tsx` — language switcher reference
+2. `packages/views/locales/zh-Hans/common.json` and `editor.json` — JSON structure + selector API patterns
+3. `packages/views/settings/components/preferences-tab.tsx` — language switcher reference
 
 ---
 

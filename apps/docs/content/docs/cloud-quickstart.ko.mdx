@@ -14,9 +14,9 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 <Steps>
 <Step>
 
-## 로그인하고 워크스페이스 열기 [#1-로그인하고-워크스페이스-열기]
+## 워크스페이스 열기 [#1-워크스페이스-열기]
 
-Web([multica.ai](https://multica.ai)) 또는 [Multica Desktop](https://multica.ai/download)에서 로그인합니다. 이메일 인증 코드와 Google 로그인을 지원합니다. Desktop으로 로그인하면 다음 단계에서 이 컴퓨터를 자동으로 연결할 수 있고, Web으로 로그인하면 명령줄로 연결합니다.
+Web([multica.ai](https://multica.ai)) 또는 [Multica Desktop](https://multica.ai/download)을 엽니다. 가입도 로그인도 없습니다. 서버는 로컬 사용자 한 명에게 응답하며, 처음 시작할 때 그 사용자의 기본 워크스페이스를 만들었습니다. Desktop으로 열면 다음 단계에서 이 컴퓨터를 자동으로 연결할 수 있고, Web에서는 명령줄로 연결합니다.
 
 </Step>
 <Step>
@@ -47,7 +47,7 @@ multica setup
 </Tab>
 </Tabs>
 
-`multica setup`이 브라우저를 열어 로그인을 마친 뒤 데몬을 백그라운드에서 실행합니다. 데몬이 온라인이 되면 보통 1분 안에 팝업이 이 컴퓨터를 감지합니다.
+`multica setup`이 서버 주소를 CLI profile에 저장한 뒤 데몬을 백그라운드에서 실행합니다. 로그인은 필요 없습니다. 데몬이 온라인이 되면 보통 1분 안에 팝업이 이 컴퓨터를 감지합니다.
 
 **성공 기준**: 런타임 목록에 온라인 컴퓨터가 표시됩니다.
 

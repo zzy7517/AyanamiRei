@@ -21,10 +21,10 @@ MULTICA_APP_URL=https://multica.example.com
 MULTICA_PUBLIC_URL=https://api.multica.example.com
 ```
 
-さらにメールサービスを 1 つ選ぶ必要があります。選ばない場合、認証コードと招待はサーバーログに書き込まれるだけです。
+メールは任意です。ワークスペースの招待にのみ使われます。メールサービスを設定しない場合、招待はサーバーログに書き込まれるだけです。
 
 <Callout type="warning">
-`JWT_SECRET` は本番環境で必須です。`APP_ENV=production` の場合、値が空または既知のプレースホルダーだとバックエンドが起動を拒否します（`openssl rand -hex 32` で生成）。`MULTICA_DEV_VERIFICATION_CODE` も設定しないでください。
+`JWT_SECRET` は本番環境で必須です。`APP_ENV=production` の場合、値が空または既知のプレースホルダーだとバックエンドが起動を拒否します（`openssl rand -hex 32` で生成）。
 </Callout>
 
 ## API とデータベース
@@ -41,9 +41,8 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 | `MULTICA_DATABASE_STARTUP_TIMEOUT` | `3m` | コンテナ起動時に migration と API が共有する、一時的なデータベース障害への再試行時間。`0` にすると各フェーズで 1 回だけ試行します |
 | `MULTICA_DATABASE_CONNECT_TIMEOUT` | `5s` | 起動時の接続試行ごとのフォールバックタイムアウト。pgx ネイティブの `connect_timeout`、`PGCONNECT_TIMEOUT`、service 設定が優先されます |
 | `PORT` | `8080` | API のリッスンポート |
-| `JWT_SECRET` | 本番環境で必須 | ログイン JWT と一部の署名フローに使うシークレット。本番では空または既知のプレースホルダーだと起動を拒否 |
+| `JWT_SECRET` | 本番環境で必須 | エージェントのタスクトークンと一部の署名フローに使うシークレット。本番では空または既知のプレースホルダーだと起動を拒否 |
 | `APP_ENV` | 空 | プロダクションでは `production` を設定 |
-| `AUTH_TOKEN_TTL` | `720h`（30 日） | ブラウザ JWT と cookie の有効期間。Go duration または正の整数秒を受け付けます。セッションは有効期間の半分を過ぎるとスライド更新され、使い続けている限り失効しません。`60s` 未満は `60s` に補正されます |
 | `LOG_LEVEL` | アプリのデフォルト | ログレベル |
 | `MULTICA_SHUTDOWN_HOLD_DURATION` | `0` | 終了シグナル受信後、グレースフルシャットダウンを開始するまでの待機時間 |
 | `MULTICA_RUNTIME_RECONNECT_GRACE` | `3h` | オフラインのランタイムが処理中の作業を失敗させずに再接続できる猶予時間。`150s` 未満は `150s` に補正されます |
@@ -58,25 +57,22 @@ primary とレプリカの接続上限は独立しています。全 API プロ�
 
 | 変数 | デフォルト | 説明 |
 |---|---|---|
-| `FRONTEND_ORIGIN` | 空 | ユーザーがアクセスするフロントエンドの origin。CORS、cookie、招待リンクに使われます |
-| `MULTICA_APP_URL` | `FRONTEND_ORIGIN` にフォールバック | ユーザーが到達できる Web アドレス。CLI ログインとアカウント連携リンクが使います |
+| `FRONTEND_ORIGIN` | 空 | ユーザーがアクセスするフロントエンドの origin。CORS、招待リンクに使われます |
+| `MULTICA_APP_URL` | `FRONTEND_ORIGIN` にフォールバック | ユーザーが到達できる Web アドレス。Web アプリが表示する `multica setup` コマンドと、チャット連携の返信内のリンクに使われます |
 | `MULTICA_PUBLIC_URL` | 空 | 公開 API アドレス。webhook URL とランタイム接続案内に使われます |
 | `MULTICA_DAEMON_SERVER_URL` | `MULTICA_PUBLIC_URL`、次に `MULTICA_APP_URL` / `FRONTEND_ORIGIN` にフォールバック | API プロセスが `multica setup self-host` コマンドに埋め込むサーバー URL。デーモンから到達する API URL が公開 webhook URL と異なる場合に設定します |
 | `CORS_ALLOWED_ORIGINS` | 空 | 追加で許可する HTTP origin。カンマ区切り |
 | `ALLOWED_ORIGINS` | CORS / フロントエンド設定にフォールバック | WebSocket origin の許可リスト。カンマ区切り |
-| `COOKIE_DOMAIN` | 空 | フロントエンドと API の host が異なり、ブラウザが API ドメインへ直接アクセスする場合は必須。単一ドメイン構成では空のまま |
 
 <Callout type="warning">
 `MULTICA_DAEMON_SERVER_URL` は認証なしの `/api/config` エンドポイントから返され、クライアントが読み取れます。公開設定として扱い、認証情報・トークンなどのシークレットを含めないでください。
 </Callout>
 
-フロントエンドと API が異なる host を使い、ブラウザが API ドメインへ直接アクセスする構成では、`COOKIE_DOMAIN` の設定が必須です。設定しないとブラウザが CSRF cookie を読めず、すべての書き込みリクエストが `403 CSRF validation failed` を返す一方、読み取りは正常に動きます。値には、両方の host を同時にカバーできる最も狭い親ドメインを使ってください（`.example.com` より `.agent.example.com`）。この設定はログインセッション cookie をそのドメイン配下のすべての host に広げるため、それらの host がすべて同一の信頼できる運用主体のものである場合にのみ使えます。変更後は両方の host で古い cookie を削除し、再ログインしてください。[セルフホストクイックスタート](/self-host-quickstart#remote-access)の同一オリジン構成（ブラウザは app ドメインのみアクセス）に従う場合は、空のままで構いません。IP アドレスは指定しないでください。ブラウザは Domain が IP の cookie を無視します。
-
 <Callout type="warning">
-セルフホストのデプロイでは `FRONTEND_ORIGIN` の設定が必須です。設定しないと、招待リンク、cookie のセキュリティ属性、WebSocket の origin 検証が実際のドメインと食い違うおそれがあります。
+セルフホストのデプロイでは `FRONTEND_ORIGIN` の設定が必須です。設定しないと、招待リンク、WebSocket の origin 検証が実際のドメインと食い違うおそれがあります。
 </Callout>
 
-## メールとログイン
+## メール
 
 ### Resend
 
@@ -100,35 +96,14 @@ primary とレプリカの接続上限は独立しています。全 API プロ�
 | `SMTP_TLS_INSECURE` | `false` | 証明書検証をスキップ。信頼できる内部ネットワーク専用 |
 | `SMTP_EHLO_NAME` | ホスト名 | 厳格な relay が要求する EHLO/FQDN |
 
-### Google OAuth
+### ワークスペース作成の制限
 
 | 変数 | デフォルト | 説明 |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | 空 | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | 空 | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/callback` | Google Console のコールバックアドレスと完全に一致している必要があります |
-
-### サインアップ範囲
-
-| 変数 | デフォルト | 説明 |
-|---|---|---|
-| `ALLOW_SIGNUP` | `true` | allowlist が一つも設定されていない場合に新規登録を許可するか |
-| `ALLOWED_EMAILS` | 空 | 登録を許可する完全なメールアドレス。カンマ区切り |
-| `ALLOWED_EMAIL_DOMAINS` | 空 | 登録を許可するメールドメイン。カンマ区切り |
 | `DISABLE_WORKSPACE_CREATION` | `false` | すべてのユーザーのワークスペース新規作成を禁止。owner/admin の例外はありません |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | 空 | ワークスペースの新規作成を許可するメールアドレス（完全一致、カンマ区切り）。設定すると、それ以外のユーザーには 403 を返します。`DISABLE_WORKSPACE_CREATION=true` が優先されます。他のワークスペースへのアクセス権は付与しません |
-| `MULTICA_DEV_VERIFICATION_CODE` | 空 | 非 production 環境で使う固定 6 桁のテスト認証コード |
 
-allowlist の正確な判定順序は[ログインとサインアップ](/auth-setup#サインアップ制限)を参照してください。
-
-### 事前共有トークン
-
-認証コードも Google も使わずに、クライアントを 1 つのアカウントでログインさせる固定のシークレットです。[Desktop](/desktop-app#ログインなしで直接入る)は設定ファイルに `authToken` があるときにこれを送り、CLI とデーモンはプロファイル設定の `token` フィールドで受け付けます。
-
-| 変数 | デフォルト | 説明 |
-|---|---|---|
-| `MULTICA_AUTH_TOKEN` | 空 | 個人アクセストークンが使えるすべての場所で使えるシークレット: `/api/**` と WebSocket エンドポイント。未設定ならオフ |
-| `MULTICA_AUTH_TOKEN_EMAIL` | 空 | トークンが属するアカウントのメールアドレス。`MULTICA_AUTH_TOKEN` を設定した場合は必須で、なければサーバーはエラーを記録してトークンを拒否します。アカウントがまだ存在しない場合は、起動時に最初のワークスペースと合わせて作成します |
+サーバーにはローカルユーザーが 1 人 (`dev@localhost`) しかいないため、`WORKSPACE_CREATION_ALLOWED_EMAILS` で照合できるアドレスはそれだけです。
 
 ## 添付ファイルストレージ
 
@@ -178,8 +153,6 @@ allowlist の正確な判定順序は[ログインとサインアップ](/auth-s
 | `REDIS_URL` | 空 | 共有レート制限、リアルタイムイベント、チャンネル WebSocket リース、token cache など、すべての Redis 機能が使用する唯一の接続 URL |
 | `REDIS_CLUSTER_MODE` | `false` | `true` にすると、`REDIS_URL` が単一の設定エンドポイントでも Redis Cluster クライアントを使用します。クラスターモードではデータベース 0 と `REALTIME_RELAY_MODE=sharded` が必要です |
 | `REDIS_DISABLE_CLIENT_NAME` | `false` | マネージド Redis が `CLIENT SETNAME` を禁止している場合に `true` を設定 |
-| `RATE_LIMIT_AUTH` | `5` | 認証コード送信または Google ログイン開始の、IP あたり毎分の回数 |
-| `RATE_LIMIT_AUTH_VERIFY` | `20` | 認証コード検証の、IP あたり毎分の回数 |
 | `RATE_LIMIT_INVITATION_ACTOR_10M` | `10` | 招待者ごとの 10 分間スライディングウィンドウ内のワークスペース招待数。`0` でこの制限を無効化 |
 | `RATE_LIMIT_INVITATION_WORKSPACE_24H` | `50` | ワークスペース内の全管理者による 24 時間スライディングウィンドウ内の招待総数。`0` でこの制限を無効化 |
 | `RATE_LIMIT_INVITATION_RECIPIENT_24H` | `6` | 正規化された同一受信メールアドレスがワークスペースをまたいで 24 時間スライディングウィンドウ内に受け取れる招待数。`0` でこの制限を無効化 |
@@ -188,7 +161,7 @@ allowlist の正確な判定順序は[ログインとサインアップ](/auth-s
 
 リバースプロキシ配下のデプロイでは、実際のプロキシのネットワーク範囲を設定してください。すべての送信元を無条件に信頼してはいけません。クライアントが転送元 IP を偽装できてしまいます。
 
-認証レート制限には `REDIS_URL` が必要です。未設定の場合、起動ログに認証レート制限が無効であることが表示されます。招待制限は Redis なしでもプロセス内メモリで動作し、Redis を設定すると複数レプリカで割り当てを共有します。設定済みの Redis が一時的に利用できない場合、認証レート制限はフェイルオープンしますが、招待作成は保護なしでメールを送らず、再試行可能な `503` を返します。
+招待制限は Redis なしでもプロセス内メモリで動作し、Redis を設定すると複数レプリカで割り当てを共有します。設定済みの Redis が一時的に利用できない場合、招待作成は保護なしでメールを送らず、再試行可能な `503` を返します。
 
 ## 外部連携
 
@@ -388,7 +361,7 @@ multica config show
 | キー | デフォルト | 説明 |
 |---|---|---|
 | `server_url` | `ws://localhost:8080/ws` | Multica API / WebSocket アドレス |
-| `app_url` | 空 | ブラウザログインに使う Web アドレス |
+| `app_url` | 空 | Web アプリのアドレス。`multica setup` が CLI プロファイルに保存します |
 | `workspace_id` | 空 | デフォルトのワークスペース |
 | `device_name` | ホスト名 | ランタイム一覧に表示されるデバイス名 |
 | `runtime_name` | `Local Agent` | ランタイムの表示名 |
@@ -424,12 +397,11 @@ multica config show
 | `METRICS_ADDR` | 空 | Prometheus metrics のリッスンアドレス。空なら起動しません |
 | `REALTIME_METRICS_TOKEN` | 空 | `/health/realtime` を保護する bearer token |
 
-ファーストパーティのセルフホストテレメトリーは、UTC 日ごとにデプロイ単位のスナップショットを、固定かつ設定変更不可の `https://telemetry.multica.ai/v1/telemetry/events` へ送信します。正式リリース版、ワークスペース数・重複を除いたメンバー数・アクティブなエージェント数・過去 24 時間のアクティブなデーモン数のバケット、および過去 24 時間に開始・完了・失敗・キャンセルされた実行の集計値、そして過去 1・7・28 完全 UTC 日にサインインして Web 版またはデスクトップ版を開いたメンバー数と、自分でエージェントの実行を開始した（割り当て、メンション、コメント、チャット、手動実行、再実行。autopilot やエージェント間の委任は含まない）メンバー数のバケットだけを含みます。メンバーはデプロイ内でのみ数えられ、識別されることはありません。名前、メールアドレスやドメイン、IP、業務 ID、ホストやデバイス情報、リポジトリ、モデルや plugin、prompt/output、コメントやチャット、ファイルパス、token/費用、認証情報、エラー、stack、ログは送信しません。このデータはセルフホスト版の採用状況、デプロイ規模、集計利用量、メンバーの利用状況の把握だけに使われ、課金、ライセンス、認証、セキュリティ判断には使われません。
+ファーストパーティのセルフホストテレメトリーは、UTC 日ごとにデプロイ単位のスナップショットを、固定かつ設定変更不可の `https://telemetry.multica.ai/v1/telemetry/events` へ送信します。正式リリース版、ワークスペース数・重複を除いたメンバー数・アクティブなエージェント数・過去 24 時間のアクティブなデーモン数のバケット、および過去 24 時間に開始・完了・失敗・キャンセルされた実行の集計値、そして過去 1・7・28 完全 UTC 日に自分でエージェントの実行を開始した（割り当て、メンション、コメント、チャット、手動実行、再実行。autopilot やエージェント間の委任は含まない）メンバー数のバケットだけを含みます。メンバーはデプロイ内でのみ数えられ、識別されることはありません。名前、メールアドレスやドメイン、IP、業務 ID、ホストやデバイス情報、リポジトリ、モデルや plugin、prompt/output、コメントやチャット、ファイルパス、token/費用、認証情報、エラー、stack、ログは送信しません。このデータはセルフホスト版の採用状況、デプロイ規模、集計利用量、メンバーの利用状況の把握だけに使われ、課金、ライセンス、認証、セキュリティ判断には使われません。
 
 `DO_NOT_TRACK` と `ANALYTICS_DISABLED` は独立しています。前者はこの匿名スナップショットを、後者は任意の PostHog 連携を制御します。
 
 ## 次のステップ
 
-- [ログインとサインアップ](/auth-setup) — ログイン方式とサインアップ制限。
 - [トラブルシューティング](/troubleshooting) — デプロイ問題の症状別診断。
 - [デーモンとランタイム](/daemon-runtimes) — デーモン側の対応する設定。

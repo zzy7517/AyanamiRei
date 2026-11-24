@@ -21,10 +21,10 @@ MULTICA_APP_URL=https://multica.example.com
 MULTICA_PUBLIC_URL=https://api.multica.example.com
 ```
 
-You also need to pick an email service, otherwise verification codes and invitations are only written to the server log.
+Email is optional: it is used only for workspace invitations. Without an email service, invitations are only written to the server log.
 
 <Callout type="warning">
-`JWT_SECRET` is required in production: with `APP_ENV=production` the backend refuses to boot if it is empty or a known placeholder (generate one with `openssl rand -hex 32`). Do not set `MULTICA_DEV_VERIFICATION_CODE`.
+`JWT_SECRET` is required in production: with `APP_ENV=production` the backend refuses to boot if it is empty or a known placeholder (generate one with `openssl rand -hex 32`).
 </Callout>
 
 ## API and database
@@ -41,9 +41,8 @@ You also need to pick an email service, otherwise verification codes and invitat
 | `MULTICA_DATABASE_STARTUP_TIMEOUT` | `3m` | Container-level retry budget shared by migration and API startup; set to `0` for one fail-fast attempt per phase |
 | `MULTICA_DATABASE_CONNECT_TIMEOUT` | `5s` | Fallback timeout for each startup connection attempt; native pgx `connect_timeout`, `PGCONNECT_TIMEOUT`, or service settings take precedence |
 | `PORT` | `8080` | API listen port |
-| `JWT_SECRET` | required in production | Secret for sign-in JWTs and some signing flows; production refuses to boot on empty or known placeholders |
+| `JWT_SECRET` | required in production | Secret that signs agent task tokens and some signing flows; production refuses to boot on empty or known placeholders |
 | `APP_ENV` | empty | Set to `production` in production |
-| `AUTH_TOKEN_TTL` | `720h` (30 days) | Lifetime of browser JWTs and cookies; accepts a Go duration or a positive integer of seconds. Sessions slide: one in continuous use is re-issued rather than expiring, from the halfway point of its lifetime onward. Values below `60s` are clamped to `60s` |
 | `LOG_LEVEL` | application default | Log level |
 | `MULTICA_SHUTDOWN_HOLD_DURATION` | `0` | How long to wait after a termination signal before graceful shutdown begins |
 | `MULTICA_RUNTIME_RECONNECT_GRACE` | `3h` | How long an offline runtime may reconnect before its in-flight runs fail; values below `150s` are clamped |
@@ -58,25 +57,22 @@ The primary and replica connection limits are independent. Budget their sum acro
 
 | Variable | Default | Description |
 |---|---|---|
-| `FRONTEND_ORIGIN` | empty | Frontend origin users visit; used for CORS, cookies, and invitation links |
-| `MULTICA_APP_URL` | falls back to `FRONTEND_ORIGIN` | User-reachable web URL; CLI sign-in and account-link URLs use it |
+| `FRONTEND_ORIGIN` | empty | Frontend origin users visit; used for CORS and invitation links |
+| `MULTICA_APP_URL` | falls back to `FRONTEND_ORIGIN` | User-reachable web URL; used for the `multica setup` command the web app shows and for links in chat-integration replies |
 | `MULTICA_PUBLIC_URL` | empty | Public API URL; used for webhook URLs and runtime connection instructions |
 | `MULTICA_DAEMON_SERVER_URL` | falls back to `MULTICA_PUBLIC_URL`, then `MULTICA_APP_URL` / `FRONTEND_ORIGIN` | Server URL the API process inserts into `multica setup self-host`; set it when daemons reach the API at a different URL than the public webhook URL |
 | `CORS_ALLOWED_ORIGINS` | empty | Extra allowed HTTP origins, comma-separated |
 | `ALLOWED_ORIGINS` | falls back to CORS / frontend origins | WebSocket origin allowlist, comma-separated |
-| `COOKIE_DOMAIN` | empty | Required when the frontend and API use different hosts and the browser talks to the API domain directly; keep empty for single-domain deployments |
 
 <Callout type="warning">
 `MULTICA_DAEMON_SERVER_URL` is returned by the unauthenticated `/api/config` endpoint and is visible to clients. Treat it as public configuration; never put credentials, tokens, or other secrets in it.
 </Callout>
 
-When the frontend and API run on different hosts and the browser talks to the API domain directly, you must set `COOKIE_DOMAIN` — otherwise the browser cannot read the CSRF cookie: every write request returns `403 CSRF validation failed` while reads work fine. Use the narrowest parent domain that covers both hosts (`.agent.example.com` over `.example.com`). It spreads the sign-in session cookie to every host under that domain, which is only acceptable when all of those hosts are operated by the same trusted party. After changing it, clear the old cookies on both hosts and sign in again. If you follow the same-origin recipe in the [self-host quickstart](/self-host-quickstart#remote-access) (the browser only visits the app domain), keep it empty. Do not use an IP address — browsers ignore cookies whose Domain is an IP.
-
 <Callout type="warning">
-Self-hosted deployments must set `FRONTEND_ORIGIN`. Without it, invitation links, cookie security attributes, and WebSocket origin checks can all disagree with your actual domain.
+Self-hosted deployments must set `FRONTEND_ORIGIN`. Without it, invitation links and WebSocket origin checks can all disagree with your actual domain.
 </Callout>
 
-## Email and sign-in
+## Email
 
 ### Resend
 
@@ -100,35 +96,14 @@ SMTP takes priority over Resend whenever `SMTP_HOST` is non-empty.
 | `SMTP_TLS_INSECURE` | `false` | Skips certificate verification; trusted internal networks only |
 | `SMTP_EHLO_NAME` | hostname | EHLO/FQDN required by strict relays |
 
-### Google OAuth
+### Workspace creation
 
 | Variable | Default | Description |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | empty | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | empty | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/callback` | Must exactly match the callback URL in the Google Console |
-
-### Signup scope
-
-| Variable | Default | Description |
-|---|---|---|
-| `ALLOW_SIGNUP` | `true` | Whether new accounts can be created when no allowlist is configured |
-| `ALLOWED_EMAILS` | empty | Full email addresses allowed to sign up, comma-separated |
-| `ALLOWED_EMAIL_DOMAINS` | empty | Email domains allowed to sign up, comma-separated |
 | `DISABLE_WORKSPACE_CREATION` | `false` | Blocks all users from creating workspaces; no owner/admin exception |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | empty | Full email addresses allowed to create workspaces, comma-separated. When set, all other users get 403. `DISABLE_WORKSPACE_CREATION=true` takes precedence. Grants no access to other workspaces |
-| `MULTICA_DEV_VERIFICATION_CODE` | empty | Fixed 6-digit test code for non-production environments |
 
-For the exact allowlist evaluation order, see [Sign-in and signup](/auth-setup#signup-restrictions).
-
-### Pre-shared token
-
-A fixed secret that signs a client in as one account, with no verification code and no Google. [Desktop](/desktop-app#sign-in-without-the-login-page) sends it when its config file sets `authToken`; the CLI and daemon accept it in the `token` field of their profile config.
-
-| Variable | Default | Description |
-|---|---|---|
-| `MULTICA_AUTH_TOKEN` | empty | Secret accepted wherever a personal access token is: `/api/**` and the WebSocket endpoints. Off when unset |
-| `MULTICA_AUTH_TOKEN_EMAIL` | empty | Email of the account the token belongs to. Required when `MULTICA_AUTH_TOKEN` is set; until it is, the server logs an error and refuses the token. An account that does not exist yet is created at startup with its first workspace |
+The server has one local user, `dev@localhost`, so that is the only address `WORKSPACE_CREATION_ALLOWED_EMAILS` can match.
 
 ## Attachment storage
 
@@ -178,8 +153,6 @@ Use `ATTACHMENT_DOWNLOAD_MODE=proxy` when the endpoint — an internal MinIO, fo
 | `REDIS_URL` | empty | The one connection URL used by all Redis-backed features, including shared rate limiting, realtime events, channel WebSocket leases, and token caches |
 | `REDIS_CLUSTER_MODE` | `false` | Forces the Redis Cluster client, including for a single configuration endpoint; cluster mode requires database 0 and `REALTIME_RELAY_MODE=sharded` |
 | `REDIS_DISABLE_CLIENT_NAME` | `false` | Set `true` when a managed Redis blocks `CLIENT SETNAME` |
-| `RATE_LIMIT_AUTH` | `5` | Per-IP requests per minute to send a verification code or start Google sign-in |
-| `RATE_LIMIT_AUTH_VERIFY` | `20` | Per-IP code verifications per minute |
 | `RATE_LIMIT_INVITATION_ACTOR_10M` | `10` | Workspace invitations each inviter may create per 10-minute sliding window; `0` disables this gate |
 | `RATE_LIMIT_INVITATION_WORKSPACE_24H` | `50` | Workspace invitations all admins may create per workspace per 24-hour sliding window; `0` disables this gate |
 | `RATE_LIMIT_INVITATION_RECIPIENT_24H` | `6` | Invitations one normalized recipient email may receive across workspaces per 24-hour sliding window; `0` disables this gate |
@@ -188,7 +161,7 @@ Use `ATTACHMENT_DOWNLOAD_MODE=proxy` when the endpoint — an internal MinIO, fo
 
 Deployments behind a reverse proxy must list their real proxy ranges. Do not blanket-trust all sources, or clients can forge forwarded IPs.
 
-The auth rate limits require `REDIS_URL`; without it, the startup log notes that auth rate limiting is disabled. Invitation limits still run in process-local memory without Redis and become shared across replicas when Redis is configured. If configured Redis becomes temporarily unavailable, auth rate limiting fails open, while invitation creation returns a retryable `503` instead of sending email without protection.
+Invitation limits run in process-local memory without Redis and become shared across replicas when Redis is configured. If configured Redis becomes temporarily unavailable, invitation creation returns a retryable `503` instead of sending email without protection.
 
 ## External integrations
 
@@ -394,7 +367,7 @@ Supported keys:
 | Key | Default | Description |
 |---|---|---|
 | `server_url` | `ws://localhost:8080/ws` | Multica API / WebSocket URL |
-| `app_url` | empty | Web URL used for browser sign-in |
+| `app_url` | empty | Web URL of the app; `multica setup` saves it in the CLI profile |
 | `workspace_id` | empty | Default workspace |
 | `device_name` | hostname | Device name shown in the runtime list |
 | `runtime_name` | `Local Agent` | Runtime display name |
@@ -430,12 +403,11 @@ A few value rules:
 | `METRICS_ADDR` | empty | Prometheus metrics listen address; empty means not started |
 | `REALTIME_METRICS_TOKEN` | empty | Bearer token protecting `/health/realtime` |
 
-First-party self-host telemetry sends one deployment-level snapshot per UTC day to the fixed, non-configurable `https://telemetry.multica.ai/v1/telemetry/events` endpoint. It contains the formal release version; bucketed workspace, distinct-human-member, active-agent, and 24-hour active-daemon counts; aggregate run counts for the previous 24 hours; and bucketed counts of members who opened the signed-in web or desktop app, and of members who personally started an agent run (assign, mention, comment, chat, manual run, or rerun — not autopilot or agent-to-agent delegation), in the previous 1, 7, and 28 complete UTC days. Members are counted per deployment and are never identified. It never includes names, email addresses or domains, IP addresses, business identifiers, host/device details, repositories, models/plugins, prompts/output, comments/chats, paths, token/cost data, credentials, errors, stacks, or logs. It is used only to understand self-hosted version adoption, deployment-size ranges, aggregate usage, and member activity—not for billing, licensing, authentication, or security decisions.
+First-party self-host telemetry sends one deployment-level snapshot per UTC day to the fixed, non-configurable `https://telemetry.multica.ai/v1/telemetry/events` endpoint. It contains the formal release version; bucketed workspace, distinct-human-member, active-agent, and 24-hour active-daemon counts; aggregate run counts for the previous 24 hours; and bucketed counts of members who personally started an agent run (assign, mention, comment, chat, manual run, or rerun — not autopilot or agent-to-agent delegation), in the previous 1, 7, and 28 complete UTC days. Members are counted per deployment and are never identified. It never includes names, email addresses or domains, IP addresses, business identifiers, host/device details, repositories, models/plugins, prompts/output, comments/chats, paths, token/cost data, credentials, errors, stacks, or logs. It is used only to understand self-hosted version adoption, deployment-size ranges, aggregate usage, and member activity—not for billing, licensing, authentication, or security decisions.
 
 `DO_NOT_TRACK` and `ANALYTICS_DISABLED` are independent. The former controls this first-party anonymous snapshot; the latter controls the optional PostHog integration.
 
 ## Next steps
 
-- [Sign-in and signup](/auth-setup) — sign-in methods and signup restrictions.
 - [Troubleshooting](/troubleshooting) — symptom-based diagnosis of deployment problems.
 - [Daemon and runtimes](/daemon-runtimes) — the daemon-side counterparts of this configuration.

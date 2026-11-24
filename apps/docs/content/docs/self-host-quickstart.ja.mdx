@@ -1,6 +1,6 @@
 ---
 title: セルフホストクイックスタート
-description: Docker Compose で Multica を起動し、ログインして、最初の実行用コンピュータを接続します。
+description: Docker Compose で Multica を起動し、開いて、最初の実行用コンピュータを接続します。
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -129,7 +129,7 @@ MULTICA_APP_URL=https://app.example.com
 MULTICA_PUBLIC_URL=https://api.example.com
 ```
 
-この構成ではブラウザのトラフィックがすべて app ドメインを経由し、cookie がドメインをまたがないため、`COOKIE_DOMAIN` の設定は不要です。ブラウザに api ドメインへ直接アクセスさせる場合は設定が必須です。[環境変数](/environment-variables)を参照してください。
+この構成ではブラウザのトラフィックがすべて app ドメインを経由するため、2 つのホスト名で共有するものはありません。ブラウザに api ドメインへ直接アクセスさせる場合は、`FRONTEND_ORIGIN` がその origin を許可します。[環境変数](/environment-variables)を参照してください。
 
 次に DNS を設定し、Caddy でローカルポートをプロキシします。Caddy が TLS 証明書を取得し、WebSocket を転送します。
 
@@ -146,7 +146,7 @@ app.example.com {
         }
     }
 
-    # 残りのパスは frontend へ。API とログインのリクエストを転送する
+    # 残りのパスは frontend へ。API のリクエストを転送する
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -185,7 +185,7 @@ multica.example.com {
         }
     }
 
-    # 残りのパスは frontend へ。API とログインのリクエストを転送する
+    # 残りのパスは frontend へ。API のリクエストを転送する
     handle {
         reverse_proxy 127.0.0.1:3000
     }
@@ -225,28 +225,9 @@ curl -fsS https://app.example.com/api/config | grep -o '"daemon_server_url":"[^"
 </Step>
 <Step>
 
-## ログインしてワークスペースを作成する [#4-ログインしてワークスペースを作成する]
+## Multica を開く [#4-multica-を開く]
 
-ローカルの `http://localhost:3000`、または先ほど設定した `https://app.example.com` を開き、メールアドレスを入力して認証コードをリクエストします。
-
-デフォルトではメールサービスは設定されていません。コードをリクエストしたら、backend のログから読み取ります。
-
-```bash
-docker compose -f docker-compose.selfhost.yml logs backend \
-  | grep "Verification code"
-```
-
-ログには次のような行が出力されます。
-
-```text
-[DEV] Verification code for you@example.com: 123456
-```
-
-コードを入力して、最初のワークスペースを作成します。Resend または SMTP を設定すると認証コードはメールで送信され、メンバーがコンテナログを読む必要はなくなります。詳しくは[ログインとサインアップ設定](/auth-setup)を参照してください。
-
-<Callout type="warning">
-セルフホストのデプロイはデフォルトで `APP_ENV=production` を使い、固定の認証コードは有効になりません。公開インスタンスで `MULTICA_DEV_VERIFICATION_CODE` を設定しないでください。
-</Callout>
+ローカルの `http://localhost:3000`、または先ほど設定した `https://app.example.com` を開きます。サインアップもサインインもありません。サーバーは 1 人のローカルユーザーに応答するもので、初回起動時にそのユーザーのデフォルトワークスペース `dev` を作成しています。Web のルートを開くと、そのワークスペースが直接開きます。
 
 </Step>
 <Step>
@@ -299,7 +280,7 @@ multica setup self-host \
 </Tab>
 </Tabs>
 
-別のマシンの場合は、先ほど設定した 2 つの URL を渡します。このコマンドはまず `<server-url>/health` を確認し、次にブラウザを開いてログインを完了します。ログイン後はローカルに認証情報を保存し、デーモンを起動します。このステップで `Server not reachable` エラーが出る場合、`/health` のプローブが 200 を取得できていません。考えられる原因は 3 つです。プロキシがすべてのトラフィックをこのパスを転送しない古い frontend に向けている、プロキシが `/health` を backend にルーティングしていない、あるいは DNS・TLS・ファイアウォール・タイムアウト・backend からの 5xx といったより下位の障害です。詳細は[トラブルシューティング](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)を参照してください。
+別のマシンの場合は、先ほど設定した 2 つの URL を渡します。このコマンドはまず `<server-url>/health` を確認し、次に 2 つの URL を CLI プロファイルに保存してデーモンを起動します。サインインは不要です。このステップで `Server not reachable` エラーが出る場合、`/health` のプローブが 200 を取得できていません。考えられる原因は 3 つです。プロキシがすべてのトラフィックをこのパスを転送しない古い frontend に向けている、プロキシが `/health` を backend にルーティングしていない、あるいは DNS・TLS・ファイアウォール・タイムアウト・backend からの 5xx といったより下位の障害です。詳細は[トラブルシューティング](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)を参照してください。
 
 接続状態を確認します。
 
@@ -464,7 +445,6 @@ Helm には独自のアップグレード経路があります。values ファ�
 | 症状 | まず確認すること |
 |---|---|
 | `/readyz` が `ok` を返さない | `docker compose -f docker-compose.selfhost.yml logs backend postgres` を実行する。 |
-| 認証コードが届かない | コードを一度リクエストし、backend のログで `Verification code` を探す。 |
 | `setup self-host` が server に到達できないと報告する | 実行用コンピュータから `https://api.example.com/health` をリクエストし、DNS、TLS、リバースプロキシがすべて到達可能か確認する。404 が返る場合、プロキシが `/health` をこのパスを転送しない古い web リリースに向けているため、backend へ直接ルーティングすること（[トラブルシューティング](/troubleshooting#multica-setup-reports-the-server-is-not-reachable)）。 |
 | デーモンが `Agents` を表示しない | AI コーディングツールが `PATH` にありログイン済みであることを確認し、`multica daemon restart` を実行する。 |
 | タスクがキューにとどまり続ける | `multica daemon status` を実行し、デーモンが起動していてワークスペースに接続していることを確認する。 |
@@ -473,7 +453,6 @@ Helm には独自のアップグレード経路があります。values ファ�
 
 ## 次のステップ
 
-- [ログインとサインアップ設定](/auth-setup) — メール、Google ログイン、サインアップ範囲を設定する。
 - [環境変数](/environment-variables) — サーバー設定の完全なリファレンス。
 - [Self-hosting guide](https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md) — Kubernetes、アップグレード、手動デプロイ。
 - [デスクトップアプリ](/desktop-app) — デスクトップアプリをセルフホストのサービスに接続する。

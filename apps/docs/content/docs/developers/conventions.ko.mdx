@@ -15,7 +15,7 @@ Multica 코드를 작성하거나, 번역을 변경하거나, 중국어 제품 �
 
 워크스페이스 진입 전 라우트(사용자가 워크스페이스에 들어가기 전에 존재하는 라우트)는 반드시 단일 단어 또는 `/{noun}/{verb}` 패턴을 사용해야 합니다.
 
-- ✅ `/login`, `/inbox`, `/workspaces/new`
+- ✅ `/onboarding`, `/inbox`, `/workspaces/new`
 - ❌ `/new-workspace`, `/create-team`, `/accept-invite`
 
 루트에 하이픈으로 연결된 단어 묶음은 사용자가 직접 고른 워크스페이스 slug와 충돌하며, 끝없는 예약어 slug 점검을 강요합니다. 명사(`workspaces`)를 예약해 두면 `/workspaces/*` 하위 트리 전체가 자동으로 보호됩니다.
@@ -62,7 +62,7 @@ Multica 코드를 작성하거나, 번역을 변경하거나, 중국어 제품 �
 ### Go
 
 - 표준 `gofmt` + `go vet`. 예외 없음.
-- Handler 파일은 도메인을 반영: `agent.go`, `auth.go`, `runtime.go`
+- Handler 파일은 도메인을 반영: `agent.go`, `issue.go`, `runtime.go`
 - 테스트: `<file>_test.go`로 같은 위치에 배치
 - handler에서의 UUID 파싱은 루트 `AGENTS.md`의 규칙을 따릅니다 — 경계 입력에는 `parseUUIDOrBadRequest`, 신뢰할 수 있는 왕복에는 `parseUUID`(panic 버전), 절대 error를 확인하지 않고 `util.ParseUUID`를 직접 사용하지 마세요.
 
@@ -326,9 +326,8 @@ i18next는 `_one` / `_other`를 사용합니다; 중국어에는 문법적 수�
 용어집이 특정 용어를 다루지 않을 때는 다음을 참고하세요:
 
 1. `apps/docs/content/docs/*.zh.mdx` — 사실상의 중국어 보이스 표준, 일관된 번역 20개 이상 페이지
-2. `packages/views/locales/zh-Hans/auth.json`과 `editor.json` — JSON 구조 + selector API 패턴
-3. `packages/views/auth/login-page.tsx` — 컴포넌트 수준 selector API 호출 지점
-4. `packages/views/settings/components/preferences-tab.tsx` — 언어 전환기 참고
+2. `packages/views/locales/zh-Hans/common.json`과 `editor.json` — JSON 구조 + selector API 패턴
+3. `packages/views/settings/components/preferences-tab.tsx` — 언어 전환기 참고
 
 ---
 

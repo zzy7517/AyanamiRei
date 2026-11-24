@@ -1,9 +1,8 @@
 ---
 title: CLI を使う
-description: Multica CLI をインストールしてサインインし、ターミナルからワークスペース、タスク、エージェント、ランタイムを管理します。
+description: Multica CLI をインストールして設定し、ターミナルからワークスペース、タスク、エージェント、ランタイムを管理します。
 ---
 
-import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 Multica CLI は、ローカルのランタイムを接続する役割と、ターミナルからワークスペース、タスク、エージェント、オートパイロットを管理する役割の両方を担います。このページではよく使う操作の流れを紹介します。現在のバージョンがサポートするフラグは、常に各コマンド自身の `--help` が正です。
@@ -64,20 +63,12 @@ multica setup self-host \
 </Tab>
 </Tabs>
 
-`setup` はサーバーアドレスを保存し、ブラウザを開いてサインインを完了し、デーモンを起動します。完了したら確認します:
+`setup` はサーバーアドレスを現在のプロファイルに保存し、デーモンを起動します。サインインは不要です。サーバーは 1 人のローカルユーザーに応答します。完了したら確認します:
 
 ```bash
-multica auth status
+multica config show
 multica daemon status
 ```
-
-他の設定を上書きせずにサインインだけやり直したい場合は、`multica login` を実行します。ブラウザのない環境では、先に Web の設定で個人アクセストークンを作成しておき、次のコマンドで入力します:
-
-```bash
-multica login --token
-```
-
-このコマンドはターミナル上でトークンの貼り付けを促すため、完全な値が shell history に残りません。
 
 ## ワークスペースを選ぶ
 
@@ -421,7 +412,7 @@ multica autopilot trigger-update <autopilot-id> <trigger-id> --clear-event-filte
 | `env` | リポジトリが宣言した環境の起動・停止・一覧（エージェントの実行の中でのみ） |
 | `attachment` | 添付ファイルのアップロードとダウンロード |
 | `user profile` | 現在のユーザーのプロフィールを表示・更新 |
-| `auth`、`login`、`setup` | サインイン、認証状態の確認、接続の初期化 |
+| `setup` | サーバーアドレスを保存してデーモンを起動 |
 | `config` | 現在の CLI プロファイルのローカル設定を表示・編集 |
 | `update`、`version` | CLI の更新とバージョンの表示 |
 
@@ -444,7 +435,7 @@ multica agent list --output json
 
 ## プロファイルと設定
 
-デフォルトの設定は `~/.multica/config.json` に保存されます。`--profile <name>` を使うと、サーバーアドレス、トークン、デフォルトワークスペース、デーモン状態を別のセットとして分離できます:
+デフォルトの設定は `~/.multica/config.json` に保存されます。`--profile <name>` を使うと、サーバーアドレス、デフォルトワークスペース、デーモン状態を別のセットとして分離できます:
 
 ```bash
 multica setup self-host --profile staging \
@@ -460,10 +451,6 @@ multica issue list --profile staging
 multica config show
 multica config show --profile staging
 ```
-
-<Callout type="warning">
-CLI の設定ファイルには、あなたとして Multica にアクセスできるトークンが含まれます。リポジトリにコミットしたり、ログにアップロードしたり、他人と共有したりしないでください。
-</Callout>
 
 ## コマンドリファレンス
 
@@ -562,10 +549,8 @@ CSV 形式からの移行: 2 つのファイルを添付する場合は `--attac
 
 | コマンド | サブコマンド | 用途 | 主なフラグ |
 | --- | --- | --- | --- |
-| `auth` | `status` / `logout` | 認証状態を確認。`logout` はローカルに保存されたトークンを削除するだけで、サーバー側のトークンは失効させません | |
 | `user` | `profile get/update` | 現在のユーザーのプロフィールを表示・更新 | |
-| `login` | — | ブラウザでサインインし、すべてのワークスペースを自動設定 | `--token`（値なしで渡すとターミナルで対話的に入力） |
-| `setup` | `cloud`（デフォルト）、`self-host` | サーバーアドレスを保存し、サインインを完了してデーモンを起動 | `self-host`: `--server-url`、`--app-url`、`--port`、`--frontend-port` |
+| `setup` | `cloud`（デフォルト）、`self-host` | サーバーアドレスを保存し、デーモンを起動 | `self-host`: `--server-url`、`--app-url`、`--port`、`--frontend-port` |
 | `attachment` | `download <attachment-id>`、`upload <path>` | 添付ファイルのダウンロードとアップロード | `download`: `--output-dir`；`upload`: `--task` |
 | `config` | `show`、`set <key> <value>` | 現在のプロファイルのローカル設定を表示・編集 | 優先順位: コマンドラインフラグ > 環境変数 > `config.json` > 組み込みデフォルト。空文字列を設定すると値をクリア |
 | `update` | — | CLI を最新バージョンに更新 | |
@@ -575,11 +560,11 @@ CSV 形式からの移行: 2 つのファイルを添付する場合は `--attac
 
 作業の多くを Codex、Claude Code、Cursor の中で進めているなら、ターミナルに切り替えずそこから Multica を操作できます。[Multica CLI skill](https://github.com/multica-ai/multica-cli) は、このページのコマンドを安全に扱う方法をそれらのエージェントに教えます。タスクとコメントスレッドをトークンを浪費せずに読み、コメントはファイル経由で書き、メンション・ステータス変更・アサインが伴う副作用を正しく扱います。
 
-認証済みの CLI を通してのみ動作し、それ自体は何の権限も与えません。権限は引き続きログイン、選択中のプロファイル、ワークスペースに由来します。CLI は v0.4.26 以降が必要です。Claude Code のプラグインマーケットプレイス、Codex の skill インストーラー、Cursor、その他 Markdown の指示を読み込むツールへのインストール方法は、リポジトリの README を参照してください。
+CLI を通してのみ動作し、それ自体は何の権限も与えません。権限は引き続き選択中のプロファイル、ワークスペースに由来します。CLI は v0.4.26 以降が必要です。Claude Code のプラグインマーケットプレイス、Codex の skill インストーラー、Cursor、その他 Markdown の指示を読み込むツールへのインストール方法は、リポジトリの README を参照してください。
 
 ## 次のステップ
 
 - [Multica CLI skill](https://github.com/multica-ai/multica-cli) — Codex、Claude Code、Cursor から Multica を操作する。
-- [認証とトークン](/auth-tokens) — PAT の作成、更新、失効。
+- [タスクトークン](/auth-tokens) — エージェントがタスクを実行している間に使う一時トークン。
 - [トラブルシューティング](/troubleshooting) — コマンドのエラーと、いつまでも開始しない実行の診断。
 - [エージェントの作成と設定](/agents-create) — `agent create` 各フィールドの完全な意味。

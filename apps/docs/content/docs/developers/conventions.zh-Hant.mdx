@@ -13,7 +13,7 @@ description: 程式碼命名規範、i18n 翻譯術語表、中文風格指南�
 
 工作區前置路由（使用者進入工作區之前能訪問的路由）必須用單個單詞，或者 `/{noun}/{verb}` 格式。
 
-- ✅ `/login`、`/inbox`、`/workspaces/new`
+- ✅ `/onboarding`、`/inbox`、`/workspaces/new`
 - ❌ `/new-workspace`、`/create-team`、`/accept-invite`
 
 根目錄的連字元詞組會跟使用者自選 workspace slug 衝突，逼著團隊不停審保留字列表。把名詞（`workspaces`）保留下來，整個 `/workspaces/*` 子樹自動受保護。
@@ -60,7 +60,7 @@ Web 和 Desktop 都有的邏輯，**必須**抽到共享包。"小段重複"也�
 ### Go
 
 - 標準 `gofmt` + `go vet`，無例外
-- Handler 檔案依領域命名：`agent.go`、`auth.go`、`runtime.go`
+- Handler 檔案依領域命名：`agent.go`、`issue.go`、`runtime.go`
 - 測試：`<file>_test.go` 同目錄
 - handler 裡 UUID 解析遵守根 `AGENTS.md` 的規則：邊界輸入用 `parseUUIDOrBadRequest`，可信迴環用 `parseUUID`（panic 版），永遠不要直接用 `util.ParseUUID` 不查 error
 
@@ -330,9 +330,8 @@ description 預設省略。新增前先問：**沒有這句話，使用者會誤
 術語表沒覆蓋的詞，按這個順序查：
 
 1. `apps/docs/content/docs/*.zh.mdx` —— CN voice 事實標準，20+ 篇高度一致
-2. `packages/views/locales/zh-Hans/auth.json` 和 `editor.json` —— JSON 結構 + selector API 用法參考
-3. `packages/views/auth/login-page.tsx` —— 元件層 selector API 呼叫參考
-4. `packages/views/settings/components/preferences-tab.tsx` —— 語言切換器參考
+2. `packages/views/locales/zh-Hans/common.json` 和 `editor.json` —— JSON 結構 + selector API 用法參考
+3. `packages/views/settings/components/preferences-tab.tsx` —— 語言切換器參考
 
 ---
 

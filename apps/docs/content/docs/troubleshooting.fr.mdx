@@ -3,7 +3,6 @@ title: Dépannage
 description: Diagnostiquez les problèmes courants de connexion, d'exécution, de mises à jour en temps réel, d'e-mail et de services auto-hébergés.
 ---
 
-import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 
@@ -14,7 +13,6 @@ Commencez par déterminer à quelle couche appartient le problème : le service 
 
 ```bash
 multica version
-multica auth status
 multica daemon status --output json
 multica daemon logs --lines 100
 ```
@@ -32,7 +30,7 @@ curl -i https://api.example.com/readyz
 
 `/health` indique seulement que le processus API répond ; `/readyz` vérifie aussi la base de données et les migrations. Lorsque vous signalez un problème, incluez l'erreur, les journaux pertinents, la version du CLI et le système d'exploitation ; retirez les jetons, les adresses e-mail et les autres informations sensibles avant l'envoi.
 
-## Connexion et authentification
+## Connexion
 
 <Accordions>
 <Accordion title="Le daemon ne parvient pas à se connecter" id="daemon-fails-to-connect" value="daemon-fails-to-connect">
@@ -40,25 +38,20 @@ curl -i https://api.example.com/readyz
 Exécutez d'abord :
 
 ```bash
-multica auth status
 multica daemon status --output json
 multica daemon logs --lines 100
 ```
 
-Si la CLI ne peut pas vérifier le jeton, examinez l’erreur signalée avant de vous reconnecter.
-
 Causes fréquentes :
 
-- Le CLI ne s'est pas connecté, ou le jeton stocké sur cette machine a expiré.
 - Le daemon est connecté au mauvais service Multica.
 - L'ordinateur d'exécution ne peut pas joindre l'API, ou le DNS, TLS ou un pare-feu bloque la connexion.
 - Le compte actuel n'est plus membre de l'espace de travail cible.
 - Aucun outil de codage IA pris en charge n'est installé sur cette machine ; le daemon ne peut donc pas démarrer.
 
-Reconnectez-vous et redémarrez le daemon :
+Redémarrez le daemon :
 
 ```bash
-multica login
 multica daemon restart
 ```
 
@@ -82,9 +75,9 @@ curl -fsS <server-url>/health
 ```
 
 </Accordion>
-<Accordion title={<><code>multica login</code> échoue avec un dépassement de délai de la poignée de main TLS</>} id="multica-login-fails-with-a-tls-handshake-timeout" value="multica-login-fails-with-a-tls-handshake-timeout">
+<Accordion title={<><code>multica</code> échoue avec un dépassement de délai de la poignée de main TLS</>} id="multica-fails-with-a-tls-handshake-timeout" value="multica-fails-with-a-tls-handshake-timeout">
 
-`multica login` ouvre le navigateur et la connexion web aboutit, mais le CLI échoue quand même avec « Sign-in did not complete » ou « TLS handshake timed out ». `multica --debug login` affiche `net/http: TLS handshake timeout` sur `POST /api/tokens`, alors que `curl.exe -I https://api.multica.ai` ou un navigateur sur la même machine se connecte sans problème.
+Une commande qui joint le serveur, comme `multica workspace list`, échoue avec « TLS handshake timed out ». `multica --debug workspace list` affiche `net/http: TLS handshake timeout`, alors que `curl -I <server-url>` ou un navigateur sur la même machine se connecte sans problème.
 
 La connexion TCP s'ouvre, mais la poignée de main TLS n'aboutit jamais. Les clients Go, dont le CLI et le daemon Multica, envoient par défaut un partage de clé post-quantique dans le ClientHello TLS, ce qui porte sa taille à environ 1,5 Ko et le répartit sur deux paquets. Certains logiciels de sécurité, VPN, routeurs et pare-feu abandonnent ces poignées de main ; curl envoie un ClientHello beaucoup plus petit et passe.
 
@@ -94,7 +87,7 @@ Confirmez la cause en réessayant avec le partage de clé post-quantique désact
 <Tab value="macOS / Linux">
 
 ```bash
-GODEBUG=tlsmlkem=0 multica --debug login
+GODEBUG=tlsmlkem=0 multica --debug workspace list
 ```
 
 </Tab>
@@ -102,7 +95,7 @@ GODEBUG=tlsmlkem=0 multica --debug login
 
 ```powershell
 $env:GODEBUG = 'tlsmlkem=0'
-multica --debug login
+multica --debug workspace list
 ```
 
 </Tab>
@@ -206,7 +199,6 @@ Vérifiez la connexion `/ws` sous **Network → WS** (Réseau) dans les outils d
 - Si `FRONTEND_ORIGIN` correspond à l'adresse que le navigateur ouvre réellement.
 - Si une page HTTPS se connecte via `wss://`.
 - Si le proxy inverse transmet la requête WebSocket Upgrade.
-- Si la connexion du navigateur a expiré.
 
 Qu'un simple `curl` sur `/ws` renvoie HTTP 400 est normal : le point de terminaison exige des paramètres de requête propres à l'espace de travail et rejette une poignée de main nue avant toute mise à niveau WebSocket. Un 400/401 enregistré dans les journaux du backend prouve donc seulement que le routage HTTP ordinaire atteint le backend ; il ne prouve pas que le proxy préserve les en-têtes WebSocket `Upgrade`. Pour vérifier la connexion réelle, ouvrez les DevTools du navigateur → onglet Network → WS (ou utilisez un client compatible WebSocket) et recherchez une poignée de main `101`.
 
@@ -221,7 +213,7 @@ docker compose -f docker-compose.selfhost.yml up -d
 Pour un exemple complet de proxy inverse, consultez le [démarrage rapide de l'auto-hébergement](/self-host-quickstart#remote-access).
 
 </Accordion>
-<Accordion title="Les e-mails de code de vérification et d'invitation ne sont pas reçus" id="verification-code-and-invitation-emails-not-delivered" value="verification-code-and-invitation-emails-not-delivered">
+<Accordion title="Les e-mails d'invitation ne sont pas reçus" id="invitation-emails-not-delivered" value="invitation-emails-not-delivered">
 
 Consultez d'abord le journal de démarrage du backend. Il indique si le serveur utilise `SMTP relay`, `Resend API` ou `DEV mode` :
 
@@ -230,15 +222,11 @@ docker compose -f docker-compose.selfhost.yml logs backend \
   | grep "EmailService:"
 ```
 
-- **DEV mode** : aucun e-mail n'est envoyé ; les codes de vérification et les liens d'invitation sont uniquement écrits dans le journal du backend.
+- **DEV mode** : aucun e-mail n'est envoyé ; les liens d'invitation sont uniquement écrits dans le journal du backend.
 - **Resend** : vérifiez que la clé d'API est valide et que le domaine de l'adresse de l'expéditeur est vérifié.
 - **SMTP** : vérifiez l'hôte, le port, les identifiants et l'adresse de l'expéditeur, et utilisez le journal d'erreurs pour déterminer si l'échec est survenu à l'étape de la connexion, de TLS, de l'authentification ou de la remise.
 
-Lorsque `SMTP_HOST` et Resend sont tous deux configurés, Multica privilégie SMTP. Pour la configuration, consultez [Connexion et inscription](/auth-setup#codes-de-vérification-par-e-mail).
-
-<Callout type="warning">
-En production, ne vous fiez pas aux codes écrits dans le journal et n'activez pas le code de test local fixe.
-</Callout>
+Lorsque `SMTP_HOST` et Resend sont tous deux configurés, Multica privilégie SMTP. Pour la configuration, consultez [Variables d'environnement](/environment-variables).
 
 </Accordion>
 <Accordion title="L'envoi ou le téléchargement de pièces jointes échoue" id="attachment-uploads-or-downloads-fail" value="attachment-uploads-or-downloads-fail">

@@ -21,10 +21,10 @@ MULTICA_APP_URL=https://multica.example.com
 MULTICA_PUBLIC_URL=https://api.multica.example.com
 ```
 
-Vous devez aussi choisir un service d'e-mail ; sinon, les codes de vérification et les invitations sont uniquement écrits dans le journal du serveur.
+L'e-mail est facultatif : il sert uniquement aux invitations à un espace de travail. Sans service d'e-mail, les invitations sont uniquement écrites dans le journal du serveur.
 
 <Callout type="warning">
-`JWT_SECRET` est obligatoire en production : avec `APP_ENV=production`, le backend refuse de démarrer si la valeur est vide ou correspond à une valeur d'exemple connue (générez-en une avec `openssl rand -hex 32`). Ne définissez pas `MULTICA_DEV_VERIFICATION_CODE`.
+`JWT_SECRET` est obligatoire en production : avec `APP_ENV=production`, le backend refuse de démarrer si la valeur est vide ou correspond à une valeur d'exemple connue (générez-en une avec `openssl rand -hex 32`).
 </Callout>
 
 ## API et base de données
@@ -41,9 +41,8 @@ Vous devez aussi choisir un service d'e-mail ; sinon, les codes de vérification
 | `MULTICA_DATABASE_STARTUP_TIMEOUT` | `3m` | Budget de nouvelles tentatives, au niveau du conteneur, partagé par la migration et le démarrage de l'API ; définissez `0` pour une seule tentative par phase, avec échec immédiat |
 | `MULTICA_DATABASE_CONNECT_TIMEOUT` | `5s` | Délai de repli pour chaque tentative de connexion au démarrage ; le `connect_timeout` natif de pgx, `PGCONNECT_TIMEOUT` ou les paramètres de service sont prioritaires |
 | `PORT` | `8080` | Port d'écoute de l'API |
-| `JWT_SECRET` | obligatoire en production | Secret des JWT de connexion et de certains flux de signature ; en production, le démarrage est refusé si la valeur est vide ou correspond à une valeur d'exemple connue |
+| `JWT_SECRET` | obligatoire en production | Secret des jetons de tâche des agents et de certains flux de signature ; en production, le démarrage est refusé si la valeur est vide ou correspond à une valeur d'exemple connue |
 | `APP_ENV` | vide | Définissez `production` en production |
-| `AUTH_TOKEN_TTL` | `720h` (30 jours) | Durée de vie des JWT et des cookies du navigateur ; accepte une durée Go ou un nombre entier positif de secondes. Les sessions sont glissantes : une session utilisée en continu est réémise au lieu d'expirer, à partir de la moitié de sa durée de vie. Les valeurs inférieures à `60s` sont ramenées à `60s` |
 | `LOG_LEVEL` | valeur par défaut de l'application | Niveau de journalisation |
 | `MULTICA_SHUTDOWN_HOLD_DURATION` | `0` | Délai d'attente, après un signal d'arrêt, avant le début de l'arrêt propre |
 | `MULTICA_RUNTIME_RECONNECT_GRACE` | `3h` | Durée pendant laquelle un runtime hors ligne peut se reconnecter avant que ses exécutions en cours n'échouent ; les valeurs inférieures à `150s` sont relevées à ce plancher |
@@ -58,25 +57,22 @@ Les limites de connexions du primaire et du réplica sont indépendantes. Dimens
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `FRONTEND_ORIGIN` | vide | Origine du frontend visitée par les utilisateurs ; utilisée pour CORS, les cookies et les liens d'invitation |
-| `MULTICA_APP_URL` | se rabat sur `FRONTEND_ORIGIN` | URL web accessible aux utilisateurs ; utilisée par les URL de connexion du CLI et de liaison de compte |
+| `FRONTEND_ORIGIN` | vide | Origine du frontend visitée par les utilisateurs ; utilisée pour CORS et les liens d'invitation |
+| `MULTICA_APP_URL` | se rabat sur `FRONTEND_ORIGIN` | URL web accessible aux utilisateurs ; utilisée par la commande `multica setup` affichée par l'application web et par les liens des réponses des intégrations de chat |
 | `MULTICA_PUBLIC_URL` | vide | URL publique de l'API ; utilisée pour les URL de webhook et les instructions de connexion des runtimes |
 | `MULTICA_DAEMON_SERVER_URL` | se rabat sur `MULTICA_PUBLIC_URL`, puis sur `MULTICA_APP_URL` / `FRONTEND_ORIGIN` | URL du serveur que le processus API insère dans `multica setup self-host` ; définissez-la lorsque les daemons joignent l'API via une URL différente de l'URL publique des webhooks |
 | `CORS_ALLOWED_ORIGINS` | vide | Origines HTTP supplémentaires autorisées, séparées par des virgules |
 | `ALLOWED_ORIGINS` | se rabat sur les origines CORS / frontend | Liste des origines WebSocket autorisées, séparées par des virgules |
-| `COOKIE_DOMAIN` | vide | Obligatoire lorsque le frontend et l'API utilisent des hôtes différents et que le navigateur communique directement avec le domaine de l'API ; laissez vide pour les déploiements sur un seul domaine |
 
 <Callout type="warning">
 `MULTICA_DAEMON_SERVER_URL` est renvoyée par le point de terminaison `/api/config`, qui ne requiert aucune authentification, et elle est visible par les clients. Considérez-la comme une configuration publique ; n'y placez jamais d'identifiants, de jetons ni d'autres secrets.
 </Callout>
 
-Lorsque le frontend et l'API s'exécutent sur des hôtes différents et que le navigateur communique directement avec le domaine de l'API, vous devez définir `COOKIE_DOMAIN` — sinon le navigateur ne peut pas lire le cookie CSRF : toutes les requêtes d'écriture renvoient `403 CSRF validation failed`, alors que les lectures fonctionnent normalement. Utilisez le domaine parent le plus restreint qui couvre les deux hôtes (`.agent.example.com` plutôt que `.example.com`). Il étend le cookie de session de connexion à tous les hôtes de ce domaine, ce qui n'est acceptable que si tous ces hôtes sont exploités par la même entité de confiance. Après l'avoir modifié, effacez les anciens cookies sur les deux hôtes et reconnectez-vous. Si vous suivez la configuration en origine unique du [démarrage rapide de l'auto-hébergement](/self-host-quickstart#remote-access) (le navigateur ne visite que le domaine de l'application), laissez-le vide. N'utilisez pas d'adresse IP — les navigateurs ignorent les cookies dont le Domain est une adresse IP.
-
 <Callout type="warning">
-Les déploiements auto-hébergés doivent définir `FRONTEND_ORIGIN`. Sans cette variable, les liens d'invitation, les attributs de sécurité des cookies et les vérifications d'origine WebSocket peuvent tous diverger de votre domaine réel.
+Les déploiements auto-hébergés doivent définir `FRONTEND_ORIGIN`. Sans cette variable, les liens d'invitation et les vérifications d'origine WebSocket peuvent tous diverger de votre domaine réel.
 </Callout>
 
-## E-mail et connexion
+## E-mail
 
 ### Resend
 
@@ -100,35 +96,14 @@ SMTP est prioritaire sur Resend dès que `SMTP_HOST` n'est pas vide.
 | `SMTP_TLS_INSECURE` | `false` | Ignore la vérification des certificats ; réseaux internes de confiance uniquement |
 | `SMTP_EHLO_NAME` | nom d'hôte | Nom EHLO/FQDN exigé par les relais stricts |
 
-### Google OAuth
+### Création d'espaces de travail
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | vide | ID client Google OAuth |
-| `GOOGLE_CLIENT_SECRET` | vide | Secret client Google OAuth |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/callback` | Doit correspondre exactement à l'URL de rappel configurée dans la Google Console |
-
-### Périmètre des inscriptions
-
-| Variable | Valeur par défaut | Description |
-|---|---|---|
-| `ALLOW_SIGNUP` | `true` | Autorise ou non la création de nouveaux comptes lorsqu'aucune liste d'autorisation n'est configurée |
-| `ALLOWED_EMAILS` | vide | Adresses e-mail complètes autorisées à s'inscrire, séparées par des virgules |
-| `ALLOWED_EMAIL_DOMAINS` | vide | Domaines e-mail autorisés à s'inscrire, séparés par des virgules |
 | `DISABLE_WORKSPACE_CREATION` | `false` | Empêche tous les utilisateurs de créer des espaces de travail ; aucune exception pour les propriétaires ou les administrateurs |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | vide | Adresses e-mail complètes autorisées à créer des espaces de travail, séparées par des virgules. Si défini, les autres utilisateurs reçoivent une 403. `DISABLE_WORKSPACE_CREATION=true` est prioritaire. N'accorde aucun accès aux autres espaces de travail |
-| `MULTICA_DEV_VERIFICATION_CODE` | vide | Code de test fixe à 6 chiffres pour les environnements hors production |
 
-Pour l'ordre exact d'évaluation des listes d'autorisation, consultez [Connexion et inscription](/auth-setup#restrictions-dinscription).
-
-### Jeton pré-partagé
-
-Un secret fixe qui connecte un client à un seul compte, sans code de vérification ni Google. [Desktop](/desktop-app#se-connecter-sans-page-de-connexion) l'envoie lorsque son fichier de configuration définit `authToken` ; le CLI et le daemon l'acceptent dans le champ `token` de la configuration de leur profil.
-
-| Variable | Valeur par défaut | Description |
-|---|---|---|
-| `MULTICA_AUTH_TOKEN` | vide | Secret accepté partout où l'est un jeton d'accès personnel : `/api/**` et les points d'accès WebSocket. Désactivé si non défini |
-| `MULTICA_AUTH_TOKEN_EMAIL` | vide | Adresse e-mail du compte auquel appartient le jeton. Obligatoire quand `MULTICA_AUTH_TOKEN` est défini ; sans elle, le serveur journalise une erreur et refuse le jeton. Un compte qui n'existe pas encore est créé au démarrage avec son premier espace de travail |
+Le serveur n'a qu'un utilisateur local, `dev@localhost` : c'est la seule adresse que `WORKSPACE_CREATION_ALLOWED_EMAILS` peut accepter.
 
 ## Stockage des pièces jointes
 
@@ -178,8 +153,6 @@ Utilisez `ATTACHMENT_DOWNLOAD_MODE=proxy` lorsque le point de terminaison — un
 | `REDIS_URL` | vide | L'unique URL de connexion utilisée par toutes les fonctionnalités reposant sur Redis, notamment la limitation de débit partagée, les événements en temps réel, les baux WebSocket des canaux et les caches de jetons |
 | `REDIS_CLUSTER_MODE` | `false` | Force le client Redis Cluster, y compris pour un point de terminaison de configuration unique ; le mode cluster exige la base de données 0 et `REALTIME_RELAY_MODE=sharded` |
 | `REDIS_DISABLE_CLIENT_NAME` | `false` | Définissez `true` lorsqu'un Redis managé bloque `CLIENT SETNAME` |
-| `RATE_LIMIT_AUTH` | `5` | Requêtes par minute et par IP pour envoyer un code de vérification ou lancer la connexion avec Google |
-| `RATE_LIMIT_AUTH_VERIFY` | `20` | Vérifications de code par minute et par IP |
 | `RATE_LIMIT_INVITATION_ACTOR_10M` | `10` | Invitations à l'espace de travail que chaque personne qui invite peut créer par fenêtre glissante de 10 minutes ; `0` désactive cette limite |
 | `RATE_LIMIT_INVITATION_WORKSPACE_24H` | `50` | Invitations que l'ensemble des administrateurs peuvent créer par espace de travail et par fenêtre glissante de 24 heures ; `0` désactive cette limite |
 | `RATE_LIMIT_INVITATION_RECIPIENT_24H` | `6` | Invitations qu'une même adresse e-mail destinataire normalisée peut recevoir, tous espaces de travail confondus, par fenêtre glissante de 24 heures ; `0` désactive cette limite |
@@ -188,7 +161,7 @@ Utilisez `ATTACHMENT_DOWNLOAD_MODE=proxy` lorsque le point de terminaison — un
 
 Les déploiements situés derrière un proxy inverse doivent lister les plages d'adresses réelles de leurs proxys. Ne faites pas confiance à toutes les sources sans distinction, sinon les clients peuvent falsifier les IP transmises.
 
-Les limites de débit d'authentification nécessitent `REDIS_URL` ; sans cette variable, le journal de démarrage indique que la limitation de débit d'authentification est désactivée. Les limites d'invitation fonctionnent quand même sans Redis, dans la mémoire locale du processus, et deviennent partagées entre les réplicas lorsque Redis est configuré. Si le Redis configuré devient temporairement indisponible, la limitation de débit d'authentification laisse passer les requêtes (fail open), tandis que la création d'invitations renvoie une erreur `503` réessayable au lieu d'envoyer des e-mails sans protection.
+Les limites d'invitation fonctionnent sans Redis, dans la mémoire locale du processus, et deviennent partagées entre les réplicas lorsque Redis est configuré. Si le Redis configuré devient temporairement indisponible, la création d'invitations renvoie une erreur `503` réessayable au lieu d'envoyer des e-mails sans protection.
 
 ## Intégrations externes
 
@@ -385,7 +358,7 @@ Clés prises en charge :
 | Clé | Valeur par défaut | Description |
 |---|---|---|
 | `server_url` | `ws://localhost:8080/ws` | URL de l'API / WebSocket Multica |
-| `app_url` | vide | URL web utilisée pour la connexion dans le navigateur |
+| `app_url` | vide | URL web de l'application ; `multica setup` l'enregistre dans le profil du CLI |
 | `workspace_id` | vide | Espace de travail par défaut |
 | `device_name` | nom d'hôte | Nom de l'appareil affiché dans la liste des runtimes |
 | `runtime_name` | `Local Agent` | Nom d'affichage du runtime |
@@ -421,12 +394,11 @@ Quelques règles concernant les valeurs :
 | `METRICS_ADDR` | vide | Adresse d'écoute des métriques Prometheus ; vide signifie non démarré |
 | `REALTIME_METRICS_TOKEN` | vide | Jeton Bearer qui protège `/health/realtime` |
 
-La télémétrie propre à Multica pour les instances auto-hébergées envoie un instantané par jour UTC, au niveau du déploiement, au point de terminaison fixe et non configurable `https://telemetry.multica.ai/v1/telemetry/events`. Il contient la version officielle publiée ; les nombres, regroupés par tranches, d'espaces de travail, de membres humains distincts, d'agents actifs et de daemons actifs sur 24 heures ; le nombre agrégé d'exécutions des 24 heures précédentes ; ainsi que les nombres, regroupés par tranches, de membres ayant ouvert l'application web ou de bureau connectée et de membres ayant lancé eux-mêmes une exécution d'agent (attribution, mention, commentaire, chat, exécution manuelle ou relance — hors autopilot et délégation entre agents) au cours des 1, 7 et 28 jours UTC complets précédents. Les membres sont comptés au sein du déploiement et ne sont jamais identifiés. Il n'inclut jamais de noms, d'adresses ou de domaines e-mail, d'adresses IP, d'identifiants métier, de détails sur les hôtes ou les appareils, de dépôts, de modèles ou de plugins, de prompts ou de sorties, de commentaires ou de discussions, de chemins, de données de tokens ou de coûts, d'identifiants de connexion, d'erreurs, de piles d'appels ni de journaux. Il sert uniquement à comprendre l'adoption des versions auto-hébergées, les tranches de taille des déploiements, l'usage agrégé et l'activité des membres — et non à la facturation, aux licences, à l'authentification ou aux décisions de sécurité.
+La télémétrie propre à Multica pour les instances auto-hébergées envoie un instantané par jour UTC, au niveau du déploiement, au point de terminaison fixe et non configurable `https://telemetry.multica.ai/v1/telemetry/events`. Il contient la version officielle publiée ; les nombres, regroupés par tranches, d'espaces de travail, de membres humains distincts, d'agents actifs et de daemons actifs sur 24 heures ; le nombre agrégé d'exécutions des 24 heures précédentes ; ainsi que les nombres, regroupés par tranches, de membres ayant lancé eux-mêmes une exécution d'agent (attribution, mention, commentaire, chat, exécution manuelle ou relance — hors autopilot et délégation entre agents) au cours des 1, 7 et 28 jours UTC complets précédents. Les membres sont comptés au sein du déploiement et ne sont jamais identifiés. Il n'inclut jamais de noms, d'adresses ou de domaines e-mail, d'adresses IP, d'identifiants métier, de détails sur les hôtes ou les appareils, de dépôts, de modèles ou de plugins, de prompts ou de sorties, de commentaires ou de discussions, de chemins, de données de tokens ou de coûts, d'identifiants de connexion, d'erreurs, de piles d'appels ni de journaux. Il sert uniquement à comprendre l'adoption des versions auto-hébergées, les tranches de taille des déploiements, l'usage agrégé et l'activité des membres — et non à la facturation, aux licences, à l'authentification ou aux décisions de sécurité.
 
 `DO_NOT_TRACK` et `ANALYTICS_DISABLED` sont indépendantes. La première contrôle cet instantané anonyme propre à Multica ; la seconde contrôle l'intégration facultative avec PostHog.
 
 ## Étapes suivantes
 
-- [Connexion et inscription](/auth-setup) — méthodes de connexion et restrictions d'inscription.
 - [Dépannage](/troubleshooting) — diagnostic des problèmes de déploiement à partir des symptômes.
 - [Daemon et runtimes](/daemon-runtimes) — les équivalents côté daemon de cette configuration.

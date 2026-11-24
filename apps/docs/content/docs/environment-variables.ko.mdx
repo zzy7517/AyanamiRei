@@ -21,10 +21,10 @@ MULTICA_APP_URL=https://multica.example.com
 MULTICA_PUBLIC_URL=https://api.multica.example.com
 ```
 
-이메일 서비스도 하나 선택해야 합니다. 설정하지 않으면 인증 코드와 초대가 서버 로그에만 기록됩니다.
+이메일은 선택 사항이며 워크스페이스 초대에만 사용됩니다. 이메일 서비스를 설정하지 않으면 초대가 서버 로그에만 기록됩니다.
 
 <Callout type="warning">
-`JWT_SECRET`은 프로덕션에서 필수입니다. `APP_ENV=production`일 때 비어 있거나 알려진 자리표시자 값이면 백엔드가 부팅을 거부합니다(`openssl rand -hex 32`로 생성). `MULTICA_DEV_VERIFICATION_CODE`도 설정하지 마세요.
+`JWT_SECRET`은 프로덕션에서 필수입니다. `APP_ENV=production`일 때 비어 있거나 알려진 자리표시자 값이면 백엔드가 부팅을 거부합니다(`openssl rand -hex 32`로 생성).
 </Callout>
 
 ## API와 데이터베이스
@@ -41,9 +41,8 @@ MULTICA_PUBLIC_URL=https://api.multica.example.com
 | `MULTICA_DATABASE_STARTUP_TIMEOUT` | `3m` | 컨테이너 시작 중 migration과 API가 공유하는 일시적인 데이터베이스 장애 재시도 시간. `0`으로 설정하면 각 단계에서 한 번만 시도 |
 | `MULTICA_DATABASE_CONNECT_TIMEOUT` | `5s` | 시작 중 각 연결 시도의 폴백 제한 시간. pgx 기본 `connect_timeout`, `PGCONNECT_TIMEOUT` 또는 service 설정이 우선 적용됨 |
 | `PORT` | `8080` | API listen port |
-| `JWT_SECRET` | 프로덕션에서 필수 | 로그인 JWT와 일부 서명 절차에서 사용하는 키. 프로덕션에서는 비어 있거나 알려진 자리표시자 값으로 부팅 거부 |
+| `JWT_SECRET` | 프로덕션에서 필수 | 에이전트 태스크 토큰과 일부 서명 절차에서 사용하는 키. 프로덕션에서는 비어 있거나 알려진 자리표시자 값으로 부팅 거부 |
 | `APP_ENV` | 비어 있음 | 프로덕션 환경에서는 `production`으로 설정 |
-| `AUTH_TOKEN_TTL` | `720h`(30일) | 브라우저 JWT와 cookie 유효 기간. Go duration 또는 양의 정수 초 허용. 세션은 유효 기간의 절반이 지나면 슬라이딩 갱신되어, 계속 사용하는 동안에는 만료되지 않습니다. `60s` 미만은 `60s`로 조정됩니다 |
 | `LOG_LEVEL` | 앱 기본값 | 로그 수준 |
 | `MULTICA_SHUTDOWN_HOLD_DURATION` | `0` | 종료 신호를 받은 뒤 graceful shutdown을 시작하기 전 대기 시간 |
 | `MULTICA_RUNTIME_RECONNECT_GRACE` | `3h` | 오프라인 런타임이 진행 중인 실행을 실패시키지 않고 재연결할 수 있는 유예 시간. `150s` 미만은 `150s`로 조정됨 |
@@ -58,25 +57,22 @@ primary와 복제본의 연결 한도는 서로 독립적입니다. 모든 API �
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
-| `FRONTEND_ORIGIN` | 비어 있음 | 사용자가 접근하는 프런트엔드 origin. CORS, cookie, 초대 링크에 사용 |
-| `MULTICA_APP_URL` | `FRONTEND_ORIGIN`으로 fallback | 사용자가 접근할 수 있는 Web 주소. CLI 로그인과 계정 연결 링크에 사용 |
+| `FRONTEND_ORIGIN` | 비어 있음 | 사용자가 접근하는 프런트엔드 origin. CORS, 초대 링크에 사용 |
+| `MULTICA_APP_URL` | `FRONTEND_ORIGIN`으로 fallback | 사용자가 접근할 수 있는 Web 주소. 웹 앱이 안내하는 `multica setup` 명령과 채팅 연동 답장의 링크에 사용 |
 | `MULTICA_PUBLIC_URL` | 비어 있음 | 공개 API 주소. webhook URL과 런타임 연결 안내에 사용 |
 | `MULTICA_DAEMON_SERVER_URL` | `MULTICA_PUBLIC_URL`, 그다음 `MULTICA_APP_URL` / `FRONTEND_ORIGIN`으로 fallback | API 프로세스가 `multica setup self-host` 명령에 넣는 서버 URL. 데몬이 접근하는 API URL이 공개 webhook URL과 다를 때 설정 |
 | `CORS_ALLOWED_ORIGINS` | 비어 있음 | 추가로 허용할 HTTP origin, 쉼표로 구분 |
 | `ALLOWED_ORIGINS` | CORS 또는 프런트엔드 주소로 fallback | WebSocket origin allowlist, 쉼표로 구분 |
-| `COOKIE_DOMAIN` | 비어 있음 | 프런트엔드와 backend의 host가 다르고 브라우저가 API 도메인에 직접 접근할 때 필수. 단일 도메인 배포에서는 비워 둠 |
 
 <Callout type="warning">
 `MULTICA_DAEMON_SERVER_URL`은 인증이 필요 없는 `/api/config` 엔드포인트에서 반환되며 클라이언트가 읽을 수 있습니다. 공개 설정으로 취급하고 자격 증명, 토큰 또는 기타 비밀을 절대 포함하지 마세요.
 </Callout>
 
-프런트엔드와 API가 서로 다른 host를 사용하고 브라우저가 API 도메인에 직접 접근한다면 `COOKIE_DOMAIN`을 설정해야 합니다. 설정하지 않으면 브라우저가 CSRF cookie를 읽지 못해 모든 쓰기 요청이 `403 CSRF validation failed`를 반환하고 읽기 요청만 정상 작동합니다. 두 host를 모두 포함하는 가장 좁은 상위 도메인을 사용하세요(`.example.com`보다 `.agent.example.com`이 더 적합). 이 설정은 로그인 세션 cookie를 해당 도메인의 모든 host로 확장하므로 모든 host를 같은 신뢰 주체가 운영할 때만 사용할 수 있습니다. 수정 후 두 host에서 이전 cookie를 삭제하고 다시 로그인해야 합니다. [자체 호스팅 빠른 시작](/self-host-quickstart#remote-access)의 same-origin 구성을 사용해 브라우저가 app 도메인에만 접근한다면 비워 두세요. IP 주소는 입력하지 마세요. 브라우저가 IP Domain이 포함된 cookie를 무시합니다.
-
 <Callout type="warning">
-자체 호스팅 배포에서는 `FRONTEND_ORIGIN`을 설정해야 합니다. 없으면 초대 링크, cookie 보안 속성, WebSocket origin 검증이 실제 도메인과 맞지 않을 수 있습니다.
+자체 호스팅 배포에서는 `FRONTEND_ORIGIN`을 설정해야 합니다. 없으면 초대 링크, WebSocket origin 검증이 실제 도메인과 맞지 않을 수 있습니다.
 </Callout>
 
-## 이메일과 로그인
+## 이메일
 
 ### Resend
 
@@ -100,35 +96,14 @@ primary와 복제본의 연결 한도는 서로 독립적입니다. 모든 API �
 | `SMTP_TLS_INSECURE` | `false` | 인증서 검증 건너뛰기. 신뢰할 수 있는 내부 네트워크에서만 사용 |
 | `SMTP_EHLO_NAME` | host 이름 | 엄격한 relay에서 요구하는 EHLO/FQDN |
 
-### Google OAuth
+### 워크스페이스 생성 제한
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
-| `GOOGLE_CLIENT_ID` | 비어 있음 | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | 비어 있음 | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/callback` | Google Console의 callback 주소와 완전히 같아야 함 |
-
-### 가입 범위
-
-| 변수 | 기본값 | 설명 |
-|---|---|---|
-| `ALLOW_SIGNUP` | `true` | allowlist가 없을 때 새 계정 생성 허용 여부 |
-| `ALLOWED_EMAILS` | 비어 있음 | 가입을 허용할 전체 이메일 주소, 쉼표로 구분 |
-| `ALLOWED_EMAIL_DOMAINS` | 비어 있음 | 가입을 허용할 이메일 도메인, 쉼표로 구분 |
 | `DISABLE_WORKSPACE_CREATION` | `false` | 모든 사용자의 새 워크스페이스 생성을 금지. owner/admin 예외 없음 |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | 비어 있음 | 워크스페이스 생성을 허용할 전체 이메일 주소, 쉼표로 구분. 설정하면 그 외 사용자는 403을 받습니다. `DISABLE_WORKSPACE_CREATION=true`가 우선합니다. 다른 워크스페이스에 대한 접근 권한은 부여하지 않습니다 |
-| `MULTICA_DEV_VERIFICATION_CODE` | 비어 있음 | production이 아닌 환경에서 사용하는 고정 6자리 테스트 인증 코드 |
 
-allowlist의 정확한 판단 순서는 [로그인과 가입](/auth-setup#가입-범위-제어)을 참고하세요.
-
-### 사전 공유 토큰
-
-인증 코드나 Google 없이 클라이언트를 한 계정으로 로그인시키는 고정 비밀값입니다. [Desktop](/desktop-app#로그인-없이-바로-진입)은 설정 파일에 `authToken`이 있으면 이를 전송하며, CLI와 데몬은 프로필 설정의 `token` 필드에서 이를 받아들입니다.
-
-| 변수 | 기본값 | 설명 |
-|---|---|---|
-| `MULTICA_AUTH_TOKEN` | 비어 있음 | 개인 액세스 토큰이 받아들여지는 모든 곳에서 받아들여지는 비밀값: `/api/**`와 WebSocket 엔드포인트. 설정하지 않으면 꺼집니다 |
-| `MULTICA_AUTH_TOKEN_EMAIL` | 비어 있음 | 토큰이 속한 계정의 이메일. `MULTICA_AUTH_TOKEN`을 설정했다면 필수이며, 없으면 서버가 오류를 기록하고 토큰을 거부합니다. 계정이 아직 없다면 시작 시 첫 워크스페이스와 함께 생성합니다 |
+서버에는 로컬 사용자가 1명(`dev@localhost`)뿐이므로 `WORKSPACE_CREATION_ALLOWED_EMAILS`에서 일치할 수 있는 주소는 그 주소 하나뿐입니다.
 
 ## 첨부 파일 저장소
 
@@ -178,8 +153,6 @@ allowlist의 정확한 판단 순서는 [로그인과 가입](/auth-setup#가입
 | `REDIS_URL` | 비어 있음 | 공유 rate limit, 실시간 이벤트, 채널 WebSocket lease, token cache 등 모든 Redis 기능이 사용하는 유일한 연결 URL |
 | `REDIS_CLUSTER_MODE` | `false` | `true`로 설정하면 `REDIS_URL`이 단일 구성 엔드포인트여도 Redis Cluster 클라이언트를 사용합니다. 클러스터 모드에서는 데이터베이스 0과 `REALTIME_RELAY_MODE=sharded`가 필요합니다 |
 | `REDIS_DISABLE_CLIENT_NAME` | `false` | 관리형 Redis가 `CLIENT SETNAME`을 금지하면 `true`로 설정 |
-| `RATE_LIMIT_AUTH` | `5` | IP당 1분에 인증 코드 전송 또는 Google 로그인 시작 허용 횟수 |
-| `RATE_LIMIT_AUTH_VERIFY` | `20` | IP당 1분에 인증 코드 검증 허용 횟수 |
 | `RATE_LIMIT_INVITATION_ACTOR_10M` | `10` | 초대자별 10분 슬라이딩 윈도 내 워크스페이스 초대 생성 횟수. `0`이면 이 제한을 비활성화 |
 | `RATE_LIMIT_INVITATION_WORKSPACE_24H` | `50` | 워크스페이스의 모든 관리자가 24시간 슬라이딩 윈도 내 생성할 수 있는 총 초대 수. `0`이면 이 제한을 비활성화 |
 | `RATE_LIMIT_INVITATION_RECIPIENT_24H` | `6` | 정규화된 동일 수신 이메일이 워크스페이스 전체에서 24시간 슬라이딩 윈도 내 받을 수 있는 초대 수. `0`이면 이 제한을 비활성화 |
@@ -188,7 +161,7 @@ allowlist의 정확한 판단 순서는 [로그인과 가입](/auth-setup#가입
 
 reverse proxy 뒤에 배포한다면 실제 proxy 네트워크를 입력해야 합니다. 모든 출처를 그대로 신뢰하지 마세요. 클라이언트가 전달 IP를 위조할 수 있습니다.
 
-인증 rate limit에는 `REDIS_URL`이 필요하며, 설정하지 않으면 시작 로그에 인증 rate limit이 비활성화되었다고 표시됩니다. 초대 제한은 Redis 없이도 프로세스 메모리에서 동작하고, Redis를 설정하면 여러 replica가 할당량을 공유합니다. 설정된 Redis를 일시적으로 사용할 수 없으면 인증 rate limit은 fail-open하지만, 초대 생성은 보호 없이 이메일을 보내지 않고 재시도 가능한 `503`을 반환합니다.
+초대 제한은 Redis 없이도 프로세스 메모리에서 동작하고, Redis를 설정하면 여러 replica가 할당량을 공유합니다. 설정된 Redis를 일시적으로 사용할 수 없으면 초대 생성은 보호 없이 이메일을 보내지 않고 재시도 가능한 `503`을 반환합니다.
 
 ## 외부 연동
 
@@ -388,7 +361,7 @@ multica config show
 | key | 기본값 | 설명 |
 |---|---|---|
 | `server_url` | `ws://localhost:8080/ws` | Multica API / WebSocket 주소 |
-| `app_url` | 비어 있음 | 브라우저 로그인에 사용할 Web 주소 |
+| `app_url` | 비어 있음 | 웹 앱의 Web 주소. `multica setup`이 CLI 프로필에 저장 |
 | `workspace_id` | 비어 있음 | 기본 워크스페이스 |
 | `device_name` | host 이름 | 런타임 목록의 기기 이름 |
 | `runtime_name` | `Local Agent` | 런타임 표시 이름 |
@@ -424,12 +397,11 @@ multica config show
 | `METRICS_ADDR` | 비어 있음 | Prometheus metrics listen 주소. 비어 있으면 시작하지 않음 |
 | `REALTIME_METRICS_TOKEN` | 비어 있음 | `/health/realtime`을 보호하는 bearer token |
 
-자사 셀프 호스트 텔레메트리는 UTC 기준 하루에 한 번 배포 단위 스냅샷을 고정되어 설정할 수 없는 `https://telemetry.multica.ai/v1/telemetry/events` 주소로 전송합니다. 정식 릴리스 버전, 작업 공간 수·중복을 제거한 멤버 수·활성 에이전트 수·지난 24시간 활성 데몬 수의 버킷, 그리고 지난 24시간 시작·완료·실패·취소된 실행의 집계, 그리고 지난 1·7·28 완전한 UTC 일 동안 로그인해 웹 또는 데스크톱 앱을 연 멤버 수와 직접 에이전트 실행을 시작한(할당, 멘션, 댓글, 채팅, 수동 실행, 재실행. autopilot과 에이전트 간 위임은 제외) 멤버 수의 버킷만 포함합니다. 멤버는 배포 안에서만 집계되며 식별되지 않습니다. 이름, 이메일 주소나 도메인, IP, 업무 ID, 호스트나 기기 정보, 저장소, 모델이나 plugin, prompt/output, 댓글이나 채팅, 파일 경로, token/비용, 자격 증명, 오류, stack, 로그는 전송하지 않습니다. 이 데이터는 셀프 호스트 버전 사용 현황, 배포 규모, 집계 사용량, 멤버 활동을 파악하는 데만 쓰며 결제, 라이선스, 인증, 보안 판단에는 사용하지 않습니다.
+자사 셀프 호스트 텔레메트리는 UTC 기준 하루에 한 번 배포 단위 스냅샷을 고정되어 설정할 수 없는 `https://telemetry.multica.ai/v1/telemetry/events` 주소로 전송합니다. 정식 릴리스 버전, 작업 공간 수·중복을 제거한 멤버 수·활성 에이전트 수·지난 24시간 활성 데몬 수의 버킷, 그리고 지난 24시간 시작·완료·실패·취소된 실행의 집계, 그리고 지난 1·7·28 완전한 UTC 일 동안 직접 에이전트 실행을 시작한(할당, 멘션, 댓글, 채팅, 수동 실행, 재실행. autopilot과 에이전트 간 위임은 제외) 멤버 수의 버킷만 포함합니다. 멤버는 배포 안에서만 집계되며 식별되지 않습니다. 이름, 이메일 주소나 도메인, IP, 업무 ID, 호스트나 기기 정보, 저장소, 모델이나 plugin, prompt/output, 댓글이나 채팅, 파일 경로, token/비용, 자격 증명, 오류, stack, 로그는 전송하지 않습니다. 이 데이터는 셀프 호스트 버전 사용 현황, 배포 규모, 집계 사용량, 멤버 활동을 파악하는 데만 쓰며 결제, 라이선스, 인증, 보안 판단에는 사용하지 않습니다.
 
 `DO_NOT_TRACK`과 `ANALYTICS_DISABLED`는 서로 독립적입니다. 전자는 이 익명 스냅샷을, 후자는 선택 사항인 PostHog 연동을 제어합니다.
 
 ## 다음 단계
 
-- [로그인과 가입](/auth-setup) — 로그인 방식과 가입 제한을 알아봅니다.
 - [문제 해결](/troubleshooting) — 배포 문제의 증상을 확인합니다.
 - [데몬과 런타임](/daemon-runtimes) — 데몬 측 대응 설정을 알아봅니다.

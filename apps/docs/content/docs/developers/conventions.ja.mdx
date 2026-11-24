@@ -15,7 +15,7 @@ Multica のコードを書く、翻訳を変更する、あるいは中国語の
 
 ワークスペース進入前のルート（ユーザーがワークスペースに入る前から存在するルート）は、必ず単一の単語または `/{noun}/{verb}` パターンを使用しなければなりません。
 
-- ✅ `/login`, `/inbox`, `/workspaces/new`
+- ✅ `/onboarding`, `/inbox`, `/workspaces/new`
 - ❌ `/new-workspace`, `/create-team`, `/accept-invite`
 
 ルート直下のハイフンで連結した単語のまとまりは、ユーザーが自分で選んだワークスペースの slug と衝突し、際限のない予約 slug の監査を強いることになります。名詞（`workspaces`）を予約しておけば、`/workspaces/*` のサブツリー全体が自動的に保護されます。
@@ -62,7 +62,7 @@ Multica のコードを書く、翻訳を変更する、あるいは中国語の
 ### Go
 
 - 標準の `gofmt` + `go vet`。例外なし。
-- Handler ファイルはドメインを反映する: `agent.go`, `auth.go`, `runtime.go`
+- Handler ファイルはドメインを反映する: `agent.go`, `issue.go`, `runtime.go`
 - テスト: `<file>_test.go` を同じ場所に配置
 - handler での UUID パースは、ルートの `AGENTS.md` のルールに従ってください — 境界の入力には `parseUUIDOrBadRequest`、信頼できる往復には `parseUUID`（panic 版）を使い、error を確認せずに `util.ParseUUID` を直接使用しないでください。
 
@@ -326,9 +326,8 @@ i18next は `_one` / `_other` を使います。中国語には文法的な数�
 用語集が特定の用語を扱っていない場合は、次を参照してください。
 
 1. `apps/docs/content/docs/*.zh.mdx` — 事実上の中国語ボイス標準、一貫した翻訳が 20 ページ以上
-2. `packages/views/locales/zh-Hans/auth.json` と `editor.json` — JSON 構造 + selector API パターン
-3. `packages/views/auth/login-page.tsx` — コンポーネントレベルの selector API 呼び出し箇所
-4. `packages/views/settings/components/preferences-tab.tsx` — 言語切り替えの参考
+2. `packages/views/locales/zh-Hans/common.json` と `editor.json` — JSON 構造 + selector API パターン
+3. `packages/views/settings/components/preferences-tab.tsx` — 言語切り替えの参考
 
 ---
 
