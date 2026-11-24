@@ -17,7 +17,7 @@ Each user who runs AI agents locally also installs the **`multica` CLI** and run
 
 The self-hosted API server sends one first-party, deployment-level anonymous snapshot per UTC day to the fixed Multica endpoint `https://telemetry.multica.ai/v1/telemetry/events`. This helps maintainers understand which release versions are in use, deployment-size ranges, aggregate run volume, and how many members actively use a deployment. The endpoint is compiled into the server and cannot be redirected through configuration.
 
-The snapshot contains only the release version; bucketed counts of workspaces, distinct human members, active agents, and daemons seen in the previous 24 hours; aggregate counts of runs started, completed, failed, and cancelled in that window; and bucketed counts of members who opened the signed-in web or desktop app, and of members who personally started an agent run (assign, mention, comment, chat, manual run, or rerun — not autopilot or agent-to-agent delegation), in the previous 1, 7, and 28 complete UTC days. Members are counted per deployment and are never identified. It does not include names, email addresses or domains, IP addresses, business IDs, host/device details, repository or organization details, model/plugin data, prompts or output, comments or chats, paths, token/cost data, credentials, errors, stacks, or logs. This telemetry is not used for billing, licensing, authentication, or security decisions.
+The snapshot contains only the release version; bucketed counts of workspaces, distinct human members, active agents, and daemons seen in the previous 24 hours; aggregate counts of runs started, completed, failed, and cancelled in that window; and bucketed counts of members who personally started an agent run (assign, mention, comment, chat, manual run, or rerun — not autopilot or agent-to-agent delegation), in the previous 1, 7, and 28 complete UTC days. Members are counted per deployment and are never identified. It does not include names, email addresses or domains, IP addresses, business IDs, host/device details, repository or organization details, model/plugin data, prompts or output, comments or chats, paths, token/cost data, credentials, errors, stacks, or logs. This telemetry is not used for billing, licensing, authentication, or security decisions.
 
 Telemetry is enabled by default. To stop both collection and network delivery, set `DO_NOT_TRACK=1` or `DO_NOT_TRACK=true` on the API server and recreate/restart the backend. The deployment identity remains in PostgreSQL, so enabling it again does not create a new identity. `ANALYTICS_DISABLED` controls the separate PostHog integration and does not disable this first-party telemetry.
 
@@ -36,7 +36,7 @@ Two commands to set up everything — server, CLI, and configuration.
 # 1. Install CLI + provision the self-host server
 curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash -s -- --with-server
 
-# 2. Configure CLI, authenticate, and start the daemon
+# 2. Configure the CLI and start the daemon
 multica setup self-host
 ```
 </details>
@@ -49,14 +49,14 @@ multica setup self-host
 # 1. Install CLI + provision the self-host server
 $env:MULTICA_MODE="with-server"; irm https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.ps1 | iex
 
-# 2. Configure CLI, authenticate, and start the daemon
+# 2. Configure the CLI and start the daemon
 multica setup self-host
 ```
 </details>
 
 This installs the `multica` CLI, checks out the latest self-host assets, pulls the official Multica images from GHCR, and configures everything for localhost.
 
-Open http://localhost:3000. To log in, configure `RESEND_API_KEY` in `.env` for email-based codes (recommended), or leave Resend unset and copy the generated code from the backend logs. See [Step 2 — Log In](#step-2--log-in) for details.
+Open http://localhost:3000. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`. See [Step 2 — Open Multica](#step-2--open-multica) for details.
 
 > **Prerequisites:** Docker and Docker Compose must be installed. The script checks for this and provides install links if missing.
 >
@@ -97,17 +97,21 @@ Once ready:
 
 > **Live doc co-editing (optional):** Docs are off until `FF_DOCS_V1=true` is set in `.env`, and then save through the API on their own. To let everyone in a doc edit it together in real time, add `COLLAB_SECRET=<output of openssl rand -hex 32>` and `COMPOSE_PROFILES=collab` to `.env` and run `make selfhost` again; this starts the `collab` service. Set both together. See [Advanced Configuration → Live Doc Co-editing](SELF_HOSTING_ADVANCED.md#live-doc-co-editing-optional).
 
-### Step 2 — Log In
+### Step 2 — Open Multica
 
-Open http://localhost:3000 in your browser. The Docker self-host stack defaults to `APP_ENV=production` (set in `docker-compose.selfhost.yml`), and there is no fixed verification code by default. Pick one of the following to log in:
+Open http://localhost:3000 in your browser. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`.
+The web root opens straight into it, and the CLI and the daemon need no
+credential either.
 
-- **Recommended (production):** configure `RESEND_API_KEY` in `.env`, then restart the backend. Real verification codes will be sent to the email address you enter. See [Advanced Configuration → Email](SELF_HOSTING_ADVANCED.md#email-required-for-authentication).
-- **Without email configured:** the verification code is generated server-side and printed to the backend container logs (look for `[DEV] Verification code for ...:`). Useful for one-off testing on a single machine.
-- **Deterministic local/private testing:** set `APP_ENV=development` and `MULTICA_DEV_VERIFICATION_CODE=888888` in `.env`, then restart the backend. This fixed code is ignored when `APP_ENV=production`.
+`DISABLE_WORKSPACE_CREATION` and `WORKSPACE_CREATION_ALLOWED_EMAILS` take
+effect after restarting the backend / compose stack. The web UI reads
+`DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no web rebuild
+is needed. `WORKSPACE_CREATION_ALLOWED_EMAILS` is read only by the backend and
+is not exposed through `/api/config`. See [Advanced Configuration → Workspace
+Creation](SELF_HOSTING_ADVANCED.md#workspace-creation-optional).
 
-Changes to `ALLOW_SIGNUP`, `DISABLE_WORKSPACE_CREATION`, `WORKSPACE_CREATION_ALLOWED_EMAILS`, and `GOOGLE_CLIENT_ID` also take effect after restarting the backend / compose stack. The web UI reads `ALLOW_SIGNUP`, `DISABLE_WORKSPACE_CREATION`, and `GOOGLE_CLIENT_ID` from `/api/config` at runtime, so no web rebuild is needed. `WORKSPACE_CREATION_ALLOWED_EMAILS` is read only by the backend and is not exposed through `/api/config`. See [Advanced Configuration → Signup Controls](SELF_HOSTING_ADVANCED.md#signup-controls-optional) for the recommended sequence to lock down workspace creation, or to limit it to selected users.
-
-> **Warning:** do **not** set `MULTICA_DEV_VERIFICATION_CODE` on a publicly reachable instance — anyone who knows an email address can then log in with that fixed code.
+> **Warning:** anyone who can reach the server is served as the local user. Do
+> not expose it to an untrusted network.
 
 ### Step 3 — Install CLI & Start Daemon
 
@@ -156,10 +160,9 @@ multica setup self-host
 ```
 
 This automatically:
-1. Configures the CLI to connect to `localhost` (ports 8080/3000)
-2. Opens your browser for authentication
-3. Discovers your workspaces
-4. Starts the daemon in the background
+1. Checks that the server at `localhost` (ports 8080/3000) answers `/health`
+2. Saves the server addresses in the CLI profile — there is no sign-in
+3. Starts the daemon in the background
 
 For on-premise deployments with custom domains:
 
@@ -217,7 +220,7 @@ The chart defaults to `multica.dev.lan` (web) and `api.multica.dev.lan` (backend
 
 - **Local DNS** (Pi-hole, Unbound, etc.): add A records for both hostnames pointing at the cluster Ingress IP.
 
-To use different hostnames, override the matching values at install time (see [Step 4](#step-4--install-the-chart)) — `ingress.frontend.host`, `ingress.backend.host`, plus `backend.config.appUrl`, `backend.config.frontendOrigin`, `backend.config.localUploadBaseUrl`, and `backend.config.googleRedirectUri`.
+To use different hostnames, override the matching values at install time (see [Step 4](#step-4--install-the-chart)) — `ingress.frontend.host`, `ingress.backend.host`, plus `backend.config.appUrl`, `backend.config.frontendOrigin`, and `backend.config.localUploadBaseUrl`.
 
 ### Step 2 — Create the namespace
 
@@ -234,12 +237,10 @@ kubectl -n multica create secret generic multica-secrets \
   --from-literal=JWT_SECRET="$(openssl rand -hex 32)" \
   --from-literal=POSTGRES_PASSWORD="$(openssl rand -hex 16)" \
   --from-literal=RESEND_API_KEY="" \
-  --from-literal=GOOGLE_CLIENT_SECRET="" \
-  --from-literal=CLOUDFRONT_PRIVATE_KEY="" \
-  --from-literal=MULTICA_DEV_VERIFICATION_CODE=""
+  --from-literal=CLOUDFRONT_PRIVATE_KEY=""
 ```
 
-Leave optional values empty for now — you can fill them in later (see [Step 5 — Log In](#step-5--log-in)).
+Leave optional values empty for now — you can fill them in later (see [Step 5 — Open Multica](#step-5--open-multica)).
 
 ### Step 4 — Install the chart
 
@@ -303,11 +304,12 @@ curl -H "Host: api.multica.dev.lan" http://<ingress-ip>/healthz
 
 Then open http://multica.dev.lan in your browser.
 
-### Step 5 — Log In
+### Step 5 — Open Multica
 
-The chart defaults to `APP_ENV=production` (set in `values.yaml` under `backend.config.appEnv`), and there is no fixed verification code by default. Pick one of the following to log in — the same three options as the Docker setup:
-
-- **Recommended (production):** patch the Secret with a real Resend key, then restart the backend:
+There is nothing to configure before the first visit: the backend created its
+one local user and the default workspace `dev` when it first started, and the
+web root opens straight into it. To send workspace invitations by email, patch
+the Secret with a Resend key and restart the backend:
 
   ```bash
   kubectl -n multica patch secret multica-secrets --type=merge \
@@ -315,29 +317,15 @@ The chart defaults to `APP_ENV=production` (set in `values.yaml` under `backend.
   kubectl -n multica rollout restart deploy/multica-backend
   ```
 
-  Real verification codes will be sent to the email address you enter. See [Advanced Configuration → Email](SELF_HOSTING_ADVANCED.md#email-required-for-authentication).
+`DISABLE_WORKSPACE_CREATION` and `WORKSPACE_CREATION_ALLOWED_EMAILS` likewise
+live under `backend.config.*` in `values.yaml` (as `disableWorkspaceCreation`
+and `workspaceCreationAllowedEmails`). After `helm upgrade`, the backend pod
+rolls automatically because the ConfigMap hash changes. The web UI reads
+`DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no web rebuild
+is needed.
 
-- **Without email configured:** the verification code is generated server-side and printed to the backend pod logs (look for `[DEV] Verification code for ...:`). Useful for one-off testing.
-
-  ```bash
-  kubectl -n multica logs -f deploy/multica-backend | grep "Verification code"
-  ```
-
-- **Deterministic local/private testing:** set `backend.config.appEnv: development` in your values file and `MULTICA_DEV_VERIFICATION_CODE=888888` in the Secret, then `helm upgrade` and restart. This fixed code is ignored when `APP_ENV=production`.
-
-  ```bash
-  helm upgrade multica oci://ghcr.io/multica-ai/charts/multica \
-    --version <chart-version> \
-    -n multica \
-    -f my-values.yaml --set backend.config.appEnv=development
-  kubectl -n multica patch secret multica-secrets --type=merge \
-    -p '{"stringData":{"MULTICA_DEV_VERIFICATION_CODE":"888888"}}'
-  kubectl -n multica rollout restart deploy/multica-backend
-  ```
-
-`ALLOW_SIGNUP`, `DISABLE_WORKSPACE_CREATION`, `WORKSPACE_CREATION_ALLOWED_EMAILS`, and `GOOGLE_CLIENT_ID` likewise live under `backend.config.*` in `values.yaml` (as `allowSignup`, `disableWorkspaceCreation`, `workspaceCreationAllowedEmails`, and `googleClientId`). After `helm upgrade`, the backend pod will roll automatically because the ConfigMap hash changes; the web UI reads `allowSignup`, `disableWorkspaceCreation`, and `googleClientId` from `/api/config` at runtime, so no web rebuild is needed. `workspaceCreationAllowedEmails` is read only by the backend and is not exposed through `/api/config`.
-
-> **Warning:** do **not** set `MULTICA_DEV_VERIFICATION_CODE` on a publicly reachable instance — anyone who knows an email address can then log in with that fixed code.
+> **Warning:** anyone who can reach the server is served as the local user. Do
+> not expose it to an untrusted network.
 
 ### Step 6 — Install CLI & Start Daemon
 
@@ -558,19 +546,18 @@ If you prefer configuring the CLI step by step instead of `multica setup`:
 multica config set server_url http://localhost:8080
 multica config set app_url http://localhost:3000
 
-# Login (opens browser)
-multica login
-
 # Start the daemon
 multica daemon start
 ```
+
+The CLI and the daemon need no credential: the server serves every request as
+its one local user. `multica config show` prints the saved addresses.
 
 For production deployments with TLS:
 
 ```bash
 multica config set app_url https://app.example.com
 multica config set server_url https://api.example.com
-multica login
 multica daemon start
 ```
 

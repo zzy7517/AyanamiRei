@@ -52,60 +52,22 @@ When these variables are unset, the GitHub defaults remain unchanged.
 ## Quick Start
 
 ```bash
-# One-command setup: configure, authenticate, and start the daemon
+# One-command setup: configure and start the daemon; there is no sign-in
 multica setup
 
 # For self-hosted (local) deployments:
 multica setup self-host
 ```
 
-Or step by step:
-
-```bash
-# 1. Authenticate (opens browser for login)
-multica login
-
-# 2. Start the agent daemon
-multica daemon start
-
-# 3. Done — agents in your watched workspaces can now execute tasks on your machine
-```
-
-`multica login` automatically discovers all workspaces you belong to and adds them to the daemon watch list.
+`multica setup` saves the server addresses in the current profile and starts the daemon. The CLI and the daemon need no credential: the server serves one local user.
 
 ## Authentication
 
-### Browser Login
+The CLI and the daemon send no credential. The server serves one local user and treats every request as that user, so there is nothing to sign in to. `multica setup` saves the server addresses in the current profile and starts the daemon; `multica config show` prints what the profile points at:
 
 ```bash
-multica login
+multica config show
 ```
-
-Opens your browser for OAuth authentication, creates a 90-day personal access token, and auto-configures your workspaces.
-
-### Token Login
-
-```bash
-multica login --token <mul_...>
-```
-
-Authenticate using a personal access token directly. Useful for headless environments. Pass `--token=` with an empty value to be prompted interactively (so the token never lands in shell history).
-
-### Check Status
-
-```bash
-multica auth status
-```
-
-Shows your current server and user when the token can be verified. If verification fails, check the reported error before signing in again.
-
-### Logout
-
-```bash
-multica auth logout
-```
-
-Removes the stored authentication token.
 
 ## Agent Daemon
 
@@ -549,7 +511,7 @@ Consequences worth knowing:
 When connecting to a self-hosted Multica instance, the easiest approach is:
 
 ```bash
-# One command — configures for localhost, authenticates, starts daemon
+# One command — configures for localhost and starts the daemon
 multica setup self-host
 
 # Or for on-premise with custom domains:
@@ -567,7 +529,6 @@ multica config set app_url http://localhost:3000
 # multica config set server_url https://api.example.com
 # multica config set app_url https://app.example.com
 
-multica login
 multica daemon start
 ```
 
@@ -596,11 +557,11 @@ Every command runs against a single workspace. The CLI resolves which one in thi
 
 1. `--workspace-id <id>` flag on the command
 2. `MULTICA_WORKSPACE_ID` environment variable
-3. The default workspace stored in your current profile (set by `multica workspace switch` or `multica login`)
+3. The default workspace stored in your current profile (set by `multica workspace switch`)
 
 `multica workspace switch <id|slug>` is the day-to-day way to change the default workspace. For scripting and headless setups where you don't want any stored state, prefer the `--workspace-id` flag or the env variable. `multica config set workspace_id <id>` is the low-level equivalent of `switch` (it writes the same setting but skips the access check).
 
-If you need full isolation between organizations or accounts — separate tokens, separate daemons, separate config dirs — use `--profile <name>` instead. Each profile keeps its own default workspace.
+If you need full isolation between servers — separate server addresses, separate daemons, separate config dirs — use `--profile <name>` instead. Each profile keeps its own default workspace.
 
 ### List Workspaces
 
@@ -1238,7 +1199,7 @@ layer.) The underlying detail is still available on demand (see `--debug`).
   connection refused, TLS) and HTTP status failures (401/403/404/409/400·422/
   429/5xx) are each rendered as one clear sentence with a next step — for
   example a timeout suggests checking the network or raising
-  `MULTICA_HTTP_TIMEOUT`, and a 401 tells you to run `multica login`.
+  `MULTICA_HTTP_TIMEOUT`, and a 401 tells you to check the server address.
 - **Server-provided validation messages are preserved.** For a 400/422 that
   carries a message from the server, that message is shown verbatim
   (`Invalid request: <server message>`); only when there is none do you get the

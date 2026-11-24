@@ -7,7 +7,7 @@
 Give this instruction to your AI agent:
 
 ```
-Fetch https://github.com/multica-ai/multica/blob/main/CLI_INSTALL.md and follow the instructions to install Multica CLI, log in, and start the daemon on this machine.
+Fetch https://github.com/multica-ai/multica/blob/main/CLI_INSTALL.md and follow the instructions to install Multica CLI, set it up, and start the daemon on this machine.
 ```
 
 ---
@@ -95,31 +95,28 @@ multica version
 
 ---
 
-## Step 3: Log in
+## Step 3: Set up the CLI
 
 Run:
 
 ```bash
-multica login
+multica setup
 ```
 
-**Important:** This command opens a browser window for OAuth authentication. Tell the user:
+**Important:** There is no sign-in. The command saves the server address in the CLI profile and starts the daemon, so it does not open a browser. If a Multica profile already exists on this machine, it asks whether to keep the existing local settings; tell the user to answer that question in the terminal.
 
-> "A browser window will open for Multica login. Please complete the authentication in your browser, then come back here."
-
-Wait for the command to complete. It will automatically discover and watch all workspaces the user belongs to.
+Wait for the command to complete.
 
 Verify:
 
 ```bash
-multica auth status
+multica config show
 ```
 
-Expected output should show the authenticated user and server URL.
+Expected output should show the server URL.
 
-**If login fails:**
-- If no browser is available (headless environment), the user can generate a Personal Access Token at `https://multica.ai/settings?tab=tokens` and run: `multica login --token <mul_...>` (use `--token=` with an empty value to be prompted interactively).
-- If the server URL needs to be customized: `multica config set server_url <url>` before logging in.
+**If setup fails:**
+- If the server URL needs to be customized: run `multica setup self-host --server-url <url> --app-url <url>` instead.
 
 ---
 

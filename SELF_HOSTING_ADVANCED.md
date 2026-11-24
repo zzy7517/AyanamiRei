@@ -28,9 +28,12 @@ These have sensible defaults and only need to be set when tuning a large or cons
 
 Budget the sum of primary and replica pool limits across every API pod against the PostgreSQL cluster connection ceiling. The replica pool defaults to a five-minute connection lifetime (overridable with the `pool_max_conn_lifetime` URL parameter) so read-only validation is refreshed after promotion. Replica configuration is non-critical: invalid configuration or runtime connection failure makes explicitly opted-in reads fall back to primary, with a short passive circuit preventing every request from paying the connection timeout. Existing read paths remain primary-only until migrated individually. Replica reads have no application-enforced staleness bound; monitor replication lag in the database layer and keep consistency-sensitive reads on primary.
 
-### Email (Required for Authentication)
+### Email (Optional)
 
-Multica supports two email backends. `SMTP_HOST` takes priority when set; otherwise `RESEND_API_KEY` is used. With neither configured, verification codes are printed to the server log — copy them from there to log in.
+Email is used only for workspace invitations, so none of this is required.
+Multica supports two email backends: `SMTP_HOST` takes priority when set;
+otherwise `RESEND_API_KEY` is used. With neither configured, invitation
+emails are printed to the server log instead of sent.
 
 #### Option A: Resend (recommended for cloud deployments)
 
@@ -55,70 +58,20 @@ Use this option when your deployment cannot reach the public internet or you alr
 
 STARTTLS is used automatically when advertised by the server. Port 465 (SMTPS / implicit TLS) is supported and auto-enables implicit TLS; set `SMTP_TLS=implicit` (aliases `smtps`, `ssl`) to force it on a non-standard port.
 
-> **Note:** If neither Resend nor SMTP is configured, generated verification codes are printed to backend logs — copy them from there to log in. A fixed local testing code (e.g. `888888`) is **opt-in only**: set `MULTICA_DEV_VERIFICATION_CODE=888888` in `.env` and keep `APP_ENV` non-production. The Docker self-host stack pins `APP_ENV=production`, so the shortcut is ignored there. **Never enable a fixed code on a publicly reachable instance.**
-
-### Google OAuth (Optional)
+### Workspace Creation (Optional)
 
 | Variable | Description |
 |----------|-------------|
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | OAuth callback URL (e.g. `https://app.example.com/auth/callback`) |
-
-Changes take effect after restarting the backend / compose stack. The web UI reads `GOOGLE_CLIENT_ID` from `/api/config` at runtime, so no web rebuild is needed.
-
-### Signup Controls (Optional)
-
-| Variable | Description |
-|----------|-------------|
-| `ALLOW_SIGNUP` | Set to `false` to restrict new accounts to allowlisted or invited users |
-| `ALLOWED_EMAIL_DOMAINS` | Optional comma-separated allowlist of email domains |
-| `ALLOWED_EMAILS` | Optional comma-separated allowlist of exact email addresses |
-| `DISABLE_WORKSPACE_CREATION` | Set to `true` to make `POST /api/workspaces` return 403 for every caller — users can only join workspaces they were invited to |
+| `DISABLE_WORKSPACE_CREATION` | Set to `true` to make `POST /api/workspaces` return 403 for every caller. The web UI hides every "Create workspace" entry point |
 | `WORKSPACE_CREATION_ALLOWED_EMAILS` | Optional comma-separated list of exact email addresses allowed to create workspaces. When set, everyone else gets 403 from `POST /api/workspaces`. Ignored when `DISABLE_WORKSPACE_CREATION=true` |
 
-Changes take effect after restarting the backend / compose stack. The web UI reads `ALLOW_SIGNUP` and `DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no web rebuild is needed.
+Changes take effect after restarting the backend / compose stack. The web UI reads
+`DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no web rebuild is
+needed.
 
-#### Locking down workspace creation
-
-`ALLOW_SIGNUP=false` restricts new accounts to allowlisted or invited users, but it does **not** block an already-signed-in user from creating another workspace via `POST /api/workspaces`. On a self-hosted instance where every issue/repo/agent must be visible to the platform admin, set `DISABLE_WORKSPACE_CREATION=true` to close that gap. The recommended bootstrap sequence is:
-
-1. Start the instance with `DISABLE_WORKSPACE_CREATION=false` (the default).
-2. Sign in as the admin and create the shared workspace.
-3. Set `DISABLE_WORKSPACE_CREATION=true` and restart the backend. Optionally set `ALLOW_SIGNUP=false` at the same time if you also want to restrict new account creation.
-4. Going forward, additional users join via invitation only — the "Create workspace" affordance is hidden in the UI and any direct API call returns 403.
-
-#### Letting only selected users create workspaces
-
-If a few people (for example platform or team leads) need to keep creating workspaces while everyone else only joins by invitation, set `WORKSPACE_CREATION_ALLOWED_EMAILS` instead of toggling `DISABLE_WORKSPACE_CREATION` back and forth:
-
-```dotenv
-WORKSPACE_CREATION_ALLOWED_EMAILS=alice@example.com,bob@example.com
-```
-
-`POST /api/workspaces` is evaluated in this order:
-
-1. `DISABLE_WORKSPACE_CREATION=true` → 403 for everyone, including listed users.
-2. `WORKSPACE_CREATION_ALLOWED_EMAILS` empty → allowed for every signed-in user (default).
-3. The caller's account email matches an entry (case-insensitive) → allowed.
-4. Otherwise → 403.
-
-Things to know:
-
-- The list only controls who can create a workspace. It is not an instance-admin role: listed users get no visibility into, or management rights over, workspaces they are not a member of. Keeping new workspaces visible to the people who run the instance still depends on inviting them.
-- The UI does not hide the "Create workspace" entry points for unlisted users. They see the server's error message when they try.
-- This list is separate from `ALLOWED_EMAILS` / `ALLOWED_EMAIL_DOMAINS`, which only control who can sign up.
-
-> Note: setting `ALLOW_SIGNUP=false` enables invite-only account creation. A new user with a live pending workspace invitation can create an account with the invited email; users without an allowlist match or a valid invitation remain blocked. Invitations also permit emails outside configured allowlists when `ALLOW_SIGNUP=true`. Revocation does not delete accounts already created using an invitation or prevent those accounts from signing in. Combine this with `DISABLE_WORKSPACE_CREATION=true` when invitees must join an existing workspace instead of creating their own.
-
-### Pre-shared Sign-in Token (Optional)
-
-| Variable | Description |
-|----------|-------------|
-| `MULTICA_AUTH_TOKEN` | Fixed secret accepted wherever a personal access token is: `/api/**` and the WebSocket endpoints. Leave empty to keep email and Google sign-in only |
-| `MULTICA_AUTH_TOKEN_EMAIL` | Email of the account the token belongs to; required when the token is set. Startup creates the account with a first workspace if it does not exist |
-
-Desktop sends this token when `~/.multica/desktop.json` sets `authToken`, which lets it skip the login page. Restart the backend after changing either variable.
+The server has one local user, `dev@localhost`, so that is the only address
+`WORKSPACE_CREATION_ALLOWED_EMAILS` can match. A list without it blocks workspace
+creation for the server's user.
 
 ### File Storage (Optional)
 
@@ -166,8 +119,8 @@ Block Public Access, R2, MinIO), the API instead serves avatars from
 `/api/avatars/<signature>/<key>` and resolves each request through
 `ATTACHMENT_DOWNLOAD_MODE` — a presigned redirect, a CloudFront-signed
 redirect, or a proxied body. The signature in the path is what authorizes the
-read: an auth-gated URL cannot be used as an `<img src>` from the Desktop app
-or a split-origin frontend, because the session cookie is `SameSite=Strict`.
+read, so the address also works as an `<img src>` from the Desktop app or a
+split-origin frontend, where a request carries no credentials of its own.
 
 Only image objects resolve through this route, and only ones that are
 *avatar-class*: a standalone upload not attached to an issue, comment, chat, or
@@ -177,16 +130,6 @@ cannot be turned into a public link by way of the avatar field.
 
 No configuration is required, and avatars uploaded before this behavior
 existed are fixed without a backfill.
-
-### Cookies
-
-| Variable | Description |
-|----------|-------------|
-| `COOKIE_DOMAIN` | Optional `Domain` attribute for session + CloudFront cookies. **Leave empty** for single-host deployments (localhost, LAN IP, or a single hostname). Only set it when the frontend and backend sit on different subdomains of one registered domain (e.g. `.example.com`). **Do not use an IP literal** — RFC 6265 forbids IP addresses in the cookie `Domain` attribute and browsers will drop such `Set-Cookie` headers. |
-
-The `Secure` flag on session cookies is derived automatically from the scheme of `FRONTEND_ORIGIN`: HTTPS origins get `Secure` cookies; plain-HTTP origins (LAN / private-network self-host) get non-secure cookies so the browser can actually store them.
-
-If the frontend and backend are served from different hostnames, `COOKIE_DOMAIN` is **required**, not optional: the browser must be able to read the `multica_csrf` cookie from the page's own origin to send the `X-CSRF-Token` header, and without it every write request fails with `403 {"error":"CSRF validation failed"}`. Scope it to the narrowest parent domain that covers both hosts — it also shares the `multica_auth` session cookie with every host under that domain. See [Reverse Proxy](#reverse-proxy) for the full split-domain configuration and its trust requirements.
 
 ### Server
 
@@ -359,19 +302,14 @@ These are configured on each user's machine, not on the server:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MULTICA_SERVER_URL` | `ws://localhost:8080/ws` | WebSocket URL for daemon → server connection |
-| `MULTICA_APP_URL` | `http://localhost:3000` | Frontend URL for CLI login flow |
+| `MULTICA_APP_URL` | `http://localhost:3000` | Frontend URL; the default for `multica setup self-host --app-url` |
 | `MULTICA_DAEMON_POLL_INTERVAL` | `30s` | Catch-up poll for tasks; WebSocket wake signals normally deliver work sooner |
 | `MULTICA_DAEMON_WS_CLAIM_POLL_INTERVAL` | `3m` | Upper bound for healthy WebSocket claim safety polls, configured independently of `MULTICA_DAEMON_POLL_INTERVAL`; downward jitter keeps normal polls at `2m30s`–`2m45s`, while old servers and uncertain claims retain the ordinary poll interval |
 | `MULTICA_DAEMON_HEARTBEAT_INTERVAL` | `15s` | Heartbeat frequency |
 
-Browser login callbacks accept only `localhost`, `127.0.0.1`, and RFC 1918
-IPv4 addresses. If route detection selects an unsupported virtual-adapter
-address (for example `198.18.0.1`), login stops before opening the browser.
-When the browser and CLI run on the same machine, retry with
-`multica login --callback-host 127.0.0.1`. For a browser on another LAN machine,
-use `--callback-host <CLI-machine-LAN-IPv4>`; SSH-only machines can use token
-login or the printed SSH tunnel instructions. The login page reports invalid
-callback links instead of treating them as ordinary web sign-ins.
+The CLI and the daemon send no credential: the server serves every request as
+its one local user. `multica setup` saves the server addresses in the CLI
+profile and starts the daemon; `multica config show` prints them.
 
 Agent-specific overrides:
 
@@ -662,7 +600,6 @@ When using separate domains for frontend and backend, set these environment vari
 # Backend
 FRONTEND_ORIGIN=https://app.example.com
 CORS_ALLOWED_ORIGINS=https://app.example.com
-COOKIE_DOMAIN=.example.com           # narrowest parent covering both hosts — read the scope warning below
 
 # Frontend (only if you are building the web image from source via docker-compose.selfhost.build.yml)
 REMOTE_API_URL=https://api.example.com
@@ -674,28 +611,15 @@ NEXT_PUBLIC_WS_URL=wss://api.example.com/ws
 >
 > This bites on upgrade: before v0.4.10 `NEXT_PUBLIC_API_URL` was inert in the published images, so a wrong value sat in `.env` doing nothing. v0.4.10 wired it through, and the stale value took effect. If you upgraded and the UI loads but nothing else does, check this variable first, then recreate the frontend container (`docker compose ... up -d --force-recreate frontend`) so the new value is picked up.
 
-> **`COOKIE_DOMAIN` is required in this setup — omitting it breaks every write.** The web app authenticates with an HttpOnly `multica_auth` cookie plus a JS-readable `multica_csrf` cookie, and sends the CSRF value as an `X-CSRF-Token` header on every non-GET request. Both cookies are host-only unless `COOKIE_DOMAIN` is set, so a frontend on `app.example.com` cannot read a cookie issued by `api.example.com`. The header is then never sent and the backend rejects the request with `403 {"error":"CSRF validation failed"}` — while GET requests keep working, so the app renders but nothing can be created or edited.
->
-> After changing `COOKIE_DOMAIN`, delete the existing `multica_auth` / `multica_csrf` cookies on **both** hosts and log in again. Stale host-only cookies otherwise sit alongside the new domain-scoped ones and the browser sends both.
-
-> **Scope `COOKIE_DOMAIN` as narrowly as possible.** The same value also scopes `multica_auth`, the session JWT, and the browser then sends it to **every** host under that domain. `HttpOnly` only stops page scripts from reading the cookie — it does not stop the server behind a sibling subdomain from receiving it on every request. Use the narrowest parent that still covers both hosts: for `agent.example.com` + `api.agent.example.com` that is `.agent.example.com`, **not** `.example.com`, which would also hand your users' session cookie to unrelated hosts such as a separately deployed `docs.example.com`.
-
-Both of these must hold, or this layout is not safe to use:
-
-- The frontend and backend share a common parent domain. Unrelated domains (`app.com` and `api.io`) cannot be covered by any `COOKIE_DOMAIN` value.
-- Every host under that parent domain is operated by the same trusted party. If anything in scope is third-party hosted, or other teams can create records under it, a compromise or a rogue service there receives valid sessions for your deployment.
-
-If either condition fails, use the same-origin layout below, which keeps the session cookie host-only.
-
 ### Same Origin (Recommended)
 
-A separate API domain is not required. Leave `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` at their defaults and the browser calls `/api` and `/ws` on the page's own origin, so no cross-host cookie problem can arise in the first place:
+A separate API domain is not required. Leave `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` at their defaults and the browser calls `/api` and `/ws` on the page's own origin, so nothing
+has to be shared between two hostnames:
 
 ```bash
 # Backend
 FRONTEND_ORIGIN=https://app.example.com
 CORS_ALLOWED_ORIGINS=https://app.example.com
-COOKIE_DOMAIN=                       # empty: cookies are host-only on app.example.com, which is correct here
 
 # Frontend
 NEXT_PUBLIC_API_URL=                 # empty: the client uses relative /api paths on the page origin
@@ -729,7 +653,9 @@ location /collab {
 
 See [WebSocket for LAN / Non-localhost Access](#websocket-for-lan--non-localhost-access) for why the rewrites cannot carry the `Upgrade` handshake.
 
-This keeps cookies, CORS, and the WebSocket origin check on a single origin. It is both the configuration least likely to break and the safer one: the session cookie stays host-only, so no sibling subdomain can ever receive it. An `api.example.com` vhost can still be kept for CLI and daemon use: those clients authenticate with a `mul_` personal access token over `Authorization: Bearer`, which never goes through the cookie or CSRF path.
+This keeps CORS and the WebSocket origin check on a single origin, which is
+the configuration least likely to break. An `api.example.com` vhost can still
+be kept for CLI and daemon use: those clients send no credential.
 
 ## LAN / Non-localhost Access
 
