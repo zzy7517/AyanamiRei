@@ -1,0 +1,42 @@
+scripts/desktop-cdp.mjs
+  s_fc0852876b2926::t_1ffc7101f83e2f 10-13,19,30,44
+  s_fc0852876b2926::t_4ae2d206c3fffc 54
+  s_fc0852876b2926::t_9aaa5342f78195 179
+scripts/dev-fixtures.mjs
+  s_fc0852876b2926::t_d63c4da95e2c52 11-17
+  s_fc0852876b2926::t_eb728a037a9866 86,88,96-98,100-104,107
+  s_fc0852876b2926::t_4db6ddf86343e1 720
+scripts/local-env.sh
+  s_fc0852876b2926::t_83d012ef988343 24
+scripts/dev-env.sh
+  s_fc0852876b2926::t_bfc9d700b5a803 998-1000,1018,1026-1028,1038,1040
+  s_fc0852876b2926::t_d0315cf32615f1 1061
+  s_fc0852876b2926::t_58b48a34de4457 458-460
+  s_fc0852876b2926::t_743e57df39e79d 2194-2198
+  s_fc0852876b2926::t_69272c4023f5c2 1836
+  s_fc0852876b2926::t_2e6e2170db6ac3 53-54
+  s_fc0852876b2926::t_bd64dfab127a7c 38-41
+  s_fc0852876b2926::t_b9a698f5d4eebb 1197
+  s_fc0852876b2926::t_3fa62f065732ea 1610,1619-1620
+turbo.json
+  s_fc0852876b2926::t_b79e735f47caf7 58-59
+Makefile
+  s_fc0852876b2926::t_47af4a0b640379 169
+  s_fc0852876b2926::t_37dfad8c1fe6fc 338
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "ed0a3c7953390e75a95888cdf621872e6c40015a",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
