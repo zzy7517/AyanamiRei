@@ -1,0 +1,43 @@
+apps/desktop/src/renderer/src/App.tsx
+  s_fc0852876b2926::t_755d66afca913b 41
+apps/desktop/src/renderer/src/globals.css
+  s_fc0852876b2926::t_2480e572edf017 12,33,47,61
+apps/desktop/src/renderer/src/main.tsx
+  s_fc0852876b2926::t_12acfd062156c9 11,16,21-25,39
+docker-compose.selfhost.build.yml
+  s_fc0852876b2926::t_e1dd72918c9f5d 1-2
+docker-compose.selfhost.yml
+  s_fc0852876b2926::t_eb174197e2a86d 1,6-10,20-24,149-150
+packages/ui/lib/utils.ts
+  s_fc0852876b2926::t_023ace36aeb945 15-17
+scripts/brand/README.md
+  s_fc0852876b2926::t_475e13199a8ced 34
+scripts/brand/generate.mjs
+  s_fc0852876b2926::t_8569f2cf293552 18-19,61
+scripts/brand/sync.mjs
+  s_fc0852876b2926::t_f4898723126632 3
+scripts/check-dependency-catalog.test.mjs
+  s_fc0852876b2926::t_b872e68b7f0629 63,80
+scripts/check-ui-radius-tokens.mjs
+  s_fc0852876b2926::t_95fc6676420e75 9,20
+scripts/check.sh
+  s_fc0852876b2926::t_cb650bb05e7608 5,27,56,63,70
+turbo.json
+  s_fc0852876b2926::t_87076cac8a1c9e 57,83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "81bb9eba8dbe07964db7f6fc8067037b2e8f169f",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
