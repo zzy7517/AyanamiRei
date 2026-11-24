@@ -3,30 +3,22 @@
   "default_project": "Proyecto por defecto",
   "all_projects": "Todos los proyectos",
   "add_project": "Añadir proyecto",
-  "no_project_folders": "Ningún proyecto tiene todavía una carpeta local.",
+  "no_project_folders": "Ningún proyecto tiene todavía una carpeta.",
   "end_session": "Finalizar sesión",
   "agent_terminal": "Terminal del agente",
   "restart": "Reiniciar",
   "status": {
-    "connecting": "Conectando…",
-    "reconnecting": "Reconectando…",
+    "connecting": "Abriendo…",
     "ended": "La sesión ha terminado",
     "ended_with_code": "La sesión ha terminado con código de salida {{code}}",
-    "ended_by_signal": "La sesión ha terminado por la señal {{signal}}",
-    "reattached": "Reconectado. La pantalla permanece en blanco hasta que el programa vuelva a escribir."
+    "ended_by_signal": "La sesión ha terminado por la señal {{signal}}"
   },
   "errors": {
-    "unavailable": "El terminal no está disponible en este servidor.",
-    "flag_disabled": "El terminal está desactivado en este servidor.",
-    "bad_request": "El servidor ha rechazado la solicitud.",
-    "terminal_root_unconfigured": "La máquina no tiene configurado ningún directorio para terminales.",
-    "path_not_allowed": "No se puede abrir un terminal en este directorio.",
-    "daemon_unavailable": "La máquina no está conectada.",
-    "not_found": "El terminal ya no está en ejecución.",
-    "unsupported_platform": "El sistema de la máquina no admite terminales.",
+    "unavailable": "Los terminales solo se abren en la aplicación de escritorio.",
+    "bad_request": "La aplicación no ha podido abrir este terminal.",
+    "not_found": "La carpeta ya no está ahí.",
     "tree_not_ready": "El worktree aún no se ha construido.",
-    "runtime_offline": "La máquina que construyó el worktree no está conectada.",
-    "project_not_found": "La carpeta de este proyecto ya no existe.",
+    "project_not_found": "Este proyecto ya no tiene carpeta.",
     "internal": "Algo ha ido mal."
   }
 }

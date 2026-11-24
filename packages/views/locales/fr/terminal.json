@@ -3,30 +3,22 @@
   "default_project": "Projet par défaut",
   "all_projects": "Tous les projets",
   "add_project": "Ajouter un projet",
-  "no_project_folders": "Aucun projet n’a encore de dossier local.",
+  "no_project_folders": "Aucun projet n’a encore de dossier.",
   "end_session": "Terminer la session",
   "agent_terminal": "Terminal de l’agent",
   "restart": "Redémarrer",
   "status": {
-    "connecting": "Connexion…",
-    "reconnecting": "Reconnexion…",
+    "connecting": "Ouverture…",
     "ended": "Session terminée",
     "ended_with_code": "Session terminée avec le code {{code}}",
-    "ended_by_signal": "Session terminée par le signal {{signal}}",
-    "reattached": "Reconnecté. L’écran reste vide jusqu’à ce que le programme écrive à nouveau."
+    "ended_by_signal": "Session terminée par le signal {{signal}}"
   },
   "errors": {
-    "unavailable": "Le terminal n’est pas disponible sur ce serveur.",
-    "flag_disabled": "Le terminal est désactivé sur ce serveur.",
-    "bad_request": "Le serveur a refusé la requête.",
-    "terminal_root_unconfigured": "Aucun répertoire de terminal n’est configuré sur cette machine.",
-    "path_not_allowed": "Un terminal ne peut pas être ouvert dans ce répertoire.",
-    "daemon_unavailable": "La machine n’est pas connectée.",
-    "not_found": "Le terminal n’est plus en cours d’exécution.",
-    "unsupported_platform": "Le système de la machine ne prend pas en charge les terminaux.",
+    "unavailable": "Les terminaux ne s’ouvrent que dans l’application de bureau.",
+    "bad_request": "L’application n’a pas pu ouvrir ce terminal.",
+    "not_found": "Le dossier n’existe plus.",
     "tree_not_ready": "Le worktree n’est pas encore construit.",
-    "runtime_offline": "La machine qui a construit le worktree n’est pas connectée.",
-    "project_not_found": "Le dossier de ce projet n’existe plus.",
+    "project_not_found": "Ce projet n’a plus de dossier.",
     "internal": "Une erreur est survenue."
   }
 }

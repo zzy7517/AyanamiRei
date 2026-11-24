@@ -1,9 +1,6 @@
 export const COMPOSIO_MCP_APPS_FLAG = "composio_mcp_apps";
 export const PLUGINS_V1_FLAG = "plugins_v1";
 export const DOCS_V1_FLAG = "docs_v1";
-// Terminals on the daemon's machine, reached through the server. Off unless
-// the server turns it on; while it is off, `POST /api/terminal/ticket` answers 404.
-export const TERMINAL_V1_FLAG = "terminal_v1";
 // Tasks and their trees: a task works on "project + branch" pairs, each built
 // as a worktree, and an agent terminal opens inside one. Off unless the server
 // turns it on; while it is off, the tree routes answer 404.

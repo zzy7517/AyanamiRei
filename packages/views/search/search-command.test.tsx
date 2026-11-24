@@ -15,7 +15,7 @@ import { issueViewEverywhereOptions } from "@multica/core/issue-views/queries";
 import { projectListOptions } from "@multica/core/projects/queries";
 import { configStore } from "@multica/core/config";
 import { docTreeOptions } from "@multica/core/docs";
-import { DOCS_V1_FLAG, TERMINAL_V1_FLAG } from "@multica/core/feature-flags";
+import { DOCS_V1_FLAG } from "@multica/core/feature-flags";
 import { I18nProvider } from "@multica/core/i18n/react";
 import { issueDetailOptions, issueTimelineOptions } from "@multica/core/issues/queries";
 import { WORKSPACE_PAGES } from "@multica/core/paths";
@@ -373,7 +373,7 @@ describe("SearchCommand", () => {
     apiFns.set("searchIssues", vi.fn(() => Promise.resolve({ issues: [], total: 0 })));
     apiFns.set("searchProjects", vi.fn(() => Promise.resolve({ projects: [], total: 0 })));
     apiFns.set("searchDocs", vi.fn(() => Promise.resolve({ docs: [] })));
-    configStore.getState().setFeatureFlags({ [DOCS_V1_FLAG]: true, [TERMINAL_V1_FLAG]: true });
+    configStore.getState().setFeatureFlags({ [DOCS_V1_FLAG]: true });
     mockPush.mockReset();
     mockPathname.current = "/ws-test/issues";
     mockGetShareableUrl.mockReset().mockImplementation((p: string) => `https://app.multica/${p}`);

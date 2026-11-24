@@ -3,30 +3,22 @@
   "default_project": "デフォルトプロジェクト",
   "all_projects": "すべてのプロジェクト",
   "add_project": "プロジェクトを追加",
-  "no_project_folders": "ローカルフォルダを持つプロジェクトはまだありません。",
+  "no_project_folders": "フォルダを持つプロジェクトはまだありません。",
   "end_session": "セッションを終了",
   "agent_terminal": "エージェントターミナル",
   "restart": "再起動",
   "status": {
-    "connecting": "接続中…",
-    "reconnecting": "再接続中…",
+    "connecting": "開いています…",
     "ended": "セッションが終了しました",
     "ended_with_code": "セッションが終了しました (終了コード {{code}})",
-    "ended_by_signal": "セッションはシグナル {{signal}} により終了しました",
-    "reattached": "再接続しました。プログラムが再び出力するまで画面は空のままです。"
+    "ended_by_signal": "セッションはシグナル {{signal}} により終了しました"
   },
   "errors": {
-    "unavailable": "このサーバーではターミナルを利用できません。",
-    "flag_disabled": "このサーバーではターミナルが無効になっています。",
-    "bad_request": "サーバーがリクエストを拒否しました。",
-    "terminal_root_unconfigured": "このマシンにはターミナルのディレクトリが設定されていません。",
-    "path_not_allowed": "このディレクトリではターミナルを開けません。",
-    "daemon_unavailable": "マシンが接続されていません。",
-    "not_found": "このターミナルはすでに終了しています。",
-    "unsupported_platform": "このマシンの OS ではターミナルを利用できません。",
+    "unavailable": "ターミナルを開けるのはデスクトップアプリだけです。",
+    "bad_request": "このターミナルを開けませんでした。",
+    "not_found": "フォルダはもうありません。",
     "tree_not_ready": "worktree はまだ構築されていません。",
-    "runtime_offline": "worktree を構築したマシンが接続されていません。",
-    "project_not_found": "このプロジェクトのフォルダは存在しなくなりました。",
+    "project_not_found": "このプロジェクトにはもうフォルダがありません。",
     "internal": "問題が発生しました。"
   }
 }

@@ -98,11 +98,14 @@ function workspaceScoped(slug: string) {
     settings: () => `${ws}/settings`,
     attachmentPreview: (id: string) => `${ws}/attachments/${encode(id)}/preview`,
     terminal: () => `${ws}/terminal`,
-    // The terminal page for a shell in one of a task's directories.
-    // `terminalId` names a terminal that is already running, which the page
-    // rejoins instead of opening a shell.
-    terminalIn: (cwd: string, terminalId?: string) =>
-      `${ws}/terminal?cwd=${encode(cwd)}${terminalId ? `&t=${encode(terminalId)}` : ""}`,
+    // The terminal page for a shell in one of a task's directories. `host`
+    // names the SSH host the directory is on; without it the directory is on
+    // this computer. `terminalId` names a terminal that is already running,
+    // which the page rejoins instead of opening a shell.
+    terminalIn: (cwd: string, options: { host?: string; terminalId?: string } = {}) =>
+      `${ws}/terminal?cwd=${encode(cwd)}${options.host ? `&host=${encode(options.host)}` : ""}${
+        options.terminalId ? `&t=${encode(options.terminalId)}` : ""
+      }`,
     // The terminal page for a project. `project` is the default project
     // (`TERMINAL_DEFAULT_PROJECT`) or the id of the local folder a project
     // registered. `terminalId` names a terminal that is already running, as

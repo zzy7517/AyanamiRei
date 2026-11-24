@@ -1,5 +1,6 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import type { RuntimeConfigResult } from "../shared/runtime-config";
+import type { TerminalHostBridge } from "@multica/core/terminal/host";
 import type { NavigationGesture } from "../shared/navigation-gestures";
 import type { ContextMenuCommand, ContextMenuRequest } from "../shared/context-menu";
 import type { RendererRouteContextInput } from "../shared/renderer-route-context";
@@ -130,6 +131,9 @@ interface DesktopAPI {
      *  Drives the worktree execution-mode option in the resource UI. */
     is_git_repo?: boolean;
   }>;
+  /** The terminals the main process owns: shells in a project's folder, and
+   *  an agent's command line in a tree of a task. */
+  terminal: TerminalHostBridge;
   /** Read every theme in the themes folder in user data, and start watching it. */
   readThemeFolder: () => Promise<ThemeFolderSnapshot>;
   /** Called once a change in the themes folder settles. Returns an unsubscribe function. */

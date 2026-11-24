@@ -27,6 +27,10 @@ func reportAgentReply(issueID string, body any) *http.Request {
 }
 
 // markAgentReplySeen is a member saying they have seen the reply.
+func reportReplyByMember(userID, issueID string) *http.Request {
+	return withURLParam(scopeRequest(userID, http.MethodPost, "/api/issues/"+issueID+"/agent-reply", nil), "id", issueID)
+}
+
 func markAgentReplySeen(userID, issueID string) *http.Request {
 	return withURLParam(scopeRequest(userID, http.MethodPost, "/api/issues/"+issueID+"/agent-reply/seen", nil), "id", issueID)
 }
@@ -273,7 +277,7 @@ func TestDaemonReportOfAReplyHidesWhatTheUserCannotSee(t *testing.T) {
 		Want(http.StatusNotFound)
 }
 
-// TestAgentReplyRoutes checks both routes reach their handler through the
+// TestAgentReplyRoutes checks each route reaches its handler through the
 // router, which hands the issue over under the name each router uses.
 func TestAgentReplyRoutes(t *testing.T) {
 	r := chi.NewRouter()
@@ -282,6 +286,7 @@ func TestAgentReplyRoutes(t *testing.T) {
 
 	for name, req := range map[string]*http.Request{
 		"the daemon report": reportAgentReply(agentReplyMissingIssueID, map[string]any{"daemon_id": projectScopeDaemonID}),
+		"the member report": reportReplyByMember(testUserID, agentReplyMissingIssueID),
 		"the member seen":   markAgentReplySeen(testUserID, agentReplyMissingIssueID),
 	} {
 		res := testutil.Call(t, r.ServeHTTP, req)

@@ -65,7 +65,8 @@ describe("terminal addresses", () => {
   it("name a shell by its directory and an agent's session by its task and tree", () => {
     const ws = paths.workspace("acme");
     expect(ws.terminalIn("/srv/app")).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp");
-    expect(ws.terminalIn("/srv/app", "t-1")).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp&t=t-1");
+    expect(ws.terminalIn("/srv/app", { terminalId: "t-1" })).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp&t=t-1");
+    expect(ws.terminalIn("/srv/app", { host: "box" })).toBe("/acme/terminal?cwd=%2Fsrv%2Fapp&host=box");
     expect(ws.terminalAgent("issue-1", "tree-1")).toBe("/acme/terminal?issue=issue-1&tree=tree-1");
     expect(ws.terminalAgent("issue-1", "tree-1", "t-1")).toBe(
       "/acme/terminal?issue=issue-1&tree=tree-1&t=t-1",

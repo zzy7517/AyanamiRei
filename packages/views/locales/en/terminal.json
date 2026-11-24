@@ -3,30 +3,22 @@
   "default_project": "Default project",
   "all_projects": "All projects",
   "add_project": "Add project",
-  "no_project_folders": "No project has a local folder yet.",
+  "no_project_folders": "No project has a folder yet.",
   "end_session": "End session",
   "agent_terminal": "Agent terminal",
   "restart": "Restart",
   "status": {
-    "connecting": "Connecting...",
-    "reconnecting": "Reconnecting...",
+    "connecting": "Opening...",
     "ended": "Session ended",
     "ended_with_code": "Session ended with exit code {{code}}",
-    "ended_by_signal": "Session ended by signal {{signal}}",
-    "reattached": "Reattached. The screen stays blank until the program writes again."
+    "ended_by_signal": "Session ended by signal {{signal}}"
   },
   "errors": {
-    "unavailable": "The terminal is not available on this server.",
-    "flag_disabled": "The terminal is turned off on this server.",
-    "bad_request": "The server rejected the request.",
-    "terminal_root_unconfigured": "No terminal directory is configured on the machine.",
-    "path_not_allowed": "A terminal cannot be opened in this directory.",
-    "daemon_unavailable": "The machine is not connected.",
-    "not_found": "The terminal is no longer running.",
-    "unsupported_platform": "The machine's system does not support terminals.",
+    "unavailable": "Terminals open in the desktop app only.",
+    "bad_request": "The app could not open this terminal.",
+    "not_found": "The folder is not there any more.",
     "tree_not_ready": "The worktree is not built yet.",
-    "runtime_offline": "The machine that built the worktree is not connected.",
-    "project_not_found": "This project folder no longer exists.",
+    "project_not_found": "This project has no folder any more.",
     "internal": "Something went wrong."
   }
 }

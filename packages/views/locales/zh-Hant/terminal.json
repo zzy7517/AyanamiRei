@@ -3,30 +3,22 @@
   "default_project": "預設專案",
   "all_projects": "所有專案",
   "add_project": "新增專案",
-  "no_project_folders": "還沒有帶本地資料夾的專案。",
+  "no_project_folders": "還沒有帶資料夾的專案。",
   "end_session": "結束工作階段",
   "agent_terminal": "AI 代理終端",
   "restart": "重新啟動",
   "status": {
-    "connecting": "正在連線…",
-    "reconnecting": "正在重新連線…",
+    "connecting": "正在開啟…",
     "ended": "工作階段已結束",
     "ended_with_code": "工作階段已結束，結束代碼為 {{code}}",
-    "ended_by_signal": "工作階段已由訊號 {{signal}} 終止",
-    "reattached": "已重新連接。在程式再次輸出之前，畫面保持空白。"
+    "ended_by_signal": "工作階段已由訊號 {{signal}} 終止"
   },
   "errors": {
-    "unavailable": "此伺服器未提供終端。",
-    "flag_disabled": "此伺服器未啟用終端。",
-    "bad_request": "伺服器拒絕了該請求。",
-    "terminal_root_unconfigured": "該機器尚未設定終端目錄。",
-    "path_not_allowed": "無法在該目錄開啟終端。",
-    "daemon_unavailable": "該機器未連線。",
-    "not_found": "該終端已不再執行。",
-    "unsupported_platform": "該機器的系統不支援終端。",
+    "unavailable": "只有桌面應用程式能開啟終端。",
+    "bad_request": "應用程式無法開啟這個終端。",
+    "not_found": "資料夾已經不在了。",
     "tree_not_ready": "worktree 尚未建立完成。",
-    "runtime_offline": "建立該 worktree 的機器未連線。",
-    "project_not_found": "這個專案的資料夾已經不存在了。",
+    "project_not_found": "這個專案已經沒有資料夾了。",
     "internal": "發生未知錯誤。"
   }
 }

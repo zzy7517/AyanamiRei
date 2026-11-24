@@ -29,8 +29,9 @@ const LAUNCHER_ENV_NAMES = new Set([
 ]);
 
 /**
- * Env for every CLI child the Desktop app spawns. The daemon passes its own env
- * on to each agent task, so whatever lands here is what agents see.
+ * Env for every process the Desktop app spawns: the daemon, and the shells
+ * and agents of its terminals. The daemon passes its own env on to each agent
+ * task, so whatever lands here is what agents see.
  *
  * A dev Desktop is launched by `pnpm dev:desktop` → turbo → `electron-vite
  * dev`, and each layer adds env describing that launch. Left in, pnpm in any
@@ -39,10 +40,10 @@ const LAUNCHER_ENV_NAMES = new Set([
  * the dev checkout, and NODE_ENV=development breaks Next.js and Vite
  * production builds. NODE_ENV_ELECTRON_VITE marks that launch, so the launcher
  * env is dropped only when it is present. A packaged app is not launched this
- * way, so its env reaches the daemon untouched.
+ * way, so its env reaches the child untouched.
  */
-export function daemonSpawnEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const spawnEnv: NodeJS.ProcessEnv = { ...env, MULTICA_LAUNCHED_BY: "desktop" };
+export function childProcessEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const spawnEnv: NodeJS.ProcessEnv = { ...env };
   if (spawnEnv.NODE_ENV_ELECTRON_VITE === undefined) return spawnEnv;
 
   const scriptDir = spawnEnv.PNPM_SCRIPT_SRC_DIR;
@@ -60,6 +61,11 @@ export function daemonSpawnEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     spawnEnv[pathKey] = withoutScriptBins(spawnEnv[pathKey] ?? "", scriptDir);
   }
   return spawnEnv;
+}
+
+/** The daemon's env: it tells the server which app started it. */
+export function daemonSpawnEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return { ...childProcessEnv(env), MULTICA_LAUNCHED_BY: "desktop" };
 }
 
 // pnpm puts `node_modules/.bin` of the script's package and each ancestor, and

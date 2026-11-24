@@ -91,9 +91,11 @@ export interface ListProjectsResponse {
 //
 // Known types (UI must default-case unknown server-side additions):
 //   - github_repo: cloud-side git checkout, ref = { url, ref?, default_branch_hint? }
-//   - local_directory: agent execution on a specific daemon,
+//   - local_directory: a folder on the computer the desktop app runs on,
 //     ref = { local_path, daemon_id, label?, execution_mode? }
-export type ProjectResourceType = "github_repo" | "local_directory";
+//   - ssh_directory: a folder on a host the system `ssh` reaches,
+//     ref = { host, path, label? }
+export type ProjectResourceType = "github_repo" | "local_directory" | "ssh_directory";
 
 export interface GithubRepoResourceRef {
   url: string;
@@ -128,9 +130,17 @@ export interface LocalDirectoryResourceRef {
   execution_mode?: LocalDirectoryExecutionMode;
 }
 
+/** A folder on an SSH host. `host` is what `ssh` takes for a destination. */
+export interface SshDirectoryResourceRef {
+  host: string;
+  path: string;
+  label?: string;
+}
+
 export type ProjectResourceRef =
   | GithubRepoResourceRef
   | LocalDirectoryResourceRef
+  | SshDirectoryResourceRef
   | Record<string, unknown>;
 
 export interface ProjectResource {

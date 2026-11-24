@@ -2,22 +2,25 @@
 
 /**
  * A terminal in a project's folder, or the agent's command line in a tree of a
- * task.
+ * task. The desktop app owns the terminal: it keeps running while the page is
+ * gone, and a page that names it shows it again.
  *
  * The URL says what the page shows. `?project=<project>` opens a shell in a
  * project's folder: the default project, which is there without adding one, or
- * a folder a project registered, named by the id of that folder. `?cwd=
- * <directory>` opens one in a directory of a task, which is where the task
- * page's Shell link leads. `?issue=<task id>&tree=<tree id>` opens an agent
- * terminal in that tree. `&t=<terminal id>` rejoins a terminal that is already
- * running, which is how a desktop tab finds its terminal again after a switch.
- * The id is written once the server names the terminal and stays after the
- * process has ended, so returning to the page does not quietly open another
- * shell or start the agent again.
+ * a folder a project registered, named by the id of that folder.
+ * `?cwd=<directory>` opens one in a directory of a task, which is where the
+ * task page's Shell link leads; `&host=<host>` says it is on an SSH host.
+ * `?issue=<task id>&tree=<tree id>` opens an agent terminal in that tree.
+ * `&t=<terminal id>` rejoins a terminal that is already open, which is how a
+ * desktop tab finds its terminal again after a switch. The id is written once
+ * the app names the terminal and stays after the process has ended, so
+ * returning to the page does not quietly open another shell or start the agent
+ * again.
  *
  * With none of these the page lists the projects a terminal can open in.
  */
 
+import { useQuery } from "@tanstack/react-query";
 import {
   forwardRef,
   useEffect,
@@ -27,18 +30,28 @@ import {
   type ReactNode,
 } from "react";
 import { useWorkspaceId } from "@multica/core/hooks";
-import { useIssueShown } from "@multica/core/issues/agent-reply";
+import { issueDetailOptions, useIssueProjectScope, useIssueShown } from "@multica/core/issues";
 import { useModalStore } from "@multica/core/modals";
 import { useWorkspacePaths } from "@multica/core/paths";
-import { useProjectLocalDirectories } from "@multica/core/projects";
+import {
+  projectFolderLabel,
+  projectFolderPlace,
+  projectListOptions,
+  projectResourcesOptions,
+  useProjectFolders,
+  type ProjectFolder,
+} from "@multica/core/projects";
 import {
   TERMINAL_DEFAULT_PROJECT,
   useTerminalSession,
   useTerminalSessionState,
-  type TerminalAgentTarget,
+  type AgentTerminalTree,
+  type TerminalHostTarget,
+  type TerminalPlace,
   type TerminalStatus,
 } from "@multica/core/terminal";
 import { Button } from "@multica/ui/components/ui/button";
+import { Spinner } from "@multica/ui/components/ui/spinner";
 import { ArrowLeft, FolderOpen } from "@multica/ui/icons";
 import { cn } from "@multica/ui/lib/utils";
 import { useT } from "../i18n";
@@ -47,11 +60,10 @@ import { PAGE_GUTTER, PageHeader } from "../layout/page-header";
 import { AppLink, useNavigation } from "../navigation";
 import { Terminal, type TerminalHandle } from "./terminal";
 
-/** What the page starts when the address names no running terminal. */
-export type TerminalTarget =
-  | { project: string }
-  | { cwd: string }
-  | { agent: TerminalAgentTarget };
+/** The page's address with the id of the terminal it shows. */
+function withTerminalId(address: string, terminalId: string): string {
+  return `${address}${address.includes("?") ? "&" : "?"}t=${encodeURIComponent(terminalId)}`;
+}
 
 export function TerminalPage() {
   const { t } = useT("terminal");
@@ -59,37 +71,38 @@ export function TerminalPage() {
   const workspacePaths = useWorkspacePaths();
   const project = navigation.searchParams.get("project")?.trim() ?? "";
   const directory = navigation.searchParams.get("cwd")?.trim() ?? "";
+  const host = navigation.searchParams.get("host")?.trim() ?? "";
   const issueId = navigation.searchParams.get("issue")?.trim() ?? "";
   const treeId = navigation.searchParams.get("tree")?.trim() ?? "";
   // A tree belongs to one task: an address with only one of the two opens nothing.
-  const agent = issueId && treeId ? { issue_id: issueId, tree_id: treeId } : null;
+  const isAgent = Boolean(issueId && treeId);
   // An id on its own says which terminal to rejoin, but not what it is for.
-  const terminalId = agent || project || directory ? navigation.searchParams.get("t") || undefined : undefined;
+  const terminalId =
+    isAgent || project || directory ? navigation.searchParams.get("t") || undefined : undefined;
   // The viewer is watching this agent, so its replies are seen as they land:
   // none is left marked, and none is announced over the terminal showing it.
   const wsId = useWorkspaceId();
-  const shownIssueId = agent ? issueId : null;
+  const shownIssueId = isAgent ? issueId : null;
   useIssueShown(shownIssueId);
   useMarkAgentReplySeenWhileViewing(wsId, shownIssueId ?? "");
 
   const back = { label: t(($) => $.all_projects), to: workspacePaths.terminal() };
 
-  if (agent) {
+  if (isAgent) {
     return (
-      <TerminalFor
-        target={{ agent }}
+      <AgentTerminal
+        issueId={issueId}
+        treeId={treeId}
         terminalId={terminalId}
         address={workspacePaths.terminalAgent(issueId, treeId)}
-        // As the directory is to a shell: what this page opens, and the way
-        // to open it again once the agent has ended.
-        title={<span className="shrink-0 text-muted-foreground">{t(($) => $.agent_terminal)}</span>}
       />
     );
   }
   if (project === TERMINAL_DEFAULT_PROJECT) {
     return (
       <TerminalFor
-        target={{ project }}
+        target={{ kind: "defaultProject" }}
+        sessionKey="default-project"
         terminalId={terminalId}
         address={workspacePaths.terminalProject(project)}
         back={back}
@@ -99,13 +112,17 @@ export function TerminalPage() {
   }
   if (project) return <ProjectTerminal project={project} terminalId={terminalId} back={back} />;
   if (directory) {
+    const place: TerminalPlace = host ? { kind: "ssh", host } : { kind: "local" };
     return (
       <TerminalFor
-        target={{ cwd: directory }}
+        target={{ kind: "shell", place, cwd: directory }}
+        sessionKey={`shell:${host}:${directory}`}
         terminalId={terminalId}
-        address={workspacePaths.terminalIn(directory)}
+        address={workspacePaths.terminalIn(directory, { host: host || undefined })}
         title={
-          <span className="min-w-0 truncate font-mono text-caption text-muted-foreground">{directory}</span>
+          <span className="min-w-0 truncate font-mono text-caption text-muted-foreground">
+            {host ? `${host}:${directory}` : directory}
+          </span>
         }
       />
     );
@@ -123,37 +140,27 @@ interface BackToList {
  * A page for one terminal: the header says what it is for and holds its
  * controls, and the terminal fills the rest.
  */
-function TerminalFor({
-  target,
-  terminalId,
-  address,
-  back,
+function TerminalFrame({
   title,
+  back,
+  live,
+  controls,
+  children,
 }: {
-  target: TerminalTarget;
-  terminalId?: string;
-  /** The page's address for the target, without the id of a terminal. */
-  address: string;
-  /**
-   * The way back to the list. It is disabled while the terminal is opening or
-   * running: leaving would leave the shell behind, still running.
-   */
-  back?: BackToList;
-  /** What the header says about the target, before its controls. */
+  /** What the header says about the terminal. */
   title: ReactNode;
+  back?: BackToList;
+  /**
+   * The terminal is opening or running. The way back to the list is closed
+   * then: leaving would leave the shell behind, still running, with no page
+   * that leads to it.
+   */
+  live?: boolean;
+  /** The header's buttons. */
+  controls?: ReactNode;
+  children?: ReactNode;
 }) {
-  const { t } = useT("terminal");
   const navigation = useNavigation();
-  const view = useRef<TerminalViewHandle>(null);
-  const [live, setLive] = useState(false);
-
-  const restart = () => {
-    // The address drops the ended terminal's id, which a switch back to this
-    // tab would otherwise rejoin.
-    navigation.replace(address);
-    view.current?.restart();
-  };
-
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       <PageHeader className="gap-3">
@@ -173,24 +180,189 @@ function TerminalFor({
           )}
           {title}
         </div>
-        <Button type="button" size="sm" disabled={live} onClick={restart}>
-          {t(($) => $.restart)}
-        </Button>
-        {live && (
-          <Button type="button" size="sm" variant="ghost" onClick={() => view.current?.end()}>
-            {t(($) => $.end_session)}
-          </Button>
-        )}
+        {controls}
       </PageHeader>
+      {children}
+    </div>
+  );
+}
+
+function TerminalFor({
+  target,
+  sessionKey,
+  terminalId,
+  address,
+  back,
+  title,
+}: {
+  target: TerminalHostTarget;
+  /** What keeps this page's terminal across renders. */
+  sessionKey: string;
+  terminalId?: string;
+  /** The page's address for the target, without the id of a terminal. */
+  address: string;
+  back?: BackToList;
+  title: ReactNode;
+}) {
+  const { t } = useT("terminal");
+  const navigation = useNavigation();
+  const view = useRef<TerminalViewHandle>(null);
+  const [live, setLive] = useState(false);
+
+  const restart = () => {
+    // The address drops the ended terminal's id, which a switch back to this
+    // tab would otherwise rejoin.
+    if (terminalId) navigation.replace(address);
+    view.current?.restart();
+  };
+
+  return (
+    <TerminalFrame
+      title={title}
+      back={back}
+      live={live}
+      controls={
+        <>
+          <Button type="button" size="sm" disabled={live} onClick={restart}>
+            {t(($) => $.restart)}
+          </Button>
+          {live && (
+            <Button type="button" size="sm" variant="ghost" onClick={() => view.current?.end()}>
+              {t(($) => $.end_session)}
+            </Button>
+          )}
+        </>
+      }
+    >
       <div className="min-h-0 flex-1 px-3 pt-1 pb-2">
         <TerminalSessionView
           ref={view}
           target={target}
+          sessionKey={sessionKey}
           terminalId={terminalId}
+          address={address}
           onLiveChange={setLive}
         />
       </div>
-    </div>
+    </TerminalFrame>
+  );
+}
+
+/** The page's header, while what the terminal opens is still being read. */
+function TerminalLoading({ title, back }: { title: ReactNode; back?: BackToList }) {
+  return (
+    <TerminalFrame title={title} back={back}>
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <Spinner aria-hidden />
+      </div>
+    </TerminalFrame>
+  );
+}
+
+/** The page's header, and why there is no terminal to show under it. */
+function TerminalMessage({ title, back, message }: { title: ReactNode; back?: BackToList; message: string }) {
+  return (
+    <TerminalFrame title={title} back={back}>
+      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+        <p role="alert" className="max-w-md rounded-lg border border-surface-border bg-background px-4 py-3 text-center text-body text-foreground shadow-md">
+          {message}
+        </p>
+      </div>
+    </TerminalFrame>
+  );
+}
+
+function placeKey(place: TerminalPlace): string {
+  return place.kind === "ssh" ? `ssh:${place.host}` : "local";
+}
+
+/**
+ * The agent's command line in one tree of a task. The task, its trees and
+ * where each of them is are read here; what the app is asked to start follows
+ * from them.
+ */
+function AgentTerminal({
+  issueId,
+  treeId,
+  terminalId,
+  address,
+}: {
+  issueId: string;
+  treeId: string;
+  terminalId?: string;
+  address: string;
+}) {
+  const { t } = useT("terminal");
+  const wsId = useWorkspaceId();
+  const issue = useQuery(issueDetailOptions(wsId, issueId));
+  const scope = useIssueProjectScope(wsId, issueId);
+  const projects = useQuery(projectListOptions(wsId));
+  const { folders } = useProjectFolders(wsId);
+  // The pair whose tree the agent starts in.
+  const pair = scope.data.items.find((item) => item.tree?.id === treeId);
+  const tree = pair?.tree;
+  // Read for that project whatever its state: its folder says where the tree is.
+  const resources = useQuery({
+    ...projectResourcesOptions(wsId, pair?.project_id ?? ""),
+    enabled: pair !== undefined,
+  });
+
+  const title = <span className="shrink-0 text-muted-foreground">{t(($) => $.agent_terminal)}</span>;
+  if (issue.isPending || scope.isPending || projects.isPending || (pair && resources.isPending)) {
+    return <TerminalLoading title={title} />;
+  }
+
+  const folder = resources.data?.flatMap((resource) => projectFolderPlace(resource) ?? [])[0];
+  const place: TerminalPlace = folder?.place ?? { kind: "local" };
+  // A tree is a folder only once it was built.
+  const cwd = tree?.state === "ready" && tree.path && folder ? tree.path : "";
+  const projectTitle = (projectId: string) =>
+    projects.data?.find((project) => project.id === projectId)?.title ?? projectId;
+  // The other trees are where the agent can also work. Ones on another
+  // computer than the first are not its to reach.
+  const otherTrees: AgentTerminalTree[] = scope.data.items.flatMap((item) => {
+    if (item.tree?.id === treeId || item.tree?.state !== "ready" || !item.tree.path) return [];
+    const other = folders.find(({ project }) => project.id === item.project_id)?.place;
+    if (other && placeKey(other) !== placeKey(place)) return [];
+    return [
+      {
+        path: item.tree.path,
+        repoName: projectTitle(item.project_id),
+        branch: item.tree.task_branch,
+        baseBranch: item.base_branch,
+      },
+    ];
+  });
+  const task = issue.data;
+
+  return (
+    <TerminalFor
+      target={{
+        kind: "agent",
+        place,
+        cwd,
+        trees: [
+          {
+            path: tree?.path ?? "",
+            repoName: pair ? projectTitle(pair.project_id) : "",
+            branch: tree?.task_branch ?? "",
+            baseBranch: pair?.base_branch ?? "",
+          },
+          ...otherTrees,
+        ],
+        task: {
+          id: task?.id ?? issueId,
+          workspaceId: wsId,
+          identifier: task?.identifier ?? "",
+          title: task?.title ?? "",
+          description: task?.description ?? "",
+        },
+      }}
+      sessionKey={`agent:${issueId}:${treeId}`}
+      terminalId={terminalId}
+      address={address}
+      title={title}
+    />
   );
 }
 
@@ -204,28 +376,41 @@ function ProjectTerminal({
   terminalId?: string;
   back: BackToList;
 }) {
+  const { t } = useT("terminal");
   const workspacePaths = useWorkspacePaths();
   const wsId = useWorkspaceId();
-  const { folders } = useProjectLocalDirectories(wsId);
+  const { folders, loading } = useProjectFolders(wsId);
   const folder = folders.find(({ resource }) => resource.id === project);
-  // Until the projects are read, and for a folder that was removed, there is nothing to name.
-  const path = folder?.resource.resource_ref.local_path;
+  const title = (shown?: ProjectFolder) => (
+    <>
+      <span className="min-w-0 truncate text-body font-medium">{shown?.project.title}</span>
+      {shown && (
+        <span
+          className="min-w-0 truncate font-mono text-caption text-muted-foreground"
+          title={projectFolderLabel(shown)}
+        >
+          {projectFolderLabel(shown)}
+        </span>
+      )}
+    </>
+  );
+  // Until the folders are read there is nothing to name. A folder that was
+  // removed from its project is not opened again.
+  if (!folder) {
+    return loading ? (
+      <TerminalLoading title={title()} />
+    ) : (
+      <TerminalMessage title={title()} back={back} message={t(($) => $.errors.project_not_found)} />
+    );
+  }
   return (
     <TerminalFor
-      target={{ project }}
+      target={{ kind: "shell", place: folder.place, cwd: folder.path }}
+      sessionKey={`project:${project}`}
       terminalId={terminalId}
       address={workspacePaths.terminalProject(project)}
       back={back}
-      title={
-        <>
-          <span className="min-w-0 truncate text-body font-medium">{folder?.project.title}</span>
-          {path && (
-            <span className="min-w-0 truncate font-mono text-caption text-muted-foreground" title={path}>
-              {path}
-            </span>
-          )}
-        </>
-      }
+      title={title(folder)}
     />
   );
 }
@@ -235,7 +420,7 @@ function ProjectList() {
   const { t } = useT("terminal");
   const workspacePaths = useWorkspacePaths();
   const wsId = useWorkspaceId();
-  const { folders, loading } = useProjectLocalDirectories(wsId);
+  const { folders, loading } = useProjectFolders(wsId);
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
@@ -255,12 +440,12 @@ function ProjectList() {
           href={workspacePaths.terminalProject(TERMINAL_DEFAULT_PROJECT)}
           title={t(($) => $.default_project)}
         />
-        {folders.map(({ project, resource }) => (
+        {folders.map(({ project, ...folder }) => (
           <ProjectRow
-            key={resource.id}
-            href={workspacePaths.terminalProject(resource.id)}
+            key={folder.resource.id}
+            href={workspacePaths.terminalProject(folder.resource.id)}
             title={project.title}
-            path={resource.resource_ref.local_path}
+            path={projectFolderLabel(folder)}
           />
         ))}
         {!loading && folders.length === 0 && (
@@ -293,7 +478,7 @@ function ProjectRow({ href, title, path }: { href: string; title: string; path?:
 interface TerminalViewHandle {
   /** Start the target's terminal again. Does nothing while one is still opening or running. */
   restart(): void;
-  /** Ask the server to end the process. */
+  /** Ask the app to end the process. */
   end(): void;
 }
 
@@ -302,45 +487,32 @@ function isOpeningOrRunning(status: TerminalStatus): boolean {
 }
 
 const TerminalSessionView = forwardRef<TerminalViewHandle, {
-  target: TerminalTarget;
-  /** The terminal to rejoin, when the address names one that is already running. */
+  target: TerminalHostTarget;
+  sessionKey: string;
+  /** The terminal to rejoin, when the address names one that is already open. */
   terminalId?: string;
+  /** The page's address, without the id of a terminal. */
+  address: string;
   onLiveChange: (live: boolean) => void;
-}>(function TerminalSessionView({ target, terminalId, onLiveChange }, ref) {
-  const { t } = useT("terminal");
+}>(function TerminalSessionView({ target, sessionKey, terminalId, address, onLiveChange }, ref) {
   const navigation = useNavigation();
-  const workspacePaths = useWorkspacePaths();
   const terminal = useRef<TerminalHandle>(null);
-  const session = useTerminalSession(
-    "cwd" in target
-      ? { cwd: target.cwd, terminalId }
-      : "agent" in target
-        ? { agent: target.agent, terminalId }
-        : { project: target.project, terminalId },
-  );
+  const session = useTerminalSession({ target, key: sessionKey, terminalId });
   const state = useTerminalSessionState(session);
   const live = isOpeningOrRunning(state.status);
-  const reattached = t(($) => $.status.reattached);
-
-  // A rejoined terminal is not replayed. Say so on the screen that comes back empty.
-  const rejoined = useRef(Boolean(terminalId));
-  const announced = useRef(false);
 
   useImperativeHandle(
     ref,
     () => ({
       restart: () => {
         if (isOpeningOrRunning(session.getState().status)) return;
-        // A terminal started from here was not rejoined, so the next ready has
-        // nothing to announce about an empty screen.
-        announced.current = true;
-        if ("cwd" in target) session.open(target.cwd);
-        else if ("agent" in target) session.openAgent(target.agent);
-        else session.openProject(target.project);
+        // What was on screen belongs to the terminal that ended.
+        terminal.current?.reset();
+        session.restart();
       },
       end: () => session.close(),
     }),
-    [session, target, announced],
+    [session],
   );
 
   useEffect(() => {
@@ -348,27 +520,14 @@ const TerminalSessionView = forwardRef<TerminalViewHandle, {
     return () => onLiveChange(false);
   }, [live, onLiveChange]);
 
-  useEffect(() => {
-    if (!rejoined.current || announced.current || state.status !== "ready") return;
-    announced.current = true;
-    terminal.current?.write(`\x1b[90m${reattached}\x1b[0m\r\n`);
-  }, [state.status, reattached]);
-
   return (
     <Terminal
       ref={terminal}
       session={session}
       onReady={(id) => {
         if (id === terminalId) return;
-        navigation.replace(
-          "cwd" in target
-            ? workspacePaths.terminalIn(target.cwd, id)
-            : "agent" in target
-              ? workspacePaths.terminalAgent(target.agent.issue_id, target.agent.tree_id, id)
-              : workspacePaths.terminalProject(target.project, id),
-        );
+        navigation.replace(withTerminalId(address, id));
       }}
-      onRequestClose={() => session.close()}
     />
   );
 });

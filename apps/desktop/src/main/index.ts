@@ -23,6 +23,7 @@ import {
 import { setupLocalDirectory } from "./local-directory";
 import { setupThemeFolder } from "./theme-folder";
 import { setupVoiceInput } from "./voice";
+import { setupTerminal, watchTerminalRenderer } from "./terminal";
 import { configureLinuxFileDialogs } from "./linux-file-dialog";
 import { openExternalSafely, downloadURLSafely } from "./external-url";
 import { installContextMenu } from "./context-menu";
@@ -1037,6 +1038,21 @@ if (!gotTheLock) {
     setupLocalDirectory(() => mainWindows.mostRecent());
     setupThemeFolder();
     setupVoiceInput();
+    // Terminals are this process's own, so they end with the app: when a quit
+    // goes ahead (one that the updater or the daemon holds leaves them
+    // running), and when a signal ends the process without a quit at all.
+    const terminals = await setupTerminal();
+    app.on("web-contents-created", (_event, contents) => watchTerminalRenderer(terminals, contents));
+    app.on("before-quit", (event) => {
+      if (!event.defaultPrevented) terminals.endAll();
+    });
+    for (const signal of ["SIGINT", "SIGTERM"] as const) {
+      process.once(signal, () => {
+        terminals.endAll();
+        // Ends the app as the signal did before; this was its only listener.
+        process.kill(process.pid, signal);
+      });
+    }
 
     // Registered after the updater and daemon gates, so a quit they hold
     // (busy daemon, pending install) leaves the session writable; only the

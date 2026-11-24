@@ -26,7 +26,13 @@ export {
   ProjectDeletionOfflineError,
 } from "./mutations";
 export { isProjectArchived, selectableProjects } from "./archive";
-export { useProjectLocalDirectories, type ProjectLocalDirectories, type ProjectLocalDirectory } from "./local-directories";
+export {
+  projectFolderLabel,
+  projectFolderPlace,
+  useProjectFolders,
+  type ProjectFolder,
+  type ProjectFolders,
+} from "./folders";
 export { useProjectDraftStore } from "./draft-store";
 export {
   useProjectViewStore,

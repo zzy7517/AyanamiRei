@@ -1,31 +1,19 @@
 export type {
-  TerminalAgentTarget,
-  TerminalClientMessage,
+  AgentTerminalTask,
+  AgentTerminalTree,
   TerminalErrorCode,
-  TerminalErrorMessage,
-  TerminalExitMessage,
-  TerminalReadyMessage,
-  TerminalServerMessage,
+  TerminalExit,
+  TerminalHostAttachResult,
+  TerminalHostBridge,
+  TerminalHostEvent,
+  TerminalHostOpenResult,
+  TerminalHostTarget,
+  TerminalPlace,
   TerminalSize,
-  TerminalTicket,
-} from "./protocol";
-export {
-  TERMINAL_DEFAULT_PROJECT,
-  TERMINAL_ERROR_CODES,
-  TERMINAL_SOCKET_PATH,
-  TERMINAL_TICKET_DEFAULT_TTL_SECONDS,
-  TERMINAL_TICKET_ENDPOINT,
-  TerminalServerMessageSchema,
-  TerminalTicketSchema,
-  decodeOutputFrame,
-  encodeClientMessage,
-  isTerminalServerMessageType,
-  parseServerMessage,
-  terminalSocketUrl,
-} from "./protocol";
+} from "./host";
+export { TERMINAL_DEFAULT_PROJECT, terminalHost } from "./host";
 export type {
   TerminalErrorInfo,
-  TerminalExitInfo,
   TerminalSessionIntent,
   TerminalSessionOptions,
   TerminalSessionState,

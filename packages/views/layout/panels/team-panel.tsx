@@ -25,8 +25,6 @@ import { canAssignAgentToIssue } from "@multica/core/permissions";
 import { issueDetailOptions } from "@multica/core/issues/queries";
 import { useSidebarTreeStore } from "@multica/core/issues/stores/sidebar-tree-store";
 import { useCurrentWorkspace, useWorkspacePaths, issueRouteRef } from "@multica/core/paths";
-import { useFeatureEnabled } from "@multica/core/config";
-import { TERMINAL_V1_FLAG } from "@multica/core/feature-flags";
 import { runtimeListOptions } from "@multica/core/runtimes/queries";
 import { memberListOptions, skillListOptions } from "@multica/core/workspace/queries";
 import { resolvePublicFileUrl } from "@multica/core/workspace/avatar-url";
@@ -254,7 +252,6 @@ function WorkingAgentRow({
 }
 
 export function TeamPanel() {
-  const terminalEnabled = useFeatureEnabled(TERMINAL_V1_FLAG, false);
   const { t } = useT("layout");
   const p = useWorkspacePaths();
   const { pathname, push } = useNavigation();
@@ -414,15 +411,12 @@ export function TeamPanel() {
               label={t(($) => $.nav.usage)}
               active={isPathWithin(pathname, p.usage())}
             />
-            {/* Behind its flag: a server without terminals would only refuse the page. */}
-            {terminalEnabled && (
-              <PanelLink
-                href={p.terminal()}
-                icon={<SquareTerminal />}
-                label={t(($) => $.nav.terminal)}
-                active={isPathWithin(pathname, p.terminal())}
-              />
-            )}
+            <PanelLink
+              href={p.terminal()}
+              icon={<SquareTerminal />}
+              label={t(($) => $.nav.terminal)}
+              active={isPathWithin(pathname, p.terminal())}
+            />
           </PanelList>
         </PanelSection>
       </PanelBody>

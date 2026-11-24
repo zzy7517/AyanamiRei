@@ -21,7 +21,12 @@ import {
 import { clientErrorMessage } from "@multica/core/api";
 import { EMPTY_ISSUE_PROJECT_SCOPE } from "@multica/core/api/schemas";
 import { useWorkspaceId } from "@multica/core/hooks";
-import { isProjectScopeValid, projectListOptions, type ProjectScopePair } from "@multica/core/projects";
+import {
+  isProjectScopeValid,
+  projectListOptions,
+  useProjectFolders,
+  type ProjectScopePair,
+} from "@multica/core/projects";
 import { useWorkspacePaths, type WorkspacePaths } from "@multica/core/paths";
 import type { IssueProjectTreeState, ProjectScopeItem } from "@multica/core/types";
 import {
@@ -108,6 +113,7 @@ export function IssueTreesSection({ issueId }: { issueId: string }) {
                   issueId={issueId}
                   item={item}
                   project={projectTitle(item.project_id)}
+                  projectId={item.project_id}
                   onDelete={() =>
                     setDeleting({
                       treeId: item.tree!.id,
@@ -167,18 +173,26 @@ function TreeRow({
   issueId,
   item,
   project,
+  projectId,
   onDelete,
 }: {
   issueId: string;
   item: ProjectScopeItem;
   /** The project's title, or its id until the list of projects has loaded. */
   project: string;
+  projectId: string;
   onDelete: () => void;
 }) {
   const { t } = useT("issues");
   const paths = useWorkspacePaths();
+  const wsId = useWorkspaceId();
+  const { folders } = useProjectFolders(wsId);
   const tree = item.tree;
   const state = tree?.state ?? null;
+  // A tree is where its project's folder is. Until the folders are read it
+  // reads as on this computer, which is what a shell needs to be told anyway.
+  const place = folders.find(({ project }) => project.id === projectId)?.place;
+  const host = place?.kind === "ssh" ? place.host : undefined;
 
   return (
     <li className="rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50">
@@ -219,7 +233,14 @@ function TreeRow({
       )}
       {/* Nothing can be done with a tree while the server is building it. */}
       {tree && tree.state !== "pending" && (
-        <TreeActions issueId={issueId} tree={tree} state={tree.state} paths={paths} onDelete={onDelete} />
+        <TreeActions
+          issueId={issueId}
+          tree={tree}
+          state={tree.state}
+          host={host}
+          paths={paths}
+          onDelete={onDelete}
+        />
       )}
     </li>
   );
@@ -264,12 +285,15 @@ function TreeActions({
   issueId,
   tree,
   state,
+  host,
   paths,
   onDelete,
 }: {
   issueId: string;
   tree: NonNullable<ProjectScopeItem["tree"]>;
   state: IssueProjectTreeState;
+  /** The SSH host the tree is on, when it is not on this computer. */
+  host: string | undefined;
   paths: WorkspacePaths;
   onDelete: () => void;
 }) {
@@ -298,7 +322,10 @@ function TreeActions({
             {t(($) => $.trees.open_agent_terminal)}
           </AppLink>
           {tree.path && (
-            <AppLink href={paths.terminalIn(tree.path)} className={buttonVariants({ variant: "outline", size: "xs" })}>
+            <AppLink
+              href={paths.terminalIn(tree.path, { host })}
+              className={buttonVariants({ variant: "outline", size: "xs" })}
+            >
               <Terminal />
               {t(($) => $.trees.open_shell)}
             </AppLink>

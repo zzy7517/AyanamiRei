@@ -24,7 +24,6 @@ export {
   DOCS_V1_FLAG,
   PLUGINS_V1_FLAG,
   TASK_SESSIONS_V1_FLAG,
-  TERMINAL_V1_FLAG,
 } from "./keys";
 export {
   FeatureFlagsProvider,

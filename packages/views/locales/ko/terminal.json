@@ -3,30 +3,22 @@
   "default_project": "기본 프로젝트",
   "all_projects": "모든 프로젝트",
   "add_project": "프로젝트 추가",
-  "no_project_folders": "로컬 폴더가 있는 프로젝트가 아직 없습니다.",
+  "no_project_folders": "폴더가 있는 프로젝트가 아직 없습니다.",
   "end_session": "세션 종료",
   "agent_terminal": "에이전트 터미널",
   "restart": "재시작",
   "status": {
-    "connecting": "연결하는 중…",
-    "reconnecting": "다시 연결하는 중…",
+    "connecting": "여는 중…",
     "ended": "세션이 종료되었습니다",
     "ended_with_code": "세션이 종료되었습니다 (종료 코드 {{code}})",
-    "ended_by_signal": "세션이 {{signal}} 신호로 종료되었습니다",
-    "reattached": "다시 연결했습니다. 프로그램이 다시 출력하기 전까지 화면은 비어 있습니다."
+    "ended_by_signal": "세션이 {{signal}} 신호로 종료되었습니다"
   },
   "errors": {
-    "unavailable": "이 서버에서는 터미널을 사용할 수 없습니다.",
-    "flag_disabled": "이 서버에서 터미널이 꺼져 있습니다.",
-    "bad_request": "서버가 요청을 거부했습니다.",
-    "terminal_root_unconfigured": "이 머신에 터미널 디렉터리가 설정되어 있지 않습니다.",
-    "path_not_allowed": "이 디렉터리에서는 터미널을 열 수 없습니다.",
-    "daemon_unavailable": "머신이 연결되어 있지 않습니다.",
-    "not_found": "터미널이 더 이상 실행되고 있지 않습니다.",
-    "unsupported_platform": "머신의 운영체제가 터미널을 지원하지 않습니다.",
+    "unavailable": "터미널은 데스크톱 앱에서만 열 수 있습니다.",
+    "bad_request": "이 터미널을 열지 못했습니다.",
+    "not_found": "폴더가 더 이상 없습니다.",
     "tree_not_ready": "worktree가 아직 빌드되지 않았습니다.",
-    "runtime_offline": "worktree를 빌드한 머신이 연결되어 있지 않습니다.",
-    "project_not_found": "이 프로젝트의 폴더는 더 이상 존재하지 않습니다.",
+    "project_not_found": "이 프로젝트에는 더 이상 폴더가 없습니다.",
     "internal": "문제가 발생했습니다."
   }
 }

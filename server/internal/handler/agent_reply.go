@@ -16,9 +16,10 @@ import (
 )
 
 // The "new reply" marker of the task list. The agent of an issue ends a turn,
-// its daemon reports that, and the marker stays on the issue until a member
-// says they saw the reply. It is a moment on the issue that only moves
-// forward, until clearing it makes room for the next reply.
+// whoever ran it reports that (a daemon, or the desktop app the agent's command
+// line ran in), and the marker stays on the issue until a member says they saw
+// the reply. It is a moment on the issue that only moves forward, until
+// clearing it makes room for the next reply.
 
 type daemonAgentReplyRequest struct {
 	DaemonID string `json:"daemon_id"`
@@ -67,6 +68,29 @@ func (h *Handler) DaemonReportIssueAgentReply(w http.ResponseWriter, r *http.Req
 		repliedAt = parsed
 	}
 
+	h.raiseIssueAgentReply(w, r, issueID, workspaceID, repliedAt)
+}
+
+// ReportIssueAgentReply raises the marker of an issue on a member's word: the
+// desktop app that ran the agent's command line saw the agent end a turn. A
+// report that is not newer than the marker changes nothing.
+func (h *Handler) ReportIssueAgentReply(w http.ResponseWriter, r *http.Request) {
+	issue, ok := h.loadIssueForUser(w, r, chi.URLParam(r, "id"))
+	if !ok {
+		return
+	}
+	h.raiseIssueAgentReply(w, r, issue.ID, issue.WorkspaceID, time.Now())
+}
+
+// raiseIssueAgentReply moves the marker of an issue to repliedAt, when that is
+// newer than what stands, tells the workspace if it moved, and answers with the
+// marker as it stands afterwards.
+func (h *Handler) raiseIssueAgentReply(
+	w http.ResponseWriter,
+	r *http.Request,
+	issueID, workspaceID pgtype.UUID,
+	repliedAt time.Time,
+) {
 	stored, err := h.Queries.SetIssueAgentRepliedAt(r.Context(), db.SetIssueAgentRepliedAtParams{
 		AgentRepliedAt: pgtype.Timestamptz{Time: repliedAt, Valid: true},
 		ID:             issueID,
@@ -129,7 +153,9 @@ func RegisterDaemonAgentReplyRoutes(r chi.Router, h *Handler) {
 }
 
 // RegisterAgentReplyRoutes registers what a member says about an agent's
-// reply, on the workspace member router.
+// reply, on the workspace member router: that there is one, and that it was
+// seen. Neither is a machine's to say.
 func RegisterAgentReplyRoutes(r chi.Router, h *Handler) {
+	r.With(RequireHumanActor).Post("/api/issues/{id}/agent-reply", h.ReportIssueAgentReply)
 	r.With(RequireHumanActor).Post("/api/issues/{id}/agent-reply/seen", h.MarkIssueAgentReplySeen)
 }

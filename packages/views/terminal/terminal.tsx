@@ -10,7 +10,6 @@ import {
   type TerminalSessionState,
 } from "@multica/core/terminal";
 import { RAW_KEYBOARD_ATTRIBUTE } from "@multica/core/shortcuts";
-import { Button } from "@multica/ui/components/ui/button";
 import { Spinner } from "@multica/ui/components/ui/spinner";
 import { cn } from "@multica/ui/lib/utils";
 import { useT } from "../i18n";
@@ -28,6 +27,8 @@ const SCROLLBACK_LINES = 10_000;
 export interface TerminalHandle {
   /** Put text on screen, as the terminal itself would have printed it. */
   write(data: string | Uint8Array): void;
+  /** Empty the screen, for a terminal that starts in the place of one that ended. */
+  reset(): void;
   focus(): void;
 }
 
@@ -35,12 +36,10 @@ export interface TerminalProps {
   /** The terminal on screen. Another session is another, blank, terminal. */
   session: TerminalSession;
   /**
-   * The terminal answered and takes input, with the id it can be attached by
-   * again. Fires after every connection, reconnects included.
+   * The terminal is open and takes input, with the id another page can
+   * follow it by.
    */
   onReady?: (terminalId: string) => void;
-  /** The user asked for the terminal to end from a place this component owns. */
-  onRequestClose?: () => void;
   className?: string;
 }
 
@@ -53,7 +52,7 @@ export interface TerminalProps {
  * attribute that keeps the app's own shortcuts out of it.
  */
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
-  { session, onReady, onRequestClose, className },
+  { session, onReady, className },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -75,6 +74,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     ref,
     () => ({
       write: (data) => termRef.current?.write(data),
+      reset: () => termRef.current?.reset(),
       focus: () => termRef.current?.focus(),
     }),
     [],
@@ -99,9 +99,17 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       term.onData((data) => session.sendInput(data)),
       // Bytes that are not text (a mouse report, a file protocol).
       term.onBinary((data) => session.sendInput(Uint8Array.from(data, (char) => char.charCodeAt(0)))),
-      term.onResize(({ cols, rows }) => session.resize(cols, rows)),
+      term.onResize(({ cols, rows }) => session.resize({ cols, rows })),
     ].map((subscription) => () => subscription.dispose());
-    stop.push(session.onOutput((data) => term.write(data)));
+    stop.push(
+      session.onOutput((data) => term.write(data)),
+      // A terminal rejoined comes back as the screen it had reached. What was
+      // drawn here before is another terminal's, or this one's from before.
+      session.onScreen((screen) => {
+        term.reset();
+        term.write(screen);
+      }),
+    );
     term.open(host);
     fit.fit();
     term.focus();
@@ -159,7 +167,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       // Clicks that land beside the text — on the scrollbar, in the padding — focus it too.
       onPointerDown={() => termRef.current?.focus()}
     >
-      <TerminalStatus state={state} onRequestClose={onRequestClose} />
+      <TerminalStatus state={state} />
     </div>
   );
 });
@@ -168,42 +176,19 @@ const STATUS_PILL =
   "rounded-md border border-surface-border bg-background/95 px-3 py-1.5 text-caption text-muted-foreground shadow-xs";
 
 /** What to say while the terminal is not there to be used. */
-function TerminalStatus({
-  state,
-  onRequestClose,
-}: {
-  state: TerminalSessionState;
-  onRequestClose?: () => void;
-}) {
+function TerminalStatus({ state }: { state: TerminalSessionState }) {
   const { t } = useT("terminal");
 
   if (state.status === "ready") return null;
 
-  if (state.status === "connecting") {
+  // Before the session starts, and while the app opens or rejoins it.
+  if (state.status === "idle" || state.status === "connecting") {
     // Along the top: what is on screen, if anything, stays readable under it.
-    const reconnecting = state.reconnectAttempt > 0;
-    const canEnd = reconnecting && !state.closing && onRequestClose !== undefined;
     return (
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center p-3">
-        <div
-          role="status"
-          className={cn(STATUS_PILL, "pointer-events-auto flex items-center gap-2")}
-        >
+        <div role="status" className={cn(STATUS_PILL, "flex items-center gap-2")}>
           <Spinner aria-hidden className="size-3.5" />
-          <span>
-            {reconnecting ? t(($) => $.status.reconnecting) : t(($) => $.status.connecting)}
-          </span>
-          {canEnd && (
-            <Button
-              type="button"
-              size="xs"
-              variant="ghost"
-              className="-me-1.5 text-muted-foreground"
-              onClick={onRequestClose}
-            >
-              {t(($) => $.end_session)}
-            </Button>
-          )}
+          <span>{t(($) => $.status.connecting)}</span>
         </div>
       </div>
     );

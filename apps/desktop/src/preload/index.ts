@@ -45,6 +45,20 @@ import type {
   LocalRuntimeProbe,
 } from "../shared/daemon-types";
 import {
+  TERMINAL_ATTACH_CHANNEL,
+  TERMINAL_DETACH_CHANNEL,
+  TERMINAL_END_CHANNEL,
+  TERMINAL_EVENT_CHANNEL,
+  TERMINAL_OPEN_CHANNEL,
+  TERMINAL_RESIZE_CHANNEL,
+  TERMINAL_WRITE_CHANNEL,
+  type TerminalHostAttachResult,
+  type TerminalHostEvent,
+  type TerminalHostOpenResult,
+  type TerminalHostTarget,
+  type TerminalSize,
+} from "../shared/terminal";
+import {
   VOICE_HISTORY_AUDIO_CHANNEL,
   VOICE_HISTORY_CHANGED_CHANNEL,
   VOICE_HISTORY_LIST_CHANNEL,
@@ -280,6 +294,25 @@ const desktopAPI = {
   /** Validate that a path is an existing readable+writable directory. */
   validateLocalDirectory: (path: string) =>
     ipcRenderer.invoke("local-directory:validate", path),
+  // The terminals the main process owns; see `TerminalHostBridge` for each call.
+  terminal: {
+    open: (target: TerminalHostTarget, size: TerminalSize): Promise<TerminalHostOpenResult> =>
+      ipcRenderer.invoke(TERMINAL_OPEN_CHANNEL, target, size),
+    attach: (terminalId: string, size: TerminalSize): Promise<TerminalHostAttachResult> =>
+      ipcRenderer.invoke(TERMINAL_ATTACH_CHANNEL, terminalId, size),
+    detach: (terminalId: string) => ipcRenderer.send(TERMINAL_DETACH_CHANNEL, terminalId),
+    write: (terminalId: string, data: string) =>
+      ipcRenderer.send(TERMINAL_WRITE_CHANNEL, terminalId, data),
+    resize: (terminalId: string, size: TerminalSize) =>
+      ipcRenderer.send(TERMINAL_RESIZE_CHANNEL, terminalId, size),
+    end: (terminalId: string) => ipcRenderer.send(TERMINAL_END_CHANNEL, terminalId),
+    onEvent: (callback: (event: TerminalHostEvent) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, event: TerminalHostEvent) =>
+        callback(event);
+      ipcRenderer.on(TERMINAL_EVENT_CHANNEL, handler);
+      return () => ipcRenderer.removeListener(TERMINAL_EVENT_CHANNEL, handler);
+    },
+  },
   /** Read every theme in the themes folder, and start watching it. */
   readThemeFolder: (): Promise<ThemeFolderSnapshot> =>
     ipcRenderer.invoke(THEME_FOLDER_READ_CHANNEL),

@@ -35,11 +35,6 @@ import { archivedInboxQuery, type ArchivedInboxFilters } from "../inbox/filters"
 import type { ArchivedInboxPage, ArchivedInboxFacets } from "../types/inbox";
 import { parseQoderConnection, parseQoderCatalog, type QoderInput } from "../runtimes/qoder-schema";
 import { configStore } from "../config";
-import {
-  TERMINAL_TICKET_ENDPOINT,
-  TerminalTicketSchema,
-  type TerminalTicket,
-} from "../terminal/protocol";
 import type {
   Issue,
   IssuePriority,
@@ -1035,19 +1030,6 @@ export class ApiClient {
       { endpoint: "POST /api/docs/{id}/collab-ticket" },
     );
   }
-  /**
-   * A single-use, short-lived ticket for the terminal socket, or null when the
-   * server's answer carries no usable ticket. Rejects with an `ApiError` when
-   * the endpoint refuses (404 while the `terminal_v1` flag is off).
-   */
-  async createTerminalTicket(): Promise<TerminalTicket | null> {
-    return parseWithFallback<TerminalTicket | null>(
-      await this.fetch<unknown>(TERMINAL_TICKET_ENDPOINT, { method: "POST" }),
-      TerminalTicketSchema,
-      null,
-      { endpoint: "POST /api/terminal/ticket" },
-    );
-  }
   async getDocVersion(id: string, number: number): Promise<DocVersion | null> {
     return parseWithFallback<DocVersion | null>(
       await this.fetch<unknown>(`/api/docs/${id}/versions/${number}`),
@@ -1835,6 +1817,18 @@ export class ApiClient {
     });
     return parseWithFallback(raw, IssueAgentReplyResponseSchema, { agent_replied_at: null }, {
       endpoint: "POST /api/issues/:id/agent-reply/seen",
+    });
+  }
+
+  /**
+   * Says an agent finished a turn on a task, which marks the task as having a
+   * new reply. A desktop app reports this for the agents it started; the
+   * request names its workspace, since the window may have moved to another.
+   */
+  async reportIssueAgentReply(workspaceId: string, issueId: string): Promise<void> {
+    await this.fetch(`/api/issues/${issueId}/agent-reply`, {
+      method: "POST",
+      headers: workspaceHeader({ workspaceId }),
     });
   }
 
