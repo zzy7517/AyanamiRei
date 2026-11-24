@@ -1,0 +1,187 @@
+apps/docs/content/docs/developers/conventions.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 18,65,335-336
+apps/docs/content/docs/developers/conventions.ja.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 18,65,329-330
+apps/docs/content/docs/developers/contributing.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/self-host-quickstart.zh-Hant.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,188,228,230,283
+apps/docs/content/docs/developers/contributing.zh-Hant.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/environment-variables.ko.mdx
+  s_fc0852876b2926::t_53df32e5020f97 400
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,164,364
+apps/docs/content/docs/developers/conventions.fr.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 18,65,329-330
+apps/docs/content/docs/self-host-quickstart.zh.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,188,228,230,283
+apps/docs/content/docs/self-host-quickstart.ja.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,188,228,230,283
+apps/docs/content/docs/workspaces.zh.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/inbox.zh.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/inbox.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/developers/contributing.ja.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/workspaces.ko.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/workspaces.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/developers/conventions.zh-Hant.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 16,63,333-334
+apps/docs/content/docs/self-host-quickstart.ko.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,188,228,230,283
+apps/docs/content/docs/developers/contributing.zh.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/workspaces.fr.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/developers/contributing.fr.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/environment-variables.mdx
+  s_fc0852876b2926::t_624a805177b55c 406
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,164,370
+apps/docs/content/docs/workspaces.ja.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/inbox.fr.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/self-host-quickstart.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,189,229,231,284
+apps/docs/content/docs/environment-variables.ja.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,164,364
+  s_fc0852876b2926::t_53df32e5020f97 400
+apps/docs/content/docs/environment-variables.zh.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,164,364
+  s_fc0852876b2926::t_53df32e5020f97 400
+apps/docs/content/docs/inbox.ja.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/workspaces.zh-Hant.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 43,47
+apps/docs/content/docs/environment-variables.fr.mdx
+  s_fc0852876b2926::t_53df32e5020f97 397
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,164,361
+apps/docs/content/docs/environment-variables.zh-Hant.mdx
+  s_fc0852876b2926::t_53df32e5020f97 396
+  s_fc0852876b2926::t_bd326b4d1188f2 24,27,44,60-61,72,75,99,106,160,360
+apps/docs/content/docs/developers/conventions.ko.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 18,65,329-330
+apps/docs/content/docs/inbox.ko.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/self-host-quickstart.fr.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 3,132,149,189,229,231,284
+apps/docs/content/docs/inbox.zh-Hant.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 56,62,86
+apps/docs/content/docs/developers/conventions.zh.mdx
+  s_fc0852876b2926::t_985a24fb472ef0 16,63,333-334
+apps/docs/content/docs/developers/contributing.ko.mdx
+  s_fc0852876b2926::t_bd326b4d1188f2 37
+apps/docs/content/docs/auth-tokens.fr.mdx
+  s_fc0852876b2926::t_61f4631a3966cd 2-3,6,12,18-19
+apps/docs/content/docs/auth-tokens.ja.mdx
+  s_fc0852876b2926::t_b87b011f5307ab 2-3,6,12,18-19
+apps/docs/content/docs/auth-tokens.ko.mdx
+  s_fc0852876b2926::t_5358db869139b7 2-3,6,12,18-19
+apps/docs/content/docs/auth-tokens.mdx
+  s_fc0852876b2926::t_d65fccf1f7fd71 2-3,6,12,18-19
+apps/docs/content/docs/auth-tokens.zh-Hant.mdx
+  s_fc0852876b2926::t_34aa4d3f5ce8fb 2-3,6,12,18-19
+apps/docs/content/docs/auth-tokens.zh.mdx
+  s_fc0852876b2926::t_66cabe90b650c1 2-3,6,12,18-19
+apps/docs/content/docs/cli.fr.mdx
+  s_fc0852876b2926::t_09850c21947c88 3,66,69,415,438,455,457,459,561,571,576
+apps/docs/content/docs/cli.ko.mdx
+  s_fc0852876b2926::t_16789aff21396e 3,66,69,415,438,553,563,568
+apps/docs/content/docs/cloud-quickstart.fr.mdx
+  s_fc0852876b2926::t_1ac5f1ddee97c4 17,19,50
+apps/docs/content/docs/cloud-quickstart.ja.mdx
+  s_fc0852876b2926::t_fdbb59f26e8edb 17,19,50
+apps/docs/content/docs/cloud-quickstart.ko.mdx
+  s_fc0852876b2926::t_d2d7fd4aabb51e 17,19,50
+apps/docs/content/docs/cloud-quickstart.mdx
+  s_fc0852876b2926::t_f41a2d897a4e3a 17,19,50
+apps/docs/content/docs/cloud-quickstart.zh-Hant.mdx
+  s_fc0852876b2926::t_f7cff6732be1da 17,19,50
+apps/docs/content/docs/cloud-quickstart.zh.mdx
+  s_fc0852876b2926::t_a6b57670e6c1d1 17,19,50
+apps/docs/content/docs/daemon-runtimes.mdx
+  s_fc0852876b2926::t_6f2580720d7d83 66,73,374
+apps/docs/content/docs/desktop-app.ja.mdx
+  s_fc0852876b2926::t_1fddc1d0415312 11,19,24,39,79
+apps/docs/content/docs/desktop-app.zh-Hant.mdx
+  s_fc0852876b2926::t_e96ff91fe9f9d9 11,19,24,39,79
+apps/docs/content/docs/desktop-app.zh.mdx
+  s_fc0852876b2926::t_4a386259c62702 11,19,24,39,79
+apps/docs/content/docs/troubleshooting.fr.mdx
+  s_fc0852876b2926::t_3a9d7d520bab4f 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/troubleshooting.ja.mdx
+  s_fc0852876b2926::t_641199bdc1774b 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/troubleshooting.ko.mdx
+  s_fc0852876b2926::t_d4aa5cacb4c2cf 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/troubleshooting.mdx
+  s_fc0852876b2926::t_640f0fc8c83215 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/troubleshooting.zh-Hant.mdx
+  s_fc0852876b2926::t_3522d59cce4710 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/troubleshooting.zh.mdx
+  s_fc0852876b2926::t_1a31a28d9f6207 33,52,78,80,90,98,216,225,229
+apps/docs/content/docs/tutorial.ko.mdx
+  s_fc0852876b2926::t_1b5615bdf670e0 18,23,58
+apps/docs/content/docs/tutorial.mdx
+  s_fc0852876b2926::t_1ee6f2ef3cd16d 18,23,58
+apps/docs/content/docs/cli.ja.mdx
+  s_469cf115a6f71d::t_e93a380d352554 3,66,69,415,438,553,563,568
+apps/docs/content/docs/cli.mdx
+  s_469cf115a6f71d::t_ee12855890d86b 3,66,69,426,449,466,468,470,576,586,591
+apps/docs/content/docs/cli.zh-Hant.mdx
+  s_469cf115a6f71d::t_d1a4e2bfebf1e5 3,66,69,408,431,550,560,565
+apps/docs/content/docs/cli.zh.mdx
+  s_469cf115a6f71d::t_06ab95ea4aaded 3,66,69,417,440,559,569,574
+apps/docs/content/docs/daemon-runtimes.fr.mdx
+  s_469cf115a6f71d::t_7544b3e6357588 66,73,372
+apps/docs/content/docs/daemon-runtimes.ja.mdx
+  s_469cf115a6f71d::t_46dd665d51b8af 66,73,370
+apps/docs/content/docs/daemon-runtimes.ko.mdx
+  s_469cf115a6f71d::t_4c025509505f02 66,73,370
+apps/docs/content/docs/daemon-runtimes.zh-Hant.mdx
+  s_469cf115a6f71d::t_bf1f91fdd315c5 66,73,373
+apps/docs/content/docs/daemon-runtimes.zh.mdx
+  s_469cf115a6f71d::t_340e43ee5f8a2a 66,73,375
+apps/docs/content/docs/desktop-app.fr.mdx
+  s_469cf115a6f71d::t_7ffde6c0ce60a3 11,19,24,39,79
+apps/docs/content/docs/desktop-app.ko.mdx
+  s_469cf115a6f71d::t_d57c7c2f8922e6 11,19,24,39,79
+apps/docs/content/docs/desktop-app.mdx
+  s_469cf115a6f71d::t_d53bb2790ea3ba 11,19,24,39,79
+apps/docs/content/docs/tutorial.fr.mdx
+  s_469cf115a6f71d::t_7bc1be38dde141 18,23,58
+apps/docs/content/docs/tutorial.ja.mdx
+  s_469cf115a6f71d::t_dd670dcd317971 18,23,58
+apps/docs/content/docs/tutorial.zh-Hant.mdx
+  s_469cf115a6f71d::t_438ddb0a9b5d7c 18,23,58
+apps/docs/content/docs/tutorial.zh.mdx
+  s_469cf115a6f71d::t_0cd0f6b8c02f45 18,23,58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "3ee2e8b6068dbeb09ee2504db14c87c2c6f4d6cd",
+  "prompts": {},
+  "sessions": {
+    "s_469cf115a6f71d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ae0ca73ee8907fef3",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
