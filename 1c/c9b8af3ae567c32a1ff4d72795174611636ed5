@@ -1,0 +1,21 @@
+CONTRIBUTING.md
+  s_fc0852876b2926::t_b783ab1f91bd92 554-556,570-572
+  s_fc0852876b2926::t_1c68ec51d52028 645-648
+  s_fc0852876b2926::t_78930df4832960 489-490,501-504,624,643-644
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "1cc9b8af3ae567c32a1ff4d72795174611636ed5",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
