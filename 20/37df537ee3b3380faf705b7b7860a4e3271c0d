@@ -1,0 +1,21 @@
+server/internal/featureflags/keys.go
+  s_fc0852876b2926::t_ce6b7461616d45 86-88
+server/internal/featureflags/keys_test.go
+  s_fc0852876b2926::t_35658c91921589 10-14,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "2037df537ee3b3380faf705b7b7860a4e3271c0d",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
