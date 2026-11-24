@@ -1,0 +1,27 @@
+AGENTS.md
+  s_fc0852876b2926::t_62a72e86e72924 18,20,26-27,47,55-57,115,123,127
+SELF_HOSTING.md
+  s_fc0852876b2926::t_1d1a7f40950511 59,87,89,93,101-102,105-106,181
+apps/docs/content/docs/developers/contributing.fr.mdx
+  s_fc0852876b2926::t_abe89708fe3a50 8,28,55,72,84,132,134,139-140
+apps/docs/content/docs/developers/contributing.zh-Hant.mdx
+  s_fc0852876b2926::t_8ce65044d74547 8,55,72,84,124,126,131-132
+apps/docs/content/docs/developers/contributing.zh.mdx
+  s_fc0852876b2926::t_fc6e94d816595e 8,55,72,84,124,126,131-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "cd37844f4fbbbfe51671b744a9f17dca91374edd",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
