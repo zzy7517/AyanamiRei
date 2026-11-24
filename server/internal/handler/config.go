@@ -118,10 +118,9 @@ type AppConfig struct {
 	ServerVersion string `json:"server_version,omitempty"`
 }
 
-// GetConfig is mounted on the public (unauthenticated) route group because
-// the web app calls it before login to decide whether to render the Google
-// sign-in button and signup UI. Only add fields here that are safe to expose
-// to anonymous callers — never user- or tenant-scoped data.
+// GetConfig is mounted on the public route group: the web app reads it before
+// it has a workspace. Only add fields here that are safe to expose to any
+// caller — never user- or tenant-scoped data.
 func (h *Handler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	config := AppConfig{
 		// A property of this build, not of the deployment: if this code is
