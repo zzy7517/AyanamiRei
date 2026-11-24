@@ -1,0 +1,65 @@
+packages/views/locales/es/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 212-214
+packages/views/locales/zh-Hant/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,267,666
+packages/views/locales/ko/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 210-212
+packages/views/locales/ko/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,267,666
+packages/views/locales/zh-Hans/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 210-212
+packages/views/locales/fr/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 212-214
+packages/views/runtimes/components/connect-remote-dialog.tsx
+  s_fc0852876b2926::t_3d3faa283018d4 328
+packages/views/locales/zh-Hans/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,267,666
+packages/views/locales/zh-Hant/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 210-212
+packages/views/i18n/resources-types.ts
+  s_fc0852876b2926::t_7ffe782f37b82d 29
+packages/views/locales/ja/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,267,666
+packages/core/runtimes/commands.ts
+  s_fc0852876b2926::t_a5e82bb04834fe 16
+packages/views/runtimes/components/connect-remote-dialog.test.tsx
+  s_fc0852876b2926::t_f3ce7129442a76 173-185,225
+  s_fc0852876b2926::t_eef7c9f85ba50f 198
+  s_fc0852876b2926::t_5736134bbd8585 201
+packages/views/locales/fr/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,278,686
+packages/views/locales/ru/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 214-216
+packages/views/i18n/use-t.ts
+  s_fc0852876b2926::t_46b600f7b372c2 61
+packages/core/runtimes/commands.test.ts
+  s_fc0852876b2926::t_0c2ff134de10af 43,103
+packages/views/locales/en/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,278,686
+packages/views/locales/en/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 212-214
+packages/views/locales/es/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,278,686
+packages/views/locales/ja/onboarding.json
+  s_fc0852876b2926::t_261cdd5284e91d 210-212
+packages/views/locales/ru/runtimes.json
+  s_fc0852876b2926::t_261cdd5284e91d 56,296,734
+packages/views/settings/components/preferences-tab.test.tsx
+  s_fc0852876b2926::t_f29463d9a9aaa7 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "a2026594362cb36086a454addbe350c517da230e",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
