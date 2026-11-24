@@ -7,6 +7,8 @@
   "end_session": "End session",
   "agent_terminal": "Agent terminal",
   "restart": "Restart",
+  "preparing_trees": "Building the worktrees…",
+  "retry": "Retry",
   "status": {
     "connecting": "Opening...",
     "ended": "Session ended",

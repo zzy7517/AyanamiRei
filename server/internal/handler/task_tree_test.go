@@ -12,15 +12,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
-	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/testutil"
 )
 
-// newTaskTreeFixture turns the flag on and gives the test user a daemon, an
-// agent and two projects.
+// newTaskTreeFixture gives the test user a daemon, an agent and two projects.
 func newTaskTreeFixture(t *testing.T) projectScopeFixture {
 	t.Helper()
-	withFeatureFlag(t, testHandler, featureflags.TaskSessionsV1, true)
 	return newProjectScopeFixture(t)
 }
 
@@ -81,6 +78,22 @@ func daemonTreePath(query string) string {
 // treeRequest builds a member request that names a tree of a task.
 func treeRequest(userID, issueID, treeID, method, suffix string, body any) *http.Request {
 	return testutil.WithURLParams(scopeRequest(userID, method, "/api/issues/"+issueID+"/project-scope/"+treeID+suffix, body), "id", issueID, "treeId", treeID)
+}
+
+// reportTreeGone is what the desktop app says about a tree it removed.
+func reportTreeGone(t *testing.T, issueID, treeID string) *testutil.Response {
+	t.Helper()
+	return testutil.Call(t, testHandler.ReportIssueProjectTreeState, treeRequest(testUserID, issueID, treeID, http.MethodPost, "/state", map[string]any{"state": projectTreeDeleted}))
+}
+
+// memberTreeWork reads the test workspace's tree work for its member: what the
+// desktop app builds and removes.
+func memberTreeWork(t *testing.T) taskTreeWorkResponse {
+	t.Helper()
+	var out taskTreeWorkResponse
+	testutil.Call(t, testHandler.ListTaskTreeWork, scopeRequest(testUserID, http.MethodGet, "/api/issues/project-scope/work", nil)).
+		Want(http.StatusOK).JSON(&out)
+	return out
 }
 
 func treeOf(t *testing.T, issueID, treeID string) IssueProjectTree {
@@ -161,9 +174,8 @@ func completedAt(t *testing.T, issueID string) *string {
 	return at
 }
 
-// The routes sit next to the scope routes without shadowing them, answer 404
-// while the flag is off, and keep machine credentials out of the member
-// writes.
+// The routes sit next to the scope routes without shadowing them, and keep
+// machine credentials out of the member writes.
 func TestTaskTreeRoutesResolveNextToTheScopeRoutes(t *testing.T) {
 	r := chi.NewRouter()
 	h := &Handler{}
@@ -180,7 +192,7 @@ func TestTaskTreeRoutesResolveNextToTheScopeRoutes(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, route := range []string{
-		"DELETE /api/issues/{id}/project-scope/{treeId}/tree", "POST /api/issues/{id}/project-scope/{treeId}/rebuild",
+		"POST /api/issues/{id}/project-scope/{treeId}/rebuild", "POST /api/issues/{id}/project-scope/{treeId}/state",
 		"GET /issues/project-scope/work", "GET /issues/project-scope/mature",
 		// The scope routes they sit next to.
 		"GET /api/issues/{id}/project-scope", "PUT /api/issues/{id}/project-scope",
@@ -196,59 +208,15 @@ func TestTaskTreeRoutesResolveNextToTheScopeRoutes(t *testing.T) {
 		}
 	}
 
-	reads := []string{"GET /issues/project-scope/work", "GET /issues/project-scope/mature"}
-	writes := []string{
-		"DELETE /api/issues/x/project-scope/t/tree", "POST /api/issues/x/project-scope/t/rebuild",
-	}
-	call := func(route string, machine bool) *httptest.ResponseRecorder {
+	for _, route := range []string{"POST /api/issues/x/project-scope/t/rebuild", "POST /api/issues/x/project-scope/t/state"} {
 		method, path, _ := strings.Cut(route, " ")
 		req := httptest.NewRequest(method, path, strings.NewReader("{}"))
-		if machine {
-			req.Header.Set("X-Actor-Source", "task_token")
-		}
+		req.Header.Set("X-Actor-Source", "task_token")
 		rec := httptest.NewRecorder()
 		r.ServeHTTP(rec, req)
-		return rec
-	}
-	for _, route := range append(reads, writes...) {
-		if rec := call(route, false); rec.Code != http.StatusNotFound || !strings.Contains(rec.Body.String(), `"error":"not found"`) {
-			t.Fatalf("%s with the flag off got %d %q, want 404 not found", route, rec.Code, rec.Body.String())
-		}
-	}
-	for _, route := range writes {
-		if rec := call(route, true); rec.Code != http.StatusForbidden {
+		if rec.Code != http.StatusForbidden {
 			t.Fatalf("%s by a machine credential got %d %q, want 403", route, rec.Code, rec.Body.String())
 		}
-	}
-}
-
-// With the flag off no tree route answers, and nothing changes.
-func TestTaskTreeRoutesAnswer404WhileTheFlagIsOff(t *testing.T) {
-	f := newProjectScopeFixture(t)
-	withFeatureFlag(t, testHandler, featureflags.TaskSessionsV1, false)
-	issueID := dbfx.Issue(t, "Task tree flag off issue")
-	treeID := putIssueScope(t, issueID, scopeTestPair{f.projectID, "main"}).Items[0].Tree.ID
-	calls := map[string]func() *testutil.Response{
-		"delete tree": func() *testutil.Response {
-			return testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, treeID, http.MethodDelete, "/tree", nil))
-		},
-		"rebuild tree": func() *testutil.Response {
-			return testutil.Call(t, testHandler.RebuildIssueProjectTree, treeRequest(testUserID, issueID, treeID, http.MethodPost, "/rebuild", nil))
-		},
-		"tree work": func() *testutil.Response {
-			return testutil.Call(t, testHandler.DaemonListIssueProjectTreeWork, newOwnerDaemonRequest(http.MethodGet, daemonTreePath("work?daemon_id="+projectScopeDaemonID), nil))
-		},
-		"mature trees": func() *testutil.Response {
-			return testutil.Call(t, testHandler.DaemonListIssueProjectMatureTrees, newOwnerDaemonRequest(http.MethodGet, maturePath(), nil))
-		},
-	}
-	for name, call := range calls {
-		if resp := call(); resp.Code != http.StatusNotFound {
-			t.Fatalf("%s answered %d %s with the flag off, want 404", name, resp.Code, resp.Text())
-		}
-	}
-	if tree := treeOf(t, issueID, treeID).State; tree != "pending" {
-		t.Fatalf("with the flag off the tree became %s", tree)
 	}
 }
 
@@ -274,10 +242,11 @@ func TestTaskTreeLifecycle(t *testing.T) {
 	reportTaskTreeReady(t, issueID, first, projectScopeDaemonID, "/srv/tasks/one", "task/HAN-1")
 	refusedRebuild(first, codeTreeReady)
 
-	// Deleting a tree keeps its branch, for a rebuild continues it, and loses
-	// where it was. Asking again is not an error and changes nothing.
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, first, http.MethodDelete, "/tree", nil)).Want(http.StatusNoContent)
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, first, http.MethodDelete, "/tree", nil)).Want(http.StatusNoContent)
+	// Removing a tree keeps its branch, for a rebuild continues it, and loses
+	// where it was. The desktop app that removed it says so; saying so again
+	// is not an error and changes nothing.
+	reportTreeGone(t, issueID, first).Want(http.StatusOK)
+	reportTreeGone(t, issueID, first).Want(http.StatusOK)
 	if tree := treeOf(t, issueID, first); tree.State != "deleted" || tree.Path != "" || tree.Error != "" || tree.TaskBranch != "task/HAN-1" {
 		t.Fatalf("a deleted tree = %+v", tree)
 	}
@@ -288,23 +257,33 @@ func TestTaskTreeLifecycle(t *testing.T) {
 		t.Fatalf("a rebuilt tree = %+v", rebuilt.Tree)
 	}
 
-	// A tree the daemon could not build is rebuilt the same way and loses
+	// A tree the desktop app could not build is rebuilt the same way and loses
 	// its error.
-	reportTreeState(t, issueID, second, map[string]any{"daemon_id": projectScopeDaemonID, "state": "failed", "error": "no space left on device"}).Want(http.StatusOK)
+	memberReport := func(treeID string, body map[string]any) *testutil.Response {
+		t.Helper()
+		return testutil.Call(t, testHandler.ReportIssueProjectTreeState, treeRequest(testUserID, issueID, treeID, http.MethodPost, "/state", body))
+	}
+	memberReport(second, map[string]any{"state": "failed", "error": "no space left on device"}).Want(http.StatusOK)
 	testutil.Call(t, testHandler.RebuildIssueProjectTree, treeRequest(testUserID, issueID, second, http.MethodPost, "/rebuild", nil)).Want(http.StatusAccepted)
 	if tree := treeOf(t, issueID, second); tree.State != "pending" || tree.Error != "" {
 		t.Fatalf("a rebuilt failed tree = %+v", tree)
 	}
 
-	// A tree is one task's: another task cannot delete or rebuild it, and an
+	// A tree is one task's: another task cannot report on or rebuild it, and an
 	// id that names no tree is not found.
 	other := taskTreeInState(t, f, projectScopeDaemonID, projectTreePending)
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, other.issueID, second, http.MethodDelete, "/tree", nil)).Want(http.StatusNotFound)
+	reportTreeGone(t, other.issueID, second).Want(http.StatusNotFound)
 	testutil.Call(t, testHandler.RebuildIssueProjectTree, treeRequest(testUserID, other.issueID, second, http.MethodPost, "/rebuild", nil)).Want(http.StatusNotFound)
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, "00000000-0000-0000-0000-00000000dead", http.MethodDelete, "/tree", nil)).Want(http.StatusNotFound)
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, "not-a-uuid", http.MethodDelete, "/tree", nil)).Want(http.StatusBadRequest)
+	reportTreeGone(t, issueID, "00000000-0000-0000-0000-00000000dead").Want(http.StatusNotFound)
+	reportTreeGone(t, issueID, "not-a-uuid").Want(http.StatusBadRequest)
 	if tree := treeOf(t, issueID, second).State; tree != "pending" {
-		t.Fatalf("a refused delete left the tree %s", tree)
+		t.Fatalf("a refused report left the tree %s", tree)
+	}
+	// A report that describes no tree of that state changes nothing: a ready
+	// tree needs an absolute path.
+	memberReport(second, map[string]any{"state": "ready", "path": "relative/path"}).Want(http.StatusBadRequest)
+	if tree := treeOf(t, issueID, second).State; tree != "pending" {
+		t.Fatalf("a malformed report left the tree %s", tree)
 	}
 }
 
@@ -333,9 +312,9 @@ func TestIssueProjectScopeRefusesALayoutChange(t *testing.T) {
 	if tree := treeOf(t, issueID, treeID).State; tree != "pending" {
 		t.Fatalf("a refused replace left the tree %s", tree)
 	}
-	// Once the tree is deleted the list is free again. A pair the list keeps
+	// Once the tree is removed the list is free again. A pair the list keeps
 	// keeps its deleted tree, so two live trees come from a list without it.
-	testutil.Call(t, testHandler.DeleteIssueProjectTree, treeRequest(testUserID, issueID, treeID, http.MethodDelete, "/tree", nil)).Want(http.StatusNoContent)
+	reportTreeGone(t, issueID, treeID).Want(http.StatusOK)
 	two := putIssueScope(t, issueID, develop, release)
 	if len(two.Items) != 2 || two.Items[0].Tree.State != "pending" || two.Items[1].Tree.State != "pending" {
 		t.Fatalf("after the only tree was deleted the scope = %+v, want two pending trees", two.Items)
@@ -720,5 +699,50 @@ func TestDeletingAnIssueTakesItsTrees(t *testing.T) {
 	}
 	if n := pairs(kept); n != 1 {
 		t.Fatalf("the other task kept %d pairs, want 1", n)
+	}
+}
+
+// The desktop app's list names every tree waiting to be built and the trees of
+// tasks complete for longer than the workspace keeps them, and nothing else:
+// where each one goes is where its project's folder is, which is not said here.
+func TestTreeWorkListsWhatTheDesktopAppHasToDo(t *testing.T) {
+	f := newTaskTreeFixture(t)
+	// complete closes the task, which stamps when, then moves that moment
+	// back by days.
+	complete := func(tree taskTestTree, days int) {
+		t.Helper()
+		dbfx.Exec(t, `UPDATE issue SET status = 'done' WHERE id = $1`, tree.issueID)
+		dbfx.Exec(t, `UPDATE issue SET completed_at = now() - make_interval(days => $2) WHERE id = $1`, tree.issueID, days)
+	}
+	in := func(state string) taskTestTree {
+		t.Helper()
+		return taskTreeInState(t, f, projectScopeDaemonID, state)
+	}
+	pending := in(projectTreePending)
+	old, fresh := in(projectTreeReady), in(projectTreeReady)
+	// An open task's tree, a failed one and one already gone are nobody's work.
+	for _, state := range []string{projectTreeReady, projectTreeFailed, projectTreeDeleted} {
+		in(state)
+	}
+	complete(old, 10)
+	complete(fresh, 3)
+
+	got := memberTreeWork(t).Items
+	key := func(item TaskTreeWorkItem) string { return item.TreeID + " " + item.Action }
+	slices.SortFunc(got, func(a, b TaskTreeWorkItem) int { return strings.Compare(key(a), key(b)) })
+	want := []TaskTreeWorkItem{
+		{TreeID: old.treeID, IssueID: old.issueID, TaskKey: taskKeyOf(t, old.issueID), ProjectID: f.projectID, BaseBranch: "main", TaskBranch: "task/HAN-1", Action: "remove"},
+		{TreeID: pending.treeID, IssueID: pending.issueID, TaskKey: taskKeyOf(t, pending.issueID), ProjectID: f.projectID, BaseBranch: "main", Action: "create"},
+	}
+	slices.SortFunc(want, func(a, b TaskTreeWorkItem) int { return strings.Compare(key(a), key(b)) })
+	if !slices.EqualFunc(got, want, func(a, b TaskTreeWorkItem) bool {
+		return key(a) == key(b) && a.IssueID == b.IssueID && a.TaskKey == b.TaskKey && a.ProjectID == b.ProjectID && a.BaseBranch == b.BaseBranch && a.TaskBranch == b.TaskBranch
+	}) {
+		t.Fatalf("the desktop app's tree work = %+v, want the pending tree to build and the 10-day-old one to remove", got)
+	}
+	// A task that is back to work keeps its tree.
+	dbfx.Exec(t, `UPDATE issue SET status = 'backlog', completed_at = NULL WHERE id = $1`, old.issueID)
+	if again := memberTreeWork(t).Items; len(again) != 1 || again[0].TreeID != pending.treeID {
+		t.Fatalf("after a reopen the tree work = %+v, want only the pending tree", again)
 	}
 }

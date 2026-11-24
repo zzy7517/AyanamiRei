@@ -7,6 +7,8 @@
   "end_session": "セッションを終了",
   "agent_terminal": "エージェントターミナル",
   "restart": "再起動",
+  "preparing_trees": "worktree を構築しています…",
+  "retry": "再試行",
   "status": {
     "connecting": "開いています…",
     "ended": "セッションが終了しました",

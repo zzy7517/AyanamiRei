@@ -56,8 +56,16 @@ import {
   type TerminalHostEvent,
   type TerminalHostOpenResult,
   type TerminalHostTarget,
+  type TerminalPlace,
   type TerminalSize,
 } from "../shared/terminal";
+import {
+  TREES_ENSURE_CHANNEL,
+  TREES_REMOVE_CHANNEL,
+  type TreeEnsureResult,
+  type TreeRemoveResult,
+  type TreeSpec,
+} from "../shared/tasktrees";
 import {
   VOICE_HISTORY_AUDIO_CHANNEL,
   VOICE_HISTORY_CHANGED_CHANNEL,
@@ -312,6 +320,16 @@ const desktopAPI = {
       ipcRenderer.on(TERMINAL_EVENT_CHANNEL, handler);
       return () => ipcRenderer.removeListener(TERMINAL_EVENT_CHANNEL, handler);
     },
+  },
+  // Where the trees of tasks are made and removed; see `TreeHostBridge`.
+  trees: {
+    ensure: (place: TerminalPlace, taskKey: string, specs: TreeSpec[]): Promise<TreeEnsureResult> =>
+      ipcRenderer.invoke(TREES_ENSURE_CHANNEL, place, taskKey, specs),
+    remove: (
+      place: TerminalPlace,
+      taskKey: string,
+      tree: { branch: string },
+    ): Promise<TreeRemoveResult> => ipcRenderer.invoke(TREES_REMOVE_CHANNEL, place, taskKey, tree),
   },
   /** Read every theme in the themes folder, and start watching it. */
   readThemeFolder: (): Promise<ThemeFolderSnapshot> =>

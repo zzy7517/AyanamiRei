@@ -23,7 +23,6 @@ export {
   DASHBOARD_HISTORY_365D_FLAG,
   DOCS_V1_FLAG,
   PLUGINS_V1_FLAG,
-  TASK_SESSIONS_V1_FLAG,
 } from "./keys";
 export {
   FeatureFlagsProvider,

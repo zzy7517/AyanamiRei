@@ -7,6 +7,8 @@
   "end_session": "Finalizar sesión",
   "agent_terminal": "Terminal del agente",
   "restart": "Reiniciar",
+  "preparing_trees": "Construyendo los worktrees…",
+  "retry": "Reintentar",
   "status": {
     "connecting": "Abriendo…",
     "ended": "La sesión ha terminado",

@@ -118,6 +118,7 @@ import type {
   WebhookDelivery,
   WorkspaceMcpServer,
   IssueProjectScope,
+  TaskTreeWork,
 } from "../types";
 import type { CloudRuntimeNode } from "../runtimes/cloud-runtime";
 import type { CreateFeedbackResponse } from "../feedback/types";
@@ -4919,6 +4920,25 @@ export const EMPTY_ISSUE_PROJECT_SCOPE: IssueProjectScope = { items: [] };
 export const IssueProjectTreeResponseSchema = z.object({
   tree: IssueProjectTreeSchema.nullable().catch(null),
 }).loose();
+
+// What a desktop app has to do with the workspace's trees. A malformed item
+// drops out, and one whose action is unknown reads as none: the app acts on
+// what it understands and leaves the rest to the next list.
+export const TaskTreeWorkItemSchema = z.object({
+  tree_id: z.string().min(1),
+  issue_id: z.string().min(1),
+  task_key: z.string().default(""),
+  project_id: z.string().min(1),
+  base_branch: z.string().default(""),
+  task_branch: z.string().default(""),
+  action: z.enum(["create", "remove"]).nullish().catch(null),
+}).loose();
+
+export const TaskTreeWorkSchema = z.object({
+  items: lenientArray(TaskTreeWorkItemSchema),
+}).loose();
+
+export const EMPTY_TASK_TREE_WORK: TaskTreeWork = { items: [] };
 
 // What marking an agent's reply seen answers: the marker as the server left
 // it, which is null once cleared. A malformed answer reads as cleared too —

@@ -3,8 +3,6 @@
 import { issueStatusCategory, useReplaceIssueProjectScope } from "@multica/core/issues";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useFeatureEnabled } from "@multica/core/config";
-import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
 import { isProjectScopeValid, type ProjectScopePair } from "@multica/core/projects";
 import { AppLink, resolveClickIntent, useNavigation } from "../navigation";
 import {
@@ -351,7 +349,6 @@ export function ManualCreatePanel({
   // The "project + branch" pairs the new task works on. The server takes them
   // only once the task has an id, so they are held here until it is created.
   // An added row nobody filled in is not a pair.
-  const taskSessions = useFeatureEnabled(TASK_SESSIONS_V1_FLAG, false);
   const [scopePairs, setScopePairs] = useState<ProjectScopePair[]>([]);
   const scopeFilled = scopePairs.filter((pair) => pair.project_id !== "" || pair.branch !== "");
   const scopeItems = scopeFilled.map(({ project_id, branch }) => ({ project_id, base_branch: branch }));
@@ -1539,17 +1536,15 @@ export function ManualCreatePanel({
 
             {/* The task's "project + branch" pairs. The list scrolls on its own
                 so the compact dialog keeps room for the editor. */}
-            {taskSessions && (
-              <div role="group" aria-label={tProjects(($) => $.scope.section_title)} className="shrink-0 border-t px-4 py-2">
-                <div className="mb-1.5 flex items-center gap-1.5 px-1 text-micro font-medium text-muted-foreground">
-                  <FolderGit2 className="size-3.5" />
-                  {tProjects(($) => $.scope.section_title)}
-                </div>
-                <div className="max-h-40 overflow-y-auto">
-                  <ProjectScopeEditor value={scopePairs} onChange={setScopePairs} busy={submitBusy} />
-                </div>
+            <div role="group" aria-label={tProjects(($) => $.scope.section_title)} className="shrink-0 border-t px-4 py-2">
+              <div className="mb-1.5 flex items-center gap-1.5 px-1 text-micro font-medium text-muted-foreground">
+                <FolderGit2 className="size-3.5" />
+                {tProjects(($) => $.scope.section_title)}
               </div>
-            )}
+              <div className="max-h-40 overflow-y-auto">
+                <ProjectScopeEditor value={scopePairs} onChange={setScopePairs} busy={submitBusy} />
+              </div>
+            </div>
 
             {unavailablePropertyRemoved && (
               <p role="alert" className="px-5 pb-3 text-caption text-destructive">

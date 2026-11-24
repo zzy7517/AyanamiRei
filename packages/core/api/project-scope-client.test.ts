@@ -73,19 +73,70 @@ describe("project + branch scope client methods", () => {
 describe("task tree client methods", () => {
   const treePath = "https://api.example.test/api/issues/issue-1/project-scope/t1";
 
-  it("deletes a tree and reads the tree a rebuild answers", async () => {
+  it("reads the tree a rebuild answers", async () => {
     const fetchMock = respond({ tree: issueItem.tree });
-    fetchMock.mockImplementationOnce(async () => new Response(null, { status: 204 }));
     const client = new ApiClient("https://api.example.test");
 
-    await client.deleteIssueProjectTree("issue-1", "t1");
     const rebuilt = await client.rebuildIssueProjectTree("issue-1", "t1");
 
     expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([
-      [`${treePath}/tree`, "DELETE"],
       [`${treePath}/rebuild`, "POST"],
     ]);
     expect(rebuilt).toEqual(issueItem.tree);
+  });
+
+  it("says what became of a tree on the caller's machine, and reads the tree as the server left it", async () => {
+    const fetchMock = respond({ tree: issueItem.tree });
+    const client = new ApiClient("https://api.example.test");
+
+    const tree = await client.reportIssueProjectTreeState("ws-1", "issue-1", "t1", {
+      state: "ready",
+      path: "/home/me/ayanami-tasks/MUL-1",
+      task_branch: "task/MUL-1",
+    });
+
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({ "X-Workspace-ID": "ws-1" });
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ method: "POST" });
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      state: "ready",
+      path: "/home/me/ayanami-tasks/MUL-1",
+      task_branch: "task/MUL-1",
+    });
+    expect(tree).toEqual(issueItem.tree);
+  });
+
+  it("lists the trees of a workspace that the app has to build or to remove", async () => {
+    const fetchMock = respond({
+      items: [
+        {
+          issue_id: "issue-1",
+          tree_id: "t1",
+          project_id: "project-1",
+          task_key: "MUL-1",
+          task_branch: "task/MUL-1",
+          base_branch: "main",
+          action: "create",
+        },
+      ],
+    });
+    const client = new ApiClient("https://api.example.test");
+
+    const work = await client.getTaskTreeWork("ws-1");
+
+    expect(work.items[0]).toMatchObject({ issue_id: "issue-1", tree_id: "t1", action: "create" });
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({ "X-Workspace-ID": "ws-1" });
+  });
+
+  it("reads a malformed list of tree work as no work, and an action it does not know as none", async () => {
+    const client = new ApiClient("https://api.example.test");
+    respond("not a list");
+    expect(await client.getTaskTreeWork("ws-1")).toEqual({ items: [] });
+
+    respond({
+      items: [{ issue_id: "issue-1", tree_id: "t1", project_id: "project-1", action: "something new" }],
+    });
+    const work = await client.getTaskTreeWork("ws-1");
+    expect(work.items[0]?.action).toBeNull();
   });
 
   it("reads a malformed rebuild answer as unknown", async () => {

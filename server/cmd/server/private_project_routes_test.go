@@ -15,14 +15,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/projectaccess"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
 	dbfx "github.com/multica-ai/multica/server/internal/testutil"
 	"github.com/multica-ai/multica/server/internal/util"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
-	"github.com/multica-ai/multica/server/pkg/featureflag"
 )
 
 // A route parameter is keyed by the literal path segment before it and its
@@ -488,13 +486,7 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	t.Setenv("LOCAL_UPLOAD_BASE_URL", "")
 	shared.uploadDir = t.TempDir()
 	t.Setenv("LOCAL_UPLOAD_DIR", shared.uploadDir)
-	// The task-tree routes answer 404 while task_sessions_v1 is off, which is
-	// the missing-id answer too: probe them as a deployment with it on.
-	flags := featureflag.NewStaticProvider()
-	flags.Set(featureflags.TaskSessionsV1, featureflag.Rule{Default: true})
-	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{
-		FeatureFlags: featureflag.NewService(flags),
-	})
+	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{})
 	call := func(method, path, body string) routeAnswer {
 		var req *http.Request
 		switch method {

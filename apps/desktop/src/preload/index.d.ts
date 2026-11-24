@@ -1,6 +1,7 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import type { RuntimeConfigResult } from "../shared/runtime-config";
 import type { TerminalHostBridge } from "@multica/core/terminal/host";
+import type { TreeHostBridge } from "@multica/core/tasktrees/host";
 import type { NavigationGesture } from "../shared/navigation-gestures";
 import type { ContextMenuCommand, ContextMenuRequest } from "../shared/context-menu";
 import type { RendererRouteContextInput } from "../shared/renderer-route-context";
@@ -134,6 +135,8 @@ interface DesktopAPI {
   /** The terminals the main process owns: shells in a project's folder, and
    *  an agent's command line in a tree of a task. */
   terminal: TerminalHostBridge;
+  /** Makes and removes the trees of tasks where their projects' folders are. */
+  trees: TreeHostBridge;
   /** Read every theme in the themes folder in user data, and start watching it. */
   readThemeFolder: () => Promise<ThemeFolderSnapshot>;
   /** Called once a change in the themes folder settles. Returns an unsubscribe function. */

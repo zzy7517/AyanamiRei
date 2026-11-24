@@ -13,11 +13,11 @@ import {
   TriangleAlert,
 } from "@multica/ui/icons";
 import {
-  useDeleteIssueProjectTree,
   useIssueProjectScope,
   useRebuildIssueProjectTree,
   useReplaceIssueProjectScope,
 } from "@multica/core/issues";
+import { TreeFailure, useDeleteIssueProjectTree } from "@multica/core/tasktrees";
 import { clientErrorMessage } from "@multica/core/api";
 import { EMPTY_ISSUE_PROJECT_SCOPE } from "@multica/core/api/schemas";
 import { useWorkspaceId } from "@multica/core/hooks";
@@ -49,9 +49,12 @@ import { AppLink } from "../../navigation";
 import { ProjectScopeEditor } from "../../projects/components/project-scope-editor";
 import { IssueSidebarSectionHeader } from "./issue-sidebar-section";
 
-/** The server's words for a refusal it wrote for the user, or `fallback`. */
+/**
+ * The server's words for a refusal it wrote for the user, or `fallback`. The
+ * reason a tree was kept is such words too, written where the tree stands.
+ */
 function refusal(err: unknown, fallback: string): string {
-  return clientErrorMessage(err) ?? fallback;
+  return clientErrorMessage(err) ?? (err instanceof TreeFailure ? err.message : fallback);
 }
 
 /** Where a row's text and actions start: under the project's name, past its icon. */
@@ -231,7 +234,7 @@ function TreeRow({
       {state === "failed" && tree?.error && (
         <p className={`mt-1 wrap-anywhere whitespace-pre-wrap text-caption text-destructive ${ROW_INDENT}`}>{tree.error}</p>
       )}
-      {/* Nothing can be done with a tree while the server is building it. */}
+      {/* Nothing can be done with a tree while it is being built. */}
       {tree && tree.state !== "pending" && (
         <TreeActions
           issueId={issueId}

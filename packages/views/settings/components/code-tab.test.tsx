@@ -4,7 +4,6 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@multica/core/i18n/react";
 import { configStore } from "@multica/core/config";
-import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
 import enCommon from "../../locales/en/common.json";
 import enSettings from "../../locales/en/settings.json";
 
@@ -349,7 +348,6 @@ describe("CodeTab — worktrees", () => {
     expect(screen.queryByRole("spinbutton", { name: label })).toBeNull();
     unmount();
 
-    configStore.getState().setFeatureFlags({ [TASK_SESSIONS_V1_FLAG]: true });
     render(<CodeTab />, { wrapper: Wrapper });
     expect(screen.getByRole("spinbutton", { name: label })).toHaveValue(5);
   });

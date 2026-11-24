@@ -2223,6 +2223,8 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 				// The caller's subscribed issue ids; backs the "subscribed"
 				// relation filter on client-filtered surfaces.
 				r.Get("/subscribed", h.ListSubscribedIssueIDs)
+				// The trees the caller's desktop app has to build or remove.
+				r.With(handler.RequireHumanActor).Get("/project-scope/work", h.ListTaskTreeWork)
 				r.Get("/", h.ListIssues)
 				// POST twin of GET /api/issues for oversized filter sets
 				// (agents-working ids facet) — see QueryIssues.

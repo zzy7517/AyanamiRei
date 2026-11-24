@@ -7,6 +7,8 @@
   "end_session": "結束工作階段",
   "agent_terminal": "AI 代理終端",
   "restart": "重新啟動",
+  "preparing_trees": "正在建立 worktree…",
+  "retry": "重試",
   "status": {
     "connecting": "正在開啟…",
     "ended": "工作階段已結束",

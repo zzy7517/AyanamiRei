@@ -20,7 +20,7 @@
  * With none of these the page lists the projects a terminal can open in.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forwardRef,
   useEffect,
@@ -50,6 +50,8 @@ import {
   type TerminalPlace,
   type TerminalStatus,
 } from "@multica/core/terminal";
+import { ensureTaskTrees, placeKey, type BuiltTree } from "@multica/core/tasktrees";
+import type { Issue, IssueProjectScope, ProjectScopeItem } from "@multica/core/types";
 import { Button } from "@multica/ui/components/ui/button";
 import { Spinner } from "@multica/ui/components/ui/spinner";
 import { ArrowLeft, FolderOpen } from "@multica/ui/icons";
@@ -119,6 +121,7 @@ export function TerminalPage() {
         sessionKey={`shell:${host}:${directory}`}
         terminalId={terminalId}
         address={workspacePaths.terminalIn(directory, { host: host || undefined })}
+        back={back}
         title={
           <span className="min-w-0 truncate font-mono text-caption text-muted-foreground">
             {host ? `${host}:${directory}` : directory}
@@ -248,32 +251,41 @@ function TerminalFor({
   );
 }
 
-/** The page's header, while what the terminal opens is still being read. */
-function TerminalLoading({ title, back }: { title: ReactNode; back?: BackToList }) {
+/** The page's header while there is nothing to show under it yet, and what is being waited for. */
+function TerminalLoading({ title, back, label }: { title: ReactNode; back?: BackToList; label?: string }) {
   return (
     <TerminalFrame title={title} back={back}>
-      <div className="flex min-h-0 flex-1 items-center justify-center">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
         <Spinner aria-hidden />
+        {label && <p className="text-body text-muted-foreground">{label}</p>}
       </div>
     </TerminalFrame>
   );
 }
 
 /** The page's header, and why there is no terminal to show under it. */
-function TerminalMessage({ title, back, message }: { title: ReactNode; back?: BackToList; message: string }) {
+function TerminalMessage({
+  title,
+  back,
+  message,
+  action,
+}: {
+  title: ReactNode;
+  back?: BackToList;
+  message: string;
+  /** What there is to do about it. */
+  action?: ReactNode;
+}) {
   return (
     <TerminalFrame title={title} back={back}>
-      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6">
         <p role="alert" className="max-w-md rounded-lg border border-surface-border bg-background px-4 py-3 text-center text-body text-foreground shadow-md">
           {message}
         </p>
+        {action}
       </div>
     </TerminalFrame>
   );
-}
-
-function placeKey(place: TerminalPlace): string {
-  return place.kind === "ssh" ? `ssh:${place.host}` : "local";
 }
 
 /**
@@ -300,7 +312,6 @@ function AgentTerminal({
   const { folders } = useProjectFolders(wsId);
   // The pair whose tree the agent starts in.
   const pair = scope.data.items.find((item) => item.tree?.id === treeId);
-  const tree = pair?.tree;
   // Read for that project whatever its state: its folder says where the tree is.
   const resources = useQuery({
     ...projectResourcesOptions(wsId, pair?.project_id ?? ""),
@@ -311,29 +322,153 @@ function AgentTerminal({
   if (issue.isPending || scope.isPending || projects.isPending || (pair && resources.isPending)) {
     return <TerminalLoading title={title} />;
   }
+  return (
+    <EnsuredAgentTerminal
+      issueId={issueId}
+      treeId={treeId}
+      terminalId={terminalId}
+      address={address}
+      title={title}
+      scope={scope.data}
+      task={issue.data}
+      folder={resources.data?.flatMap((resource) => projectFolderPlace(resource) ?? [])[0] ?? null}
+      projectTitle={(projectId: string) =>
+        projects.data?.find((project) => project.id === projectId)?.title ?? projectId
+      }
+      otherPlaces={folders.map(({ project, place }) => ({ projectId: project.id, place }))}
+    />
+  );
+}
 
-  const folder = resources.data?.flatMap((resource) => projectFolderPlace(resource) ?? [])[0];
+/**
+ * Where the trees of each task this window made sure of last stood, by tree
+ * id. Kept for the window's life: a page that comes back shows the terminal
+ * at once, and asks again while it does.
+ */
+const lastEnsured = new Map<string, Map<string, BuiltTree>>();
+
+/** What became of making sure the task's trees are there. */
+type Ensured =
+  | { step: "ensuring" }
+  | { step: "ready"; built: Map<string, BuiltTree> }
+  | { step: "failed"; error: string };
+
+/**
+ * The agent terminal once the task and its trees are read: the tree is made
+ * sure of before anything starts in it. One that is there costs a look; one
+ * that is missing, deleted or failed to build is built again first, and the
+ * page waits for it. When it cannot be, the page says why and offers to try
+ * again. A terminal that is already open is joined without asking.
+ */
+function EnsuredAgentTerminal({
+  issueId,
+  treeId,
+  terminalId,
+  address,
+  title,
+  scope,
+  task,
+  folder,
+  projectTitle,
+  otherPlaces,
+}: {
+  issueId: string;
+  treeId: string;
+  terminalId?: string;
+  address: string;
+  title: ReactNode;
+  scope: IssueProjectScope;
+  task: Issue | undefined;
+  /** The folder of the tree's project, wherever it is. */
+  folder: { place: TerminalPlace; path: string } | null;
+  projectTitle: (projectId: string) => string;
+  /** Where each project's folder is, for the trees the agent may also work in. */
+  otherPlaces: { projectId: string; place: TerminalPlace }[];
+}) {
+  const { t } = useT("terminal");
+  const qc = useQueryClient();
+  const wsId = useWorkspaceId();
+  // The pair whose tree the agent starts in.
+  const pair = scope.items.find((item) => item.tree?.id === treeId);
+  const [attempt, setAttempt] = useState(0);
+  const [ensured, setEnsured] = useState<Ensured>(() => {
+    // An open terminal is joined as it is. One shown before is shown again
+    // before the app is asked, as long as the server still says its tree is
+    // there: one it says is gone is made again first.
+    if (terminalId) return { step: "ready", built: new Map() };
+    const remembered = pair?.tree?.state === "ready" ? lastEnsured.get(issueId) : undefined;
+    return remembered ? { step: "ready", built: remembered } : { step: "ensuring" };
+  });
+
+  useEffect(() => {
+    if (terminalId) return;
+    let cancelled = false;
+    ensureTaskTrees(qc, wsId, { issueId, treeIds: [treeId] }).then(
+      (built) => {
+        lastEnsured.set(issueId, built);
+        if (!cancelled) setEnsured({ step: "ready", built });
+      },
+      (error: unknown) => {
+        if (!cancelled) {
+          setEnsured({ step: "failed", error: error instanceof Error ? error.message : String(error) });
+        }
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [qc, wsId, issueId, treeId, attempt, terminalId]);
+
   const place: TerminalPlace = folder?.place ?? { kind: "local" };
-  // A tree is a folder only once it was built.
-  const cwd = tree?.state === "ready" && tree.path && folder ? tree.path : "";
-  const projectTitle = (projectId: string) =>
-    projects.data?.find((project) => project.id === projectId)?.title ?? projectId;
+  if (ensured.step === "ensuring") {
+    return <TerminalLoading title={title} label={t(($) => $.preparing_trees)} />;
+  }
+  if (ensured.step === "failed") {
+    return (
+      <TerminalMessage
+        title={title}
+        message={ensured.error}
+        action={
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              setEnsured({ step: "ensuring" });
+              setAttempt((count) => count + 1);
+            }}
+          >
+            {t(($) => $.retry)}
+          </Button>
+        }
+      />
+    );
+  }
+
+  // A tree is a folder only once it was built: the server's record says so, or
+  // making sure of it just did.
+  const pathOf = (item: ProjectScopeItem): string | null =>
+    ensured.built.get(item.tree?.id ?? "")?.path ??
+    (item.tree?.state === "ready" ? item.tree.path : null);
+  // The tree was taken out of the task meanwhile: there is nothing to open.
+  const cwd = pair?.tree ? (pathOf(pair) ?? "") : "";
   // The other trees are where the agent can also work. Ones on another
   // computer than the first are not its to reach.
-  const otherTrees: AgentTerminalTree[] = scope.data.items.flatMap((item) => {
-    if (item.tree?.id === treeId || item.tree?.state !== "ready" || !item.tree.path) return [];
-    const other = folders.find(({ project }) => project.id === item.project_id)?.place;
+  const otherTrees: AgentTerminalTree[] = scope.items.flatMap((item) => {
+    const tree = item.tree;
+    if (!tree || tree.id === treeId || tree.state === "deleted") return [];
+    const path = pathOf(item);
+    if (!path) return [];
+    const other = otherPlaces.find((known) => known.projectId === item.project_id)?.place;
     if (other && placeKey(other) !== placeKey(place)) return [];
     return [
       {
-        path: item.tree.path,
+        path,
         repoName: projectTitle(item.project_id),
-        branch: item.tree.task_branch,
+        branch: tree.task_branch,
         baseBranch: item.base_branch,
       },
     ];
   });
-  const task = issue.data;
 
   return (
     <TerminalFor
@@ -343,9 +478,9 @@ function AgentTerminal({
         cwd,
         trees: [
           {
-            path: tree?.path ?? "",
+            path: cwd,
             repoName: pair ? projectTitle(pair.project_id) : "",
-            branch: tree?.task_branch ?? "",
+            branch: pair?.tree?.task_branch ?? "",
             baseBranch: pair?.base_branch ?? "",
           },
           ...otherTrees,

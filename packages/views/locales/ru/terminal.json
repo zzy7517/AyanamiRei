@@ -7,6 +7,8 @@
   "end_session": "Завершить сеанс",
   "agent_terminal": "Терминал агента",
   "restart": "Перезапустить",
+  "preparing_trees": "Создание рабочих копий…",
+  "retry": "Повторить",
   "status": {
     "connecting": "Открытие…",
     "ended": "Сеанс завершён",

@@ -23,6 +23,7 @@ import {
 import { setupLocalDirectory } from "./local-directory";
 import { setupThemeFolder } from "./theme-folder";
 import { setupVoiceInput } from "./voice";
+import { setupTaskTrees } from "./tasktrees";
 import { setupTerminal, watchTerminalRenderer } from "./terminal";
 import { configureLinuxFileDialogs } from "./linux-file-dialog";
 import { openExternalSafely, downloadURLSafely } from "./external-url";
@@ -1042,6 +1043,8 @@ if (!gotTheLock) {
     // goes ahead (one that the updater or the daemon holds leaves them
     // running), and when a signal ends the process without a quit at all.
     const terminals = await setupTerminal();
+    // A task's trees are made where its projects' folders are, from here.
+    setupTaskTrees();
     app.on("web-contents-created", (_event, contents) => watchTerminalRenderer(terminals, contents));
     app.on("before-quit", (event) => {
       if (!event.defaultPrevented) terminals.endAll();

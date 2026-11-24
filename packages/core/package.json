@@ -179,6 +179,8 @@
     "./terminal": "./terminal/index.ts",
     "./terminal/client": "./terminal/client.ts",
     "./terminal/host": "./terminal/host.ts",
+    "./tasktrees": "./tasktrees/index.ts",
+    "./tasktrees/host": "./tasktrees/host.ts",
     "./feedback": "./feedback/index.ts",
     "./feedback/mutations": "./feedback/mutations.ts",
     "./realtime": "./realtime/index.ts",

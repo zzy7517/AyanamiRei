@@ -6,12 +6,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { setApiInstance } from "../api";
 import type { ApiClient } from "../api/client";
 import { EMPTY_ISSUE_PROJECT_SCOPE } from "../api/schemas";
+import { taskTreeKeys } from "../tasktrees/work";
 import type { IssueProjectScope, IssueProjectTree, ProjectScopeItem } from "../types";
 import {
   ISSUE_TREE_POLL_INTERVAL_MS,
   issueProjectScopeKeys,
   issueProjectScopeOptions,
-  useDeleteIssueProjectTree,
   useIssueProjectScope,
   useRebuildIssueProjectTree,
   useReplaceIssueProjectScope,
@@ -147,7 +147,9 @@ describe("useReplaceIssueProjectScope", () => {
 
     expect(replaceIssueProjectScope).toHaveBeenCalledWith("issue-1", { items: pairs });
     expect(queryClient.getQueryData(ownKey)).toEqual(own);
-    expect(invalidate).not.toHaveBeenCalled();
+    // Trees the saved scope asks for are the app's to build: its list is read again.
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: taskTreeKeys.work("ws-1") });
   });
 
   it("writes the pairs of a task the request names, and caches them under that task", async () => {
@@ -201,10 +203,7 @@ describe("useReplaceIssueProjectScope", () => {
 });
 
 describe("tree writes", () => {
-  it.each([
-    ["useDeleteIssueProjectTree", useDeleteIssueProjectTree, "deleteIssueProjectTree"],
-    ["useRebuildIssueProjectTree", useRebuildIssueProjectTree, "rebuildIssueProjectTree"],
-  ] as const)("reads the scope again after %s succeeds", async (_name, useWrite, method) => {
+  it.each([["useRebuildIssueProjectTree", useRebuildIssueProjectTree, "rebuildIssueProjectTree"]] as const)("reads the scope again after %s succeeds", async (_name, useWrite, method) => {
     const write = vi.fn().mockResolvedValue(undefined);
     const after = { items: [item("main", "deleted")] };
     const getIssueProjectScope = vi.fn().mockResolvedValue(built);
@@ -217,7 +216,7 @@ describe("tree writes", () => {
     await waitFor(() => expect(result.current.scope.data).toEqual(built));
     setQueryData.mockClear();
 
-    // What the daemon reports once it has dealt with the tree.
+    // What the server answers once it has dealt with the tree.
     getIssueProjectScope.mockResolvedValue(after);
     await act(async () => {
       await result.current.write.mutateAsync("tree-1");
@@ -230,36 +229,4 @@ describe("tree writes", () => {
     await waitFor(() => expect(result.current.scope.data).toEqual(after));
   });
 
-  it("leaves the shown scope alone until the server answered a delete", async () => {
-    let refuse!: (error: Error) => void;
-    const deleteIssueProjectTree = vi.fn(
-      () => new Promise<void>((_resolve, reject) => { refuse = reject; }),
-    );
-    const getIssueProjectScope = vi.fn().mockResolvedValue(own);
-    const { queryClient, wrapper } = setup({ deleteIssueProjectTree, getIssueProjectScope });
-    queryClient.setQueryData(ownKey, own);
-    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const { result } = renderHook(() => useDeleteIssueProjectTree("ws-1", "issue-1"), {
-      wrapper,
-    });
-
-    const pending = result.current.mutateAsync("tree-1");
-    const outcome = pending.then(
-      () => "deleted",
-      (error: Error) => error.message,
-    );
-    await act(async () => {});
-    expect(deleteIssueProjectTree).toHaveBeenCalledWith("issue-1", "tree-1");
-    expect(invalidate).not.toHaveBeenCalled();
-    expect(queryClient.getQueryData(ownKey)).toEqual(own);
-
-    await act(async () => {
-      refuse(new Error("the tree's state changed; read it again"));
-    });
-    expect(await outcome).toMatch(/state changed/);
-
-    // The panel showed a state the tree no longer has: read it again.
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ownKey });
-    expect(queryClient.getQueryData(ownKey)).toEqual(own);
-  });
 });

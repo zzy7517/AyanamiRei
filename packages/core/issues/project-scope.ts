@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { api } from "../api";
 import { EMPTY_ISSUE_PROJECT_SCOPE } from "../api/schemas";
+import { taskTreeKeys } from "../tasktrees/work";
 import type {
   IssueProjectScope,
   ReplaceIssueProjectScopeRequest,
@@ -27,7 +28,7 @@ export function issueProjectScopeOptions(wsId: string, issueId: string) {
   return queryOptions({
     queryKey: issueProjectScopeKeys.own(wsId, issueId),
     queryFn: () => api.getIssueProjectScope(issueId),
-    // The daemon builds a tree on its own schedule and no event reports when
+    // The desktop app builds a tree in its own time and no event reports when
     // it is done, so the scope is read again until no tree is waiting.
     refetchInterval: (query) =>
       query.state.data && hasPendingTree(query.state.data) ? ISSUE_TREE_POLL_INTERVAL_MS : false,
@@ -56,7 +57,8 @@ export interface ReplaceIssueProjectScopeInput extends ReplaceIssueProjectScopeR
 
 /** Replaces a task's pairs wholesale, in their order. The cache follows from
  *  the response. Removing a pair whose tree is ready is refused by the server,
- *  as a thrown error. */
+ *  as a thrown error. A tree the new pairs ask for is built by the desktop app
+ *  once it reads the new list of work. */
 export function useReplaceIssueProjectScope(wsId: string, issueId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -68,16 +70,9 @@ export function useReplaceIssueProjectScope(wsId: string, issueId: string) {
       // the stored pairs: they are refetched, not read as none.
       if (scope) qc.setQueryData(key, scope);
       else void qc.invalidateQueries({ queryKey: key });
+      void qc.invalidateQueries({ queryKey: taskTreeKeys.work(wsId) });
     },
   });
-}
-
-/** Marks a task's tree deleted. The daemon removes it from the disk after the
- *  server accepted, so nothing is taken out of the cache first. */
-export function useDeleteIssueProjectTree(wsId: string, issueId: string) {
-  return useIssueProjectTreeWrite(wsId, issueId, (treeId) =>
-    api.deleteIssueProjectTree(issueId, treeId),
-  );
 }
 
 /** Asks for a deleted or failed tree to be built again. */
@@ -94,7 +89,11 @@ function useIssueProjectTreeWrite(
 ) {
   const qc = useQueryClient();
   const readAgain = () =>
-    qc.invalidateQueries({ queryKey: issueProjectScopeKeys.own(wsId, issueId) });
+    Promise.all([
+      qc.invalidateQueries({ queryKey: issueProjectScopeKeys.own(wsId, issueId) }),
+      // A tree asked for again is built once the desktop app reads of it.
+      qc.invalidateQueries({ queryKey: taskTreeKeys.work(wsId) }),
+    ]);
   return useMutation({
     mutationFn: write,
     // The answer describes one tree. The panel shows every tree as they are

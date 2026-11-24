@@ -232,6 +232,10 @@ export type {
   IssueProjectScope,
   IssueProjectScopeItemInput,
   ReplaceIssueProjectScopeRequest,
+  IssueProjectTreeStateReport,
+  TaskTreeWork,
+  TaskTreeWorkAction,
+  TaskTreeWorkItem,
 } from "./project-scope";
 export type { PinnedItem, PinnedItemType, CreatePinRequest, ReorderPinsRequest } from "./pin";
 export type {

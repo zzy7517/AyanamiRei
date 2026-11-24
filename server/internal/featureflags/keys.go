@@ -42,14 +42,6 @@ const (
 	// for a deployment. It is a GLOBAL switch. Turning it off leaves existing
 	// doc rows untouched — they simply become unreachable until it is back on.
 	DocsV1 = "docs_v1"
-	// TaskSessionsV1 gates task sessions and the task-tree lifecycle: the
-	// member routes under /api/issues/{id}/sessions, /api/sessions/{id}, and
-	// /api/issues/{id}/project-scope/{treeId}/{tree,rebuild}, and their daemon
-	// counterparts under /api/daemon. Off by default
-	// (FF_TASK_SESSIONS_V1=true turns it on for a deployment). It is a GLOBAL
-	// switch. Off, every one of those routes answers 404; the tree state
-	// report the daemon already sends stays reachable.
-	TaskSessionsV1 = "task_sessions_v1"
 	// DashboardHistory365d offers the 365-day range on the workspace dashboard
 	// (MUL-9490). On by default; FF_DASHBOARD_HISTORY_365D=off hides the range
 	// again if the year-long dashboard queries turn out too slow for a
@@ -83,10 +75,6 @@ var frontendPublicFlags = []string{
 	ComposioMCPApps,
 	PluginsV1,
 	DocsV1,
-	// Clients gate the task page's trees section and the Code settings tab
-	// on this, read from GET /api/config. Evaluated but not published, it
-	// reads as off in every client whatever the deployment set.
-	TaskSessionsV1,
 }
 
 func BillingWorkspaceSubscriptionsEnabled(ctx context.Context, flags *featureflag.Service) bool {
@@ -111,10 +99,6 @@ func LocalSearchIndexEnabled(ctx context.Context, flags *featureflag.Service) bo
 
 func DocsV1Enabled(ctx context.Context, flags *featureflag.Service) bool {
 	return flags.IsEnabled(ctx, DocsV1, false)
-}
-
-func TaskSessionsV1Enabled(ctx context.Context, flags *featureflag.Service) bool {
-	return flags.IsEnabled(ctx, TaskSessionsV1, false)
 }
 
 func DashboardHistory365dEnabled(ctx context.Context, flags *featureflag.Service) bool {

@@ -73,3 +73,29 @@ WHERE t.workspace_id = ANY(sqlc.arg('workspace_ids')::uuid[])
   AND i.completed_at < sqlc.arg('completed_before')::timestamptz
   AND t.daemon_id = sqlc.arg('daemon_id')::text
 ORDER BY t.id, pr.position, pr.created_at;
+
+-- name: ListWorkspaceIssueProjectScopeTreeWork :many
+-- The trees of a workspace the desktop app has to act on: those waiting to be
+-- built, and those of tasks complete for longer than completed_before, which
+-- it removes. The workspace and issue columns are what a task key is built
+-- from.
+SELECT t.*,
+    w.issue_prefix,
+    w.name AS workspace_name,
+    i.number AS issue_number,
+    CASE WHEN t.state = 'pending' THEN 'create' ELSE 'remove' END AS action
+FROM issue_project_scope t
+JOIN issue i ON i.id = t.issue_id AND i.workspace_id = t.workspace_id
+JOIN workspace w ON w.id = t.workspace_id
+WHERE t.workspace_id = sqlc.arg('workspace_id')::uuid
+  AND (
+        t.state = 'pending'
+     OR (t.state = 'ready' AND i.completed_at IS NOT NULL
+         AND i.completed_at < sqlc.arg('completed_before')::timestamptz)
+  )
+ORDER BY i.created_at, t.issue_id, t.position, t.created_at;
+
+-- name: GetWorkspaceSettings :one
+-- The settings of one workspace.
+SELECT settings FROM workspace
+WHERE id = sqlc.arg('workspace_id')::uuid;

@@ -244,7 +244,9 @@ import type {
   UpdateAgentAppsRequest,
   IssueProjectScope,
   IssueProjectTree,
+  IssueProjectTreeStateReport,
   ReplaceIssueProjectScopeRequest,
+  TaskTreeWork,
   SlackInstallation,
   ListSlackInstallationsResponse,
   RegisterSlackBYORequest,
@@ -493,6 +495,8 @@ import {
   IssueProjectTreeResponseSchema,
   IssueAgentReplyResponseSchema,
   EMPTY_ISSUE_PROJECT_SCOPE,
+  TaskTreeWorkSchema,
+  EMPTY_TASK_TREE_WORK,
   AppActivityResponseSchema,
   AppCatalogResponseSchema,
   AppConnectInitSchema,
@@ -1786,14 +1790,41 @@ export class ApiClient {
     });
   }
 
-  /** Marks a task's tree deleted; the daemon then removes it from the disk,
-   *  so nothing is known about the new state until the scope is read again.
-   *  Rejects with an `ApiError` when the server refuses (404 while the
-   *  `task_sessions_v1` flag is off). */
-  async deleteIssueProjectTree(issueId: string, treeId: string): Promise<void> {
-    await this.fetch<unknown>(`/api/issues/${issueId}/project-scope/${treeId}/tree`, {
-      method: "DELETE",
+  /**
+   * The trees of a workspace that the app has to build or to remove. The
+   * request names its workspace: the app sees to every workspace it is in,
+   * whichever one the window shows.
+   */
+  async getTaskTreeWork(workspaceId: string): Promise<TaskTreeWork> {
+    const raw = await this.fetch<unknown>("/api/issues/project-scope/work", {
+      headers: workspaceHeader({ workspaceId }),
     });
+    return parseWithFallback(raw, TaskTreeWorkSchema, EMPTY_TASK_TREE_WORK, {
+      endpoint: "GET /api/issues/project-scope/work",
+    });
+  }
+
+  /**
+   * Says what became of a task's tree on the app's machine: that it was built,
+   * that building it failed, or that it was removed. The request names its
+   * workspace, since the window may have moved to another. Resolves to the
+   * tree as the server left it, or null when the write went through but its
+   * answer was malformed.
+   */
+  async reportIssueProjectTreeState(
+    workspaceId: string,
+    issueId: string,
+    treeId: string,
+    report: IssueProjectTreeStateReport,
+  ): Promise<IssueProjectTree | null> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/project-scope/${treeId}/state`, {
+      method: "POST",
+      body: JSON.stringify(report),
+      headers: workspaceHeader({ workspaceId }),
+    });
+    return parseWithFallback<{ tree: IssueProjectTree | null }>(raw, IssueProjectTreeResponseSchema, { tree: null }, {
+      endpoint: "POST /api/issues/:id/project-scope/:treeId/state",
+    }).tree;
   }
 
   /** Asks for a deleted or failed tree to be built again. Resolves to the tree

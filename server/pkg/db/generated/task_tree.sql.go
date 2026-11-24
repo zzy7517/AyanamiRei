@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getWorkspaceSettings = `-- name: GetWorkspaceSettings :one
+SELECT settings FROM workspace
+WHERE id = $1::uuid
+`
+
+// The settings of one workspace.
+func (q *Queries) GetWorkspaceSettings(ctx context.Context, workspaceID pgtype.UUID) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getWorkspaceSettings, workspaceID)
+	var settings []byte
+	err := row.Scan(&settings)
+	return settings, err
+}
+
 const listIssueProjectScopeMatureTrees = `-- name: ListIssueProjectScopeMatureTrees :many
 SELECT DISTINCT ON (t.id)
     t.id, t.workspace_id, t.issue_id, t.project_id, t.base_branch, t.position, t.path, t.task_branch, t.state, t.error, t.created_at, t.updated_at, t.daemon_id,
@@ -234,6 +247,91 @@ func (q *Queries) ListRuntimeWorkspacesByDaemon(ctx context.Context, daemonID pg
 			return nil, err
 		}
 		items = append(items, workspace_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listWorkspaceIssueProjectScopeTreeWork = `-- name: ListWorkspaceIssueProjectScopeTreeWork :many
+SELECT t.id, t.workspace_id, t.issue_id, t.project_id, t.base_branch, t.position, t.path, t.task_branch, t.state, t.error, t.created_at, t.updated_at, t.daemon_id,
+    w.issue_prefix,
+    w.name AS workspace_name,
+    i.number AS issue_number,
+    CASE WHEN t.state = 'pending' THEN 'create' ELSE 'remove' END AS action
+FROM issue_project_scope t
+JOIN issue i ON i.id = t.issue_id AND i.workspace_id = t.workspace_id
+JOIN workspace w ON w.id = t.workspace_id
+WHERE t.workspace_id = $1::uuid
+  AND (
+        t.state = 'pending'
+     OR (t.state = 'ready' AND i.completed_at IS NOT NULL
+         AND i.completed_at < $2::timestamptz)
+  )
+ORDER BY i.created_at, t.issue_id, t.position, t.created_at
+`
+
+type ListWorkspaceIssueProjectScopeTreeWorkParams struct {
+	WorkspaceID     pgtype.UUID        `json:"workspace_id"`
+	CompletedBefore pgtype.Timestamptz `json:"completed_before"`
+}
+
+type ListWorkspaceIssueProjectScopeTreeWorkRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	WorkspaceID   pgtype.UUID        `json:"workspace_id"`
+	IssueID       pgtype.UUID        `json:"issue_id"`
+	ProjectID     pgtype.UUID        `json:"project_id"`
+	BaseBranch    string             `json:"base_branch"`
+	Position      int32              `json:"position"`
+	Path          string             `json:"path"`
+	TaskBranch    string             `json:"task_branch"`
+	State         string             `json:"state"`
+	Error         string             `json:"error"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	DaemonID      pgtype.Text        `json:"daemon_id"`
+	IssuePrefix   string             `json:"issue_prefix"`
+	WorkspaceName string             `json:"workspace_name"`
+	IssueNumber   int32              `json:"issue_number"`
+	Action        string             `json:"action"`
+}
+
+// The trees of a workspace the desktop app has to act on: those waiting to be
+// built, and those of tasks complete for longer than completed_before, which
+// it removes. The workspace and issue columns are what a task key is built
+// from.
+func (q *Queries) ListWorkspaceIssueProjectScopeTreeWork(ctx context.Context, arg ListWorkspaceIssueProjectScopeTreeWorkParams) ([]ListWorkspaceIssueProjectScopeTreeWorkRow, error) {
+	rows, err := q.db.Query(ctx, listWorkspaceIssueProjectScopeTreeWork, arg.WorkspaceID, arg.CompletedBefore)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListWorkspaceIssueProjectScopeTreeWorkRow{}
+	for rows.Next() {
+		var i ListWorkspaceIssueProjectScopeTreeWorkRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkspaceID,
+			&i.IssueID,
+			&i.ProjectID,
+			&i.BaseBranch,
+			&i.Position,
+			&i.Path,
+			&i.TaskBranch,
+			&i.State,
+			&i.Error,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DaemonID,
+			&i.IssuePrefix,
+			&i.WorkspaceName,
+			&i.IssueNumber,
+			&i.Action,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

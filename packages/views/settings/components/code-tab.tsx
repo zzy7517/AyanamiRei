@@ -23,8 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@multica/ui/components/ui/dropdown-menu";
-import { useConfigStore, useFeatureEnabled } from "@multica/core/config";
-import { TASK_SESSIONS_V1_FLAG } from "@multica/core/feature-flags";
+import { useConfigStore } from "@multica/core/config";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useCurrentMember } from "@multica/core/permissions";
 import { useCurrentWorkspace } from "@multica/core/paths";
@@ -67,9 +66,6 @@ export function CodeTab() {
   const { role, member } = useCurrentMember(wsId);
   const isManager = role === "owner" || role === "admin";
   const vcsAvailable = useConfigStore((s) => s.vcsIntegrationAvailable);
-  // Worktrees exist only while task sessions do.
-  const taskSessions = useFeatureEnabled(TASK_SESSIONS_V1_FLAG, false);
-
   // Every member can see the installation list (MUL-2413); connect and
   // disconnect follow the backend's `can_manage` so the UI never offers what
   // the server would reject.
@@ -265,13 +261,11 @@ export function CodeTab() {
 
       <RepositoriesSection connection={githubConnection} />
 
-      {taskSessions ? (
-        <SettingsSection title={t(($) => $.code.task_trees_title)} anchor="task-trees">
-          <SettingsCard>
-            <TaskTreeRetentionRow canManage={isManager} />
-          </SettingsCard>
-        </SettingsSection>
-      ) : null}
+      <SettingsSection title={t(($) => $.code.task_trees_title)} anchor="task-trees">
+        <SettingsCard>
+          <TaskTreeRetentionRow canManage={isManager} />
+        </SettingsCard>
+      </SettingsSection>
 
       <SettingsSection
         title={t(($) => $.code.pr_linking_title)}

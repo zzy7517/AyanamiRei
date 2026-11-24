@@ -7,6 +7,8 @@
   "end_session": "세션 종료",
   "agent_terminal": "에이전트 터미널",
   "restart": "재시작",
+  "preparing_trees": "worktree를 빌드하는 중…",
+  "retry": "다시 시도",
   "status": {
     "connecting": "여는 중…",
     "ended": "세션이 종료되었습니다",

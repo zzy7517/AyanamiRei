@@ -14,18 +14,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/multica-ai/multica/server/internal/daemon/tasktree"
-	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/projectaccess"
 	"github.com/multica-ai/multica/server/internal/service"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
-// The task-tree lifecycle: a person asks for a tree to go or to be built
-// again, and the daemon lists the trees it has to create or remove.
+// The task-tree lifecycle. The desktop app builds and removes a task's trees
+// where their projects' folders are and reports what became of them; the
+// server keeps the record and lists what is left to do.
 
-// Behind the task_sessions_v1 flag: every route here answers 404 while it is
-// off.
 const (
 	codeTreeReady        = "tree_ready"
 	codeTreePending      = "tree_pending"
@@ -47,13 +45,24 @@ const (
 	MaxTaskTreeRetentionDays = 36500
 )
 
-// requireTaskSessionsV1 answers 404 while the task_sessions_v1 flag is off.
-func (h *Handler) requireTaskSessionsV1(w http.ResponseWriter, r *http.Request) bool {
-	if !featureflags.TaskSessionsV1Enabled(r.Context(), h.FeatureFlags) {
-		writeError(w, http.StatusNotFound, "not found")
-		return false
-	}
-	return true
+// TaskTreeWorkItem is one tree the desktop app has to act on. TaskKey is the
+// key its tree layout names the task's directory and branches by. Where the
+// tree goes is where its project's folder is, which the client reads from the
+// project's resources.
+type TaskTreeWorkItem struct {
+	TreeID     string `json:"tree_id"`
+	IssueID    string `json:"issue_id"`
+	TaskKey    string `json:"task_key"`
+	ProjectID  string `json:"project_id"`
+	BaseBranch string `json:"base_branch"`
+	TaskBranch string `json:"task_branch"`
+	// Action is "create" for a tree waiting to be built, "remove" for one of
+	// a task that was complete for longer than its workspace keeps trees.
+	Action string `json:"action"`
+}
+
+type taskTreeWorkResponse struct {
+	Items []TaskTreeWorkItem `json:"items"`
 }
 
 // DaemonTaskTreeWorkItem is one tree a daemon has to act on. TaskKey is the
@@ -75,35 +84,65 @@ type daemonTaskTreeWorkResponse struct {
 	Items []DaemonTaskTreeWorkItem `json:"items"`
 }
 
-// DeleteIssueProjectTree marks a tree deleted: it must not exist. The task
-// branch is kept, for a rebuild continues it; the daemon makes it true on
-// disk. Asking again for a deleted tree is not an error.
-func (h *Handler) DeleteIssueProjectTree(w http.ResponseWriter, r *http.Request) {
-	if !h.requireTaskSessionsV1(w, r) {
-		return
+// taskTreeKey is the key the tree layout names a task's directory and
+// branches by: its identifier with the characters a name cannot hold
+// replaced.
+func taskTreeKey(issuePrefix, workspaceName string, number int32) string {
+	if issuePrefix == "" {
+		issuePrefix = legacyIssuePrefixFromName(workspaceName)
 	}
-	issue, ok := h.loadIssueForUser(w, r, chi.URLParam(r, "id"))
+	return tasktree.TaskKey(service.IssueIdentifier(issuePrefix, number))
+}
+
+// ListTaskTreeWork returns the trees of the workspace the caller's desktop
+// app has to build or remove. The server is what both start from: a tree
+// waits to be built until the app reports it built or failed, and a finished
+// task's trees are listed until it reports them gone.
+func (h *Handler) ListTaskTreeWork(w http.ResponseWriter, r *http.Request) {
+	workspaceID, ok := parseUUIDOrBadRequest(w, h.resolveWorkspaceID(r), "workspace_id")
 	if !ok {
 		return
 	}
-	treeID, ok := parseUUIDOrBadRequest(w, chi.URLParam(r, "treeId"), "tree_id")
+	hidden, ok := h.requestHiddenProjects(w, r, uuidToString(workspaceID))
 	if !ok {
 		return
 	}
-	updated, ok := h.setIssueProjectTree(w, r, issue, treeID, projectTreeDeleted)
-	if !ok {
+	settings, err := h.Queries.GetWorkspaceSettings(r.Context(), workspaceID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load workspace settings")
 		return
 	}
-	_ = updated
-	w.WriteHeader(http.StatusNoContent)
+	// A finished task keeps its trees for as many days as its workspace set.
+	rows, err := h.Queries.ListWorkspaceIssueProjectScopeTreeWork(r.Context(), db.ListWorkspaceIssueProjectScopeTreeWorkParams{
+		WorkspaceID:     workspaceID,
+		CompletedBefore: pgtype.Timestamptz{Time: time.Now().AddDate(0, 0, -taskTreeRetentionDays(settings)), Valid: true},
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list tree work")
+		return
+	}
+	items := make([]TaskTreeWorkItem, 0, len(rows))
+	for _, row := range rows {
+		// Trees of projects the caller may not see are not the caller's to act on.
+		if !hidden.CanSeeProject(row.ProjectID) {
+			continue
+		}
+		items = append(items, TaskTreeWorkItem{
+			TreeID:     uuidToString(row.ID),
+			IssueID:    uuidToString(row.IssueID),
+			TaskKey:    taskTreeKey(row.IssuePrefix, row.WorkspaceName, row.IssueNumber),
+			ProjectID:  uuidToString(row.ProjectID),
+			BaseBranch: row.BaseBranch,
+			TaskBranch: row.TaskBranch,
+			Action:     row.Action,
+		})
+	}
+	writeJSON(w, http.StatusOK, taskTreeWorkResponse{Items: items})
 }
 
 // RebuildIssueProjectTree asks for a deleted or failed tree to be built again,
 // from its base branch and continuing its task branch.
 func (h *Handler) RebuildIssueProjectTree(w http.ResponseWriter, r *http.Request) {
-	if !h.requireTaskSessionsV1(w, r) {
-		return
-	}
 	issue, ok := h.loadIssueForUser(w, r, chi.URLParam(r, "id"))
 	if !ok {
 		return
@@ -261,25 +300,12 @@ func (h *Handler) daemonTaskTreeScopes(w http.ResponseWriter, r *http.Request, s
 	return daemonID, scopes, true
 }
 
-// taskTreeKey is the key the daemon's tree layout names a task's directory
-// and branches by: its identifier with the characters a name cannot hold
-// replaced.
-func taskTreeKey(issuePrefix, workspaceName string, number int32) string {
-	if issuePrefix == "" {
-		issuePrefix = legacyIssuePrefixFromName(workspaceName)
-	}
-	return tasktree.TaskKey(service.IssueIdentifier(issuePrefix, number))
-}
-
 // DaemonListIssueProjectTreeWork returns the trees the daemon has to create
 // (pending) or remove from disk (deleted), among the projects it holds a
 // local_directory for. A pending tree goes to a daemon that may build it: one
 // with no daemon recorded yet, or the one that held it before a rebuild. A
 // deleted tree goes only to the daemon that built it.
 func (h *Handler) DaemonListIssueProjectTreeWork(w http.ResponseWriter, r *http.Request) {
-	if !h.requireTaskSessionsV1(w, r) {
-		return
-	}
 	daemonID, scopes, ok := h.daemonTaskTreeScopes(w, r, r.URL.Query().Get("daemon_id"))
 	if !ok {
 		return
@@ -361,9 +387,6 @@ func (h *Handler) taskTreeRetentionCutoffs(w http.ResponseWriter, r *http.Reques
 // were completed before their workspace's tree retention ran out, for the
 // daemon to remove.
 func (h *Handler) DaemonListIssueProjectMatureTrees(w http.ResponseWriter, r *http.Request) {
-	if !h.requireTaskSessionsV1(w, r) {
-		return
-	}
 	daemonID, scopes, ok := h.daemonTaskTreeScopes(w, r, r.URL.Query().Get("daemon_id"))
 	if !ok {
 		return
