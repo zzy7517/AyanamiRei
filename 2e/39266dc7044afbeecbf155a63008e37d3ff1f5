@@ -1,0 +1,65 @@
+apps/desktop/src/main/terminal/agent-launch.ts
+  s_fc0852876b2926::t_26e3dca0d14da6 187
+packages/core/projects/folders.ts
+  s_fc0852876b2926::t_757dfc1544286f 42-51
+packages/core/projects/index.ts
+  s_fc0852876b2926::t_5c7d24fb1d00bf 32
+packages/core/types/index.ts
+  s_fc0852876b2926::t_b962832796b08f 223
+packages/views/locales/en/modals.json
+  s_fc0852876b2926::t_38619b0f60be2e 136-143
+packages/views/locales/en/projects.json
+  s_fc0852876b2926::t_172b5fc48e881c 137-143
+packages/views/locales/es/modals.json
+  s_fc0852876b2926::t_fb58264366481a 111-118
+packages/views/locales/es/projects.json
+  s_fc0852876b2926::t_74c36fe1cc408e 137-143
+packages/views/locales/fr/modals.json
+  s_fc0852876b2926::t_b9e15abc03cfe0 136-143
+packages/views/locales/fr/projects.json
+  s_fc0852876b2926::t_522a12779676ca 137-143
+packages/views/locales/ja/modals.json
+  s_fc0852876b2926::t_a2f41be04d22c8 135-142
+packages/views/locales/ja/projects.json
+  s_fc0852876b2926::t_b5516544d5b223 137-143
+packages/views/locales/ko/modals.json
+  s_fc0852876b2926::t_44bd17b578721c 135-142
+packages/views/locales/ko/projects.json
+  s_fc0852876b2926::t_b38348b738d09f 137-143
+packages/views/locales/ru/modals.json
+  s_fc0852876b2926::t_8938e534e5b792 130-137
+packages/views/locales/ru/projects.json
+  s_fc0852876b2926::t_dce61bda2c1ef8 137-143
+packages/views/locales/zh-Hans/modals.json
+  s_fc0852876b2926::t_83663e53093003 135-142
+packages/views/locales/zh-Hans/projects.json
+  s_fc0852876b2926::t_701e482411031c 137-143
+packages/views/locales/zh-Hant/modals.json
+  s_fc0852876b2926::t_d019429125eff5 135-142
+packages/views/locales/zh-Hant/projects.json
+  s_fc0852876b2926::t_aea1e50740bd0c 137-143
+packages/views/modals/create-project.tsx
+  s_fc0852876b2926::t_69d6b497def345 4,26,146-147,208-213,216-221,288,362-367,384,389,417-423,803-811,826-830,832-848,1006-1032,1178-1189,1218-1219
+packages/views/projects/components/project-resources-section.tsx
+  s_fc0852876b2926::t_989058cdb4d7c9 16,23,37,89-90,98-100,110-113,162,164,194-201,1326-1471
+server/internal/handler/project_resource.go
+  s_fc0852876b2926::t_9725ddca674a0a 83-84,313-354
+server/internal/handler/project_resource_test.go
+  s_fc0852876b2926::t_3fd3104d176fc5 1882-1910
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "2e39266dc7044afbeecbf155a63008e37d3ff1f5",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
