@@ -1,0 +1,25 @@
+server/cmd/server/router.go
+  s_fc0852876b2926::t_59880796c34ac7 153-154
+server/internal/service/email.go
+  s_fc0852876b2926::t_9606bd7157fd1b 237
+server/internal/handler/config.go
+  s_fc0852876b2926::t_9eda90ec2f7572 121-123
+server/cmd/server/main.go
+  s_fc0852876b2926::t_5a75464eb69979 347
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "d521fd3d9a390814e029a9ffa1cfeac61fd30fa3",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
