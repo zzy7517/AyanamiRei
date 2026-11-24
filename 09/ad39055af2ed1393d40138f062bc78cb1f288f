@@ -1,0 +1,164 @@
+packages/views/locales/fr/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+packages/views/terminal/terminal-page.tsx
+  s_fc0852876b2926::t_929155eab52957 138
+  s_fc0852876b2926::t_58c9c9e48cb0ee 137,139-140
+  s_fc0852876b2926::t_317861b3a6375c 4-5,7-18,27,31,33,35,42,46-47,52,60,66-67,75,77-136,141-155,160-161,165-166,168,170-171,173-178,185-192,197-201,203-205,207-232,234,236-238,240-272,274,276-289,317-319,338-339,366-368
+  s_fc0852876b2926::t_ff81e53538e431 233
+packages/views/locales/en/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+server/internal/daemon/terminal/agent_test.go
+  s_fc0852876b2926::t_f9a5a089cdd155 62-64,113-115,126-128,139-141
+packages/core/terminal/index.ts
+  s_fc0852876b2926::t_ef5ece90349da8 13
+packages/core/projects/local-directories.ts
+  s_fc0852876b2926::t_ca139f8b05e661 1-18,29-34,36-42,49
+  s_fc0852876b2926::t_847bd560b644e6 19-28,35,43-48
+packages/views/terminal/terminal-page.test.tsx
+  s_fc0852876b2926::t_599e14e84a2234 4,245,260-261,280-285,323,442-444
+  s_fc0852876b2926::t_cf70ed44b1c8ce 445
+  s_fc0852876b2926::t_6968cae282bab1 3,8,61-62,65-67,76-77,81-85,90-152,202,208-210,216,229-233,258,270-271,273-279,286-288,290,298-301,303-305,307-311,313-314,316,319-321,324,326-327,330,333-343
+  s_fc0852876b2926::t_534d6910381339 289,345-347,349-352,354-358,360-364,366-374,376-382,384-432,435-439,441,446-454,456-525,528-530,532-536,555-556,564-576
+server/internal/terminal/browser.go
+  s_fc0852876b2926::t_cedab25eed566f 136-139,153,161-171
+  s_fc0852876b2926::t_a3ae00027f1cbd 172-173
+  s_fc0852876b2926::t_38424825e20a45 101-102,105-106
+server/internal/daemon/terminal_ws_test.go
+  s_fc0852876b2926::t_da56b969f613d4 72,97
+server/cmd/server/router.go
+  s_fc0852876b2926::t_e6c106d7cf9589 485
+packages/core/terminal/client.ts
+  s_fc0852876b2926::t_d992a3d2efb7aa 73-77,194-206,323,328-331,532-535,538,552,557-571,578-579,585,593-595,597,609-610,612
+server/internal/terminal/terminal.go
+  s_fc0852876b2926::t_2f88c8912c3fdf 99-102
+  s_fc0852876b2926::t_72dc6e8f5f9d7c 113
+  s_fc0852876b2926::t_6f23881cfcf7c2 138
+  s_fc0852876b2926::t_52f47573bf8b3d 286-289
+server/internal/daemon/config.go
+  s_fc0852876b2926::t_3614affec8d9b7 807-825
+  s_fc0852876b2926::t_619bc8e85f8ca6 98-105
+  s_fc0852876b2926::t_862607adefa03e 127
+  s_fc0852876b2926::t_0f19de317df2d9 682
+  s_fc0852876b2926::t_61cc67323f565f 564-569,571,573
+server/internal/handler/terminal_project_test.go
+  s_fc0852876b2926::t_e4e26c47d28637 1-4,6-18,23-26,28-43,45-112
+  s_fc0852876b2926::t_bda30c4f20f188 5,19-22,27,44
+server/internal/terminal/endtoend_linux_test.go
+  s_fc0852876b2926::t_2298e6d6d60b1c 181
+  s_fc0852876b2926::t_ca231992903eb7 11,195-239
+  s_fc0852876b2926::t_c374618e9602e8 66-68,75
+  s_fc0852876b2926::t_539e2b1b6a4906 107-134,138
+server/pkg/protocol/terminal_test.go
+  s_fc0852876b2926::t_0a47322fcbbf64 265,290-291
+  s_fc0852876b2926::t_9eac15fe7e67f1 260-264,266-289,292-305
+  s_fc0852876b2926::t_2c101236c6577b 211
+server/internal/daemon/terminal/link.go
+  s_fc0852876b2926::t_3b35120b2cda22 86-89,110-126,130-134
+  s_fc0852876b2926::t_533c29b5396fb5 37-38
+server/internal/terminal/project_test.go
+  s_fc0852876b2926::t_6ee0c06f9610e3 111,117
+  s_fc0852876b2926::t_c809048e8738b6 125-129,131-136,141,145-146
+  s_fc0852876b2926::t_09e7fb29346a45 1-110,112-116,118-124,130,137-140,142-144,147-180
+packages/core/terminal/protocol.ts
+  s_fc0852876b2926::t_ef5ece90349da8 32-34,46,164-170,172,174-179
+server/internal/daemon/terminal/path.go
+  s_fc0852876b2926::t_6edba62fb8137b 51,56-61
+  s_fc0852876b2926::t_fb86ddc1ba273d 27-32,43-50,52-53,55
+server/internal/terminal/agent.go
+  s_fc0852876b2926::t_a8347940fdf47f 63-64
+packages/core/paths/paths.ts
+  s_fc0852876b2926::t_6eb5ff94e856f5 101-103,106-111
+server/internal/handler/terminal_project.go
+  s_fc0852876b2926::t_3d73f41c6c1adb 1-76
+server/internal/daemon/terminal/link_test.go
+  s_fc0852876b2926::t_bb99326e54648d 304
+  s_fc0852876b2926::t_a29e26f5009ce5 133
+  s_fc0852876b2926::t_aab8104150a278 198-204
+  s_fc0852876b2926::t_48c986e9dbc6ba 160-164,168,173-192,196-197,205-246
+  s_fc0852876b2926::t_e3e6e85098424d 10-11
+  s_fc0852876b2926::t_f451bfe11825ec 23
+  s_fc0852876b2926::t_7df211950078b1 193-195
+  s_fc0852876b2926::t_525ba4c646c63c 247
+server/internal/terminal/project.go
+  s_fc0852876b2926::t_0a47322fcbbf64 67,69-70
+  s_fc0852876b2926::t_6ee0c06f9610e3 102-103,106
+  s_fc0852876b2926::t_b28ba6919a00ca 1-66,68,71-101,104-105,107-117
+server/internal/daemon/tree_worker_test.go
+  s_fc0852876b2926::t_f63cdd9f166286 134-167
+packages/core/terminal/client.hook.test.tsx
+  s_fc0852876b2926::t_6eb5ff94e856f5 194-223
+  s_fc0852876b2926::t_06fdc80781e169 11
+  s_fc0852876b2926::t_9e57ec2d79f8fc 224
+packages/core/terminal/client.test.ts
+  s_fc0852876b2926::t_6eb5ff94e856f5 6,163-193
+  s_fc0852876b2926::t_09313668b772c4 194
+server/pkg/protocol/terminal.go
+  s_fc0852876b2926::t_0a47322fcbbf64 134-137
+  s_fc0852876b2926::t_774a1e1a2733d1 211-216,219-227
+  s_fc0852876b2926::t_49f62ddae53a17 75-79,84-88,102,117-121,128-133
+  s_fc0852876b2926::t_f040a156f05f85 11-13
+  s_fc0852876b2926::t_71dd0ac60aa7a3 228
+packages/views/locales/ko/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+packages/core/terminal/protocol.test.ts
+  s_fc0852876b2926::t_ac7ffa599b639d 83
+server/internal/daemon/terminal_ws.go
+  s_fc0852876b2926::t_09f813906cffd7 165-167
+server/internal/terminal/relay_test.go
+  s_fc0852876b2926::t_ca231992903eb7 475-476,478-480
+packages/views/locales/es/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+packages/views/locales/zh-Hans/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+packages/core/projects/local-directories.test.tsx
+  s_fc0852876b2926::t_8092bf4f710914 1,3-138
+  s_fc0852876b2926::t_847bd560b644e6 2
+server/internal/daemon/terminal/host.go
+  s_fc0852876b2926::t_9b542bced5d0d3 94-100,106-107,110-117
+  s_fc0852876b2926::t_399a8bf938f746 65-70
+  s_fc0852876b2926::t_06266c3f49ff5a 10-14
+  s_fc0852876b2926::t_aa358cd92f4482 187-188
+  s_fc0852876b2926::t_d70ebb5ed38212 21-22
+  s_fc0852876b2926::t_666123c0c7faf7 158-160,162-186,192-202
+server/internal/daemon/terminal/host_test.go
+  s_fc0852876b2926::t_8d6b7f49595c67 125-128,130-133,135,139,149,162-240,242-260,267
+  s_fc0852876b2926::t_fac1e73387d32d 136
+  s_fc0852876b2926::t_5d4ea90f0c8182 261-262
+  s_fc0852876b2926::t_bd80e4294a58c2 91-92,96,101-104,115-116,118-119,121-124,129,263
+  s_fc0852876b2926::t_edaf72cd1209e7 241
+  s_fc0852876b2926::t_7ed9629399b1e2 480
+  s_fc0852876b2926::t_0011f167787ba3 264-266
+  s_fc0852876b2926::t_db4b56d9f236f5 268-270
+  s_fc0852876b2926::t_4ca4c9eedd0dcb 271-281
+packages/core/projects/index.ts
+  s_fc0852876b2926::t_847bd560b644e6 29
+packages/views/locales/ja/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+server/internal/daemon/terminal/path_test.go
+  s_fc0852876b2926::t_0a47322fcbbf64 37-38,40
+  s_fc0852876b2926::t_4a4bc17ad06a2b 17-21,23-28,39,57-61,63-82,85
+server/internal/handler/terminal_agent.go
+  s_fc0852876b2926::t_bf793a32e68a3b 31,73,102,147
+packages/views/locales/ru/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+packages/core/paths/paths.test.ts
+  s_fc0852876b2926::t_6eb5ff94e856f5 74-75
+packages/views/locales/zh-Hant/terminal.json
+  s_fc0852876b2926::t_8453d97a004276 2-6,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "09ad39055af2ed1393d40138f062bc78cb1f288f",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
