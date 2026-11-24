@@ -197,6 +197,7 @@ function TerminalFor({
   address,
   back,
   title,
+  ensured,
 }: {
   target: TerminalHostTarget;
   /** What keeps this page's terminal across renders. */
@@ -206,6 +207,12 @@ function TerminalFor({
   address: string;
   back?: BackToList;
   title: ReactNode;
+  /**
+   * For an agent's terminal: how many times the page has made sure of the
+   * task's trees. A start refused because the tree was not there is made
+   * again when it changes.
+   */
+  ensured?: number;
 }) {
   const { t } = useT("terminal");
   const navigation = useNavigation();
@@ -244,6 +251,7 @@ function TerminalFor({
           sessionKey={sessionKey}
           terminalId={terminalId}
           address={address}
+          ensured={ensured}
           onLiveChange={setLive}
         />
       </div>
@@ -359,6 +367,10 @@ type Ensured =
  * that is missing, deleted or failed to build is built again first, and the
  * page waits for it. When it cannot be, the page says why and offers to try
  * again. A terminal that is already open is joined without asking.
+ *
+ * One shown before is shown again at once, while the app makes sure of its
+ * tree. The app can refuse to start the agent there because the tree was
+ * removed meanwhile; once the tree is made again the agent starts in it.
  */
 function EnsuredAgentTerminal({
   issueId,
@@ -391,7 +403,7 @@ function EnsuredAgentTerminal({
   // The pair whose tree the agent starts in.
   const pair = scope.items.find((item) => item.tree?.id === treeId);
   const [attempt, setAttempt] = useState(0);
-  const [ensured, setEnsured] = useState<Ensured>(() => {
+  const [ensuredState, setEnsuredState] = useState<Ensured>(() => {
     // An open terminal is joined as it is. One shown before is shown again
     // before the app is asked, as long as the server still says its tree is
     // there: one it says is gone is made again first.
@@ -399,6 +411,8 @@ function EnsuredAgentTerminal({
     const remembered = pair?.tree?.state === "ready" ? lastEnsured.get(issueId) : undefined;
     return remembered ? { step: "ready", built: remembered } : { step: "ensuring" };
   });
+  /** How many times the app made sure of the task's trees from this page. */
+  const [ensured, setEnsured] = useState(0);
 
   useEffect(() => {
     if (terminalId) return;
@@ -406,11 +420,14 @@ function EnsuredAgentTerminal({
     ensureTaskTrees(qc, wsId, { issueId, treeIds: [treeId] }).then(
       (built) => {
         lastEnsured.set(issueId, built);
-        if (!cancelled) setEnsured({ step: "ready", built });
+        if (!cancelled) {
+          setEnsured((count) => count + 1);
+          setEnsuredState({ step: "ready", built });
+        }
       },
       (error: unknown) => {
         if (!cancelled) {
-          setEnsured({ step: "failed", error: error instanceof Error ? error.message : String(error) });
+          setEnsuredState({ step: "failed", error: error instanceof Error ? error.message : String(error) });
         }
       },
     );
@@ -420,20 +437,20 @@ function EnsuredAgentTerminal({
   }, [qc, wsId, issueId, treeId, attempt, terminalId]);
 
   const place: TerminalPlace = folder?.place ?? { kind: "local" };
-  if (ensured.step === "ensuring") {
+  if (ensuredState.step === "ensuring") {
     return <TerminalLoading title={title} label={t(($) => $.preparing_trees)} />;
   }
-  if (ensured.step === "failed") {
+  if (ensuredState.step === "failed") {
     return (
       <TerminalMessage
         title={title}
-        message={ensured.error}
+        message={ensuredState.error}
         action={
           <Button
             type="button"
             size="sm"
             onClick={() => {
-              setEnsured({ step: "ensuring" });
+              setEnsuredState({ step: "ensuring" });
               setAttempt((count) => count + 1);
             }}
           >
@@ -447,7 +464,7 @@ function EnsuredAgentTerminal({
   // A tree is a folder only once it was built: the server's record says so, or
   // making sure of it just did.
   const pathOf = (item: ProjectScopeItem): string | null =>
-    ensured.built.get(item.tree?.id ?? "")?.path ??
+    ensuredState.built.get(item.tree?.id ?? "")?.path ??
     (item.tree?.state === "ready" ? item.tree.path : null);
   // The tree was taken out of the task meanwhile: there is nothing to open.
   const cwd = pair?.tree ? (pathOf(pair) ?? "") : "";
@@ -497,6 +514,7 @@ function EnsuredAgentTerminal({
       terminalId={terminalId}
       address={address}
       title={title}
+      ensured={ensured}
     />
   );
 }
@@ -628,13 +646,31 @@ const TerminalSessionView = forwardRef<TerminalViewHandle, {
   terminalId?: string;
   /** The page's address, without the id of a terminal. */
   address: string;
+  /** See `TerminalFor`. */
+  ensured?: number;
   onLiveChange: (live: boolean) => void;
-}>(function TerminalSessionView({ target, sessionKey, terminalId, address, onLiveChange }, ref) {
+}>(function TerminalSessionView(
+  { target, sessionKey, terminalId, address, ensured = 0, onLiveChange },
+  ref,
+) {
   const navigation = useNavigation();
   const terminal = useRef<TerminalHandle>(null);
   const session = useTerminalSession({ target, key: sessionKey, terminalId });
   const state = useTerminalSessionState(session);
   const live = isOpeningOrRunning(state.status);
+
+  // The agent's tree is made sure of apart from its terminal. The app refuses
+  // to start the agent while its tree is not there, as after the folder was
+  // removed by hand: once the tree is made again after such a refusal, the
+  // agent starts in it. Each start is judged by what was made sure of since
+  // it began, and only a refused one is started again: one that ended is left
+  // to the page's button.
+  const ensuredWhenStarted = useRef(ensured);
+  useEffect(() => {
+    if (state.status === "connecting") ensuredWhenStarted.current = ensured;
+    else if (state.status === "error" && state.error?.code === "tree_not_ready" && ensured !== ensuredWhenStarted.current)
+      session.restart();
+  }, [session, state.status, state.error, ensured]);
 
   useImperativeHandle(
     ref,
