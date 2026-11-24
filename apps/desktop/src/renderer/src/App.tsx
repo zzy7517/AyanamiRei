@@ -22,6 +22,7 @@ import { useWindowOverlayStore } from "./stores/window-overlay-store";
 import { useOpenSettingsShortcut } from "./hooks/use-open-settings-shortcut";
 import { useTabSelectionShortcut } from "./hooks/use-tab-selection-shortcut";
 import { useDaemonIPCBridge } from "./platform/daemon-ipc-bridge";
+import { startDaemonOnLaunch } from "./platform/daemon-start-sync";
 import { createDesktopLocaleAdapter } from "./platform/i18n-adapter";
 import { captureEvent } from "@multica/core/analytics";
 import { AppearanceSync } from "@multica/views/common/appearance-sync";
@@ -120,6 +121,15 @@ function AppContent() {
     if (!runtimeConfig) return;
     window.daemonAPI.setTargetApiUrl(runtimeConfig.apiUrl);
   }, [runtimeConfig]);
+
+  // Start the daemon once the user record is known. The ordering inside
+  // startDaemonOnLaunch is load-bearing — see that module.
+  useEffect(() => {
+    if (!user || !runtimeConfig) return;
+    startDaemonOnLaunch(window.daemonAPI, runtimeConfig.apiUrl).catch((err) => {
+      console.error("Failed to start the daemon", err);
+    });
+  }, [user, runtimeConfig]);
 
   // When a session that started with zero workspaces creates the first one,
   // restart the daemon so it picks the workspace up immediately rather than
