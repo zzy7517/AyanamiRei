@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### イメージタグが固定されていないか確認する
 
-両方のイメージが `${MULTICA_IMAGE_TAG:-latest}` として解決され（`docker-compose.selfhost.yml`：`services.backend.image`、`services.frontend.image`）、`.env.example` は `MULTICA_IMAGE_TAG=latest` を同梱しています。
+backend イメージは `${MULTICA_IMAGE_TAG:-latest}` として解決され（`docker-compose.selfhost.yml`：`services.backend.image`）、`.env.example` は `MULTICA_IMAGE_TAG=latest` を同梱しています。
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

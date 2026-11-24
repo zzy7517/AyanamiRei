@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### 이미지 태그가 고정되어 있지 않은지 확인
 
-두 이미지 모두 `${MULTICA_IMAGE_TAG:-latest}`로 해석되며(`docker-compose.selfhost.yml`, `services.backend.image` / `services.frontend.image`), `.env.example`에는 `MULTICA_IMAGE_TAG=latest`가 들어 있습니다.
+backend 이미지는 `${MULTICA_IMAGE_TAG:-latest}`로 해석되며(`docker-compose.selfhost.yml`, `services.backend.image`), `.env.example`에는 `MULTICA_IMAGE_TAG=latest`가 들어 있습니다.
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

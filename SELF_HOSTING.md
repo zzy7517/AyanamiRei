@@ -7,7 +7,6 @@ Deploy Multica on your own infrastructure in minutes.
 | Component | Description | Technology |
 |-----------|-------------|------------|
 | **Backend** | REST API + WebSocket server | Go (single binary) |
-| **Frontend** | Web application | Next.js 16 |
 | **Database** | Primary data store | PostgreSQL 17 (`pgcrypto` + `pg_trgm`) |
 | **Collab** (optional) | Live co-editing for Docs | Node.js (Hocuspocus + Yjs) |
 

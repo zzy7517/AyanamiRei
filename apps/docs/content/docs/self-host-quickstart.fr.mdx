@@ -336,7 +336,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### Vérifier que le tag d'image n'est pas figé
 
-Les deux images sont résolues en `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image` / `services.frontend.image`), et `.env.example` fournit `MULTICA_IMAGE_TAG=latest`.
+L'image backend est résolue en `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image`), et `.env.example` fournit `MULTICA_IMAGE_TAG=latest`.
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

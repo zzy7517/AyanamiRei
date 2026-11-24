@@ -58,8 +58,8 @@ Running `make selfhost` again reuses the existing `.env` and volumes; it does no
 
 1. Create `.env` from `.env.example`
 2. Generate a random `JWT_SECRET`, PostgreSQL password, and `MULTICA_VCS_SECRET_KEY` (the encryption key for self-hosted Git integrations)
-3. Pull the PostgreSQL, Multica backend, and Multica frontend images
-4. Create persistent volumes and start the three containers
+3. Pull the PostgreSQL and Multica backend images
+4. Create persistent volumes and start the containers
 5. Wait until the backend starts answering health checks
 
 </Accordion>
@@ -336,7 +336,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### Check for a pinned image tag
 
-Both images resolve as `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image` / `services.frontend.image`), and `.env.example` ships `MULTICA_IMAGE_TAG=latest`.
+The backend image resolves as `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image`), and `.env.example` ships `MULTICA_IMAGE_TAG=latest`.
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### 確認沒有釘死映象 tag
 
-兩個映象都寫成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`、`services.frontend.image`），而 `.env.example` 裡預設是 `MULTICA_IMAGE_TAG=latest`。
+backend 映象寫成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`），而 `.env.example` 裡預設是 `MULTICA_IMAGE_TAG=latest`。
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

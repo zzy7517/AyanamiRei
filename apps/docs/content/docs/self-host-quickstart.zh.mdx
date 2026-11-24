@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### 确认没有钉死镜像 tag
 
-两个镜像都写成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`、`services.frontend.image`），而 `.env.example` 里默认是 `MULTICA_IMAGE_TAG=latest`。
+backend 镜像写成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`），而 `.env.example` 里默认是 `MULTICA_IMAGE_TAG=latest`。
 
 ```bash
 grep MULTICA_IMAGE_TAG .env
