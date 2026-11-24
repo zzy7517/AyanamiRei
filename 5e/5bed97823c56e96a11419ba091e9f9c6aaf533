@@ -1,0 +1,25 @@
+apps/web/app/(auth)/onboarding/page.tsx
+  s_fc0852876b2926::t_2806aa9ff0eb85 17-18,31-32,53-54,60-62
+apps/web/app/(auth)/workspaces/new/page.tsx
+  s_fc0852876b2926::t_e13cad9ca97d36 24-25,31-34
+apps/web/app/(auth)/onboarding/page.test.tsx
+  s_fc0852876b2926::t_31440432472b34 1-101
+apps/web/app/(auth)/workspaces/new/page.test.tsx
+  s_fc0852876b2926::t_08354b08ece1f2 1-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "5e5bed97823c56e96a11419ba091e9f9c6aaf533",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
