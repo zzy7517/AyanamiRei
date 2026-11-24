@@ -35,10 +35,10 @@ DEV_WORKSPACES_PARENT="${MULTICA_DEV_WORKSPACES_PARENT:-$HOME}"
 DEV_DESKTOP_APP_DATA="${MULTICA_DEV_DESKTOP_APP_DATA:-}"
 DEV_PROFILES_HOME="${MULTICA_DEV_PROFILES_HOME:-$HOME/.multica/profiles}"
 
-DEV_EMAIL="${MULTICA_DEV_EMAIL:-dev@localhost}"
-DEV_CODE_DEFAULT=888888
-WORKSPACE_NAME="${MULTICA_DEV_WORKSPACE_NAME:-Dev}"
-WORKSPACE_SLUG="${MULTICA_DEV_WORKSPACE_SLUG:-dev}"
+# The API serves every request as one local user and creates this account and
+# workspace on its first start; the script only points a profile at them.
+DEV_EMAIL=dev@localhost
+WORKSPACE_SLUG=dev
 
 ALL_COMPONENTS="api collab web daemon desktop"
 DEFAULT_COMPONENTS="api collab web"
@@ -50,9 +50,8 @@ DEV_TMPDIR="${MULTICA_DEV_TMPDIR:-$HOME/.multica/dev-tmp}"
 
 # The agent runtime exports these pointing at PRODUCTION, and MULTICA_SERVER_URL
 # silently outranks server_url in a saved profile config. Every long-lived child
-# is launched without them, so a local daemon cannot authenticate its local
-# token against the production API — which fails as a bare 401 and reads like a
-# product bug. PATH is never stripped: the daemon resolves agent CLI paths by
+# is launched without them, so a local daemon cannot end up registered with the
+# production API. PATH is never stripped: the daemon resolves agent CLI paths by
 # forking the login shell.
 CLEAN_ENV=(env
   -u MULTICA_SERVER_URL -u MULTICA_TOKEN -u MULTICA_WORKSPACE_ID
@@ -424,25 +423,6 @@ load_env_file() {
   . "$root/scripts/local-env.sh"
 }
 
-# The verification code has to be in the file BEFORE the backend starts: the
-# handler reads the variable at request time, but the process loads the file
-# once. Setting it here removes the start → edit → restart detour, and is what
-# makes `up` able to log itself in without a human reading a log for a code.
-ensure_dev_code() {
-  local file="$REPO_ROOT/$1" tmp
-  if grep -qE '^MULTICA_DEV_VERIFICATION_CODE=[0-9]{6}$' "$file"; then
-    return 0
-  fi
-  if grep -q '^MULTICA_DEV_VERIFICATION_CODE=' "$file"; then
-    tmp="$(mktemp)"
-    sed "s/^MULTICA_DEV_VERIFICATION_CODE=.*/MULTICA_DEV_VERIFICATION_CODE=$DEV_CODE_DEFAULT/" "$file" > "$tmp"
-    mv "$tmp" "$file"
-  else
-    printf '\nMULTICA_DEV_VERIFICATION_CODE=%s\n' "$DEV_CODE_DEFAULT" >> "$file"
-  fi
-  info "Set MULTICA_DEV_VERIFICATION_CODE=$DEV_CODE_DEFAULT in $1 (ignored when APP_ENV=production)."
-}
-
 set_env_value() {
   local file=$1 tmp
   tmp="$(mktemp)"
@@ -475,12 +455,11 @@ rewrite_env_ports() {
   set_env_value "$file" NEXT_PUBLIC_WS_URL "ws://localhost:${backend}/ws"
 }
 
-# `make` derives LOCAL_UPLOAD_BASE_URL and GOOGLE_REDIRECT_URI before the slot
-# exists, so a first run inherits :8080 and :3000 whether the slot was
-# allocated or adopted from a generated .env.worktree.
+# `make` derives LOCAL_UPLOAD_BASE_URL before the slot exists, so a first run
+# inherits :8080 whether the slot was allocated or adopted from a generated
+# .env.worktree.
 sync_slot_urls() {
   sync_local_url "$1" LOCAL_UPLOAD_BASE_URL "http://localhost:$2" '/?'
-  sync_local_url "$1" GOOGLE_REDIRECT_URI "http://localhost:$3/auth/callback" '/auth/callback'
 }
 
 # The key follows the slot only while it holds a bare localhost origin; an S3,
@@ -1016,7 +995,9 @@ EOF
   chmod 600 "$config"
 }
 
-ensure_credentials() {
+# Writes the CLI profile for the local user's workspace. The API needs no
+# credential, so the profile is only a server URL and a workspace.
+ensure_profile() {
   local server="http://localhost:${BACKEND_PORT}" config="$PROFILE_DIR/config.json"
   local ws
 
@@ -1034,7 +1015,7 @@ ensure_credentials() {
       process.stdout.write(match.id);
     ' "$(curl -sS --max-time 5 "$server/api/workspaces")" "$WORKSPACE_SLUG" 2>/dev/null || true)"
   fi
-  [ -n "$ws" ] || die "fixed workspace $WORKSPACE_SLUG is unavailable"
+  [ -n "$ws" ] || die "workspace $WORKSPACE_SLUG is unavailable; the API creates it on first start"
 
   write_profile_config "$config" "$ws"
   WORKSPACE_ID="$ws"
@@ -1042,8 +1023,9 @@ ensure_credentials() {
   ok "Wrote profile $PROFILE for workspace $WORKSPACE_SLUG"
 }
 
-# A fresh user has onboarded_at = NULL and a browser login is bounced to
-# /onboarding, so the URL this script prints would not land in the app. The
+# A user with onboarded_at = NULL is bounced to /onboarding, so the URL this
+# script prints would not land in the app. The API marks the local user
+# onboarded when it creates it; this covers a user row that predates that. The
 # server keeps the first completion time, so repeating this is harmless.
 ensure_onboarded() {
   curl -sf --max-time 5 -X POST "http://localhost:${BACKEND_PORT}/api/me/onboarding/complete" \
@@ -1053,11 +1035,9 @@ ensure_onboarded() {
     >/dev/null || warn "could not mark $DEV_EMAIL onboarded; the browser may open /onboarding"
 }
 
-# Every component set gets the same signed-in, onboarded workspace with issues
-# in it: Web, Playwright and scripts/dev-fixtures.mjs all start from the profile
-# token, and Desktop and the daemon sign in with it.
+# Every component set gets the same onboarded workspace with issues in it.
 seed_dev_workspace() {
-  ensure_credentials
+  ensure_profile
   ensure_fixture_issues
 }
 
@@ -1078,7 +1058,7 @@ ensure_fixture_issues() {
     status="${entry%%|*}"
     title="${entry#*|}"
     curl -sf --max-time 5 -X POST "$server/api/issues" \
-      -H "Authorization: Bearer $DEV_TOKEN" -H "X-Workspace-ID: $WORKSPACE_ID" \
+      -H "X-Workspace-ID: $WORKSPACE_ID" \
       -H 'Content-Type: application/json' \
       -d "{\"title\":\"$title\",\"status\":\"$status\",\"priority\":\"medium\",\"description\":\"Seeded by scripts/dev-env.sh so issue views have content.\"}" \
       >/dev/null || { warn "failed to create fixture issue '$title'"; return 0; }
@@ -1214,7 +1194,7 @@ start_desktop() {
 
   write_desktop_env_file
   # electron-vite turns REMOTE_DEBUGGING_PORT into
-  # --remote-debugging-port; turbo.json passes both through to the dev task.
+  # --remote-debugging-port; turbo.json passes it through to the dev task.
   local launch_env=(env
     DESKTOP_RENDERER_PORT="$DESKTOP_RENDERER_PORT" DESKTOP_APP_SUFFIX="$DESKTOP_APP_SUFFIX")
   [ -z "$DESKTOP_CDP_PORT" ] || launch_env+=(REMOTE_DEBUGGING_PORT="$DESKTOP_CDP_PORT")
@@ -1627,7 +1607,7 @@ print_handoff() {
   fi
   if component_selected desktop; then
     entrypoint="${entrypoint}
-  Desktop     signed in as ${DEV_EMAIL}, workspace /${WORKSPACE_SLUG}/issues"
+  Desktop     user ${DEV_EMAIL}, workspace /${WORKSPACE_SLUG}/issues"
     [ -z "${DESKTOP_CDP_PORT:-}" ] || entrypoint="${entrypoint}
   CDP         http://127.0.0.1:${DESKTOP_CDP_PORT}   (chromium.connectOverCDP)"
   fi
@@ -1636,8 +1616,8 @@ print_handoff() {
 ${C_GREEN}✓ Environment ready.${C_OFF}
 
   ${entrypoint}
-  Sign in     ${DEV_EMAIL}  ·  code ${MULTICA_DEV_VERIFICATION_CODE:-$DEV_CODE_DEFAULT}
-  Token       profile ${PROFILE} (onboarded, workspace /${WORKSPACE_SLUG})
+  User        ${DEV_EMAIL}  ·  no sign-in: the API serves every request as this local user
+  Profile     ${PROFILE} (workspace /${WORKSPACE_SLUG})
   Fixtures    make env-exec ARGS="-- node scripts/dev-fixtures.mjs all"
   Backend     http://localhost:${BACKEND_PORT}   (GET /health reports pid + commit + started_at)
   Live docs   ${live_docs}
@@ -1778,7 +1758,6 @@ cmd_up() {
     fi
     info "Created $ENV_FILE"
   fi
-  ensure_dev_code "$ENV_FILE"
   load_env_file "$ENV_FILE"
 
   acquire_lock
@@ -1854,7 +1833,7 @@ cmd_up() {
     load_manifest "$NAME"
     ok "Registered environment $NAME"
   fi
-  sync_slot_urls "$ENV_FILE" "$BACKEND_PORT" "$FRONTEND_PORT"
+  sync_slot_urls "$ENV_FILE" "$BACKEND_PORT"
   bind_paths
   # The CDP port is recorded like any other allocation: later `make up` runs
   # and restarts keep it until --no-cdp clears it.
@@ -2212,11 +2191,11 @@ daemon (agent daemon), desktop (Electron). Anything selected implies api.
 The default is api,collab,web. Without a running collab, docs save through
 the API instead of being edited live.
 
-Every environment has an onboarded workspace with two issues, signed in
-through its CLI profile; scripts/dev-fixtures.mjs adds chat, Agent Builder,
-wide-markdown issue content, a running agent task and a Work panel with
-notifications, pins and projects. desktop starts signed in. --cdp exposes a
-Chrome DevTools Protocol port (printed by up and status --json) for Playwright's
+Every environment has an onboarded workspace with two issues, served to every
+client as one local user with no sign-in; scripts/dev-fixtures.mjs adds chat,
+Agent Builder, wide-markdown issue content, a running agent task and a Work
+panel with notifications, pins and projects. --cdp exposes a Chrome DevTools
+Protocol port (printed by up and status --json) for Playwright's
 connectOverCDP; the port is kept for later runs until --no-cdp.
 
 down keeps the database, the CLI profile and the allocated slot; with

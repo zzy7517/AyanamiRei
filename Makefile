@@ -22,7 +22,6 @@ MULTICA_APP_URL ?= $(FRONTEND_ORIGIN)
 DATABASE_URL ?= postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 NEXT_PUBLIC_API_URL ?= http://localhost:$(PORT)
 NEXT_PUBLIC_WS_URL ?= ws://localhost:$(PORT)/ws
-GOOGLE_REDIRECT_URI ?= $(FRONTEND_ORIGIN)/auth/callback
 MULTICA_SERVER_URL ?= ws://localhost:$(PORT)/ws
 # Local dev default only. Compose passes LOCAL_UPLOAD_BASE_URL to the self-host
 # backend, where unset keeps upload URLs relative to the API origin; matching on
@@ -167,7 +166,7 @@ selfhost-stop: ## Stop the self-hosted Docker Compose stack
 #   make up                     api + collab + web
 #   make up C=api,collab,web,daemon  add the agent daemon
 #   make up C=desktop           Electron against this environment's backend
-#   make up C=desktop ARGS=--cdp  ...signed in, with a DevTools port for Playwright
+#   make up C=desktop ARGS=--cdp  ...with a DevTools port for Playwright
 #   make up ARGS=--ephemeral    agent-owned, expires, collected by `make gc`
 #   make down C=daemon          stop only the daemon; everything else keeps running
 
@@ -336,7 +335,7 @@ server: ## Run only the Go server for the current checkout
 	@bash scripts/ensure-postgres.sh "$(ENV_FILE)"
 	cd server && go run ./cmd/server
 
-daemon: ## Restart the local agent daemon using the CLI's stored auth/session
+daemon: ## Restart the local agent daemon on the "local" CLI profile
 	@$(MAKE) multica MULTICA_ARGS="daemon restart --profile local"
 
 cli: ## Run the multica CLI with ARGS or MULTICA_ARGS from source

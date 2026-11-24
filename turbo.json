@@ -55,13 +55,11 @@
       "cache": false,
       "persistent": true,
       // scripts/dev-env.sh opens a Desktop DevTools port (read by
-      // electron-vite) and signs the dev Desktop in (read by its main process).
-      // Desktop's bundled CLI finds a custom dev-env registry through
-      // MULTICA_DEV_HOME, or refuses its daemon inside an agent task.
+      // electron-vite). Desktop's bundled CLI finds a custom dev-env registry
+      // through MULTICA_DEV_HOME, or refuses its daemon inside an agent task.
       // VITE_DEV_TOOLBAR turns on the web/desktop dev status bar.
       "passThroughEnv": [
         "REMOTE_DEBUGGING_PORT",
-        "MULTICA_DEV_AUTH_TOKEN",
         "MULTICA_DEV_HOME",
         "VITE_DEV_TOOLBAR"
       ]

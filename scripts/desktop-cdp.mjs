@@ -7,17 +7,16 @@
 //   make env-exec ARGS="-- node scripts/desktop-cdp.mjs --record run.mp4 ./my-steps.mjs"
 //
 // Run it through `make env-exec`: that is where the CDP endpoint, renderer
-// port, backend port and dev verification code come from. A script argument is
-// an ES module whose default export receives { browser, context, page, env,
-// login, screencast, args }. The managed Desktop starts signed in; --login (or
-// the script's `login()`) restores that session after a step signed out.
+// port and backend port come from. A script argument is an ES module whose
+// default export receives { browser, context, page, env, screencast, args }.
+// The environment's API serves every request as one local user, so the managed
+// Desktop opens straight into its workspace and there is no sign-in step.
 //
 // The helper only ever disconnects. The app belongs to the environment, and
 // `make down` / `make destroy` are what stop it.
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -25,11 +24,10 @@ import { chromium } from "@playwright/test";
 
 const USAGE = `Usage: node scripts/desktop-cdp.mjs [options] [script.mjs [script args...]]
 
-  --login             make sure the dev user is signed in and onboarded, then wait for the shell
   --screenshot FILE   save a PNG of the main window when done
   --record FILE.mp4   record a CDP screencast while the script runs
   --cdp URL           CDP endpoint (default: $MULTICA_DEV_DESKTOP_CDP_URL)
-  --timeout SECONDS   how long to wait for the app and the shell (default: 60)
+  --timeout SECONDS   how long to wait for the app (default: 60)
 
 Run through \`make env-exec ARGS="-- node scripts/desktop-cdp.mjs ..."\`.`;
 
@@ -43,7 +41,7 @@ function log(message) {
 }
 
 function parseCli(argv) {
-  const options = { login: false, screenshot: "", record: "", cdp: "", timeout: 60, script: "", args: [] };
+  const options = { screenshot: "", record: "", cdp: "", timeout: 60, script: "", args: [] };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const value = () => {
@@ -53,8 +51,7 @@ function parseCli(argv) {
     if (arg === "-h" || arg === "--help") {
       console.log(USAGE);
       process.exit(0);
-    } else if (arg === "--login") options.login = true;
-    else if (arg === "--screenshot") options.screenshot = value();
+    } else if (arg === "--screenshot") options.screenshot = value();
     else if (arg === "--record") options.record = value();
     else if (arg === "--cdp") options.cdp = value();
     else if (arg === "--timeout") options.timeout = Number(value());
@@ -109,111 +106,6 @@ async function mainRendererPage(browser, rendererUrl, deadline) {
     if (Date.now() > deadline) fail(`no main renderer window on port ${port} appeared in time.`);
     await sleep(500);
   }
-}
-
-async function request(apiUrl, method, path, { token, workspaceId, body } = {}) {
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (workspaceId) headers["X-Workspace-ID"] = workspaceId;
-  const response = await fetch(`${apiUrl}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const text = await response.text();
-  if (!response.ok) {
-    const error = new Error(`${method} ${path} → ${response.status} ${text.slice(0, 300)}`);
-    error.status = response.status;
-    throw error;
-  }
-  return text ? JSON.parse(text) : null;
-}
-
-async function tokenIsValid(apiUrl, token) {
-  if (!token) return false;
-  try {
-    await request(apiUrl, "GET", "/api/me", { token });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// `make up` signs the environment's CLI profile in with a personal access
-// token, the same one Desktop starts with. Reusing it avoids requesting a new
-// login code, which the backend rate-limits.
-function profileToken(env) {
-  if (!env.MULTICA_DEV_PROFILE) return null;
-  const home = env.MULTICA_DEV_PROFILES_HOME || join(homedir(), ".multica", "profiles");
-  try {
-    return JSON.parse(readFileSync(join(home, env.MULTICA_DEV_PROFILE, "config.json"), "utf8")).token || null;
-  } catch {
-    return null;
-  }
-}
-
-async function ensureWorkspace(apiUrl, token, env) {
-  const slug = env.MULTICA_DEV_WORKSPACE_SLUG || "dev";
-  const name = env.MULTICA_DEV_WORKSPACE_NAME || "Dev";
-  const workspaces = (await request(apiUrl, "GET", "/api/workspaces", { token })) ?? [];
-  const existing = workspaces.find((ws) => ws.slug === slug) ?? workspaces[0];
-  if (existing) return existing;
-  return request(apiUrl, "POST", "/api/workspaces", { token, body: { name, slug } });
-}
-
-// Signs in through the API rather than the form: Desktop keeps its session in
-// localStorage, so writing the token and reloading lands in the same state a
-// real login does, without depending on login-page markup.
-async function login(page, env, { timeoutMs }) {
-  if (!env.PORT) fail("PORT is not set; run this through `make env-exec`.");
-  const apiUrl = `http://localhost:${env.PORT}`;
-  const email = env.MULTICA_DEV_EMAIL || "dev@localhost";
-  const code = env.MULTICA_DEV_VERIFICATION_CODE || "888888";
-
-  const stored = await page.evaluate(() => localStorage.getItem("multica_token"));
-  let token = null;
-  for (const candidate of [stored, profileToken(env)]) {
-    if (await tokenIsValid(apiUrl, candidate)) {
-      token = candidate;
-      break;
-    }
-  }
-  if (!token) {
-    try {
-      await request(apiUrl, "POST", "/auth/send-code", { body: { email } });
-    } catch (error) {
-      if (error.status !== 429) throw error;
-      fail(`${error.message}\nA login code was requested moments ago; wait a minute and retry.`);
-    }
-    try {
-      ({ token } = await request(apiUrl, "POST", "/auth/verify-code", { body: { email, code } }));
-    } catch (error) {
-      fail(`${error.message}\nDo not retry immediately: repeated verify attempts lock the code. Wait ~40s.`);
-    }
-  }
-
-  const workspace = await ensureWorkspace(apiUrl, token, env);
-  const me = await request(apiUrl, "GET", "/api/me", { token });
-  if (!me.onboarded_at) {
-    await request(apiUrl, "POST", "/api/me/onboarding/complete", {
-      token,
-      workspaceId: workspace.id,
-      body: { completion_path: "skip_existing", workspace_id: workspace.id },
-    });
-  }
-
-  // The desktop shell's canvas; it shows a role=status loader until the
-  // workspace has resolved.
-  const shell = page.locator('[data-slot="main-canvas"]').first();
-  const changed = token !== stored || !me.onboarded_at;
-  if (changed || !(await shell.isVisible())) {
-    await page.evaluate((value) => localStorage.setItem("multica_token", value), token);
-    await page.reload();
-  }
-  await shell.waitFor({ state: "visible", timeout: timeoutMs });
-  await shell.locator('> [role="status"]').waitFor({ state: "detached", timeout: timeoutMs });
-  log(`signed in as ${email} in workspace ${workspace.slug}`);
-  return { token, workspace };
 }
 
 // CDP screencasts emit a frame only when the page repaints, so each frame's
@@ -276,9 +168,6 @@ async function main() {
   const context = page.context();
   log(`attached to ${cdpUrl} → ${page.url()}`);
 
-  const loginHere = () => login(page, env, { timeoutMs });
-  if (options.login) await loginHere();
-
   let stopRecording;
   const recordTo = options.record ? resolve(options.record) : "";
   if (recordTo) stopRecording = await screencast(page, `${recordTo}.frames`);
@@ -287,7 +176,7 @@ async function main() {
     if (options.script) {
       const module = await import(pathToFileURL(resolve(options.script)).href);
       if (typeof module.default !== "function") fail(`${options.script} must export a default async function.`);
-      await module.default({ browser, context, page, env, login: loginHere, screencast, args: options.args });
+      await module.default({ browser, context, page, env, screencast, args: options.args });
     }
   } finally {
     if (stopRecording) {

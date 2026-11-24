@@ -8,13 +8,13 @@
 //   make env-exec ARGS="-- node scripts/dev-fixtures.mjs task --queued --json"
 //   make env-exec ARGS="-- node scripts/dev-fixtures.mjs sidebar"
 //
-// Replies come from the daemon API, driven with the environment profile's user
-// token: the script registers a fixture runtime, then claims, starts and
-// completes each task it caused with canned Markdown, so content appears without
-// running a model through `make up C=daemon`. The `task` fixture claims and
-// starts its task but never completes it. Every run adds new sessions and
-// issues and then exits; nothing keeps running unless `task --hold` was asked
-// to heartbeat.
+// Replies come from the daemon API, which serves every request as the
+// environment's local user: the script registers a fixture runtime, then
+// claims, starts and completes each task it caused with canned Markdown, so
+// content appears without running a model through `make up C=daemon`. The
+// `task` fixture claims and starts its task but never completes it. Every run
+// adds new sessions and issues and then exits; nothing keeps running unless
+// `task --hold` was asked to heartbeat.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -83,26 +83,28 @@ function loadProfile(env) {
   try {
     config = JSON.parse(readFileSync(file, "utf8"));
   } catch (error) {
-    fail(`could not read ${file}: ${error.message}\nRun \`make up\` first; it signs the profile in.`);
+    fail(`could not read ${file}: ${error.message}\nRun \`make up\` first; it writes the profile.`);
   }
-  if (!config.token || !config.workspace_id) fail(`${file} has no token or workspace; re-run \`make up\`.`);
+  if (!config.workspace_id) fail(`${file} has no workspace; re-run \`make up\`.`);
   return {
     apiUrl: env.PORT ? `http://localhost:${env.PORT}` : config.server_url,
     appUrl: env.FRONTEND_PORT ? `http://localhost:${env.FRONTEND_PORT}` : config.app_url,
-    token: config.token,
     workspaceId: config.workspace_id,
   };
 }
 
-function client({ apiUrl, token, workspaceId }) {
+// A token is sent only for a task's own credential, which makes the request
+// the agent's; everything else is the local user's.
+function client({ apiUrl, workspaceId, token }) {
   return async function request(method, path, body) {
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Workspace-ID": workspaceId,
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
     const response = await fetch(`${apiUrl}${path}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "X-Workspace-ID": workspaceId,
-      },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await response.text();
@@ -399,7 +401,6 @@ const SIDEBAR_SCRIPTS = [
       { issue: "checklist", update: { status: "blocked" } },
       { issue: "flags", update: { priority: "urgent" } },
       { issue: "dropoff", comment: () => `Last 30 days, by step:\n\n${DROPOFF_TABLE}\n\nThe invite step loses the most people.` },
-      { issue: "roadmap", react: "🎉" },
     ],
   },
 ];
@@ -644,7 +645,6 @@ async function seedSidebar({ request, profile, runtime, appUrl, slug }) {
         await asAgent("PUT", `/api/issues/${issue.id}`, body);
       }
       if (action.comment) await asAgent("POST", `/api/issues/${issue.id}/comments`, { content: action.comment(dev) });
-      if (action.react) await asAgent("POST", `/api/comments/${issue.devComment.id}/reactions`, { emoji: action.react });
     }
     await request("POST", `/api/daemon/tasks/${task.id}/complete`, { output: script.report });
   }
@@ -717,7 +717,7 @@ async function main() {
 
   const workspaces = (await request("GET", "/api/workspaces")) ?? [];
   const workspace = workspaces.find((ws) => ws.id === profile.workspaceId);
-  if (!workspace) fail(`the profile's workspace ${profile.workspaceId} is not visible to its token.`);
+  if (!workspace) fail(`the profile's workspace ${profile.workspaceId} is not in the workspace list the API returned.`);
   const context = { request, profile, appUrl: profile.appUrl, slug: workspace.slug, queued };
 
   if (kinds.some((kind) => kind !== "issue")) {
