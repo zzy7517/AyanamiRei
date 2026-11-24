@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/realtime"
@@ -119,7 +118,7 @@ func TestEveryInboxRouteDeniesMachineCredentialsWithoutOwnerTrigger(t *testing.T
 	ownerTriggered := mintInboxTaskToken(t, db, ownerTaskID, agentID)
 	otherTriggered := mintInboxTaskToken(t, db, runningTask(other), agentID)
 
-	router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{})
 
 	call := func(method, path string, headers ...string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(method, path, nil)

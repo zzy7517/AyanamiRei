@@ -90,7 +90,7 @@ func (f inboxWriteFixture) taskToken(t *testing.T, originator any) string {
 }
 
 func serveInboxEndpoint(handler func(*Handler, http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return middleware.FixedUser(testHandler.Queries)(
+	return middleware.FixedUser(testHandler.Queries, middleware.SystemUserEmail)(
 		middleware.RequireWorkspaceMember(testHandler.Queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler(testHandler, w, r)
 		})),
@@ -232,7 +232,7 @@ func TestUnreadInboxSummaryTaskCredentialStaysInBoundWorkspace(t *testing.T) {
 			h := *testHandler
 			h.InboxReads = inboxread.New(inboxread.Config{Concurrency: 2})
 			h.TxStarter = starter
-			asAgent := middleware.FixedUser(h.Queries)(
+			asAgent := middleware.FixedUser(h.Queries, middleware.SystemUserEmail)(
 				middleware.RequireWorkspaceMember(h.Queries)(http.HandlerFunc(h.UnreadInboxSummary)))
 			asOwner := middleware.RequireWorkspaceMember(h.Queries)(http.HandlerFunc(h.UnreadInboxSummary))
 			agentRequest := func() *http.Request {

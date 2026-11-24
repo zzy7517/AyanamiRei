@@ -99,7 +99,7 @@ func TestMain(m *testing.M) {
 		pool.Close()
 		os.Exit(1)
 	}
-	fixedUserID, err = middleware.ResolveFixedUserID(ctx, testHandler.Queries)
+	fixedUserID, err = middleware.ResolveFixedUserID(ctx, testHandler.Queries, middleware.SystemUserEmail)
 	if err != nil {
 		fmt.Printf("Failed to resolve fixed system user: %v\n", err)
 		pool.Close()
@@ -204,9 +204,6 @@ func cleanupHandlerTestFixture(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	if _, err := pool.Exec(ctx, `DELETE FROM "user" WHERE email = $1`, handlerTestEmail); err != nil {
-		return err
-	}
-	if _, err := pool.Exec(ctx, `DELETE FROM member WHERE user_id = $1`, fixedUserID); err != nil {
 		return err
 	}
 	return nil

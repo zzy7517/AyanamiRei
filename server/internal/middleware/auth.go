@@ -18,8 +18,9 @@ const SystemUserEmail = "dev@localhost"
 // FixedUser resolves every request to the one local deployment identity. The
 // router ensures the user exists during startup; resolution still checks the
 // row so a database reset produces an actionable failure rather than a request
-// acting as a phantom user.
-func FixedUser(queries *db.Queries) func(http.Handler) http.Handler {
+// acting as a phantom user. email names that identity and is SystemUserEmail
+// unless a test supplies its own.
+func FixedUser(queries *db.Queries, email string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r.Header.Del("X-Actor-Source")
@@ -47,9 +48,9 @@ func FixedUser(queries *db.Queries) func(http.Handler) http.Handler {
 				return
 			}
 
-			userID, err := ResolveFixedUserID(r.Context(), queries)
+			userID, err := ResolveFixedUserID(r.Context(), queries, email)
 			if errors.Is(err, pgx.ErrNoRows) {
-				slog.Error("fixed system user is missing", "email", SystemUserEmail)
+				slog.Error("fixed system user is missing", "email", email)
 				writeError(w, http.StatusServiceUnavailable, "system user unavailable")
 				return
 			}
@@ -74,8 +75,8 @@ func bearerToken(r *http.Request) (string, bool) {
 	return strings.TrimSpace(header[len(prefix):]), true
 }
 
-func ResolveFixedUserID(ctx context.Context, queries *db.Queries) (string, error) {
-	user, err := queries.GetUserByEmail(ctx, SystemUserEmail)
+func ResolveFixedUserID(ctx context.Context, queries *db.Queries, email string) (string, error) {
+	user, err := queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		return "", err
 	}

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,15 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/multica-ai/multica/server/internal/analytics"
-	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/middleware"
+	"github.com/multica-ai/multica/server/internal/handler"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
@@ -30,18 +27,20 @@ import (
 var (
 	testServer      *httptest.Server
 	testPool        *pgxpool.Pool
-	testToken       string
 	testUserID      string
 	testWorkspaceID string
 )
-
-// jwtSecret is resolved at runtime via auth.JWTSecret() so it respects
-// the JWT_SECRET env var (set in .env) and stays in sync with the server.
 
 const (
 	integrationTestEmail         = "integration-test@multica.ai"
 	integrationTestName          = "Integration Tester"
 	integrationTestWorkspaceSlug = "integration-tests"
+	integrationTestRuntimeName   = "Integration Test Runtime"
+	integrationTestAgentName     = "Integration Test Agent"
+
+	// testToken is a bearer that is not a task token. The router ignores it and
+	// serves the request as the local user.
+	testToken = "not-a-task-token"
 )
 
 func TestMain(m *testing.M) {
@@ -77,17 +76,8 @@ func TestMain(m *testing.M) {
 	registerListeners(bus, hub)
 	// Same wiring as main.go: HTTP writes through the test server log activity.
 	registerActivityListeners(bus, db.New(pool))
-	router := NewRouter(pool, hub, bus, analytics.NoopClient{}, nil)
+	router, _ := newTestRouter(pool, hub, bus, RouterOptions{})
 	testServer = httptest.NewServer(router)
-
-	// Generate a JWT token directly for the test user
-	testToken, err = generateTestJWT(testUserID, integrationTestEmail, integrationTestName)
-	if err != nil {
-		fmt.Printf("Failed to generate test JWT: %v\n", err)
-		testServer.Close()
-		pool.Close()
-		os.Exit(1)
-	}
 
 	code := m.Run()
 
@@ -102,28 +92,28 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// newTestRouter builds the production router around the package fixture's
+// user. Every router in this package that serves database-backed requests goes
+// through it, so requests without a task token act as that user and never as
+// the deployment identity, whose rows other test suites share.
+func newTestRouter(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus, opts RouterOptions) (chi.Router, *handler.Handler) {
+	opts.SystemUserEmail = integrationTestEmail
+	return NewRouterWithOptions(pool, hub, bus, analytics.NoopClient{}, nil, opts)
+}
+
 func setupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) (string, string, error) {
 	if err := cleanupIntegrationTestFixture(ctx, pool); err != nil {
 		return "", "", err
 	}
 
-	// Router requests with no task token are the deployment user. The fixture
-	// workspace belongs to that user; a separate login identity is not one.
+	// The fixture user is the identity the test router serves requests as, so
+	// it is onboarded like a user who has finished first-run setup.
 	var userID string
-	err := pool.QueryRow(ctx, `SELECT id FROM "user" WHERE email = $1`, middleware.SystemUserEmail).Scan(&userID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		err = pool.QueryRow(ctx, `
-			INSERT INTO "user" (name, email)
-			VALUES ('dev', $1)
-			RETURNING id
-		`, middleware.SystemUserEmail).Scan(&userID)
-	}
-	if err != nil {
-		return "", "", err
-	}
-	if _, err := pool.Exec(ctx, `
-		UPDATE "user" SET onboarded_at = COALESCE(onboarded_at, now()) WHERE id = $1
-	`, userID); err != nil {
+	if err := pool.QueryRow(ctx, `
+		INSERT INTO "user" (name, email, onboarded_at)
+		VALUES ($1, $2, now())
+		RETURNING id
+	`, integrationTestName, integrationTestEmail).Scan(&userID); err != nil {
 		return "", "", err
 	}
 
@@ -143,10 +133,9 @@ func setupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) (strin
 		return "", "", err
 	}
 
-	// Owned by the fixture user, like every runtime a real daemon registers
-	// with a member credential: a private runtime is bindable only by its
-	// owner, so an ownerless one could not host the agents these tests create
-	// through the API.
+	// Owned by the fixture user, like every runtime a daemon registers: a
+	// private runtime is bindable only by its owner, so an ownerless one could
+	// not host the agents these tests create through the API.
 	var runtimeID string
 	if err := pool.QueryRow(ctx, `
 		INSERT INTO agent_runtime (
@@ -154,7 +143,7 @@ func setupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) (strin
 		)
 		VALUES ($1, NULL, $2, 'cloud', $3, 'online', $4, '{}'::jsonb, $5, now())
 		RETURNING id
-	`, workspaceID, "Integration Test Runtime", "integration_test_runtime", "Integration test runtime", userID).Scan(&runtimeID); err != nil {
+	`, workspaceID, integrationTestRuntimeName, "integration_test_runtime", "Integration test runtime", userID).Scan(&runtimeID); err != nil {
 		return "", "", err
 	}
 
@@ -164,11 +153,24 @@ func setupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) (strin
 			runtime_id, visibility, max_concurrent_tasks, owner_id
 		)
 		VALUES ($1, $2, '', 'cloud', '{}'::jsonb, $3, 'workspace', 1, $4)
-	`, workspaceID, "Integration Test Agent", runtimeID, userID); err != nil {
+	`, workspaceID, integrationTestAgentName, runtimeID, userID); err != nil {
 		return "", "", err
 	}
 
 	return userID, workspaceID, nil
+}
+
+// fixtureAgentRuntime returns the package fixture's agent and its runtime.
+func fixtureAgentRuntime(t *testing.T) (agentID, runtimeID string) {
+	t.Helper()
+	err := testPool.QueryRow(context.Background(), `
+		SELECT a.id, a.runtime_id FROM agent a
+		WHERE a.workspace_id = $1 AND a.name = $2
+	`, testWorkspaceID, integrationTestAgentName).Scan(&agentID, &runtimeID)
+	if err != nil {
+		t.Fatalf("failed to find test agent: %v", err)
+	}
+	return agentID, runtimeID
 }
 
 func cleanupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) error {
@@ -181,7 +183,7 @@ func cleanupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) erro
 	return nil
 }
 
-// Helper to make authenticated requests
+// authRequest sends a request as the local user in the fixture workspace.
 func authRequest(t *testing.T, method, path string, body any) *http.Response {
 	t.Helper()
 	var bodyReader io.Reader
@@ -210,17 +212,6 @@ func readJSON(t *testing.T, resp *http.Response, v any) {
 	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
-}
-
-func generateTestJWT(userID, email, name string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":   userID,
-		"email": email,
-		"name":  name,
-		"exp":   time.Now().Add(72 * time.Hour).Unix(),
-		"iat":   time.Now().Unix(),
-	})
-	return token.SignedString(auth.JWTSecret())
 }
 
 // ---- Health ----
@@ -309,8 +300,8 @@ func TestAnonymousRequestIsTheDeploymentUser(t *testing.T) {
 		Email string `json:"email"`
 	}
 	readJSON(t, resp, &me)
-	if me.Email != middleware.SystemUserEmail {
-		t.Fatalf("email = %q, want %s", me.Email, middleware.SystemUserEmail)
+	if me.Email != integrationTestEmail {
+		t.Fatalf("email = %q, want %s", me.Email, integrationTestEmail)
 	}
 }
 
@@ -333,16 +324,8 @@ func TestNonTaskBearerIsTheDeploymentUser(t *testing.T) {
 		token string
 	}{
 		{"garbage token", "not-a-jwt"},
-		{"wrong secret", func() string {
-			claims := jwt.MapClaims{"sub": "test", "exp": time.Now().Add(time.Hour).Unix()}
-			signed, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("wrong"))
-			return signed
-		}()},
-		{"expired token", func() string {
-			claims := jwt.MapClaims{"sub": "test", "exp": time.Now().Add(-time.Hour).Unix()}
-			signed, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(auth.JWTSecret())
-			return signed
-		}()},
+		{"personal access token", "mul_stored_credential"},
+		{"daemon token", "mdt_stored_credential"},
 	}
 
 	for _, tc := range cases {
@@ -362,11 +345,36 @@ func TestNonTaskBearerIsTheDeploymentUser(t *testing.T) {
 				Email string `json:"email"`
 			}
 			readJSON(t, resp, &me)
-			if me.Email != middleware.SystemUserEmail {
-				t.Fatalf("email = %q, want %s", me.Email, middleware.SystemUserEmail)
+			if me.Email != integrationTestEmail {
+				t.Fatalf("email = %q, want %s", me.Email, integrationTestEmail)
 			}
 		})
 	}
+}
+
+// TestDaemonRoutesAreTheDeploymentUser pins that the daemon route group
+// resolves the same configured identity as the human API: it answers with the
+// local user's workspaces.
+func TestDaemonRoutesAreTheDeploymentUser(t *testing.T) {
+	resp, err := http.Get(testServer.URL + "/api/daemon/workspaces")
+	if err != nil {
+		t.Fatalf("list daemon workspaces failed: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, body)
+	}
+	var workspaces []struct {
+		ID string `json:"id"`
+	}
+	readJSON(t, resp, &workspaces)
+	for _, workspace := range workspaces {
+		if workspace.ID == testWorkspaceID {
+			return
+		}
+	}
+	t.Fatalf("daemon workspaces = %+v, want the fixture workspace %s among them", workspaces, testWorkspaceID)
 }
 
 // ---- Issues CRUD through full router ----

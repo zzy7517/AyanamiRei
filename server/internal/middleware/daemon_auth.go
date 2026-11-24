@@ -84,8 +84,8 @@ func WithDaemonContext(ctx context.Context, workspaceID, daemonID string) contex
 // DaemonAuth admits every daemon connection as the deployment user. Daemon
 // routes do not check a bearer token. Registration still binds the runtime
 // to that user through the existing membership path. Task-scoped mat_ tokens
-// on the human API are unchanged.
-func DaemonAuth(queries *db.Queries) func(http.Handler) http.Handler {
+// on the human API are unchanged. email names the fixed user, as in FixedUser.
+func DaemonAuth(queries *db.Queries, email string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			r.Header.Del("X-Actor-Source")
@@ -93,9 +93,9 @@ func DaemonAuth(queries *db.Queries) func(http.Handler) http.Handler {
 			r.Header.Del("X-Task-ID")
 			r.Header.Del("X-User-ID")
 
-			userID, err := ResolveFixedUserID(r.Context(), queries)
+			userID, err := ResolveFixedUserID(r.Context(), queries, email)
 			if errors.Is(err, pgx.ErrNoRows) {
-				slog.Error("fixed system user is missing", "email", SystemUserEmail)
+				slog.Error("fixed system user is missing", "email", email)
 				writeError(w, http.StatusServiceUnavailable, "system user unavailable")
 				return
 			}

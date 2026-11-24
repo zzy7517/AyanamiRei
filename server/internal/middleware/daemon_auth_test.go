@@ -72,7 +72,7 @@ func TestDaemonAuthAcceptsAnyBearerAsTheDeploymentUser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var gotUser, gotPath, gotWorkspace, gotDaemon, gotHash, gotOwner string
 			var actor, agent, task string
-			handler := DaemonAuth(queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := DaemonAuth(queries, SystemUserEmail)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				gotUser = r.Header.Get("X-User-ID")
 				actor = r.Header.Get("X-Actor-Source")
 				agent = r.Header.Get("X-Agent-ID")
@@ -116,7 +116,7 @@ func TestDaemonAuthAcceptsAnyBearerAsTheDeploymentUser(t *testing.T) {
 func TestDaemonAuthReportsMissingSystemUser(t *testing.T) {
 	queries := db.New(&fakeDaemonAuthDB{t: t, mode: "missing"})
 	rec := httptest.NewRecorder()
-	DaemonAuth(queries)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+	DaemonAuth(queries, SystemUserEmail)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		t.Fatal("handler ran")
 	})).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/daemon/register", nil))
 	if rec.Code != http.StatusServiceUnavailable {
@@ -127,7 +127,7 @@ func TestDaemonAuthReportsMissingSystemUser(t *testing.T) {
 func TestDaemonAuthReportsSystemUserLookupFailure(t *testing.T) {
 	queries := db.New(&fakeDaemonAuthDB{t: t, mode: "error"})
 	rec := httptest.NewRecorder()
-	DaemonAuth(queries)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+	DaemonAuth(queries, SystemUserEmail)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		t.Fatal("handler ran")
 	})).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/daemon/ws", nil))
 	if rec.Code != http.StatusInternalServerError {

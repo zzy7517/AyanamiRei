@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/testutil"
@@ -90,7 +89,7 @@ func TestChatRealtimeIsPrivateToSessionOwner(t *testing.T) {
 	go hub.Run()
 	bus := events.New()
 	registerListeners(bus, hub)
-	router, h := NewRouterWithOptions(testPool, hub, bus, analytics.NoopClient{}, nil, RouterOptions{})
+	router, h := newTestRouter(testPool, hub, bus, RouterOptions{})
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
 

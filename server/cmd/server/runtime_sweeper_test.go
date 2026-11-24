@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/service"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
@@ -47,21 +46,11 @@ func setupSweeperTestFixture(t *testing.T, taskStatus string) (string, string, s
 	ctx := context.Background()
 
 	// Find the integration test agent
-	var agentID, runtimeID string
-	err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
-	if err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	// Create an issue assigned to the agent
 	var issueID string
-	err = testPool.QueryRow(ctx, `
+	err := testPool.QueryRow(ctx, `
 		INSERT INTO issue (workspace_id, title, status, priority, creator_type, creator_id, assignee_type, assignee_id)
 		SELECT $1, 'Sweeper test issue', 'todo', 'none', 'member', m.user_id, 'agent', $2
 		FROM member m WHERE m.workspace_id = $1 LIMIT 1
@@ -845,21 +834,11 @@ func TestSweepResetsInProgressIssueToTodo(t *testing.T) {
 	ctx := context.Background()
 
 	// Use the same agent/runtime as the other sweeper tests.
-	var agentID, runtimeID string
-	err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
-	if err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	// Create an issue already in in_progress (simulates a daemon crash mid-run).
 	var issueID string
-	err = testPool.QueryRow(ctx, `
+	err := testPool.QueryRow(ctx, `
 		INSERT INTO issue (workspace_id, title, status, priority, creator_type, creator_id, assignee_type, assignee_id)
 		SELECT $1, 'Stuck in_progress issue', 'in_progress', 'none', 'member', m.user_id, 'agent', $2
 		FROM member m WHERE m.workspace_id = $1 LIMIT 1
@@ -936,21 +915,11 @@ func TestSweepDoesNotResetIssueAlreadyInReview(t *testing.T) {
 
 	ctx := context.Background()
 
-	var agentID, runtimeID string
-	err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
-	if err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	// Issue already advanced to in_review by the agent before the task timed out.
 	var issueID string
-	err = testPool.QueryRow(ctx, `
+	err := testPool.QueryRow(ctx, `
 		INSERT INTO issue (workspace_id, title, status, priority, creator_type, creator_id, assignee_type, assignee_id)
 		SELECT $1, 'Already in_review issue', 'in_review', 'none', 'member', m.user_id, 'agent', $2
 		FROM member m WHERE m.workspace_id = $1 LIMIT 1
@@ -1021,16 +990,7 @@ func TestExpireStaleQueuedTasks(t *testing.T) {
 	ctx := context.Background()
 
 	// Find the integration test agent
-	var agentID, runtimeID string
-	if err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	// One ancient queued task (should expire) and one fresh queued task (should not).
 	// Constraint: idx_one_pending_task_per_issue_agent → use distinct issues.
@@ -1239,16 +1199,7 @@ func TestExpireStaleQueuedTasksRespectsBatchLimit(t *testing.T) {
 
 	ctx := context.Background()
 
-	var agentID, runtimeID string
-	if err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	// Create 5 issues, each with one stale queued task — necessary because of the
 	// idx_one_pending_task_per_issue_agent unique constraint.

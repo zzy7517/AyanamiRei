@@ -274,6 +274,11 @@ type RouterOptions struct {
 	// than read here, for the same fail-the-boot-in-main-only reason: the raw
 	// value is validated by parseLLMDisableThinking before the router exists.
 	LLMDisableThinking bool
+	// SystemUserEmail is the one local identity every request without a task
+	// token is served as. Empty means the production identity. Only tests set
+	// it, so a router-level suite never acts as the deployment's real user in a
+	// database shared with other suites.
+	SystemUserEmail string
 }
 
 func buildChannelSupervisor(
@@ -415,6 +420,10 @@ func seatCapacityExecutor(cloudURL string) seatcapacity.Executor {
 // callers that only need the HTTP handler (tests, the simple
 // NewRouter shim) discard the second value.
 func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus, analyticsClient analytics.Client, rdb redis.UniversalClient, opts RouterOptions) (chi.Router, *handler.Handler) {
+	systemUserEmail := opts.SystemUserEmail
+	if systemUserEmail == "" {
+		systemUserEmail = middleware.SystemUserEmail
+	}
 	queries := db.New(pool)
 	emailSvc := service.NewEmailService()
 	daemonHub := opts.DaemonHub
@@ -1607,7 +1616,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		return util.UUIDToString(ws.ID), nil
 	})
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		userID, err := middleware.ResolveFixedUserID(r.Context(), queries)
+		userID, err := middleware.ResolveFixedUserID(r.Context(), queries, systemUserEmail)
 		if err != nil {
 			http.Error(w, `{"error":"system user unavailable"}`, http.StatusServiceUnavailable)
 			return
@@ -1718,7 +1727,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 
 	// Daemon API routes run as the deployment user. They do not check a bearer.
 	r.Route("/api/daemon", func(r chi.Router) {
-		r.Use(middleware.DaemonAuth(queries))
+		r.Use(middleware.DaemonAuth(queries, systemUserEmail))
 
 		r.Post("/register", h.DaemonRegister)
 		r.Post("/deregister", h.DaemonDeregister)
@@ -1805,7 +1814,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// signed-in user's session and the installation header. Keeping it outside
 	// /v1 prevents the Public API from accepting session cookies.
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.FixedUser(queries))
+		r.Use(middleware.FixedUser(queries, systemUserEmail))
 		r.Route(pluginBridgePrefix, func(r chi.Router) {
 			registerPluginActionRoutes(r, h)
 			// ui / manual only. `event` is dispatched by the host off the event
@@ -1815,7 +1824,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.FixedUser(queries))
+		r.Use(middleware.FixedUser(queries, systemUserEmail))
 
 		// Plugin Action API. Called by the HOST PAGE on the signed-in user's
 		// session after a surface asks for something over the postMessage

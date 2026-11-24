@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
@@ -127,7 +126,7 @@ func TestChatReplyAlertReachesOtherWorkspaceConnection(t *testing.T) {
 	bus := events.New()
 	registerListeners(bus, hub)
 	registerChatReplyNotifications(bus, hub, &membershipChecker{queries: db.New(testPool)})
-	router, _ := NewRouterWithOptions(testPool, hub, bus, analytics.NoopClient{}, nil, RouterOptions{})
+	router, _ := newTestRouter(testPool, hub, bus, RouterOptions{})
 	server := httptest.NewServer(router)
 	defer server.Close()
 	conn, _ := realtimeMembershipConn(t, server, testUserID, other)

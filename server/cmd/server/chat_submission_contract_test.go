@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	obsmetrics "github.com/multica-ai/multica/server/internal/metrics"
 	"github.com/multica-ai/multica/server/internal/realtime"
@@ -125,7 +124,7 @@ func TestChatSubmissionConcurrentFirstSendAndPersistentReplay(t *testing.T) {
 	metrics := obsmetrics.NewBusinessMetrics()
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(metrics.Collectors()...)
-	router, h := NewRouterWithOptions(testPool, hub, bus, analytics.NoopClient{}, nil, RouterOptions{BusinessMetrics: metrics})
+	router, h := newTestRouter(testPool, hub, bus, RouterOptions{BusinessMetrics: metrics})
 	wakeups := &submissionWakeupCounter{}
 	h.TaskService.Wakeup = wakeups
 	server := httptest.NewServer(router)
@@ -173,7 +172,7 @@ func TestChatSubmissionConcurrentFirstSendAndPersistentReplay(t *testing.T) {
 	// A fresh router builds fresh service instances and reads the committed receipt.
 	var beforeTouch string
 	workspaceFixture(t).QueryRow(t, `SELECT updated_at::text FROM chat_session WHERE id=$1`, sessionID).Scan(&beforeTouch)
-	restartedRouter, restartedHandler := NewRouterWithOptions(testPool, hub, bus, analytics.NoopClient{}, nil, RouterOptions{BusinessMetrics: metrics})
+	restartedRouter, restartedHandler := newTestRouter(testPool, hub, bus, RouterOptions{BusinessMetrics: metrics})
 	restartedHandler.TaskService.Wakeup = wakeups
 	restarted := httptest.NewServer(restartedRouter)
 	t.Cleanup(restarted.Close)
@@ -259,7 +258,7 @@ func TestChatSubmissionTransactionFailureRollsBackTurn(t *testing.T) {
 	body := map[string]any{"content": "atomic accepted turn", "submission_id": uuid.NewString()}
 	hub := realtime.NewHub()
 	go hub.Run()
-	router, h := NewRouterWithOptions(testPool, hub, events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+	router, h := newTestRouter(testPool, hub, events.New(), RouterOptions{})
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
 	h.TaskService.TxStarter = membershipFailCommitPool{testPool}

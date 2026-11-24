@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/testutil"
@@ -31,7 +30,7 @@ func TestLocalUploadEntryIsDisabled(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	router := NewRouter(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil)
+	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{})
 	for _, path := range []string{
 		"/uploads",
 		"/uploads/",
@@ -79,7 +78,7 @@ func TestLocalAttachmentAPIStillRequiresMembership(t *testing.T) {
 		"filename": "private.png", "url": "/uploads/" + key,
 		"content_type": "image/png", "size_bytes": len(body),
 	})
-	router := NewRouter(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil)
+	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{})
 	for _, tc := range []struct {
 		name  string
 		token string

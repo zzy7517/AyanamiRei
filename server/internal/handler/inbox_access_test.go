@@ -43,7 +43,7 @@ var inboxOwnerReads = []inboxOwnerRead{
 }
 
 func (e inboxOwnerRead) serve(h *Handler) http.HandlerFunc {
-	return middleware.FixedUser(testHandler.Queries)(
+	return middleware.FixedUser(testHandler.Queries, middleware.SystemUserEmail)(
 		middleware.RequireWorkspaceMember(testHandler.Queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			e.handler(h, w, r)
 		})),

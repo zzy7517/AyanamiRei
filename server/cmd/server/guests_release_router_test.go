@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	dbfx "github.com/multica-ai/multica/server/internal/testutil"
@@ -29,7 +28,7 @@ func TestGuestsFailClosedWhenCloudPlansAreUnavailable(t *testing.T) {
 	check := func(t *testing.T, cloudURL string, wantOffered bool) {
 		t.Helper()
 		t.Setenv("MULTICA_CLOUD_URL", cloudURL)
-		router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+		router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{})
 
 		var config struct {
 			FeatureFlags map[string]bool `json:"feature_flags"`

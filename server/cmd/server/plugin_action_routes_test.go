@@ -25,7 +25,7 @@ func TestPluginActionRouteTrustBoundaries(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name:          "public API rejects a browser session token",
+			name:          "public API rejects a non-task bearer",
 			path:          "/v1/context",
 			authorization: "Bearer " + testToken,
 			wantStatus:    http.StatusUnauthorized,
@@ -37,7 +37,7 @@ func TestPluginActionRouteTrustBoundaries(t *testing.T) {
 			wantHandler:   true,
 		},
 		{
-			name:          "surface bridge accepts a browser session",
+			name:          "surface bridge accepts the local user's request",
 			path:          "/api/plugin-bridge/v1/context",
 			authorization: "Bearer " + testToken,
 			wantHandler:   true,

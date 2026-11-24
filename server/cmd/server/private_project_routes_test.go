@@ -14,7 +14,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/projectaccess"
@@ -493,7 +492,7 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	// the missing-id answer too: probe them as a deployment with it on.
 	flags := featureflag.NewStaticProvider()
 	flags.Set(featureflags.TaskSessionsV1, featureflag.Rule{Default: true})
-	router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{
+	router, _ := newTestRouter(testPool, realtime.NewHub(), events.New(), RouterOptions{
 		FeatureFlags: featureflag.NewService(flags),
 	})
 	call := func(method, path, body string) routeAnswer {

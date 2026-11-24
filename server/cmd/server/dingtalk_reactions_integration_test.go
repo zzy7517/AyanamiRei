@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/integrations/channel"
 	"github.com/multica-ai/multica/server/internal/integrations/dingtalk"
@@ -102,7 +101,7 @@ func TestDingTalkReactionsThroughServerRouter(t *testing.T) {
 	})}
 	t.Cleanup(func() { http.DefaultClient = originalClient })
 	bus := events.New()
-	_, h := NewRouterWithOptions(testPool, realtime.NewHub(), bus, analytics.NoopClient{}, nil, RouterOptions{})
+	_, h := newTestRouter(testPool, realtime.NewHub(), bus, RouterOptions{})
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	raw, err := json.Marshal(map[string]string{"app_id": appID, "current_text": "question"})

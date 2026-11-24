@@ -64,7 +64,7 @@ func TestCommentSelfMention_SourceIssueAndThread(t *testing.T) {
 				// must determine whose run authored the comment.
 				req.Header.Set("X-Agent-ID", "forged-agent")
 				req.Header.Set("X-Task-ID", "forged-task")
-				protected := middleware.FixedUser(testHandler.Queries)(
+				protected := middleware.FixedUser(testHandler.Queries, middleware.SystemUserEmail)(
 					middleware.RequireWorkspaceMember(testHandler.Queries)(handle),
 				)
 				return testutil.Call(t, protected.ServeHTTP, req)

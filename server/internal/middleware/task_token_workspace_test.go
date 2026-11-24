@@ -183,7 +183,7 @@ func TestFixedUser_TaskTokenWorkspaceSelectors(t *testing.T) {
 			queries := db.New(&fakeTaskTokenDB{t: t})
 			var called bool
 			var gotWorkspace, gotSource string
-			handler := FixedUser(queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := FixedUser(queries, SystemUserEmail)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called = true
 				gotWorkspace = r.Header.Get("X-Workspace-ID")
 				gotSource = r.Header.Get("X-Actor-Source")

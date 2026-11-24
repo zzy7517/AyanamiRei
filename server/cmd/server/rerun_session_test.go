@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
 	"github.com/multica-ai/multica/server/internal/util"
@@ -41,17 +40,7 @@ func setupRerunTestFixture(t *testing.T) (string, string, string) {
 	t.Helper()
 	ctx := context.Background()
 
-	var agentID, runtimeID string
-	if err := testPool.QueryRow(ctx, `
-		SELECT a.id, a.runtime_id FROM agent a
-		JOIN member m ON m.workspace_id = a.workspace_id
-		JOIN "user" u ON u.id = m.user_id
-		WHERE u.email = $1
-		  AND a.archived_at IS NULL
-		LIMIT 1
-	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
-		t.Fatalf("failed to find test agent: %v", err)
-	}
+	agentID, runtimeID := fixtureAgentRuntime(t)
 
 	var issueID string
 	// Pick the next per-workspace number to avoid colliding with the

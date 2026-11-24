@@ -18,7 +18,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/featureflags"
 	"github.com/multica-ai/multica/server/internal/realtime"
@@ -111,7 +110,7 @@ func TestChatSubmissionConcurrentParentDelete(t *testing.T) {
 			cleanupSubmissionSession(t, testToken, workspace, sessionID)
 			hub := realtime.NewHub()
 			go hub.Run()
-			router, h := NewRouterWithOptions(testPool, hub, events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+			router, h := newTestRouter(testPool, hub, events.New(), RouterOptions{})
 			server := httptest.NewServer(router)
 			t.Cleanup(server.Close)
 			barrier := &submissionCommitBarrier{testPool, make(chan struct{}), make(chan struct{})}
@@ -159,7 +158,7 @@ func TestChatSubmissionDeleteWinsBeforeSendTransaction(t *testing.T) {
 			sessionID, _ := submissionSession(t)
 			hub := realtime.NewHub()
 			go hub.Run()
-			router, h := NewRouterWithOptions(testPool, hub, events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+			router, h := newTestRouter(testPool, hub, events.New(), RouterOptions{})
 			server := httptest.NewServer(router)
 			t.Cleanup(server.Close)
 			barrier := &submissionBeginBarrier{testPool, make(chan struct{}), make(chan struct{})}
@@ -210,7 +209,7 @@ func TestChatSubmissionMissingAgentIsNotMissingSession(t *testing.T) {
 	sessionID, _ := submissionSession(t)
 	hub := realtime.NewHub()
 	go hub.Run()
-	router, h := NewRouterWithOptions(testPool, hub, events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+	router, h := newTestRouter(testPool, hub, events.New(), RouterOptions{})
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
 	h.TaskService.TxStarter = submissionMissingAgentPool{testPool}
@@ -240,7 +239,7 @@ func TestChatSubmissionRecoversPostCommitNotificationFailure(t *testing.T) {
 	sessionID, _ := submissionSession(t)
 	hub := realtime.NewHub()
 	go hub.Run()
-	router, h := NewRouterWithOptions(testPool, hub, events.New(), analytics.NoopClient{}, nil, RouterOptions{})
+	router, h := newTestRouter(testPool, hub, events.New(), RouterOptions{})
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)
 	overlay := &submissionOverlay{}
