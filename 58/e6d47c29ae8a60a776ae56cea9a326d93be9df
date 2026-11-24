@@ -1,0 +1,445 @@
+apps/web/app/[workspaceSlug]/layout.tsx
+  s_558a660d7ec5a3::t_a04802930af330 6
+apps/desktop/src/renderer/src/platform/workspace-window-bridge.tsx
+  s_558a660d7ec5a3::t_bc01be3b0a7ac5 16-17,21
+packages/core/diagnostics/diagnostic-context.test.ts
+  s_558a660d7ec5a3::t_f09e23c6838b6e 113
+  s_558a660d7ec5a3::t_aa4c49caf77433 87-92
+packages/views/wecom/bind-page.test.tsx
+  s_558a660d7ec5a3::t_1f640ce18e8137 70,72-73
+  s_558a660d7ec5a3::t_ab3cf4e1299b30 85,87,89-90
+server/cmd/server/router.go
+  s_fc0852876b2926::t_908517fd798ba3 1610-1615,1808,1818
+  s_6bda9f30d2ce84::t_701ad8178d4a92 1719
+server/cmd/server/autopilot_actor_forgery_test.go
+  s_6bda9f30d2ce84::t_4fdd7ad18731be 16-18,20-24,32-44,82,85,96-97,99,101-102,105-107,112-113,118,120
+server/cmd/migrate/main.go
+  s_6bda9f30d2ce84::t_b659957a78adef 471
+  s_6bda9f30d2ce84::t_e0a25968e4564b 470
+server/internal/daemon/agent_reply_test.go
+  s_6bda9f30d2ce84::t_04aaf2ad2b2fd5 156
+apps/desktop/src/renderer/src/platform/diagnostic-route-reporter.test.tsx
+  s_558a660d7ec5a3::t_95f20cb5bd7fd7 90,96-97
+packages/views/layout/use-dashboard-guard.ts
+  s_558a660d7ec5a3::t_e9e34cccc20aa3 18,21-27,29,42,46-57
+apps/web/lib/workspace-slug-from-pathname.ts
+  s_558a660d7ec5a3::t_67f33f133c0c29 11
+packages/views/dingtalk/bind-page.tsx
+  s_558a660d7ec5a3::t_a06c6e652f8c20 8
+  s_558a660d7ec5a3::t_e8a2cfd3eed463 20-22
+  s_558a660d7ec5a3::t_d26b77a760cc21 75-81
+packages/views/billing/billing-return-page.test.tsx
+  s_558a660d7ec5a3::t_c10c416607493a 302,306-308,319,325-328,330-335,338,341-346
+  s_558a660d7ec5a3::t_f969d5093dc067 190-193,201,204-205
+packages/core/paths/paths.ts
+  s_558a660d7ec5a3::t_372f6ccd51a4bb 116-117
+  s_558a660d7ec5a3::t_c160d4979cfe79 7
+  s_558a660d7ec5a3::t_d437803c0dc64b 129
+packages/views/telegram/bind-page.test.tsx
+  s_558a660d7ec5a3::t_3fa6b71ca518a3 64,66-67,71,73,76-77
+packages/views/wecom/bind-page.tsx
+  s_558a660d7ec5a3::t_f8e01e8ced1982 71-77
+  s_558a660d7ec5a3::t_afda5591a995d8 8
+  s_558a660d7ec5a3::t_8aefb0d3571108 20-22
+packages/core/api/client.test.ts
+  s_fc0852876b2926::t_9c43c13ac85e00 76-79
+  s_fc0852876b2926::t_b7002e841dbd47 3
+packages/core/paths/consistency.test.ts
+  s_558a660d7ec5a3::t_53c966f1d4b25c 49
+apps/desktop/src/renderer/src/platform/diagnostic-route-reporter.tsx
+  s_558a660d7ec5a3::t_c61a2a2e80ca5e 22-24
+  s_558a660d7ec5a3::t_486e07c2799f74 57
+apps/desktop/src/renderer/src/components/workspace-route-layout.tsx
+  s_558a660d7ec5a3::t_55a1669dec7033 121
+  s_558a660d7ec5a3::t_58b2a2ed2ca808 65-66,70
+apps/web/platform/user-locale-sync.test.tsx
+  s_558a660d7ec5a3::t_baafca418f22f2 17,26-27,31
+server/cmd/server/autopilot_webhook_broadcast_test.go
+  s_6bda9f30d2ce84::t_aa0fa700ebaebe 94
+  s_6bda9f30d2ce84::t_89ac997d8376fc 16-18,35,45-46,48-49,52-53
+apps/desktop/src/renderer/src/platform/navigation.test.tsx
+  s_558a660d7ec5a3::t_66961943cc981e 197
+  s_558a660d7ec5a3::t_b041e861429992 12-13
+server/cmd/server/inbox_owner_gate_routes_test.go
+  s_6bda9f30d2ce84::t_9c9eca7861ca90 103-104
+  s_6bda9f30d2ce84::t_d7d01fc464e922 23
+packages/core/paths/paths.test.ts
+  s_558a660d7ec5a3::t_97578e697a6358 80-81,88-95
+packages/core/navigation/store.ts
+  s_558a660d7ec5a3::t_570bbdf5d4d64e 11,14
+server/cmd/server/composio_callback_public_test.go
+  s_6bda9f30d2ce84::t_14983d28497adb 38-40
+  s_6bda9f30d2ce84::t_6b756ecb3c66eb 64-65
+server/cmd/server/wecom_scan_install_permission_test.go
+  s_6bda9f30d2ce84::t_16160a3fffbb55 9-12,18-20,34,40,53-58
+server/cmd/server/integration_test.go
+  s_6bda9f30d2ce84::t_c6f2c63028e8b6 712-718
+  s_4239f0286650c1::t_e1ef8f2209e155 1227
+apps/desktop/src/renderer/src/platform/issue-deep-link-bridge.test.tsx
+  s_558a660d7ec5a3::t_e863561a81d303 81,84
+packages/views/slack/bind-page.tsx
+  s_558a660d7ec5a3::t_f1232d396a8d98 8
+  s_558a660d7ec5a3::t_f6e3dfae392b8e 20-22
+  s_558a660d7ec5a3::t_af2a8043c35509 71-77
+server/cmd/server/notification_project_subscriber_test.go
+  s_6bda9f30d2ce84::t_eba5f3024d961a 191-192,196,199,204-205,207,213-214,217,220
+  s_6bda9f30d2ce84::t_dc0685a4ffc962 56-57
+server/cmd/server/main.go
+  s_fc0852876b2926::t_f8051ac62f70f0 710,712-713,716-717
+  s_fc0852876b2926::t_d59bf1984d4aed 709
+  s_fc0852876b2926::t_39a41d7fb1089a 708
+packages/core/navigation/store.test.ts
+  s_558a660d7ec5a3::t_95fcfe268c9529 4-5,7,11
+packages/views/lark/bind-page.tsx
+  s_558a660d7ec5a3::t_fe1048650d745c 72-78
+  s_558a660d7ec5a3::t_373b6cce2c9b63 8
+  s_558a660d7ec5a3::t_fb69cc20b39ef1 20-22
+apps/desktop/src/renderer/src/App.tsx
+  s_558a660d7ec5a3::t_c3b8d30a1f3046 177
+  s_558a660d7ec5a3::t_69d1236fb56023 206,211
+  s_558a660d7ec5a3::t_de6e0628bdf7ce 130
+  s_558a660d7ec5a3::t_8dc2e95aa7ab89 59,61-62
+  s_558a660d7ec5a3::t_4d23038cd80298 220
+  s_558a660d7ec5a3::t_7a14ec03756ad8 158,161-166
+  s_fc0852876b2926::t_2d299d5b6d25fe 1,222
+  s_558a660d7ec5a3::t_b42b19baab371d 151-152
+  s_6bda9f30d2ce84::t_aff73c6a7f1bc0 92,105,110,124-126,230,357,359
+apps/web/proxy.test.ts
+  s_558a660d7ec5a3::t_b79f128d302c3c 276
+  s_6bda9f30d2ce84::t_374ddb08739002 55,82-84,206,224,226,228,243-245,249-250
+apps/web/lib/google-analytics.ts
+  s_558a660d7ec5a3::t_e1a4f968652ac9 61
+server/internal/handler/user_response.go
+  s_fc0852876b2926::t_d59bf1984d4aed 39-51
+  s_fc0852876b2926::t_f8051ac62f70f0 1-29,37,56-57,60,62-63,71-72,77,82,84,90,92,98,100,108,110,113,115-116,118-151
+  s_fc0852876b2926::t_867b592f580896 36,59
+apps/web/platform/user-locale-sync.ts
+  s_558a660d7ec5a3::t_5ec74f4262dea7 7-8
+server/cmd/server/chat_realtime_privacy_test.go
+  s_6bda9f30d2ce84::t_48fb3b60938797 159
+  s_6bda9f30d2ce84::t_fa8ab3d7d9b93e 160
+  s_6bda9f30d2ce84::t_6dfccc2374afd2 77-79
+server/internal/handler/inbox_write_access_test.go
+  s_4239f0286650c1::t_0fe92876b3d004 197,200-202
+apps/desktop/src/shared/renderer-route-context.ts
+  s_558a660d7ec5a3::t_17bb3d9dede14f 3-4
+server/internal/middleware/daemon_auth.go
+  s_fc0852876b2926::t_d89f92ce944ecd 24,40-41,61
+  s_6bda9f30d2ce84::t_3f1a14a7319ecf 97
+  s_6bda9f30d2ce84::t_2f33b3d6cb80e1 9,26-27,33-34,47-48,54-55,69,84-87,96,98-99,102-104,108-109
+  s_6bda9f30d2ce84::t_8c3fadb7024b8c 88
+packages/views/layout/dashboard-guard.tsx
+  s_558a660d7ec5a3::t_b656810668ac6c 15-16,26,28
+server/internal/middleware/daemon_auth_test.go
+  s_6bda9f30d2ce84::t_9d5d315be893f6 5,8,11-14,18,20-22,25-27,30-32,35-56,60-112,116-123,127-134
+server/cmd/server/local_uploads_test.go
+  s_6bda9f30d2ce84::t_15ec71fbb9757f 87-88,97-98,100-107,111-133
+server/internal/daemon/client_test.go
+  s_6bda9f30d2ce84::t_cc7df5973d9476 31-32
+  s_6bda9f30d2ce84::t_c79994cba75665 174,176-177
+apps/web/app/manifest.test.ts
+  s_558a660d7ec5a3::t_32e316924e4728 21
+  s_6bda9f30d2ce84::t_84e34c8c4f7a69 27-28,31-32,47-50
+packages/views/telegram/bind-page.tsx
+  s_558a660d7ec5a3::t_9dc7aa2ae6f888 67-69
+  s_558a660d7ec5a3::t_a4ee85f41f89dc 20-22
+  s_558a660d7ec5a3::t_c2fea5cc60e208 8
+packages/views/settings/components/settings-page.test.tsx
+  s_558a660d7ec5a3::t_06469b37a9db50 349
+server/cmd/server/chat_submission_contract_test.go
+  s_6bda9f30d2ce84::t_6ad23f91f4ad8c 434-435,437,439,442,444-445,448-449,453
+packages/core/paths/workspace-slugs.test.ts
+  s_558a660d7ec5a3::t_e34cd8e0b0a9bd 18
+server/internal/handler/system_user.go
+  s_fc0852876b2926::t_e7ad6220fc54df 7
+  s_fc0852876b2926::t_0e32e102efc0e1 11-28,85,97
+  s_fc0852876b2926::t_8f93efde0dae28 8
+  s_fc0852876b2926::t_f803da3a99e836 29
+  s_6cfc1c119885a8::t_58f310e1c53c35 31-33,36-41,46-51,61-64,67,69,72,75-77,79,87-88,91,95
+apps/web/lib/workspace-slug-from-pathname.test.ts
+  s_558a660d7ec5a3::t_137940feba100e 37
+server/cmd/server/private_project_routes_test.go
+  s_6bda9f30d2ce84::t_a77def3a3394ca 467-474,476
+  s_6bda9f30d2ce84::t_6a7da6134242ff 483
+  s_6bda9f30d2ce84::t_4b9b6b382e4423 454-455
+  s_6bda9f30d2ce84::t_8ee81d7400909f 499
+  s_6bda9f30d2ce84::t_3c23cee514da98 548-550,556,559-563
+packages/views/billing/billing-return-page.tsx
+  s_558a660d7ec5a3::t_3cd447a1555bd8 73
+  s_558a660d7ec5a3::t_6931ef9abca4be 85-88
+  s_558a660d7ec5a3::t_c4c5f01429dfab 47
+server/cmd/server/runtime_sweeper_test.go
+  s_4239f0286650c1::t_d7edca356571bb 57,855,946,1031,1249
+  s_4239f0286650c1::t_b00bb15200e966 11
+server/internal/handler/inbox_access_test.go
+  s_4239f0286650c1::t_075afc3f7818ca 224-227,229-230,236,238,246-249,252,255,265
+  s_4239f0286650c1::t_da62593dad595f 331-332,334-335
+  s_4239f0286650c1::t_352d38c97262cf 353-355,359-366,369,372,377
+apps/desktop/src/renderer/src/platform/issue-deep-link-bridge.tsx
+  s_558a660d7ec5a3::t_d7fa60d9c5f1a2 30
+  s_558a660d7ec5a3::t_dcfa49615aa0d3 10,14-16
+packages/views/lark/bind-page.test.tsx
+  s_558a660d7ec5a3::t_d67bd2d48bbed8 104,108,110-111
+  s_558a660d7ec5a3::t_171ee5a1f51a2c 70,74-75
+server/cmd/server/rerun_session_test.go
+  s_4239f0286650c1::t_a62fc6ba33be0e 12
+  s_4239f0286650c1::t_3759efa2d329db 52
+packages/core/platform/core-provider.tsx
+  s_fc0852876b2926::t_cbf08a086db2c3 18,117,130
+server/cmd/multica/cmd_setup_test.go
+  s_4239f0286650c1::t_dc898101c0cbc3 126,188-189,191,583,622,636-637,649-650,657,663,673-674
+server/cmd/multica/testmain_test.go
+  s_fd9c9b39d61366::t_b345c4ff1d1d10 59
+server/internal/daemon/health_test.go
+  s_fd9c9b39d61366::t_286ba2bdf7fdf4 672-675
+server/internal/middleware/auth.go
+  s_fd9c9b39d61366::t_649828df59f4e0 10,16,18-22,28,30-31,33-34,37,41-43,50-53,56-58,62,68-72,74-75,77-80,82
+apps/desktop/src/main/daemon-manager.ts
+  s_44a0ec4ebef26e::t_14821e3cb74872 125-126,801,834
+apps/desktop/src/main/index.ts
+  s_44a0ec4ebef26e::t_cb7fd0098467e4 954
+apps/desktop/src/renderer/src/components/daemon-settings-tab.tsx
+  s_44a0ec4ebef26e::t_2981ec652cf8df 2
+apps/desktop/src/renderer/src/components/issue-window.test.tsx
+  s_44a0ec4ebef26e::t_8202e2f6edd2a7 1
+apps/desktop/src/renderer/src/components/issue-window.tsx
+  s_44a0ec4ebef26e::t_e15cfbf34dbcb8 46-48
+apps/desktop/src/renderer/src/hooks/use-open-settings-shortcut.ts
+  s_44a0ec4ebef26e::t_3963afe3d2a998 14
+apps/desktop/src/renderer/src/platform/daemon-ipc-bridge.ts
+  s_6cfc1c119885a8::t_91323b1bf1802d 21,38
+apps/desktop/src/renderer/src/platform/use-local-runtimes-pending.ts
+  s_44a0ec4ebef26e::t_25b2dbc193f178 18-19
+apps/desktop/src/shared/daemon-types.ts
+  s_6cfc1c119885a8::t_dc50100fa77239 10
+apps/desktop/src/shared/main-renderer-messages.test.ts
+  s_44a0ec4ebef26e::t_551bcb884f02f7 22,26-27,78,81-82,84,101-102,107
+apps/web/app/(auth)/onboarding/page.tsx
+  s_44a0ec4ebef26e::t_7fb5c1377a6adf 32,56,58
+apps/web/app/(auth)/workspaces/new/page.tsx
+  s_44a0ec4ebef26e::t_e72aa738995d8e 26
+apps/web/app/manifest.ts
+  s_44a0ec4ebef26e::t_b8ba2c825d0393 5
+apps/web/config/google-analytics.ts
+  s_44a0ec4ebef26e::t_2975db093248d2 25-27
+apps/web/config/runtime-urls.test.ts
+  s_44a0ec4ebef26e::t_0f2a46bf8b158b 268
+apps/web/proxy.ts
+  s_44a0ec4ebef26e::t_46f0ef20a8c8be 25-26,72,77,80-82,87
+packages/core/api/client.ts
+  s_6cfc1c119885a8::t_b70dd2038ca1df 1138-1140,1154,1171-1184,4526-4527,4565-4566
+packages/core/api/ws-client.test.ts
+  s_6cfc1c119885a8::t_ff5e5d60ca69e8 43,58,71,188,250,394,416
+packages/core/api/ws-client.ts
+  s_6cfc1c119885a8::t_f9f004150efe6a 70
+packages/core/auth/index.ts
+  s_6cfc1c119885a8::t_b2564fb3c9fa92 1-4,8-10,21
+packages/core/auth/store.test.ts
+  s_6cfc1c119885a8::t_996df0f3502c99 1-2,5-15,17-18,20,22
+packages/core/auth/store.ts
+  s_6cfc1c119885a8::t_80773597fa07a2 3,11,24,26,29,34,38,40,44-45
+packages/core/diagnostics/dev-recorder-realtime.test.tsx
+  s_6cfc1c119885a8::t_199ca0dc4eb5e8 68-69,262
+packages/core/platform/index.ts
+  s_6cfc1c119885a8::t_5e02cc2b8a0bcb 3
+packages/core/platform/system-user-initializer.tsx
+  s_6cfc1c119885a8::t_f0258e88e81c18 5,7,14-15,17,28,36-53,55-72,84,86-90,92-95,100-103,109,121,123-126,131,135,137,144,146,149-151,154-157,160,164-167
+packages/core/realtime/provider.tsx
+  s_6cfc1c119885a8::t_6b03023ce8eff6 14,111
+packages/views/dev-toolbar/dev-toolbar.test.tsx
+  s_6cfc1c119885a8::t_afb1a5e3d2f4c1 35
+packages/views/issues/components/issue-load-failure.test.tsx
+  s_6cfc1c119885a8::t_65f498db3a0e23 43
+packages/views/locales/en/auth.json
+  s_44a0ec4ebef26e::t_8bdcd95dddc8a7 69
+packages/views/locales/en/onboarding.json
+  s_6cfc1c119885a8::t_9d5755a1b02ab2 50
+packages/views/locales/en/workspace.json
+  s_6cfc1c119885a8::t_ccbcafe6b9d8b9 30
+packages/views/locales/es/auth.json
+  s_44a0ec4ebef26e::t_2cc3b8d6585514 69
+packages/views/locales/es/onboarding.json
+  s_6cfc1c119885a8::t_035386aa5d44a7 50
+packages/views/locales/es/workspace.json
+  s_6cfc1c119885a8::t_6b8c8505c68f3a 30
+packages/views/locales/fr/auth.json
+  s_44a0ec4ebef26e::t_494773d3e8b1fd 69
+packages/views/locales/fr/onboarding.json
+  s_6cfc1c119885a8::t_bf45a1ff2bb7c6 50
+packages/views/locales/fr/workspace.json
+  s_6cfc1c119885a8::t_0821ae173860e3 30
+packages/views/locales/ja/auth.json
+  s_44a0ec4ebef26e::t_8ea40b8dd922d0 69
+packages/views/locales/ja/onboarding.json
+  s_6cfc1c119885a8::t_73e8e97931cb6b 50
+packages/views/locales/ja/workspace.json
+  s_6cfc1c119885a8::t_95cd8281a20b6c 30
+packages/views/locales/ko/auth.json
+  s_44a0ec4ebef26e::t_a6f7cca8604b33 69
+packages/views/locales/ko/onboarding.json
+  s_6cfc1c119885a8::t_749d82e0a92f97 50
+packages/views/locales/ko/workspace.json
+  s_6cfc1c119885a8::t_11cd3dd51ffb20 30
+packages/views/locales/ru/auth.json
+  s_44a0ec4ebef26e::t_f5c1e2290623f8 69
+packages/views/locales/ru/onboarding.json
+  s_6cfc1c119885a8::t_028b00e78b1890 50
+packages/views/locales/ru/workspace.json
+  s_6cfc1c119885a8::t_d1605faff8b5e5 30
+packages/views/locales/zh-Hans/auth.json
+  s_44a0ec4ebef26e::t_ee111b059299d0 69
+packages/views/locales/zh-Hans/onboarding.json
+  s_6cfc1c119885a8::t_11c938e353db69 50
+packages/views/locales/zh-Hans/workspace.json
+  s_6cfc1c119885a8::t_ffd863c6900e87 30
+packages/views/locales/zh-Hant/auth.json
+  s_44a0ec4ebef26e::t_8b167faf315480 69
+packages/views/locales/zh-Hant/onboarding.json
+  s_6cfc1c119885a8::t_5372654afb8dec 50
+packages/views/locales/zh-Hant/workspace.json
+  s_6cfc1c119885a8::t_a032c7c16660fd 30
+packages/views/onboarding/onboarding-flow.tsx
+  s_6cfc1c119885a8::t_d9637c87558cce 384
+packages/views/onboarding/steps/step-workspace.tsx
+  s_6cfc1c119885a8::t_02b3aa9ec4c7f2 439,469
+packages/views/platform/use-local-daemon-status.ts
+  s_44a0ec4ebef26e::t_85884a1c9f9173 20
+packages/views/workspace/no-access-page.tsx
+  s_6cfc1c119885a8::t_843eeb6c199e2f 59-61
+scripts/dev-env.sh
+  s_44a0ec4ebef26e::t_4b1f134c7cbf76 1006,1021,1029-1032,1035,1037,1039,1042,1050,1070,1216,1219
+server/cmd/migrate/migrate_mul5999_index_retry_test.go
+  s_6cfc1c119885a8::t_9d7b1b3ce6c288 227-230,233-234
+server/cmd/multica/cmd_agent.go
+  s_908dba535109bf::t_75f65bc9286008 260
+server/cmd/multica/cmd_daemon.go
+  s_908dba535109bf::t_6882eed61fb853 1254-1255,1268,1299,2033
+server/cmd/multica/cmd_daemon_diskusage_status_test.go
+  s_6cfc1c119885a8::t_a44a898b397dc8 138-157,294-296,305,307,321-322,324-325
+server/cmd/multica/cmd_runtime_profile_test.go
+  s_908dba535109bf::t_56a3554c1da46e 345,360
+server/cmd/multica/cmd_setup.go
+  s_908dba535109bf::t_a2d9ad2ccb2c46 24-26,32,44,58,107,194,245-246,344,350
+server/cmd/multica/cmd_workspace.go
+  s_908dba535109bf::t_77a227a412e7a4 228
+server/cmd/multica/dev_env_profile_test.go
+  s_908dba535109bf::t_e752e4c8bd0915 50
+server/cmd/server/realtime_test_helpers_test.go
+  s_908dba535109bf::t_734154c61060d4 1,4,8,11,13,16-38,40-41
+server/internal/cli/config_test.go
+  s_44a0ec4ebef26e::t_90de5a12932281 20,28,56,162,224,336,360
+server/internal/daemon/client.go
+  s_908dba535109bf::t_4810c01f6287ce 244,1482,1524
+server/internal/daemon/daemon.go
+  s_908dba535109bf::t_266996205e9cac 2188,2191,2224,4141-4142,4144
+server/internal/handler/comment_self_mention_test.go
+  s_44a0ec4ebef26e::t_fa340123bc8551 67
+server/internal/handler/config_test.go
+  s_6cfc1c119885a8::t_e60bcbf9324dee 64
+server/internal/handler/connected_apps_boundary_test.go
+  s_44a0ec4ebef26e::t_79a26b305081f7 52
+server/internal/handler/daemon_task_lookup_test.go
+  s_6cfc1c119885a8::t_42c4008ee3b4b6 30-50
+server/internal/handler/doc_comment_test.go
+  s_6cfc1c119885a8::t_27fccffa47d6a1 52
+server/internal/handler/handler_test.go
+  s_6cfc1c119885a8::t_b472850469a267 21,34,79,97-107,152-153,209-211
+server/internal/handler/inbox_snooze.go
+  s_6cfc1c119885a8::t_24eb1197c4e4ef 22-23
+server/internal/handler/workspace_test.go
+  s_6cfc1c119885a8::t_44c97cba7c55a3 1599
+server/internal/middleware/cloudfront.go
+  s_908dba535109bf::t_6a5039dc5b04c4 37-38
+server/internal/middleware/owner_lookup_test.go
+  s_44a0ec4ebef26e::t_8df263decc02c3 9,34
+server/internal/middleware/redis_test.go
+  s_44a0ec4ebef26e::t_40d4d6198ceae1 1,4,6-7,10,12-16,18-25,27-28
+server/internal/middleware/task_token_workspace_test.go
+  s_6cfc1c119885a8::t_2cecbf8b55e704 97-101,186
+server/internal/realtime/hub.go
+  s_6cfc1c119885a8::t_fe5014c60dcc39 717-718,735-742
+server/migrations/746_drop_authentication.down.sql
+  s_6cfc1c119885a8::t_6cada34d5aee60 1-2
+server/migrations/746_drop_authentication.up.sql
+  s_6cfc1c119885a8::t_9d7790b05c584c 1
+server/migrations/747_drop_pat_hash_index.down.sql
+  s_6cfc1c119885a8::t_cdabbf2af4a11e 1-2
+server/migrations/747_drop_pat_hash_index.up.sql
+  s_6cfc1c119885a8::t_b1b94231d3afa0 1
+server/migrations/748_drop_pat_and_login_tables.down.sql
+  s_6cfc1c119885a8::t_4b755c18e9da5f 1-24
+server/migrations/748_drop_pat_and_login_tables.up.sql
+  s_6cfc1c119885a8::t_31973e4c068467 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "58e6d47c29ae8a60a776ae56cea9a326d93be9df",
+  "prompts": {},
+  "sessions": {
+    "s_4239f0286650c1": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49c0154a-b76b-4e10-b68d-44e8f132d578",
+        "model": "grok-4.7"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_44a0ec4ebef26e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207c7-01d8-7033-93f0-6923936fd0d8",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_558a660d7ec5a3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a4a35978-a2b7-45ff-b6d7-f77053cb3e75",
+        "model": "grok-4.7"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_6bda9f30d2ce84": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "3e684973-91cd-45d8-9ebb-ef5893412b75",
+        "model": "grok-4.7"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_6cfc1c119885a8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20787-eacc-7e81-a822-066aecc9159c",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_908dba535109bf": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207c7-3837-7470-9403-2a0c513c0fcf",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fd9c9b39d61366": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dd25869f-1dac-434f-ba76-6201ead06fae",
+        "model": "zhipu/glm-5.3"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
