@@ -486,8 +486,8 @@ Run the local daemon:
 make daemon
 ```
 
-The daemon authenticates using the CLI's stored token (`multica login`).
-It registers runtimes for all watched workspaces from the CLI config.
+The daemon needs no credential: the local server serves one user. It registers
+runtimes for all watched workspaces from the CLI config.
 
 ## Full-Stack Isolated Testing
 
@@ -498,10 +498,10 @@ its own database and CLI profile, is one command:
 make up C=api,web,daemon
 ```
 
-It creates the environment if needed, sets the fixed local verification code
-before the first launch, logs in as `dev@localhost`, mints a personal access
-token, creates a workspace, writes the CLI profile, builds `server/bin/multica`
-and starts the daemon from that binary. It then prints the URL, the login, the
+It creates the environment if needed, writes the CLI profile for the local
+user's `dev` workspace, builds `server/bin/multica` and starts the daemon from
+that binary. There is no sign-in: the API creates the user (`dev@localhost`)
+and the `dev` workspace on its first start. It then prints the URL, the
 commit, and the stop command.
 
 Two constraints are enforced rather than documented:
@@ -551,11 +551,9 @@ left in place, with its own owner and TTL. See
 
 ### Web with realistic content
 
-Every `make up`, whatever components it starts, signs `dev@localhost` in,
-marks the user onboarded, and seeds the `dev` workspace with two issues. The
-token sits in the environment's CLI profile, so a Playwright script can open
-`/dev/issues` directly by setting it as `multica_token` in `localStorage`
-before the first page load.
+Every `make up`, whatever components it starts, marks `dev@localhost`
+onboarded and seeds the `dev` workspace with two issues. There is no sign-in,
+so a Playwright script can open `/dev/issues` directly.
 
 For chat and Agent Builder content without a model or a daemon, add one-shot
 fixtures:
@@ -569,8 +567,9 @@ make destroy ARGS="--yes"
 `chat` and `builder` each create a session with a user message and an assistant
 reply holding a wide table, code and a long log line; `issue` creates an issue
 with a wide description and a comment with a diff. The script registers a
-fixture runtime with the profile token and completes each task with canned
-Markdown through the daemon API, so it also works inside a daemon-managed task.
+fixture runtime and completes each task with canned Markdown through the
+daemon API, which serves every request as the environment's local user, so it
+also works inside a daemon-managed task.
 It prints the URL of everything it created and exits.
 
 `sidebar` makes the Work panel look used, for sidebar mocks and screenshots. It
@@ -622,7 +621,7 @@ second path-derived identity. `make destroy` removes the marked env file and
 this environment's Electron userData. Direct `pnpm dev:desktop` still uses its
 path-derived fallback when it is run outside `make up`.
 
-Log in with `dev@localhost` and `888888`.
+There is no sign-in: Desktop opens straight into this environment's workspace.
 
 #### Scripting Desktop over CDP
 
@@ -641,12 +640,12 @@ make destroy ARGS="--yes"
 picks one, and `--no-cdp` drops it; later `make up` runs keep it. `make status`
 prints the endpoint, and `make status ARGS="--json"` reports `desktop_cdp_port`.
 
-`scripts/desktop-cdp.mjs` attaches to the main window of the already signed-in
-Desktop. A script argument is an ES module whose default export receives
-`{ browser, context, page, env, login, screencast, args }`. Drive it with
-`page.mouse` or locator clicks, which go through Chromium's input pipeline,
-rather than `element.click()` inside `page.evaluate`. `--login`, or `login()`
-from a script, signs `dev@localhost` back in after a step signed out.
+`scripts/desktop-cdp.mjs` attaches to the main window of the running Desktop,
+which opens straight into its workspace. A script argument is an ES module
+whose default export receives `{ browser, context, page, env, screencast,
+args }`. Drive it with `page.mouse` or locator clicks, which go through
+Chromium's input pipeline, rather than `element.click()` inside
+`page.evaluate`.
 `--record` needs `ffmpeg` to encode; without it the frames and an ffconcat file
 stay in `<file>.frames/`. The helper only disconnects, so the app stays up for
 the next attach.
