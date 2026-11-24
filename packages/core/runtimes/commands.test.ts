@@ -24,8 +24,6 @@ describe("daemonCommands", () => {
       throw new Error("expected confirmed Cloud commands");
     }
     expect(result.setupCmd).toBe("multica setup");
-    expect(result.tokenCmd).toContain("server_url https://api.multica.ai");
-    expect(result.tokenCmd).toContain("app_url https://multica.ai");
   });
 
   it("returns self-host commands with the configured URLs", () => {
@@ -42,13 +40,7 @@ describe("daemonCommands", () => {
     expect(result.setupCmd).toBe(
       "multica setup self-host --server-url https://api.example.com --app-url https://app.example.com",
     );
-    expect(result.tokenCmd).toContain(
-      "multica config set server_url https://api.example.com",
-    );
-    expect(result.tokenCmd).toContain(
-      "multica config set app_url https://app.example.com",
-    );
-    expect(result.tokenCmd).not.toContain("multica.ai");
+    expect(result.setupCmd).not.toContain("multica.ai");
   });
 
   it.each<{ name: string; config: DaemonSetupConfig; status: string }>([
@@ -108,7 +100,7 @@ describe("daemonCommands", () => {
       },
       status: "incomplete",
     },
-  ])("offers no setup or token command for $name", ({ config, status }) => {
+  ])("offers no setup command for $name", ({ config, status }) => {
     expect(daemonCommands(config)).toEqual({ status });
   });
 });

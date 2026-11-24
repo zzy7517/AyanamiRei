@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "このコンピューターで実行",
-      "this_computer_hint": "デスクトップアプリをダウンロードしてサインインすると、このコンピューターの Claude Code や Codex などが自動的に表示されます",
+      "this_computer_hint": "デスクトップアプリをダウンロードすると、このコンピューターの Claude Code や Codex などが自動的に表示されます",
       "download_desktop": "デスクトップ版をダウンロード",
       "add_machine_title": "他のマシンやサーバーを追加",
       "add_machine_hint": "そのマシンで 2 つのコマンドを実行すると、エージェントがそこにインストールされた CLI を使えます",
@@ -264,15 +264,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "デーモンを起動",
-    "step2_hint": "サインインのためにブラウザを開き、その後デーモンをバックグラウンドで実行し続けます。",
+    "step2_hint": "サーバーアドレスを CLI プロファイルに保存し、その後デーモンをバックグラウンドで実行し続けます。",
     "live_listening": "マシンを待っています",
-    "troubleshooting": "そのマシンでブラウザを開けませんか?",
-    "trouble_intro": "ブラウザでのサインインの代わりにトークンを使ってください。手順 2 を置き換え、ターミナルがある場所ならどこでも動作します。",
-    "trouble_token_hint_prefix": "トークンは ",
-    "trouble_token_hint_destination": "設定 → トークン",
-    "trouble_token_hint_suffix": " で作成できます。デーモンは外向きの接続のみを行うため、インバウンドポートは不要です。",
-    "trouble_check_status": "ステータスを確認",
-    "trouble_view_logs": "ログを表示",
     "copy_aria": "コピー",
     "cancel": "キャンセル",
     "success_title": "マシンを接続しました",
@@ -670,7 +663,7 @@
     "slides": {
       "local": {
         "title": "このコンピューターは自動で接続",
-        "description": "デスクトップアプリをダウンロードしてサインインすると、このコンピューターの Claude Code や Codex などが自動的に表示されます。"
+        "description": "デスクトップアプリをダウンロードすると、このコンピューターの Claude Code や Codex などが自動的に表示されます。"
       },
       "remote": {
         "title": "ほかのマシンはコマンド 2 つ",

@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "Exécuter sur cet ordinateur",
-      "this_computer_hint": "Téléchargez l’app de bureau et connectez-vous : Claude Code, Codex et les autres CLI de cet ordinateur apparaîtront ici",
+      "this_computer_hint": "Téléchargez l’app de bureau : Claude Code, Codex et les autres CLI de cet ordinateur apparaîtront ici",
       "download_desktop": "Télécharger l’app",
       "add_machine_title": "Ajouter une autre machine ou un serveur",
       "add_machine_hint": "Exécutez deux commandes sur cette machine pour que les agents utilisent ses CLI",
@@ -275,15 +275,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "Démarrer le daemon",
-    "step2_hint": "Ouvre un navigateur pour la connexion, puis laisse le daemon tourner en arrière-plan.",
+    "step2_hint": "Enregistre l'adresse du serveur dans le profil CLI, puis laisse le daemon tourner en arrière-plan.",
     "live_listening": "En attente de votre machine",
-    "troubleshooting": "Impossible d'ouvrir un navigateur sur cette machine ?",
-    "trouble_intro": "Utilisez un jeton plutôt que la connexion par navigateur. Cela remplace l'étape 2 et fonctionne partout où vous disposez d'un terminal.",
-    "trouble_token_hint_prefix": "Créez un jeton dans ",
-    "trouble_token_hint_destination": "Paramètres → Jetons",
-    "trouble_token_hint_suffix": ". Le daemon n'établit que des connexions sortantes — aucun port entrant n'est requis.",
-    "trouble_check_status": "Vérifier l'état",
-    "trouble_view_logs": "Voir les journaux",
     "copy_aria": "Copier",
     "cancel": "Annuler",
     "success_title": "Machine connectée",
@@ -690,7 +683,7 @@
     "slides": {
       "local": {
         "title": "Cet ordinateur se connecte tout seul",
-        "description": "Téléchargez l'app de bureau et connectez-vous : Claude Code, Codex et les autres CLI de cet ordinateur apparaissent d'eux-mêmes."
+        "description": "Téléchargez l'app de bureau. Claude Code, Codex et les autres CLI de cet ordinateur apparaissent d'eux-mêmes."
       },
       "remote": {
         "title": "Une autre machine, deux commandes",

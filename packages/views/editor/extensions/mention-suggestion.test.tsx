@@ -12,12 +12,10 @@ import { I18nProvider } from "@multica/core/i18n/react";
 import type { IssueStatusCategory, ListIssuesCache } from "@multica/core/types";
 import type { QueryClient } from "@tanstack/react-query";
 import enCommon from "../../locales/en/common.json";
-import enAuth from "../../locales/en/auth.json";
 import enSettings from "../../locales/en/settings.json";
 import enEditor from "../../locales/en/editor.json";
 import enIssues from "../../locales/en/issues.json";
 import zhCommon from "../../locales/zh-Hans/common.json";
-import zhAuth from "../../locales/zh-Hans/auth.json";
 import zhSettings from "../../locales/zh-Hans/settings.json";
 import zhEditor from "../../locales/zh-Hans/editor.json";
 import zhIssues from "../../locales/zh-Hans/issues.json";
@@ -25,14 +23,12 @@ import zhIssues from "../../locales/zh-Hans/issues.json";
 const TEST_RESOURCES = {
   en: {
     common: enCommon,
-    auth: enAuth,
     settings: enSettings,
     editor: enEditor,
     issues: enIssues,
   },
   "zh-Hans": {
     common: zhCommon,
-    auth: zhAuth,
     settings: zhSettings,
     editor: zhEditor,
     issues: zhIssues,

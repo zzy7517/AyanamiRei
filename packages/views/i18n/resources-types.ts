@@ -26,7 +26,7 @@ import type billing from "../locales/en/billing.json";
 import type terminal from "../locales/en/terminal.json";
 
 // Module augmentation enables i18next v26 selector API across the monorepo:
-// `t($ => $.signin.title)` resolves to the value in en/auth.json.
+// `t($ => $.connect.title)` resolves to the value in en/runtimes.json.
 // Apps don't need to redeclare this — the augmentation is global, pulled
 // into the compilation graph by `use-t.ts`'s side-effect import.
 //

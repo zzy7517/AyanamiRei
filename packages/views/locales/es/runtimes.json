@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "Ejecutar en este ordenador",
-      "this_computer_hint": "Descarga la app de escritorio e inicia sesión. Claude Code, Codex y otras CLI de este ordenador aparecerán aquí automáticamente",
+      "this_computer_hint": "Descarga la app de escritorio. Claude Code, Codex y otras CLI de este ordenador aparecerán aquí automáticamente",
       "download_desktop": "Descargar escritorio",
       "add_machine_title": "Añadir otra máquina o servidor",
       "add_machine_hint": "Ejecuta dos comandos en esa máquina para que los agentes puedan usar las CLI instaladas allí",
@@ -275,15 +275,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "Inicia el daemon",
-    "step2_hint": "Abre un navegador para iniciar sesión y luego mantiene el daemon en ejecución en segundo plano.",
+    "step2_hint": "Guarda la dirección del servidor en el perfil de CLI y luego mantiene el daemon en ejecución en segundo plano.",
     "live_listening": "Esperando a tu máquina",
-    "troubleshooting": "¿No puedes abrir un navegador en esa máquina?",
-    "trouble_intro": "Usa un token en lugar del inicio de sesión con navegador. Esto sustituye el paso 2 y funciona en cualquier sitio donde tengas una terminal.",
-    "trouble_token_hint_prefix": "Crea un token en ",
-    "trouble_token_hint_destination": "Ajustes → Tokens",
-    "trouble_token_hint_suffix": ". El daemon solo hace conexiones salientes: no requiere puertos entrantes.",
-    "trouble_check_status": "Comprobar estado",
-    "trouble_view_logs": "Ver logs",
     "copy_aria": "Copiar",
     "cancel": "Cancelar",
     "success_title": "Máquina conectada",
@@ -690,7 +683,7 @@
     "slides": {
       "local": {
         "title": "Este ordenador se conecta por sí solo",
-        "description": "Descarga la app de escritorio e inicia sesión. Claude Code, Codex y las demás CLI de este ordenador aparecen automáticamente."
+        "description": "Descarga la app de escritorio. Claude Code, Codex y las demás CLI de este ordenador aparecen automáticamente."
       },
       "remote": {
         "title": "Otra máquina, dos comandos",

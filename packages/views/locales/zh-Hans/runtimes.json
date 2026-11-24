@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "在这台电脑上运行",
-      "this_computer_hint": "下载桌面端并登录，这台电脑上的 Claude Code、Codex 等会自动出现在这里",
+      "this_computer_hint": "下载桌面端，这台电脑上的 Claude Code、Codex 等会自动出现在这里",
       "download_desktop": "下载桌面端",
       "add_machine_title": "添加其他机器或服务器",
       "add_machine_hint": "在那台机器上运行两条命令，智能体就能用它上面装好的 CLI 执行任务",
@@ -264,15 +264,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "启动守护进程",
-    "step2_hint": "会打开浏览器登录，然后在后台保持守护进程运行。",
+    "step2_hint": "会把服务器地址保存到 CLI 配置里，然后在后台保持守护进程运行。",
     "live_listening": "等待你的机器上线",
-    "troubleshooting": "那台机器打不开浏览器？",
-    "trouble_intro": "改用 token 登录替代第 2 步，适用于任何有终端的环境。",
-    "trouble_token_hint_prefix": "在 ",
-    "trouble_token_hint_destination": "设置 → API 令牌",
-    "trouble_token_hint_suffix": " 中创建 token。守护进程只使用出站连接——无需开放入站端口。",
-    "trouble_check_status": "检查状态",
-    "trouble_view_logs": "查看日志",
     "copy_aria": "复制",
     "cancel": "取消",
     "success_title": "机器已连接",
@@ -670,7 +663,7 @@
     "slides": {
       "local": {
         "title": "这台电脑，自动连接",
-        "description": "下载桌面端并登录，这台电脑上的 Claude Code、Codex 等会自动出现。"
+        "description": "下载桌面端，这台电脑上的 Claude Code、Codex 等会自动出现。"
       },
       "remote": {
         "title": "其他机器，两条命令",

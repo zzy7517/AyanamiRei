@@ -170,12 +170,19 @@ describe("ConnectRemoteDialog", () => {
 
     expect(baseElement).toHaveTextContent("multica setup");
     expect(baseElement).not.toHaveTextContent("multica setup self-host");
-    expect(baseElement).toHaveTextContent(
-      "multica config set server_url https://api.multica.ai",
-    );
-    expect(baseElement).toHaveTextContent(
-      "multica config set app_url https://multica.ai",
-    );
+  });
+
+  // There is no sign-in and no token to create, so the dialog must not send
+  // anyone to a browser, a `login` command or a token settings page.
+  it("offers no sign-in or token path", () => {
+    const { baseElement } = renderDialog();
+
+    expect(baseElement).not.toHaveTextContent("multica login");
+    expect(baseElement).not.toHaveTextContent("multica config set");
+    expect(baseElement).not.toHaveTextContent("sign in");
+    expect(baseElement).not.toHaveTextContent("browser");
+    expect(baseElement).not.toHaveTextContent("token");
+    expect(screen.getByRole("status")).toHaveTextContent("Waiting for your machine");
   });
 
   it("uses self-host daemon URLs from runtime config", () => {
@@ -188,27 +195,20 @@ describe("ConnectRemoteDialog", () => {
     expect(baseElement).toHaveTextContent(
       "multica setup self-host --server-url https://api.example.com --app-url https://app.example.com",
     );
-    expect(baseElement).toHaveTextContent(
-      "multica config set server_url https://api.example.com",
-    );
-    expect(baseElement).toHaveTextContent(
-      "multica config set app_url https://app.example.com",
-    );
+    expect(baseElement.querySelector("details")).toBeNull();
   });
 
-  it("withholds setup and token commands until config recovers", () => {
+  it("withholds the setup command until config recovers", () => {
     const { baseElement } = renderDialog({}, "loading");
     expect(screen.getByRole("status")).toHaveTextContent(
       "Loading connection settings",
     );
     expect(baseElement).not.toHaveTextContent("multica setup");
-    expect(baseElement).not.toHaveTextContent("multica config set");
     act(() => configStore.getState().setDaemonConfigStatus("error"));
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Couldn't load connection settings",
     );
     expect(baseElement).not.toHaveTextContent("multica setup");
-    expect(baseElement).not.toHaveTextContent("multica config set");
     act(() => configStore.getState().setDaemonConfig({
       daemonSetupTarget: "self_host",
       daemonServerUrl: "https://api.example.com",
@@ -217,19 +217,15 @@ describe("ConnectRemoteDialog", () => {
     expect(baseElement).toHaveTextContent(
       "multica setup self-host --server-url https://api.example.com --app-url https://app.example.com",
     );
-    expect(baseElement).toHaveTextContent(
-      "multica config set server_url https://api.example.com",
-    );
   });
 
   it.each([
     { daemonSetupTarget: "unknown" as const },
     { daemonSetupTarget: "self_host" as const, daemonServerUrl: "https://api.example.com" },
-  ])("withholds both command paths for unresolved config %j", (config) => {
+  ])("withholds the setup command for unresolved config %j", (config) => {
     const { baseElement } = renderDialog(config);
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(baseElement).not.toHaveTextContent("multica setup");
-    expect(baseElement).not.toHaveTextContent("multica config set");
     expect(screen.getAllByRole("button", { name: "Copy" })).toHaveLength(1);
   });
 

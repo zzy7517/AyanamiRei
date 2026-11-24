@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "在這臺電腦上執行",
-      "this_computer_hint": "下載桌面端並登入，這臺電腦上的 Claude Code、Codex 等會自動出現在這裡",
+      "this_computer_hint": "下載桌面端，這臺電腦上的 Claude Code、Codex 等會自動出現在這裡",
       "download_desktop": "下載桌面端",
       "add_machine_title": "新增其他機器或伺服器",
       "add_machine_hint": "在那臺機器上執行兩條命令，AI 代理就能用它上面裝好的 CLI 執行任務",
@@ -264,15 +264,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "啟動守護程序",
-    "step2_hint": "會開啟瀏覽器登入，然後在後臺保持守護程序執行。",
+    "step2_hint": "會把伺服器位址儲存到 CLI 設定裡，然後在後臺保持守護程序執行。",
     "live_listening": "等待你的機器上線",
-    "troubleshooting": "那臺機器打不開瀏覽器？",
-    "trouble_intro": "改用 token 登入替代第 2 步，適用於任何有終端的環境。",
-    "trouble_token_hint_prefix": "在 ",
-    "trouble_token_hint_destination": "設定 → Tokens",
-    "trouble_token_hint_suffix": " 中建立 token。守護程序只使用出站連線——無需開放入站埠。",
-    "trouble_check_status": "檢查狀態",
-    "trouble_view_logs": "檢視日誌",
     "copy_aria": "複製",
     "cancel": "取消",
     "success_title": "機器已連線",
@@ -670,7 +663,7 @@
     "slides": {
       "local": {
         "title": "這臺電腦，自動連接",
-        "description": "下載桌面端並登入，這臺電腦上的 Claude Code、Codex 等會自動出現。"
+        "description": "下載桌面端，這臺電腦上的 Claude Code、Codex 等會自動出現。"
       },
       "remote": {
         "title": "其他機器，兩條命令",

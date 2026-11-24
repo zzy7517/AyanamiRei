@@ -58,7 +58,7 @@ function storeFor(i18n: I18n): LanguageStore {
 /**
  * Project alias for react-i18next's `useTranslation`, with the same result
  * (`t`, `i18n`, `ready`) and re-render on a language change. Use the selector
- * form when calling: t($ => $.signin.title)
+ * form when calling: t($ => $.connect.title)
  *
  * react-i18next's hook copies every property descriptor of the i18next
  * instance into a fresh wrapper for each component that mounts it and

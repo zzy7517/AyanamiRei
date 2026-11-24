@@ -325,12 +325,7 @@ function InstructionsStep({ onClose }: { onClose: () => void }) {
             )}
           </div>
 
-          {commands.status === "ready" && (
-            <>
-              <LiveListening />
-              <TroubleshootingDetails tokenCmd={commands.tokenCmd} />
-            </>
-          )}
+          {commands.status === "ready" && <LiveListening />}
         </div>
       </div>
 
@@ -340,63 +335,6 @@ function InstructionsStep({ onClose }: { onClose: () => void }) {
         </Button>
       </DialogFooter>
     </>
-  );
-}
-
-function TroubleshootingDetails({ tokenCmd }: { tokenCmd: string }) {
-  const { t } = useT("runtimes");
-  return (
-    <details className="group rounded-lg border border-dashed">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-caption font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <ChevronRight
-          className="h-3 w-3 transition-transform group-open:rotate-90"
-          aria-hidden
-        />
-        {t(($) => $.connect.troubleshooting)}
-      </summary>
-      <div className="space-y-2 border-t px-3 pt-2.5 pb-3 text-micro leading-[1.55] text-muted-foreground">
-        <p>{t(($) => $.connect.trouble_intro)}</p>
-        <CommandStep n={2} label={t(($) => $.connect.step2_label)}>
-          <CommandRow
-            cmd={tokenCmd}
-            copyAria={t(($) => $.connect.copy_aria)}
-          />
-        </CommandStep>
-        <p>
-          {t(($) => $.connect.trouble_token_hint_prefix)}
-          <span className="font-medium text-foreground">
-            {t(($) => $.connect.trouble_token_hint_destination)}
-          </span>
-          {t(($) => $.connect.trouble_token_hint_suffix)}
-        </p>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-1.5">
-            <span>{t(($) => $.connect.trouble_check_status)}</span>
-            {/* CLI command — literal shell string, not i18n content. */}
-            <code
-              className={cn(
-                "rounded-xs bg-muted px-1.5 py-0.5 font-mono text-micro text-foreground",
-                CODE_LIGATURE_CLASS,
-              )}
-            >
-              {"multica daemon status"}
-            </code>
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span>{t(($) => $.connect.trouble_view_logs)}</span>
-            {/* CLI command — literal shell string, not i18n content. */}
-            <code
-              className={cn(
-                "rounded-xs bg-muted px-1.5 py-0.5 font-mono text-micro text-foreground",
-                CODE_LIGATURE_CLASS,
-              )}
-            >
-              {"multica daemon logs -f"}
-            </code>
-          </li>
-        </ul>
-      </div>
-    </details>
   );
 }
 

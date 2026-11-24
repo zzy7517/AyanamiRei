@@ -13,7 +13,6 @@ import { render, screen, act, cleanup, waitFor, within } from "@testing-library/
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@multica/core/i18n/react";
 import enCommon from "../../locales/en/common.json";
-import enAuth from "../../locales/en/auth.json";
 import enSettings from "../../locales/en/settings.json";
 
 const navigationState = vi.hoisted(() => ({ search: "", replace: vi.fn() }));
@@ -112,7 +111,7 @@ import {
 
 
 const TEST_RESOURCES = {
-  en: { common: enCommon, auth: enAuth, settings: enSettings },
+  en: { common: enCommon, settings: enSettings },
 };
 
 function I18nWrapper({ children }: { children: ReactNode }) {

@@ -53,7 +53,7 @@
     },
     "rows": {
       "this_computer_title": "Run on this computer",
-      "this_computer_hint": "Download the desktop app and sign in; Claude Code, Codex and other CLIs on this computer show up here automatically",
+      "this_computer_hint": "Download the desktop app; Claude Code, Codex and other CLIs on this computer show up here automatically",
       "download_desktop": "Download desktop",
       "add_machine_title": "Add another machine or server",
       "add_machine_hint": "Run two commands on that machine so agents can use the CLIs installed there",
@@ -275,15 +275,8 @@
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
     "step2_label": "Start the daemon",
-    "step2_hint": "Opens a browser to sign in, then keeps the daemon running in the background.",
+    "step2_hint": "Saves the server address in the CLI profile, then keeps the daemon running in the background.",
     "live_listening": "Waiting for your machine",
-    "troubleshooting": "Can't open a browser on that machine?",
-    "trouble_intro": "Use a token instead of the browser sign-in. This replaces step 2 and works anywhere you have a terminal.",
-    "trouble_token_hint_prefix": "Create a token in ",
-    "trouble_token_hint_destination": "Settings → Tokens",
-    "trouble_token_hint_suffix": ". The daemon only makes outbound connections — no inbound ports required.",
-    "trouble_check_status": "Check status",
-    "trouble_view_logs": "View logs",
     "copy_aria": "Copy",
     "cancel": "Cancel",
     "success_title": "Machine connected",
@@ -690,7 +683,7 @@
     "slides": {
       "local": {
         "title": "This computer connects itself",
-        "description": "Download the desktop app and sign in. Claude Code, Codex and the other CLIs on this computer show up on their own."
+        "description": "Download the desktop app. Claude Code, Codex and the other CLIs on this computer show up on their own."
       },
       "remote": {
         "title": "Another machine, two commands",
