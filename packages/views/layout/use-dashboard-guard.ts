@@ -15,19 +15,18 @@ import { useRecentVisitsStore } from "@multica/core/command-bar";
 import { useNavigation } from "../navigation";
 
 /**
- * Auth + workspace gate for the dashboard.
+ * Workspace gate for the dashboard.
  *
  * Redirect logic:
- *  - Auth still loading → wait
- *  - Not logged in → /login
- *  - Logged in but workspace list not yet loaded → wait (don't bounce prematurely)
- *  - Logged in but URL slug doesn't resolve to any workspace →
- *    `resolvePostAuthDestination(list, hasOnboarded)` (workspace-presence first;
- *    see paths/resolve.ts for the full table)
+ *  - Workspace list not yet loaded → wait
+ *  - URL slug resolves → stay
+ *  - User record still loading and the slug does not resolve → wait
+ *  - User record is known and the slug does not resolve →
+ *    `resolvePostAuthDestination(list, hasOnboarded)`
+ *  - No user record and the slug does not resolve → the first workspace,
+ *    or /workspaces/new when the list is empty
  *
- * This guard only redirects when the URL slug doesn't resolve. Onboarding
- * itself marks the user onboarded before navigating into a workspace, so
- * entering the dashboard no longer depends on a follow-up Helper modal.
+ * There is no login route. A missing user is not a signed-out screen.
  *
  * We read the workspace list query state directly (rather than relying on
  * useCurrentWorkspace's null return) so we can distinguish "list loading"
@@ -40,20 +39,22 @@ export function useDashboardGuard() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const workspace = useCurrentWorkspace();
   const hasOnboarded = useHasOnboarded();
-  const { workspaces, ready: workspaceListReady } = useWorkspaceList({
-    enabled: !!user,
-  });
+  const { workspaces, ready: workspaceListReady } = useWorkspaceList();
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!user) {
-      replace(paths.login());
-      return;
-    }
     if (!workspaceListReady) return;
-    if (!workspace) {
-      replace(resolvePostAuthDestination(workspaces, hasOnboarded));
-    }
+    if (workspace) return;
+    // Onboarding depends on the user record. Don't pick a destination
+    // until that load finishes, or a still-loading user would skip it.
+    if (isLoading) return;
+    const first = workspaces[0];
+    replace(
+      user
+        ? resolvePostAuthDestination(workspaces, hasOnboarded)
+        : first
+          ? paths.workspace(first.slug).issues()
+          : paths.newWorkspace(),
+    );
   }, [user, isLoading, workspaceListReady, workspace, workspaces, hasOnboarded, replace]);
 
   useEffect(() => {

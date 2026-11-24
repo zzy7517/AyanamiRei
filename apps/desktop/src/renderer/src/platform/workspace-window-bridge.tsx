@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { useAuthStore } from "@multica/core/auth";
 import { workspaceSlugForPath } from "@multica/core/paths";
 import { useWorkspaceList } from "@multica/core/workspace";
 import { useT } from "@multica/views/i18n";
@@ -14,13 +13,12 @@ import {
 /**
  * Main-window side of multi-window workspaces: tells main which workspace
  * this window shows, opens paths other windows hand over, and answers
- * Cmd/Ctrl+Shift+N. Mounted in every main-window state (login included) so
- * a shortcut pressed before sign-in is consumed instead of replayed later.
+ * Cmd/Ctrl+Shift+N. Mounted for every main-window state so a shortcut
+ * pressed before the user record arrives is consumed instead of replayed.
  */
 export function WorkspaceWindowBridge() {
   const { t } = useT("layout");
-  const user = useAuthStore((s) => s.user);
-  const { workspaces } = useWorkspaceList({ enabled: !!user });
+  const { workspaces } = useWorkspaceList();
   const activeWorkspaceSlug = useTabStore((s) => s.activeWorkspaceSlug);
 
   const latest = useRef({ workspaces, t });

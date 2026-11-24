@@ -28,8 +28,8 @@ func TestClient_IdentityHeaders_PostJSON(t *testing.T) {
 		if got := r.Header.Get("X-Client-OS"); got != normalizeGOOS(runtime.GOOS) {
 			t.Errorf("expected X-Client-OS %q, got %q", normalizeGOOS(runtime.GOOS), got)
 		}
-		if got := r.Header.Get("Authorization"); got != "Bearer tok" {
-			t.Errorf("expected Authorization Bearer tok, got %q", got)
+		if got := r.Header.Get("Authorization"); got != "" {
+			t.Errorf("expected no Authorization header, got %q", got)
 		}
 		capabilities := make(map[string]bool)
 		for _, capability := range strings.Split(r.Header.Get("X-Client-Capabilities"), ",") {
@@ -73,7 +73,6 @@ func TestClient_IdentityHeaders_PostJSON(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
 	c.SetVersion("9.9.9")
 
 	if err := c.postJSON(context.Background(), "/api/daemon/test", map[string]any{}, nil); err != nil {
@@ -98,7 +97,6 @@ func TestClient_IdentityHeaders_GetJSON(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
 	c.SetVersion("1.2.3")
 
 	var out map[string]any
@@ -173,10 +171,10 @@ func TestStartTaskCapabilityNegotiationMixedVersions(t *testing.T) {
 	}
 }
 
-func TestClient_ResolveRemoteMCPCredentialUsesExplicitDaemonToken(t *testing.T) {
+func TestClient_ResolveRemoteMCPCredentialDoesNotSendDaemonCredential(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if got := r.Header.Get("Authorization"); got != "Bearer mdt_task_broker" {
-			t.Errorf("Authorization = %q, want short-lived daemon token", got)
+		if got := r.Header.Get("Authorization"); got != "" {
+			t.Errorf("Authorization = %q, want no daemon credential", got)
 		}
 		if got := r.URL.Path; got != "/api/daemon/tasks/task-1/remote-mcp/contribution-1/credential" {
 			t.Errorf("path = %q", got)
@@ -187,16 +185,12 @@ func TestClient_ResolveRemoteMCPCredentialUsesExplicitDaemonToken(t *testing.T) 
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("mul_owner_pat")
 	headers, err := c.ResolveRemoteMCPCredential(context.Background(), "mdt_task_broker", "task-1", "contribution-1")
 	if err != nil {
 		t.Fatalf("ResolveRemoteMCPCredential: %v", err)
 	}
 	if got := headers.Get("Authorization"); got != "Bearer upstream" {
 		t.Fatalf("resolved credential = %q", got)
-	}
-	if got := c.Token(); got != "mul_owner_pat" {
-		t.Fatalf("client PAT was mutated to %q", got)
 	}
 }
 

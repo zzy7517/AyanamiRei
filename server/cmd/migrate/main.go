@@ -467,6 +467,8 @@ var concurrentDownIndexCleanups = map[string]string{
 	"741_drop_share_link_code_uidx":                         "workspace_share_link_code_uidx",
 	"742_drop_share_link_active_ws_uidx":                    "workspace_share_link_active_ws_uidx",
 	"744_drop_share_link_pkey_uidx":                         "workspace_share_link_pkey_uidx",
+	"746_drop_authentication":                               "idx_pat_user",
+	"747_drop_pat_hash_index":                               "idx_pat_token_hash",
 }
 
 var preMigrationHooks = func() map[string]preMigrationHook {

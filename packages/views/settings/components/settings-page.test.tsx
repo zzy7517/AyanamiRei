@@ -48,7 +48,6 @@ vi.mock("./channels-tab", async () => {
   };
 });
 vi.mock("./preferences-tab", stub("PreferencesTab"));
-vi.mock("./tokens-tab", stub("TokensTab"));
 vi.mock("./workspace-tab", stub("WorkspaceTab"));
 vi.mock("./code-tab", stub("CodeTab"));
 vi.mock("./notifications-tab", stub("NotificationsTab"));
@@ -347,7 +346,7 @@ describe("SettingsPage information architecture", () => {
     ]);
     const personal = within(nav()).getByRole("region", { name: "Personal" });
     expect(within(personal).getByRole("link", { name: "Preferences" })).toBeInTheDocument();
-    expect(within(personal).getByRole("link", { name: "API tokens" })).toBeInTheDocument();
+    expect(within(personal).queryByRole("link", { name: "API tokens" })).not.toBeInTheDocument();
 
     const issues = within(nav()).getByRole("region", { name: "Issues & workflow" });
     expect(within(issues).getByRole("link", { name: "Workflows" })).toBeInTheDocument();

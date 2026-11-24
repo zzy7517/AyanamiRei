@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/service"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
@@ -53,7 +54,7 @@ func setupSweeperTestFixture(t *testing.T, taskStatus string) (string, string, s
 		JOIN "user" u ON u.id = m.user_id
 		WHERE u.email = $1
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID)
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
 	if err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
@@ -851,7 +852,7 @@ func TestSweepResetsInProgressIssueToTodo(t *testing.T) {
 		JOIN "user" u ON u.id = m.user_id
 		WHERE u.email = $1
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID)
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
 	if err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
@@ -942,7 +943,7 @@ func TestSweepDoesNotResetIssueAlreadyInReview(t *testing.T) {
 		JOIN "user" u ON u.id = m.user_id
 		WHERE u.email = $1
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID)
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID)
 	if err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
@@ -1027,7 +1028,7 @@ func TestExpireStaleQueuedTasks(t *testing.T) {
 		JOIN "user" u ON u.id = m.user_id
 		WHERE u.email = $1
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID); err != nil {
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
 
@@ -1245,7 +1246,7 @@ func TestExpireStaleQueuedTasksRespectsBatchLimit(t *testing.T) {
 		JOIN "user" u ON u.id = m.user_id
 		WHERE u.email = $1
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID); err != nil {
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
 

@@ -32,7 +32,7 @@ class FakeSocket {
 /** A connected client whose frames go through the real dispatch path. */
 function connectSocket() {
   vi.stubGlobal("WebSocket", FakeSocket as unknown as typeof WebSocket);
-  const client = new WSClient("ws://localhost:18080/ws", { cookieAuth: true });
+  const client = new WSClient("ws://localhost:18080/ws");
   client.connect();
   FakeSocket.last!.onopen!();
   return {

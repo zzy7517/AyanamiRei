@@ -82,7 +82,6 @@
     "unpin_tooltip": "ピン留めを解除",
     "workspaces_label": "ワークスペース",
     "create_workspace": "ワークスペースを作成",
-    "log_out": "ログアウト",
     "new_issue": "新規タスク",
     "pinned_label": "ピン留め済み",
     "show_more_pins": "さらに {{count}} 件を表示…",

@@ -27,11 +27,9 @@ import { CliInstallInstructions, OnboardingFlow } from "@multica/views/onboardin
  */
 export default function OnboardingPage() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const isLoading = useAuthStore((s) => s.isLoading);
   const hasOnboarded = useHasOnboarded();
   const { workspaces, ready: workspacesReady } = useWorkspaceList({
-    enabled: !!user,
+    enabled: true,
   });
   // The bootstrap path calls refreshMe() before returning, which flips
   // hasOnboarded to true while the page is still mounted. Without this
@@ -43,10 +41,6 @@ export default function OnboardingPage() {
   const completingRef = useRef(false);
 
   useEffect(() => {
-    if (isLoading || !user) {
-      if (!isLoading && !user) router.replace(paths.login());
-      return;
-    }
     if (!workspacesReady) return;
     if (completingRef.current) return;
     // Bounce out only when onboarding genuinely doesn't apply: the user is
@@ -59,9 +53,9 @@ export default function OnboardingPage() {
     if (hasOnboarded) {
       router.replace(resolvePostAuthDestination(workspaces, hasOnboarded));
     }
-  }, [isLoading, user, hasOnboarded, workspacesReady, workspaces, router]);
+  }, [hasOnboarded, workspacesReady, workspaces, router]);
 
-  if (isLoading || !user || hasOnboarded) return null;
+  if (hasOnboarded) return null;
 
   // Layout: page owns its own scroll (root layout sets `body {
   // overflow: hidden }` for the app-shell convention). OnboardingFlow

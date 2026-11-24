@@ -17,8 +17,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	"github.com/multica-ai/multica/server/internal/cli"
 )
 
 func TestBindDaemonHealthPortFallsBackWithoutReleasingListener(t *testing.T) {
@@ -239,9 +237,6 @@ func TestWaitForDaemonProfileReleaseDetectsConcurrentStart(t *testing.T) {
 func TestDaemonBackgroundWaitsForShutdownBeforeSpawning(t *testing.T) {
 	const profile = "background-lock-test"
 	mkProfiles(t, profile)
-	if err := cli.SaveCLIConfigForProfile(cli.CLIConfig{Token: "mul_fake"}, profile); err != nil {
-		t.Fatal(err)
-	}
 	falseBin, err := exec.LookPath("false")
 	if err != nil {
 		t.Skipf("false binary unavailable: %v", err)

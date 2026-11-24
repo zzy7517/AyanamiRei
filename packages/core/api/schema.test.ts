@@ -1051,7 +1051,6 @@ describe("ApiClient schema fallback", () => {
     it("drops malformed daemon setup URLs instead of throwing", async () => {
       stubFetchJson({
         cdn_domain: "cdn.example.com",
-        allow_signup: true,
         daemon_server_url: { wrong: "shape" },
         daemon_app_url: 123,
         workspace_creation_disabled: false,
@@ -1060,7 +1059,6 @@ describe("ApiClient schema fallback", () => {
       const client = new ApiClient("https://api.example.test");
       const config = await client.getConfig();
       expect(config.cdn_domain).toBe("cdn.example.com");
-      expect(config.allow_signup).toBe(true);
       expect(config.daemon_server_url).toBeUndefined();
       expect(config.daemon_app_url).toBeUndefined();
       expect(config.feature_flags?.composio_mcp_apps).toBe(true);

@@ -47,8 +47,7 @@
     "continue": "Continuer",
     "skip": "Ignorer",
     "cancel": "Annuler",
-    "close": "Fermer",
-    "log_out": "Se déconnecter"
+    "close": "Fermer"
   },
   "source_backfill": {
     "eyebrow": "Une question rapide",
@@ -161,7 +160,6 @@
     "create_failed_toast": "Échec de la création de l'espace de travail",
     "creation_disabled_headline": "Demandez un accès à votre administrateur.",
     "creation_disabled_lede": "Cette instance Multica n'autorise pas la création de nouveaux espaces de travail. Dès qu'un administrateur vous donne accès à un espace, actualisez pour continuer.",
-    "creation_disabled_logout": "Se déconnecter",
     "creation_disabled_headline_resume": "Continuez avec {{name}}.",
     "creation_disabled_lede_resume": "La création d'espaces de travail est désactivée sur cette instance : vous continuerez donc dans votre espace existant."
   },

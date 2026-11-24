@@ -9,7 +9,6 @@ import {
 } from "@multica/core/paths";
 import { workspaceListOptions } from "@multica/core/workspace/queries";
 import { useNavigation } from "../navigation";
-import { useLogout } from "../auth";
 import { DragStrip } from "../platform";
 import { useT } from "../i18n";
 
@@ -22,7 +21,6 @@ import { useT } from "../i18n";
 export function NoAccessPage() {
   const { t } = useT("workspace");
   const nav = useNavigation();
-  const logout = useLogout();
   const hasOnboarded = useHasOnboarded();
   const { data: workspaces = [] } = useQuery(workspaceListOptions());
 
@@ -58,14 +56,9 @@ export function NoAccessPage() {
             {t(($) => $.no_access.description)}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button onClick={recover}>
-            {t(($) => $.no_access.go_to_workspaces)}
-          </Button>
-          <Button variant="outline" onClick={logout}>
-            {t(($) => $.no_access.sign_in_different)}
-          </Button>
-        </div>
+        <Button onClick={recover}>
+          {t(($) => $.no_access.go_to_workspaces)}
+        </Button>
       </div>
     </div>
   );

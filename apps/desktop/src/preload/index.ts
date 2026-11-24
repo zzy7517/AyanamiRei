@@ -20,7 +20,6 @@ import {
   readDesktopWindowContext,
   type IssueWindowRequest,
 } from "../shared/issue-window";
-import { AUTH_SESSION_STATE_CHANNEL } from "../shared/auth-session";
 import {
   DEV_TOOLBAR_VISIBLE_CHANGED_CHANNEL,
   DEV_TOOLBAR_VISIBLE_GET_CHANNEL,
@@ -198,13 +197,6 @@ const desktopAPI = {
   /** Retire the breadcrumb with this exact timestamp after its event has been
    *  handed to analytics. Anything left unacknowledged is retried next boot. */
   ackFreeze: (ts: number) => ipcRenderer.send("freeze:ack", ts),
-  /** Report only the resolved user id (never a token) so main can close
-   *  dedicated issue windows that belong to an old account. */
-  reportAuthSession: (userId: string | null) =>
-    ipcRenderer.send(AUTH_SESSION_STATE_CHANNEL, userId),
-  /** Listen for auth token delivered via deep link */
-  onAuthToken: (callback: (token: string) => void) =>
-    subscribeToMainRendererChannel("auth:token", callback),
   onIssueOpen: (callback: (url: string) => void) =>
     subscribeToMainRendererChannel("issue:open", callback),
   /** Open a URL in the default browser */
@@ -446,11 +438,6 @@ const desktopAPI = {
   },
 };
 
-type DaemonReauthResult =
-  | { ok: true }
-  | { ok: false; reason: "session_invalid" }
-  | { ok: false; reason: "transient"; message: string };
-
 type FocusEnvironmentResult =
   | { ok: true }
   | { ok: false; reason: "gone" | "unsupported" | "unavailable" | "failed"; error?: string };
@@ -477,15 +464,6 @@ const daemonAPI = {
   },
   setTargetApiUrl: (url: string): Promise<void> =>
     ipcRenderer.invoke("daemon:set-target-api-url", url),
-  syncToken: (token: string, userId: string): Promise<void> =>
-    ipcRenderer.invoke("daemon:sync-token", token, userId),
-  clearToken: (): Promise<void> =>
-    ipcRenderer.invoke("daemon:clear-token"),
-  reauthenticate: (
-    token: string,
-    userId: string,
-  ): Promise<DaemonReauthResult> =>
-    ipcRenderer.invoke("daemon:reauthenticate", token, userId),
   isCliInstalled: (): Promise<boolean> =>
     ipcRenderer.invoke("daemon:is-cli-installed"),
   getPrefs: (): Promise<{ autoStart: boolean; autoStop: boolean }> =>

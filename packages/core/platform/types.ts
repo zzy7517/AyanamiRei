@@ -25,16 +25,6 @@ export interface CoreProviderProps {
   wsUrl?: string;
   /** Storage adapter. Default: SSR-safe localStorage wrapper. */
   storage?: StorageAdapter;
-  /** Use HttpOnly cookies for auth instead of localStorage tokens. Default: false. */
-  cookieAuth?: boolean;
-  /** Called after successful login (e.g. set cookie for Next.js middleware). */
-  onLogin?: () => void;
-  /** Called after logout (e.g. clear cookie). */
-  onLogout?: () => void;
-  /** Called when the server ends the session (401) rather than the user.
-   *  Defaults to `onLogout`; pass it only when some of this shell's logout
-   *  teardown is too destructive for an expiry the user did not ask for. */
-  onSessionExpired?: () => void;
   /** Identifies the calling client (web/desktop + version + os) to the server. */
   identity?: ClientIdentity;
   /** Active locale, determined server-side (web) or at app boot (desktop). */

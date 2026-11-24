@@ -83,7 +83,6 @@
     "unpin_tooltip": "Détacher",
     "workspaces_label": "Espaces de travail",
     "create_workspace": "Créer un espace de travail",
-    "log_out": "Se déconnecter",
     "new_issue": "Nouvelle tâche",
     "pinned_label": "Épinglés",
     "show_more_pins": "Afficher {{count}} de plus…",

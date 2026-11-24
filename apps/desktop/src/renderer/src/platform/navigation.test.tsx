@@ -9,8 +9,8 @@ import { useEffect } from "react";
 
 // MUL-4741: the adapter mutates tab sessions in the REAL store (no router,
 // no mocks needed for it anymore) — the Coordinator, not tested here, is
-// what projects sessions into the single router. Overlay and auth stay
-// mocked so we can spy on their entry points.
+// what projects sessions into the single router. The overlay store stays
+// mocked so we can spy on its entry point.
 
 const overlay = vi.hoisted(() => ({
   overlay: null as null | { type: string },
@@ -21,14 +21,6 @@ const overlay = vi.hoisted(() => ({
 vi.mock("@/stores/window-overlay-store", () => ({
   useWindowOverlayStore: Object.assign(() => null, {
     getState: () => overlay,
-  }),
-}));
-
-const auth = vi.hoisted(() => ({ logout: vi.fn() }));
-
-vi.mock("@multica/core/auth", () => ({
-  useAuthStore: Object.assign(() => null, {
-    getState: () => auth,
   }),
 }));
 
@@ -52,7 +44,6 @@ beforeEach(() => {
   overlay.open.mockReset();
   overlay.close.mockReset();
   overlay.overlay = null;
-  auth.logout.mockReset();
   useTabStore.getState().reset();
   useTabStore.getState().switchWorkspace("acme"); // default tab /acme/issues
   Object.defineProperty(window, "desktopAPI", {
@@ -203,12 +194,11 @@ describe("push", () => {
     );
   });
 
-  it("logs out instead of navigating for /login", () => {
+  it("stays on the current workspace when asked to open /login", () => {
     const getAdapter = renderProvider();
 
     getAdapter().push("/login");
 
-    expect(auth.logout).toHaveBeenCalledOnce();
     expect(getActiveTab(useTabStore.getState())?.url).toBe("/acme/issues");
   });
 

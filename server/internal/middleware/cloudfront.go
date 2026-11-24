@@ -34,10 +34,8 @@ func RefreshCloudFrontCookies(signer *auth.CloudFrontSigner) func(http.Handler) 
 				next.ServeHTTP(w, r)
 				return
 			}
-			_, err := r.Cookie("CloudFront-Policy")
-			if err != nil && !SessionRenewed(r) {
-				ttl := auth.AuthTokenTTL()
-				for _, cookie := range signer.SignedCookies(time.Now().Add(ttl)) {
+			if _, err := r.Cookie("CloudFront-Policy"); err != nil {
+				for _, cookie := range signer.SignedCookies(time.Now().Add(auth.AuthTokenTTL())) {
 					http.SetCookie(w, cookie)
 				}
 			}

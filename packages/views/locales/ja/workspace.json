@@ -27,7 +27,6 @@
   "no_access": {
     "title": "ワークスペースを利用できません",
     "description": "このワークスペースは存在しないか、アクセス権がありません。",
-    "go_to_workspaces": "マイワークスペースへ移動",
-    "sign_in_different": "別のユーザーでログイン"
+    "go_to_workspaces": "マイワークスペースへ移動"
   }
 }

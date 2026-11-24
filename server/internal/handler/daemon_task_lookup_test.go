@@ -27,6 +27,27 @@ type lookupFaultPool struct {
 	called bool
 }
 
+type mockRow struct {
+	err error
+}
+
+func (r *mockRow) Scan(dest ...any) error {
+	if r.err != nil {
+		return r.err
+	}
+	*dest[0].(*string) = "running"
+	return nil
+}
+
+type mockDB struct {
+	db.DBTX
+	getUserErr error
+}
+
+func (m *mockDB) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+	return &mockRow{err: m.getUserErr}
+}
+
 func (f *lookupFaultPool) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
 	if strings.Contains(query, "-- name: "+f.query+" :one") {
 		f.called = true

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@multica/ui/components/ui/card";
 import { Button } from "@multica/ui/components/ui/button";
 import { api, ApiError } from "@multica/core/api";
 import { useAuthStore } from "@multica/core/auth";
+import { paths } from "@multica/core/paths";
 import { AppLink } from "../navigation";
 import { useT } from "../i18n";
 
@@ -16,9 +17,9 @@ type RedeemState =
   | { kind: "error"; reason: string };
 
 // DingTalkBindPage is the destination the bot's "link your account" prompt
-// points at. The user lands here logged out OR logged in; we require auth
-// before redeeming because the redeemer's Multica identity is taken from the
-// session (the token alone never proves who is binding).
+// points at. Redemption waits for the local user record, because the server
+// binds the installation to that user. There is no login page: if that
+// record never arrives, the page sends the visitor into the app.
 //
 // The token comes in via `?token=<raw>`. We POST it to
 // /api/dingtalk/binding/redeem; the backend returns 410 (invalid/expired),
@@ -71,24 +72,13 @@ export function DingTalkBindPage({ token }: { token: string | null }) {
           {state.kind === "idle" || state.kind === "redeeming" ? (
             <p className="text-body text-muted-foreground">{t(($) => $.dingtalk_bind.redeeming)}</p>
           ) : state.kind === "needs-auth" ? (
-            <>
-              <p className="text-body text-muted-foreground">
-                {t(($) => $.dingtalk_bind.needs_auth_description)}
-              </p>
-              <Button
-                size="sm"
-                render={
-                  <AppLink
-                    href={`/login?next=${encodeURIComponent(
-                      `/dingtalk/bind?token=${encodeURIComponent(token ?? "")}`,
-                    )}`}
-                  />
-                }
-                nativeButton={false}
-              >
-                {t(($) => $.dingtalk_bind.sign_in)}
-              </Button>
-            </>
+            <Button
+              size="sm"
+              render={<AppLink href={paths.root()} />}
+              nativeButton={false}
+            >
+              {t(($) => $.not_found.back_to_multica)}
+            </Button>
           ) : state.kind === "done" ? (
             <>
               <p className="text-body font-medium">{t(($) => $.dingtalk_bind.done_title)}</p>

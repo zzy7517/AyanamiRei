@@ -47,8 +47,7 @@
     "continue": "続ける",
     "skip": "スキップ",
     "cancel": "キャンセル",
-    "close": "閉じる",
-    "log_out": "ログアウト"
+    "close": "閉じる"
   },
   "source_backfill": {
     "eyebrow": "ちょっと質問",
@@ -161,7 +160,6 @@
     "create_failed_toast": "ワークスペースを作成できませんでした",
     "creation_disabled_headline": "管理者にアクセス権を依頼してください。",
     "creation_disabled_lede": "この Multica インスタンスでは新しいワークスペースを作成できません。管理者からワークスペースへのアクセス権が付与されたら、更新して続けてください。",
-    "creation_disabled_logout": "ログアウト",
     "creation_disabled_headline_resume": "{{name}} で続けましょう。",
     "creation_disabled_lede_resume": "このインスタンスではワークスペースの作成が無効になっているため、既存のワークスペースへ続けて移動します。"
   },

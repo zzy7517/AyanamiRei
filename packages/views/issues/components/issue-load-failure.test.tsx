@@ -40,7 +40,7 @@ const back = vi.fn();
 function surface(routeId: string, host: "route" | "inbox" | "peek" = "route") {
   return <I18nProvider resources={{ en: { issues: enIssues, common: enCommon } }} locale="en">
     <QueryClientProvider client={qc}>
-      <WSProvider wsUrl="ws://synthetic.invalid" authStore={auth} storage={defaultStorage}><TooltipProvider><NavigationProvider value={{ push: vi.fn(), replace, back, pathname: `/synthetic/issues/${routeId}`, searchParams: new URLSearchParams(), hash: "#comment-synthetic", getShareableUrl: (p) => p }}>
+      <WSProvider wsUrl="ws://synthetic.invalid" authStore={auth}><TooltipProvider><NavigationProvider value={{ push: vi.fn(), replace, back, pathname: `/synthetic/issues/${routeId}`, searchParams: new URLSearchParams(), hash: "#comment-synthetic", getShareableUrl: (p) => p }}>
         {host === "route" ? <IssueDetailRoute routeId={routeId} /> : <IssueDetail issueId={routeId} variant={host === "peek" ? "peek" : "page"} leadingAction={<button onClick={back}>Inbox back</button>} trailingActions={<button onClick={back}>Close peek</button>} />}
       </NavigationProvider></TooltipProvider></WSProvider>
     </QueryClientProvider>
@@ -225,16 +225,6 @@ describe("primary issue read failures through the production API client", () => 
     await waitFor(() => expect(result.current.issue?.id).toBe(uuid));
     rerender();
     expect(primary).toHaveBeenCalledTimes(1);
-  });
-
-  it("preserves the API client's unauthorized callback", async () => {
-    const onUnauthorized = vi.fn();
-    setApiInstance(new ApiClient("https://synthetic.invalid", { onUnauthorized }));
-    primary.mockImplementation(() => Promise.resolve(response(401)));
-    render(surface("SYN-1"));
-    await screen.findByText(enIssues.detail.not_found_title);
-    expect(onUnauthorized).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
 
 });

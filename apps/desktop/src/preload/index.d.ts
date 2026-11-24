@@ -62,10 +62,6 @@ interface DesktopAPI {
   /** Retire the breadcrumb with this exact timestamp once its event has been
    *  handed to analytics. Unacknowledged breadcrumbs are retried next boot. */
   ackFreeze: (ts: number) => void;
-  /** Report the resolved account identity so stale issue windows can close. */
-  reportAuthSession: (userId: string | null) => void;
-  /** Listen for auth token delivered via deep link. Returns an unsubscribe function. */
-  onAuthToken: (callback: (token: string) => void) => () => void;
   /** Listen for issue links from the web once authentication is ready. */
   onIssueOpen: (callback: (url: string) => void) => () => void;
   /** Open a URL in the default browser. */
@@ -213,11 +209,6 @@ interface DesktopAPI {
   onDevToolbarVisibleChange: (callback: (visible: boolean) => void) => () => void;
 }
 
-type DaemonReauthResult =
-  | { ok: true }
-  | { ok: false; reason: "session_invalid" }
-  | { ok: false; reason: "transient"; message: string };
-
 type FocusEnvironmentResult =
   | { ok: true }
   | { ok: false; reason: "gone" | "unsupported" | "unavailable" | "failed"; error?: string };
@@ -233,12 +224,6 @@ interface DaemonAPI {
   focusEnvironment: (key: string) => Promise<FocusEnvironmentResult>;
   onStatusChange: (callback: (status: DaemonStatus) => void) => () => void;
   setTargetApiUrl: (url: string) => Promise<void>;
-  syncToken: (token: string, userId: string) => Promise<void>;
-  clearToken: () => Promise<void>;
-  reauthenticate: (
-    token: string,
-    userId: string,
-  ) => Promise<DaemonReauthResult>;
   isCliInstalled: () => Promise<boolean>;
   getPrefs: () => Promise<DaemonPrefs>;
   setPrefs: (prefs: Partial<DaemonPrefs>) => Promise<DaemonPrefs>;

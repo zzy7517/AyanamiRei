@@ -171,9 +171,6 @@ func (d *Daemon) runTerminalConnection(ctx context.Context) error {
 
 func (d *Daemon) terminalHeaders() http.Header {
 	headers := http.Header{}
-	if token := d.client.Token(); token != "" {
-		headers.Set("Authorization", "Bearer "+token)
-	}
 	if d.client.platform != "" {
 		headers.Set("X-Client-Platform", d.client.platform)
 	}

@@ -1828,7 +1828,6 @@ describe("mergePersistedTabs (rehydration, MUL-4370)", () => {
               "/acme/inbox?issue=issue-a",
               "/acme/inbox",
               "/other/issues/issue-2",
-              "/login",
               7,
             ],
           },

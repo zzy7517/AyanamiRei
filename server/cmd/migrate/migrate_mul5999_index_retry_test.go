@@ -224,14 +224,14 @@ func assertConcurrentIndexCleanupsMatchTheirMigrations(
 			t.Errorf("%s: has a cleanup hook but no %s migration file", version, direction)
 			continue
 		}
+		// A teardown migration may drop its cleanup hook's index rather than
+		// build it. Before deleting the relation, the invalid-index cleanup
+		// still prevents a wedged retry when the rollback's replacement build
+		// has left it invalid.
 		// The comment headers on these migrations mention CREATE INDEX
 		// CONCURRENTLY in prose, so the corpus matches statements only.
-		if len(migration.builds) == 0 {
-			t.Errorf("%s: has a cleanup hook but builds no index concurrently", version)
-			continue
-		}
-		if got := migration.builds[0]; got != indexName {
-			t.Errorf("%s: hook cleans %q but the migration builds %q", version, indexName, got)
+		if len(migration.builds) > 0 && migration.builds[0] != indexName {
+			t.Errorf("%s: hook cleans %q but the migration builds %q", version, indexName, migration.builds[0])
 		}
 		if hooks[version] == nil {
 			t.Errorf("%s: no pre-migration hook registered", version)

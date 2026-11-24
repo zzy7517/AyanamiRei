@@ -1,5 +1,7 @@
 export const RENDERER_ROUTE_CONTEXT_CHANNEL = "renderer:route-context";
 
+// "login" stays in the union so a report from an older build still parses.
+// The current shell does not publish that surface.
 export type RendererRouteSurface = "login" | "overlay" | "tab";
 
 // This context exists only to be attached to a freeze/crash report, and those

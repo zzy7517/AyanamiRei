@@ -94,11 +94,11 @@ func (r fakeRow) Scan(dest ...any) error {
 	return nil
 }
 
-// TestAuth_TaskTokenWorkspaceSelectors drives the real Auth middleware with a
-// mat_ token bound to workspace A and asserts that an explicit selector for
-// any other workspace is refused before the handler runs, instead of being
-// silently replaced by A (GitHub #9403).
-func TestAuth_TaskTokenWorkspaceSelectors(t *testing.T) {
+// TestFixedUser_TaskTokenWorkspaceSelectors drives the fixed-user middleware's
+// task-token branch with a mat_ token bound to workspace A and asserts that an
+// explicit selector for any other workspace is refused before the handler runs,
+// instead of being silently replaced by A (GitHub #9403).
+func TestFixedUser_TaskTokenWorkspaceSelectors(t *testing.T) {
 	cases := []struct {
 		name       string
 		method     string
@@ -183,7 +183,7 @@ func TestAuth_TaskTokenWorkspaceSelectors(t *testing.T) {
 			queries := db.New(&fakeTaskTokenDB{t: t})
 			var called bool
 			var gotWorkspace, gotSource string
-			handler := Auth(queries, nil, nil, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := FixedUser(queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called = true
 				gotWorkspace = r.Header.Get("X-Workspace-ID")
 				gotSource = r.Header.Get("X-Actor-Source")
@@ -224,29 +224,5 @@ func TestAuth_TaskTokenWorkspaceSelectors(t *testing.T) {
 				t.Fatalf("X-Actor-Source = %q, want task_token", gotSource)
 			}
 		})
-	}
-}
-
-// TestAuth_JWTWorkspaceSelectorUntouched is the control for the task-token
-// check: human JWT sessions keep choosing their workspace through headers,
-// and Auth must neither validate nor rewrite that choice.
-func TestAuth_JWTWorkspaceSelectorUntouched(t *testing.T) {
-	var gotWorkspace string
-	handler := Auth(nil, nil, nil, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotWorkspace = r.Header.Get("X-Workspace-ID")
-		w.WriteHeader(http.StatusOK)
-	}))
-
-	req := httptest.NewRequest("GET", "/api/projects?workspace_slug=anything", nil)
-	req.Header.Set("Authorization", "Bearer "+generateToken(validClaims(), auth.JWTSecret()))
-	req.Header.Set("X-Workspace-ID", ttWorkspaceB)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200 (body %s)", w.Code, w.Body.String())
-	}
-	if gotWorkspace != ttWorkspaceB {
-		t.Fatalf("X-Workspace-ID = %q, want client value %q", gotWorkspace, ttWorkspaceB)
 	}
 }

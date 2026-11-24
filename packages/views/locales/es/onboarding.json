@@ -47,8 +47,7 @@
     "continue": "Continuar",
     "skip": "Saltar",
     "cancel": "Cancelar",
-    "close": "Cerrar",
-    "log_out": "Cerrar sesión"
+    "close": "Cerrar"
   },
   "source_backfill": {
     "eyebrow": "Una pregunta rápida",
@@ -161,7 +160,6 @@
     "create_failed_toast": "Error al crear el espacio de trabajo",
     "creation_disabled_headline": "Pide acceso a tu administrador.",
     "creation_disabled_lede": "Esta instancia de Multica no permite crear espacios de trabajo nuevos. Cuando un administrador te dé acceso a uno, recarga para continuar.",
-    "creation_disabled_logout": "Cerrar sesión",
     "creation_disabled_headline_resume": "Continúa con {{name}}.",
     "creation_disabled_lede_resume": "La creación de espacios de trabajo está desactivada en esta instancia, así que continuarás en tu espacio de trabajo existente."
   },

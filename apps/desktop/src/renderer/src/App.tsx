@@ -1,18 +1,13 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { CoreProvider } from "@multica/core/platform";
 import { pickLocale, type SupportedLocale } from "@multica/core/i18n";
 import { useAuthStore } from "@multica/core/auth";
-import { workspaceKeys } from "@multica/core/workspace/queries";
 import { useWorkspaceList } from "@multica/core/workspace";
-import { api } from "@multica/core/api";
 import { useHasOnboarded } from "@multica/core/paths";
 import { setCurrentWorkspace } from "@multica/core/platform";
 import { ThemeProvider } from "@multica/ui/components/common/theme-provider";
 import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 import { Toaster } from "@multica/ui/components/ui/sonner";
-import { DesktopLoginPage } from "./pages/login";
-import { DesktopAuthRecoveryPage } from "./pages/auth-recovery";
 import { DesktopShell } from "./components/desktop-layout";
 import { UpdateNotification } from "./components/update-notification";
 import { NativeContextMenu } from "./components/native-context-menu";
@@ -27,12 +22,6 @@ import { useWindowOverlayStore } from "./stores/window-overlay-store";
 import { useOpenSettingsShortcut } from "./hooks/use-open-settings-shortcut";
 import { useTabSelectionShortcut } from "./hooks/use-tab-selection-shortcut";
 import { useDaemonIPCBridge } from "./platform/daemon-ipc-bridge";
-import {
-  createSessionStorage,
-  wasPreSharedTokenRejected,
-  type SessionStorage,
-} from "./platform/session-storage";
-import { syncDaemonOnLogin } from "./platform/daemon-login-sync";
 import { createDesktopLocaleAdapter } from "./platform/i18n-adapter";
 import { captureEvent } from "@multica/core/analytics";
 import { AppearanceSync } from "@multica/views/common/appearance-sync";
@@ -40,7 +29,6 @@ import { RESOURCES } from "@multica/views/locales";
 import { DesktopClientUsageReporter } from "./platform/client-usage-reporter";
 import { DiagnosticRouteReporter } from "./platform/diagnostic-route-reporter";
 import { flushFreezeBreadcrumb } from "./freeze-flush";
-import { DesktopAuthSessionBridge } from "./platform/auth-session-bridge";
 import { WorkspaceWindowBridge } from "./platform/workspace-window-bridge";
 import { IssueDeepLinkBridge } from "./platform/issue-deep-link-bridge";
 import {
@@ -48,11 +36,6 @@ import {
   otherWindowWorkspaces,
   resolveWindowWorkspace,
 } from "./platform/workspace-windows";
-import {
-  tearDownOnLogout,
-  tearDownOnSessionExpiry,
-  type SessionTeardown,
-} from "./platform/session-teardown";
 
 // BCP-47 region tags for the <html lang> attribute, mirroring
 // apps/web/app/layout.tsx HTML_LANG. index.html ships a static lang="en";
@@ -73,10 +56,10 @@ const HTML_LANG: Record<SupportedLocale, string> = {
 
 /**
  * Cmd/Ctrl+W: close the active tab. When the last real tab is closed
- * (or no tabs/workspace exist — e.g. login page), close the window.
+ * (or no tabs/workspace exist), close the window.
  *
- * Mounted at the App root so every renderer state — including login,
- * loading, onboarding, and runtime-config errors — has a working Cmd+W
+ * Mounted at the App root so every renderer state — including loading,
+ * onboarding, and runtime-config errors — has a working Cmd+W
  * handler. Without this, states outside the tab shell would swallow the
  * shortcut and do nothing.
  */
@@ -106,16 +89,11 @@ function useCmdWCloseTab() {
   }, []);
 }
 
-function IssueWindowContent({ session }: { session: SessionStorage }) {
-  const { preSharedToken } = session;
-  const user = useAuthStore((state) => state.user);
+function IssueWindowContent() {
   const isLoading = useAuthStore((state) => state.isLoading);
-  const authStatus = useAuthStore((state) => state.status);
-  const sessionExpired = useAuthStore((state) => state.expired);
   const context = window.desktopAPI.windowContext ?? { kind: "main" as const };
 
   if (context.kind !== "issue") return null;
-  if (authStatus === "recovering") return <DesktopAuthRecoveryPage />;
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -124,35 +102,14 @@ function IssueWindowContent({ session }: { session: SessionStorage }) {
     );
   }
 
-  return user ? (
+  return (
     <IssueWindow context={context} />
-  ) : (
-    <DesktopLoginPage
-      preSharedTokenRejected={wasPreSharedTokenRejected(
-        preSharedToken,
-        sessionExpired,
-      )}
-    />
   );
 }
 
-function AppContent({ session }: { session: SessionStorage }) {
-  const { storage, preSharedToken } = session;
+function AppContent() {
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
-  const authStatus = useAuthStore((s) => s.status);
-  const sessionExpired = useAuthStore((s) => s.expired);
-  const qc = useQueryClient();
-
-  // Deep-link login runs loginWithToken → syncToken → listWorkspaces →
-  // setQueryData sequentially. loginWithToken sets user+isLoading=false
-  // as soon as getMe resolves, which would cause DesktopShell to mount
-  // before the workspace list is hydrated and briefly see `!workspace`.
-  // This local flag keeps the loading screen up until the whole chain
-  // finishes, so IndexRedirect gets a definitive workspace state on
-  // first render.
-  const [bootstrapping, setBootstrapping] = useState(false);
-
   const runtimeConfig = window.desktopAPI.runtimeConfig.ok
     ? window.desktopAPI.runtimeConfig.config
     : null;
@@ -164,66 +121,13 @@ function AppContent({ session }: { session: SessionStorage }) {
     window.daemonAPI.setTargetApiUrl(runtimeConfig.apiUrl);
   }, [runtimeConfig]);
 
-  // Listen for auth token delivered via deep link (multica://auth/callback?token=...).
-  // daemonAPI.syncToken is handled separately by the [user] effect below, which
-  // fires whenever a user logs in (deep link, session restore, account switch).
-  useEffect(() => {
-    return window.desktopAPI.onAuthToken(async (token) => {
-      setBootstrapping(true);
-      try {
-        await useAuthStore.getState().loginWithToken(token);
-        // Seed React Query cache with the workspace list so the index-route
-        // redirect (routes.tsx `IndexRedirect`) can resolve the initial
-        // destination without a second fetch. Workspace side-effects
-        // (setCurrentWorkspace, persist namespace) are synced later by
-        // WorkspaceRouteLayout when the URL resolves.
-        const wsList = await api.listWorkspaces();
-        qc.setQueryData(workspaceKeys.list(), wsList);
-      } catch {
-        // Token invalid or expired — user stays on login page
-      } finally {
-        setBootstrapping(false);
-      }
-    });
-  }, [qc]);
-
-  // Sync token and start the daemon whenever the user logs in. The ordering
-  // inside syncDaemonOnLogin is load-bearing — see that module.
-  useEffect(() => {
-    if (!user || !runtimeConfig) return;
-    const token = storage.getItem("multica_token");
-    if (!token) return;
-    const userId = user.id;
-    (async () => {
-      try {
-        await syncDaemonOnLogin(
-          window.daemonAPI,
-          runtimeConfig.apiUrl,
-          token,
-          userId,
-        );
-      } catch (err) {
-        console.error("Failed to sync daemon on login", err);
-      }
-    })();
-  }, [user, runtimeConfig, storage]);
-
-  // When a user who started the session with zero workspaces creates their
-  // first one, restart the daemon so it picks up the new workspace
-  // immediately (otherwise workspaceSyncLoop's next 30s tick would be the
-  // earliest pickup point). Specifically scoped to "started empty" because
-  // account switches (user A logout → user B login) should not trigger a
-  // daemon restart here — daemon-manager already restarts on user change
-  // via syncToken.
+  // When a session that started with zero workspaces creates the first one,
+  // restart the daemon so it picks the workspace up immediately rather than
+  // waiting for the next workspace-sync tick.
   const {
     workspaces,
     ready: workspaceListReady,
-    unavailable: workspaceListUnavailable,
-    isFetching: workspaceListRetrying,
-    refetch: retryWorkspaceList,
-  } = useWorkspaceList({
-    enabled: !!user,
-  });
+  } = useWorkspaceList();
   const wsCount = workspaces.length;
   const hasOnboarded = useHasOnboarded();
 
@@ -244,16 +148,22 @@ function AppContent({ session }: { session: SessionStorage }) {
   //   un-onboarded (any wsCount)     → /onboarding overlay
   //   onboarded + no workspace       → /workspaces/new overlay
   //
-  // V3 invariant: `onboarded_at != null` is the only path into the
-  // dashboard. CreateWorkspace does not mark onboarded; only Step 3's
+  // When the user record is known, `onboarded_at != null` is the path into
+  // the dashboard. CreateWorkspace does not mark onboarded; only Step 3's
   // CompleteOnboarding flips the flag. A user who somehow has a workspace
   // but no onboarded mark must be sent back to /onboarding — we also clear
   // the active workspace so the dashboard doesn't render under the overlay
   // with stale workspace context.
   useEffect(() => {
-    if (!user || !workspaceListReady) return;
+    if (isLoading || !workspaceListReady) return;
     const { overlay, open } = useWindowOverlayStore.getState();
     if (overlay) return;
+    // No user record yet: enter the workspace list. Onboarding needs the
+    // user record, and there is no login surface to send them to.
+    if (!user) {
+      if (wsCount === 0) open({ type: "new-workspace" });
+      return;
+    }
     if (hasOnboarded && wsCount > 0) return;
     if (!hasOnboarded) {
       // Stale workspace context (if any) would leak X-Workspace-Slug
@@ -264,7 +174,7 @@ function AppContent({ session }: { session: SessionStorage }) {
       return;
     }
     open({ type: "new-workspace" });
-  }, [user, workspaceListReady, wsCount, hasOnboarded]);
+  }, [user, isLoading, workspaceListReady, wsCount, hasOnboarded]);
 
 
   // Validate persisted tab state against the current user's workspace list,
@@ -293,16 +203,12 @@ function AppContent({ session }: { session: SessionStorage }) {
     if (target && target !== activeWorkspaceSlug) switchWorkspace(target);
   }, [workspaces, workspaceListReady]);
 
-  // null = undecided (pre-login or list hasn't settled yet)
+  // null = undecided (user record or list hasn't settled yet)
   // true  = session started with zero workspaces; next transition to >=1 triggers restart
   // false = session started with >=1 workspace, OR we've already restarted; skip
   const sessionStartedEmptyRef = useRef<boolean | null>(null);
   useEffect(() => {
-    if (!user) {
-      sessionStartedEmptyRef.current = null;
-      return;
-    }
-    if (!workspaceListReady) return;
+    if (isLoading || !workspaceListReady) return;
     if (sessionStartedEmptyRef.current === null) {
       sessionStartedEmptyRef.current = wsCount === 0;
       return;
@@ -311,12 +217,9 @@ function AppContent({ session }: { session: SessionStorage }) {
       void window.daemonAPI.restart();
       sessionStartedEmptyRef.current = false;
     }
-  }, [user, workspaceListReady, wsCount]);
+  }, [isLoading, workspaceListReady, wsCount]);
 
-  if (authStatus === "recovering") {
-    return <DesktopAuthRecoveryPage />;
-  }
-  if (isLoading || bootstrapping) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <MulticaIcon mode="think" size={40} />
@@ -324,27 +227,7 @@ function AppContent({ session }: { session: SessionStorage }) {
     );
   }
 
-  if (workspaceListUnavailable) {
-    return (
-      <DesktopAuthRecoveryPage
-        isRetrying={workspaceListRetrying}
-        onRetry={() => {
-          void retryWorkspaceList();
-        }}
-      />
-    );
-  }
-
-  return user ? (
-    <DesktopShell />
-  ) : (
-    <DesktopLoginPage
-      preSharedTokenRejected={wasPreSharedTokenRejected(
-        preSharedToken,
-        sessionExpired,
-      )}
-    />
-  );
+  return <DesktopShell />;
 }
 
 function BlockingRuntimeConfigError({
@@ -370,26 +253,6 @@ function BlockingRuntimeConfigError({
       </div>
     </div>
   );
-}
-
-// Binds the teardown steps to this renderer's real stores and IPC. Which of
-// them each path runs — and why logout stops the daemon while an expiry
-// leaves it running — lives in platform/session-teardown.
-const sessionTeardown: SessionTeardown = {
-  reportAuthSession: (userId) =>
-    window.desktopAPI.reportAuthSession?.(userId),
-  resetTabs: () => useTabStore.getState().reset(),
-  closeOverlay: () => useWindowOverlayStore.getState().close(),
-  clearDaemonToken: () => window.daemonAPI.clearToken(),
-  stopDaemon: () => window.daemonAPI.stop(),
-};
-
-function handleDaemonLogout() {
-  return tearDownOnLogout(sessionTeardown);
-}
-
-function handleSessionExpired() {
-  tearDownOnSessionExpiry(sessionTeardown);
 }
 
 export default function App() {
@@ -441,14 +304,6 @@ export default function App() {
     [locale],
   );
 
-  const authToken = runtimeConfigResult.ok
-    ? runtimeConfigResult.config.authToken
-    : undefined;
-  const { storage, preSharedToken } = useMemo(
-    () => createSessionStorage(authToken),
-    [authToken],
-  );
-
   // Keep <html lang> in sync with the resolved locale (index.html hardcodes
   // "en"). Drives the lang-scoped Japanese CJK font override and a11y.
   // useLayoutEffect (not useEffect) so lang is committed before the first
@@ -484,19 +339,11 @@ export default function App() {
         <CoreProvider
           apiBaseUrl={runtimeConfigResult.config.apiUrl}
           wsUrl={runtimeConfigResult.config.wsUrl}
-          onLogout={
-            windowContext.kind === "main" ? handleDaemonLogout : undefined
-          }
-          onSessionExpired={
-            windowContext.kind === "main" ? handleSessionExpired : undefined
-          }
           identity={identity}
           locale={locale}
           resources={resources}
           localeAdapter={localeAdapter}
-          storage={storage}
         >
-          <DesktopAuthSessionBridge />
           <NativeContextMenu />
           {windowContext.kind === "main" && <DiagnosticRouteReporter />}
           {windowContext.kind === "main" && <WorkspaceWindowBridge />}
@@ -507,9 +354,9 @@ export default function App() {
             />
           )}
           {windowContext.kind === "issue" ? (
-            <IssueWindowContent session={{ storage, preSharedToken }} />
+            <IssueWindowContent />
           ) : (
-            <AppContent session={{ storage, preSharedToken }} />
+            <AppContent />
           )}
           {/* Opt-in dev status bar; see "Dev Toolbar" in CONTRIBUTING.md. */}
           {import.meta.env.DEV &&

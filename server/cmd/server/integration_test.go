@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,11 +16,13 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/multica-ai/multica/server/internal/analytics"
 	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
@@ -104,12 +107,23 @@ func setupIntegrationTestFixture(ctx context.Context, pool *pgxpool.Pool) (strin
 		return "", "", err
 	}
 
+	// Router requests with no task token are the deployment user. The fixture
+	// workspace belongs to that user; a separate login identity is not one.
 	var userID string
-	if err := pool.QueryRow(ctx, `
-		INSERT INTO "user" (name, email)
-		VALUES ($1, $2)
-		RETURNING id
-	`, integrationTestName, integrationTestEmail).Scan(&userID); err != nil {
+	err := pool.QueryRow(ctx, `SELECT id FROM "user" WHERE email = $1`, middleware.SystemUserEmail).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		err = pool.QueryRow(ctx, `
+			INSERT INTO "user" (name, email)
+			VALUES ('dev', $1)
+			RETURNING id
+		`, middleware.SystemUserEmail).Scan(&userID)
+	}
+	if err != nil {
+		return "", "", err
+	}
+	if _, err := pool.Exec(ctx, `
+		UPDATE "user" SET onboarded_at = COALESCE(onboarded_at, now()) WHERE id = $1
+	`, userID); err != nil {
 		return "", "", err
 	}
 
@@ -279,203 +293,77 @@ func TestConfigRouteIsPublic(t *testing.T) {
 	readJSON(t, resp, &result)
 }
 
-// ---- Auth ----
+// ---- Identity ----
 
-func TestSendCodeAndVerify(t *testing.T) {
-	const email = "integration-sendcode@multica.ai"
-	ctx := context.Background()
-
-	t.Cleanup(func() {
-		testPool.Exec(ctx, `DELETE FROM verification_code WHERE email = $1`, email)
-		var userID string
-		err := testPool.QueryRow(ctx, `SELECT id FROM "user" WHERE email = $1`, email).Scan(&userID)
-		if err == nil {
-			rows, queryErr := testPool.Query(ctx, `
-				SELECT w.id FROM workspace w JOIN member m ON m.workspace_id = w.id WHERE m.user_id = $1
-			`, userID)
-			if queryErr == nil {
-				defer rows.Close()
-				for rows.Next() {
-					var wsID string
-					if rows.Scan(&wsID) == nil {
-						testPool.Exec(ctx, `DELETE FROM workspace WHERE id = $1`, wsID)
-					}
-				}
-			}
-		}
-		testPool.Exec(ctx, `DELETE FROM "user" WHERE email = $1`, email)
-	})
-
-	// Step 1: Send code
-	body, _ := json.Marshal(map[string]string{"email": email})
-	resp, err := http.Post(testServer.URL+"/auth/send-code", "application/json", bytes.NewReader(body))
-	if err != nil {
-		t.Fatalf("send-code failed: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Fatalf("send-code: expected 200, got %d", resp.StatusCode)
-	}
-	resp.Body.Close()
-
-	// Read code from DB
-	var code string
-	err = testPool.QueryRow(ctx, `SELECT code FROM verification_code WHERE email = $1 ORDER BY created_at DESC LIMIT 1`, email).Scan(&code)
-	if err != nil {
-		t.Fatalf("failed to read code from DB: %v", err)
-	}
-
-	// Step 2: Verify code
-	body, _ = json.Marshal(map[string]string{"email": email, "code": code})
-	resp, err = http.Post(testServer.URL+"/auth/verify-code", "application/json", bytes.NewReader(body))
-	if err != nil {
-		t.Fatalf("verify-code failed: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		respBody, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		t.Fatalf("verify-code: expected 200, got %d: %s", resp.StatusCode, respBody)
-	}
-
-	var loginResp struct {
-		Token string `json:"token"`
-		User  struct {
-			Email string `json:"email"`
-		} `json:"user"`
-	}
-	readJSON(t, resp, &loginResp)
-
-	if loginResp.Token == "" {
-		t.Fatal("expected non-empty token")
-	}
-	if loginResp.User.Email != email {
-		t.Fatalf("expected email '%s', got '%s'", email, loginResp.User.Email)
-	}
-
-	// Verify the token works with /api/me
-	req, _ := http.NewRequest("GET", testServer.URL+"/api/me", nil)
-	req.Header.Set("Authorization", "Bearer "+loginResp.Token)
-	meResp, err := http.DefaultClient.Do(req)
+func TestAnonymousRequestIsTheDeploymentUser(t *testing.T) {
+	resp, err := http.Get(testServer.URL + "/api/me")
 	if err != nil {
 		t.Fatalf("getMe failed: %v", err)
 	}
-	if meResp.StatusCode != 200 {
-		t.Fatalf("getMe: expected 200, got %d", meResp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, body)
 	}
-	meResp.Body.Close()
+	var me struct {
+		Email string `json:"email"`
+	}
+	readJSON(t, resp, &me)
+	if me.Email != middleware.SystemUserEmail {
+		t.Fatalf("email = %q, want %s", me.Email, middleware.SystemUserEmail)
+	}
 }
 
-func TestVerifyCodeNewUserHasNoWorkspace(t *testing.T) {
-	const email = "new-integration-verify@multica.ai"
-	ctx := context.Background()
-
-	t.Cleanup(func() {
-		testPool.Exec(ctx, `DELETE FROM verification_code WHERE email = $1`, email)
-		testPool.Exec(ctx, `DELETE FROM "user" WHERE email = $1`, email)
-	})
-
-	testPool.Exec(ctx, `DELETE FROM "user" WHERE email = $1`, email)
-
-	// Send code
-	body, _ := json.Marshal(map[string]string{"email": email})
-	resp, err := http.Post(testServer.URL+"/auth/send-code", "application/json", bytes.NewReader(body))
+func TestUnknownTaskTokenIsRejected(t *testing.T) {
+	req, _ := http.NewRequest("GET", testServer.URL+"/api/me", nil)
+	req.Header.Set("Authorization", "Bearer mat_not-a-real-token")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		t.Fatalf("send-code failed: %v", err)
+		t.Fatalf("request failed: %v", err)
 	}
 	resp.Body.Close()
-
-	// Read code from DB
-	var code string
-	err = testPool.QueryRow(ctx, `SELECT code FROM verification_code WHERE email = $1 ORDER BY created_at DESC LIMIT 1`, email).Scan(&code)
-	if err != nil {
-		t.Fatalf("failed to read code from DB: %v", err)
-	}
-
-	// Verify code
-	body, _ = json.Marshal(map[string]string{"email": email, "code": code})
-	resp, err = http.Post(testServer.URL+"/auth/verify-code", "application/json", bytes.NewReader(body))
-	if err != nil {
-		t.Fatalf("verify-code failed: %v", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("verify-code: expected 200, got %d", resp.StatusCode)
-	}
-
-	var loginResp struct {
-		Token string `json:"token"`
-	}
-	readJSON(t, resp, &loginResp)
-
-	// New users should have no workspaces (/workspaces/new creates one)
-	req, _ := http.NewRequest("GET", testServer.URL+"/api/workspaces", nil)
-	req.Header.Set("Authorization", "Bearer "+loginResp.Token)
-	workspacesResp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("listWorkspaces failed: %v", err)
-	}
-	defer workspacesResp.Body.Close()
-
-	if workspacesResp.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200, got %d", workspacesResp.StatusCode)
-	}
-
-	var workspaces []struct {
-		Name string `json:"name"`
-		Slug string `json:"slug"`
-	}
-	readJSON(t, workspacesResp, &workspaces)
-
-	if len(workspaces) != 0 {
-		t.Fatalf("expected 0 workspaces for new user, got %d", len(workspaces))
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.StatusCode)
 	}
 }
 
-func TestProtectedRoutesRequireAuth(t *testing.T) {
-	paths := []string{"/api/me", "/api/issues", "/api/agents", "/api/inbox", "/api/workspaces"}
-
-	for _, path := range paths {
-		resp, err := http.Get(testServer.URL + path)
-		if err != nil {
-			t.Fatalf("request to %s failed: %v", path, err)
-		}
-		resp.Body.Close()
-		if resp.StatusCode != 401 {
-			t.Fatalf("%s: expected 401, got %d", path, resp.StatusCode)
-		}
-	}
-}
-
-func TestInvalidJWT(t *testing.T) {
+func TestNonTaskBearerIsTheDeploymentUser(t *testing.T) {
 	cases := []struct {
 		name  string
 		token string
 	}{
 		{"garbage token", "not-a-jwt"},
-		{"empty token", ""},
 		{"wrong secret", func() string {
 			claims := jwt.MapClaims{"sub": "test", "exp": time.Now().Add(time.Hour).Unix()}
-			t, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("wrong"))
-			return t
+			signed, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("wrong"))
+			return signed
 		}()},
 		{"expired token", func() string {
 			claims := jwt.MapClaims{"sub": "test", "exp": time.Now().Add(-time.Hour).Unix()}
-			t, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(auth.JWTSecret())
-			return t
+			signed, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(auth.JWTSecret())
+			return signed
 		}()},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			req, _ := http.NewRequest("GET", testServer.URL+"/api/me", nil)
-			if tc.token != "" {
-				req.Header.Set("Authorization", "Bearer "+tc.token)
-			}
+			req.Header.Set("Authorization", "Bearer "+tc.token)
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("request failed: %v", err)
 			}
-			resp.Body.Close()
-			if resp.StatusCode != 401 {
-				t.Fatalf("expected 401, got %d", resp.StatusCode)
+			if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				t.Fatalf("expected 200, got %d: %s", resp.StatusCode, body)
+			}
+			var me struct {
+				Email string `json:"email"`
+			}
+			readJSON(t, resp, &me)
+			if me.Email != middleware.SystemUserEmail {
+				t.Fatalf("email = %q, want %s", me.Email, middleware.SystemUserEmail)
 			}
 		})
 	}
@@ -821,159 +709,13 @@ SELECT id FROM agent WHERE workspace_id = $1 ORDER BY created_at LIMIT 1
 		t.Fatalf("disabled Agent DingTalk groups = %#v, want stable empty list", result.Groups)
 	}
 
-	var memberUserID string
-	if err := testPool.QueryRow(context.Background(), `
-INSERT INTO "user" (name, email) VALUES ('DingTalk group member', $1) RETURNING id
-`, "dingtalk-groups-member-"+time.Now().Format("150405.000000000")+"@example.test").Scan(&memberUserID); err != nil {
-		t.Fatalf("create member user: %v", err)
-	}
-	if _, err := testPool.Exec(context.Background(), `
-INSERT INTO member (workspace_id, user_id, role) VALUES ($1, $2, 'member')
-`, testWorkspaceID, memberUserID); err != nil {
-		t.Fatalf("create workspace member: %v", err)
-	}
-	t.Cleanup(func() {
-		_, _ = testPool.Exec(context.Background(), `DELETE FROM member WHERE workspace_id = $1 AND user_id = $2`, testWorkspaceID, memberUserID)
-		_, _ = testPool.Exec(context.Background(), `DELETE FROM "user" WHERE id = $1`, memberUserID)
-	})
-	memberToken, err := generateTestJWT(memberUserID, "dingtalk-groups-member@example.test", "DingTalk group member")
-	if err != nil {
-		t.Fatalf("generate member token: %v", err)
-	}
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/api/workspaces/"+testWorkspaceID+"/dingtalk/groups", nil)
-	if err != nil {
-		t.Fatalf("build member request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+memberToken)
-	req.Header.Set("X-Workspace-ID", testWorkspaceID)
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("member request failed: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("member filtered DingTalk groups status = %d, want 200", resp.StatusCode)
-	}
-
-	// Mutation routes admit workspace members to the handler, where the target
-	// agent's ownership is checked. Temporarily make this member the agent owner;
-	// a router-level admin gate would return 403 before the disabled/validation
-	// response below.
-	var originalOwnerID string
-	if err := testPool.QueryRow(context.Background(), `
-SELECT owner_id FROM agent WHERE id = $1
-`, agentID).Scan(&originalOwnerID); err != nil {
-		t.Fatalf("load fixture Agent owner: %v", err)
-	}
-	if _, err := testPool.Exec(context.Background(), `
-UPDATE agent SET owner_id = $2 WHERE id = $1
-`, agentID, memberUserID); err != nil {
-		t.Fatalf("assign fixture Agent owner: %v", err)
-	}
-	t.Cleanup(func() {
-		_, _ = testPool.Exec(context.Background(), `UPDATE agent SET owner_id = $2 WHERE id = $1`, agentID, originalOwnerID)
-	})
-	req, err = http.NewRequest(http.MethodPost,
-		testServer.URL+"/api/workspaces/"+testWorkspaceID+"/dingtalk/install/byo?agent_id="+agentID,
-		strings.NewReader(`{}`))
-	if err != nil {
-		t.Fatalf("build member DingTalk install request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+memberToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Workspace-ID", testWorkspaceID)
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("member DingTalk install request failed: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusBadRequest && resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("agent-owner DingTalk install status = %d, want 400 or 403", resp.StatusCode)
-	}
-	if _, err := testPool.Exec(context.Background(), `
-UPDATE agent SET owner_id = $2 WHERE id = $1
-`, agentID, originalOwnerID); err != nil {
-		t.Fatalf("restore fixture Agent owner: %v", err)
-	}
-
-	var originalPermissionMode, originalVisibility string
-	if err := testPool.QueryRow(context.Background(), `
-SELECT permission_mode, visibility FROM agent WHERE id = $1
-`, agentID).Scan(&originalPermissionMode, &originalVisibility); err != nil {
-		t.Fatalf("load fixture Agent access mode: %v", err)
-	}
-	if _, err := testPool.Exec(context.Background(), `
-UPDATE agent SET permission_mode = 'public_to', visibility = 'workspace' WHERE id = $1
-`, agentID); err != nil {
-		t.Fatalf("make fixture Agent public_to: %v", err)
-	}
-	targetInsert, err := testPool.Exec(context.Background(), `
-INSERT INTO agent_invocation_target (agent_id, target_type, target_id)
-VALUES ($1, 'workspace', $2)
-ON CONFLICT (agent_id, target_type, target_id) DO NOTHING
-`, agentID, testWorkspaceID)
-	if err != nil {
-		t.Fatalf("make fixture agent workspace-visible: %v", err)
-	}
-	insertedTarget := targetInsert.RowsAffected() == 1
-	t.Cleanup(func() {
-		_, _ = testPool.Exec(context.Background(), `
-UPDATE agent SET permission_mode = $2, visibility = $3 WHERE id = $1
-`, agentID, originalPermissionMode, originalVisibility)
-		if !insertedTarget {
-			return
-		}
-		_, _ = testPool.Exec(context.Background(), `
-DELETE FROM agent_invocation_target WHERE agent_id = $1 AND target_type = 'workspace' AND target_id = $2
-`, agentID, testWorkspaceID)
-	})
-	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/api/agents/"+agentID+"/dingtalk/groups", nil)
-	if err != nil {
-		t.Fatalf("build member Agent request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+memberToken)
-	req.Header.Set("X-Workspace-ID", testWorkspaceID)
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("member Agent request failed: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("member visible-Agent DingTalk groups status = %d, want 200", resp.StatusCode)
-	}
-
-	var runtimeID, privateAgentID string
-	if err := testPool.QueryRow(context.Background(), `
-SELECT runtime_id FROM agent WHERE id = $1
-`, agentID).Scan(&runtimeID); err != nil {
-		t.Fatalf("load fixture runtime: %v", err)
-	}
-	if err := testPool.QueryRow(context.Background(), `
-INSERT INTO agent (
-  workspace_id, name, description, runtime_mode, runtime_config, runtime_id,
-  visibility, permission_mode, max_concurrent_tasks, owner_id
-) VALUES ($1, 'DingTalk private groups fixture', '', 'cloud', '{}'::jsonb, $2,
-          'private', 'private', 1, $3)
-RETURNING id
-`, testWorkspaceID, runtimeID, testUserID).Scan(&privateAgentID); err != nil {
-		t.Fatalf("create private Agent: %v", err)
-	}
-	t.Cleanup(func() {
-		_, _ = testPool.Exec(context.Background(), `DELETE FROM agent WHERE id = $1`, privateAgentID)
-	})
-	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/api/agents/"+privateAgentID+"/dingtalk/groups", nil)
-	if err != nil {
-		t.Fatalf("build private Agent request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+memberToken)
-	req.Header.Set("X-Workspace-ID", testWorkspaceID)
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("private Agent request failed: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("member private-Agent DingTalk groups status = %d, want 403", resp.StatusCode)
+	// The deployment user already owns the fixture agent, so the install route
+	// reaches the handler. An unconfigured integration is 403; a configured
+	// one rejects the empty body with 400.
+	installResp := authRequest(t, http.MethodPost, "/api/workspaces/"+testWorkspaceID+"/dingtalk/install/byo?agent_id="+agentID, map[string]any{})
+	installResp.Body.Close()
+	if installResp.StatusCode != http.StatusBadRequest && installResp.StatusCode != http.StatusForbidden {
+		t.Fatalf("DingTalk install status = %d, want 400 or 403", installResp.StatusCode)
 	}
 
 	const outsideWorkspaceID = "d1474000-0000-4000-8000-000000000001"
@@ -1482,33 +1224,13 @@ func TestInvalidRequestBodies(t *testing.T) {
 // ---- WebSocket integration through full router ----
 
 func TestWebSocketIntegration(t *testing.T) {
-	// Connect WebSocket client (no token in URL — first-message auth)
+	// The socket is the deployment user as soon as the handshake succeeds.
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/ws?workspace_id=" + testWorkspaceID
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
 		t.Fatalf("WebSocket connection failed: %v", err)
 	}
 	defer conn.Close()
-
-	// First-message auth
-	authMsg, _ := json.Marshal(map[string]any{
-		"type":    "auth",
-		"payload": map[string]string{"token": testToken},
-	})
-	if err := conn.WriteMessage(websocket.TextMessage, authMsg); err != nil {
-		t.Fatalf("failed to send auth message: %v", err)
-	}
-
-	// Read auth_ack
-	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	_, ack, err := conn.ReadMessage()
-	if err != nil {
-		t.Fatalf("failed to read auth_ack: %v", err)
-	}
-	if !strings.Contains(string(ack), "auth_ack") {
-		t.Fatalf("expected auth_ack, got %s", ack)
-	}
-	conn.SetReadDeadline(time.Time{})
 
 	// Allow Hub goroutine to process the register and add client to room
 	time.Sleep(100 * time.Millisecond)

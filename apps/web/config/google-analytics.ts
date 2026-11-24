@@ -22,12 +22,9 @@ export function resolveGoogleAnalyticsId(env: RuntimeEnv): string | undefined {
   return value;
 }
 
-// Query params that are safe and useful to report. Everything else is
-// dropped: the app carries live credentials in the query string — IM bind
-// tokens (`/wecom/bind?token=…` and friends), OAuth `code`/`state` on
-// `/auth/callback`, CLI login `cli_callback`/`cli_state`, `next` redirect
-// targets — and GA would otherwise record the full URL (page_location /
-// page_referrer). An allowlist keeps new secret-bearing params out by default.
+// Query params that are safe and useful to report. Everything else is dropped:
+// integration bind tokens and redirect targets are not analytics data, and an
+// allowlist keeps future secret-bearing params out by default.
 const ALLOWED_QUERY_PARAMS = new Set([
   "utm_source",
   "utm_medium",

@@ -12,8 +12,8 @@ interface DashboardGuardProps {
 /**
  * Shared guard for dashboard layouts.
  *
- * Handles: auth check → workspace check → render children.
- * Both web and desktop layouts compose their own UI structure inside this.
+ * Waits until the URL slug resolves to a workspace, then renders children.
+ * A missing user record does not blank the dashboard.
  *
  * WorkspaceIdProvider has been removed — useWorkspaceId() now derives from
  * the URL slug via useCurrentWorkspace(). The guard still gates on workspace
@@ -23,10 +23,9 @@ export function DashboardGuard({
   children,
   loadingFallback = null,
 }: DashboardGuardProps) {
-  const { user, isLoading, workspace } = useDashboardGuard();
+  const { workspace } = useDashboardGuard();
 
-  if (isLoading || !workspace) return <>{loadingFallback}</>;
-  if (!user) return null;
+  if (!workspace) return <>{loadingFallback}</>;
 
   return <>{children}</>;
 }

@@ -325,11 +325,6 @@ func TestChatSubmissionCurrentAuthorizationBeforeReplay(t *testing.T) {
 	path := "/api/chat/sessions/" + sessionID + "/messages"
 	otherID := fx.User(t, "Other submission user", uuid.NewString()+"@example.test")
 	fx.Member(t, testWorkspaceID, otherID, "member")
-	otherToken, err := generateTestJWT(otherID, "other@example.test", "Other")
-	if err != nil {
-		t.Fatal(err)
-	}
-	submissionStatus(t, testServer.URL, otherToken, testWorkspaceID, "POST", path, body, http.StatusForbidden)
 	foreign := fx.Workspace(t, "Foreign submission", "foreign-"+uuid.NewString())
 	fx.Member(t, foreign, testUserID, "owner")
 	submissionStatus(t, testServer.URL, testToken, foreign, "POST", path, body, http.StatusNotFound)
@@ -436,32 +431,26 @@ func TestChatSubmissionIgnoresSpoofedActorHeaders(t *testing.T) {
 
 func TestChatSubmissionPreservesProjectContextContract(t *testing.T) {
 	fx := workspaceFixture(t)
-	caller := fx.User(t, "Submission project member", uuid.NewString()+"@example.test")
-	fx.Member(t, testWorkspaceID, caller, "member")
-	token, err := generateTestJWT(caller, "project-member@example.test", "Project member")
-	if err != nil {
-		t.Fatal(err)
-	}
-	runtime := fx.Runtime(t, "Submission project runtime", testutil.Cols{"owner_id": caller})
-	agent := fx.Agent(t, "Submission project agent", runtime, testutil.Cols{"owner_id": caller})
+	runtime := fx.Runtime(t, "Submission project runtime", testutil.Cols{"owner_id": testUserID})
+	agent := fx.Agent(t, "Submission project agent", runtime, testutil.Cols{"owner_id": testUserID})
 	project := fx.Project(t, "Submission project context")
-	created := submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", "/api/chat/sessions", map[string]any{"agent_id": agent, "project_id": project}, http.StatusCreated)
+	created := submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", "/api/chat/sessions", map[string]any{"agent_id": agent, "project_id": project}, http.StatusCreated)
 	sessionID := created["id"].(string)
-	cleanupSubmissionSession(t, token, testWorkspaceID, sessionID)
+	cleanupSubmissionSession(t, testToken, testWorkspaceID, sessionID)
 	path := "/api/chat/sessions/" + sessionID + "/messages"
 	body := map[string]any{"content": "project conversation", "submission_id": uuid.NewString()}
-	accepted := submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", path, body, http.StatusCreated)
+	accepted := submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", path, body, http.StatusCreated)
 	fx.Exec(t, `UPDATE project SET visibility='private' WHERE id=$1`, project)
-	submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", "/api/chat/sessions", map[string]any{"agent_id": agent, "project_id": project}, http.StatusNotFound)
-	submissionStatus(t, testServer.URL, token, testWorkspaceID, "PATCH", "/api/chat/sessions/"+sessionID, map[string]any{"project_id": project}, http.StatusNotFound)
+	submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", "/api/chat/sessions", map[string]any{"agent_id": agent, "project_id": project}, http.StatusNotFound)
+	submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "PATCH", "/api/chat/sessions/"+sessionID, map[string]any{"project_id": project}, http.StatusNotFound)
 	// The existing send path retains the selected project until claim time.
 	// Both legacy and keyed sends keep that behavior after visibility changes.
-	submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", path, map[string]any{"content": "legacy after visibility change"}, http.StatusCreated)
-	if replay := submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", path, body, http.StatusCreated); !reflect.DeepEqual(accepted, replay) {
+	submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", path, map[string]any{"content": "legacy after visibility change"}, http.StatusCreated)
+	if replay := submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", path, body, http.StatusCreated); !reflect.DeepEqual(accepted, replay) {
 		t.Fatalf("project visibility changed historical acceptance=%v", replay)
 	}
 	body["submission_id"] = uuid.NewString()
-	submissionStatus(t, testServer.URL, token, testWorkspaceID, "POST", path, body, http.StatusCreated)
+	submissionStatus(t, testServer.URL, testToken, testWorkspaceID, "POST", path, body, http.StatusCreated)
 	var stored string
 	fx.QueryRow(t, `SELECT project_id::text FROM chat_session WHERE id=$1`, sessionID).Scan(&stored)
 	if stored != project {

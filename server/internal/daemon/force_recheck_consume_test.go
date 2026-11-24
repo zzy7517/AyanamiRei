@@ -257,7 +257,6 @@ func TestClaimTasks_AcknowledgementPresenceOverTheWire(t *testing.T) {
 			defer srv.Close()
 
 			c := NewClient(srv.URL)
-			c.SetToken("tok")
 			result, err := c.claimTasksWithHints(context.Background(), "daemon-x", []string{"rt1"}, 1, "rt1")
 			if err != nil {
 				t.Fatalf("claimTasksWithHints: %v", err)

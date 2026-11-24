@@ -8,7 +8,7 @@
  * layout recognise that it is no longer the routed one.
  *
  * Returns null for the root and for anything without a first segment. Global
- * routes (`/login`, `/workspaces/new`) do return their first segment — the
+ * routes (`/onboarding`, `/workspaces/new`) do return their first segment — the
  * caller is a workspace layout that only ever compares against its own slug,
  * and a reserved slug can never equal one.
  */

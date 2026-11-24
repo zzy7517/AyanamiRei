@@ -62,7 +62,6 @@ func TestClient_GetRuntimeProfiles_RequestShape(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
 	resp, err := c.GetRuntimeProfiles(context.Background(), "ws-1", "daemon-1")
 	if err != nil {
 		t.Fatalf("GetRuntimeProfiles: %v", err)

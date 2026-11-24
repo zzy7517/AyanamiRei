@@ -11,9 +11,6 @@ vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-vi.mock("../platform/daemon-reauth", () => ({
-  reauthenticateDaemon: vi.fn(),
-}));
 
 let emitLogLine: (line: string) => void = () => {};
 

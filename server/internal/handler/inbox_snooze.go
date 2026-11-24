@@ -19,8 +19,8 @@ type SnoozedInboxResponse struct {
 	// The identifier (MUL-123) the row links to; see InboxItemResponse.
 	IssueIdentifier *string `json:"issue_identifier"`
 	ItemID          string  `json:"item_id"`
-	SnoozedUntil string `json:"snoozed_until"`
-	SnoozedAt    string `json:"snoozed_at"`
+	SnoozedUntil    string  `json:"snoozed_until"`
+	SnoozedAt       string  `json:"snoozed_at"`
 	// Rows that arrived on the issue while it was snoozed.
 	Updates int64 `json:"updates"`
 }

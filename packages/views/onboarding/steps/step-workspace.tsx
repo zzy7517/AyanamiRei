@@ -19,7 +19,6 @@ import { isImeComposing } from "@multica/core/utils";
 import { matchLocale } from "@multica/core/i18n";
 import { useConfigStore } from "@multica/core/config";
 import { workspaceUrlHost } from "@multica/core/workspace/workspace-url";
-import { useLogout } from "../../auth";
 import {
   StepFooter,
   StepHeading,
@@ -108,7 +107,6 @@ export function StepWorkspace({
   // leak a clickable create affordance even if /api/config arrives late
   // (#3433 review feedback).
   const workspaceCreationAllowed = !workspaceCreationDisabled;
-  const logout = useLogout();
 
   const reusing = existing ?? null;
   // Resume path only: user picks which card. `null` = neither yet, so
@@ -438,7 +436,7 @@ export function StepWorkspace({
               )}
             </div>
           ) : workspaceCreationDisabled ? (
-            <CreationDisabledNotice onLogout={logout} />
+            <CreationDisabledNotice />
           ) : (
             createFields
           )}
@@ -468,13 +466,9 @@ export function StepWorkspace({
  * messaging; this component only provides the logout escape so a user who
  * landed here is not trapped.
  */
-function CreationDisabledNotice({ onLogout }: { onLogout: () => void }) {
-  const { t } = useT("onboarding");
+function CreationDisabledNotice() {
   return (
     <div className="flex flex-col gap-3">
-      <Button variant="outline" size="lg" onClick={onLogout}>
-        {t(($) => $.step_workspace.creation_disabled_logout)}
-      </Button>
     </div>
   );
 }

@@ -27,7 +27,6 @@
   "no_access": {
     "title": "Workspace not available",
     "description": "This workspace doesn't exist or you don't have access.",
-    "go_to_workspaces": "Go to my workspaces",
-    "sign_in_different": "Sign in as a different user"
+    "go_to_workspaces": "Go to my workspaces"
   }
 }

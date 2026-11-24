@@ -669,6 +669,10 @@ func TestRepoCheckoutRejectsUnresolvableWorkdirWithTheReason(t *testing.T) {
 	}
 }
 
+func captureLogger(buf *bytes.Buffer) *slog.Logger {
+	return slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+}
+
 // repoCheckoutHarness drives the /repo/checkout handler against a real repo
 // cache holding every repository in urls, for one task rooted at root.
 type repoCheckoutHarness struct {

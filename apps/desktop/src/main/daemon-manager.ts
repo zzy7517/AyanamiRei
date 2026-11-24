@@ -4,7 +4,6 @@ import {
   readFile,
   writeFile,
   mkdir,
-  rm,
   open,
   stat,
 } from "fs/promises";
@@ -39,7 +38,6 @@ import {
   profileDir,
   profileLogPath,
   profilePidPath,
-  profileUserIdPath,
 } from "./daemon-profile";
 import { probeProfileHealth, readDaemonPortRecord } from "./daemon-port";
 import {
@@ -55,11 +53,6 @@ import {
   isDaemonExternallyManaged,
   normalizeHostOS,
 } from "./daemon-os";
-import {
-  classifyAuthProbe,
-  isAuthStatusError,
-  type AuthProbeResult,
-} from "./daemon-auth-probe";
 import { daemonSpawnEnv } from "./daemon-spawn-env";
 import { focusEnvironmentAt, type FocusEnvironmentResult } from "./environment-focus";
 
@@ -71,7 +64,6 @@ const LOG_TAIL_MAX_RETRIES = 5;
 // token to find out whether login expired. The daemon's own startup can legitimately
 // take a while (it renews the PAT and lists workspaces before serving /health), so we
 // wait past the common case to avoid probing healthy-but-slow starts.
-const AUTH_PROBE_GRACE_MS = 10_000;
 // `multica daemon start` blocks until the daemon reports ready, polling /health
 // for up to its own startup timeout (45s in server/cmd/multica/cmd_daemon.go) to
 // cover cold-start agent-version detection. This execFile timeout MUST stay
@@ -130,46 +122,9 @@ let externalDaemonObserved = false;
 const recoveryPolicy = new DaemonRecoveryPolicy();
 const lifecycleOperations = new DaemonOperationGate();
 
-// Auth-probe state for the current start attempt. When a start fails to reach
-// "running", we probe the daemon's token once (after AUTH_PROBE_GRACE_MS) to
-// decide whether the cause is an expired/invalid login. `authExpired` is sticky
-// until the next start attempt or a successful /health, so the UI keeps showing
-// the re-login prompt instead of flapping back to "starting". See #3512.
-let startingSince: number | null = null;
-let authProbeDone = false;
-let authExpired = false;
-
-// Serialize all writes to any profile config file. Multiple paths
-// (syncToken, resolveActiveProfile, clearToken, watch/unwatch handlers)
-// may try to write concurrently; chaining them avoids interleaved writes
-// corrupting the JSON.
+// Serialize writes to profile config files so resolving and changing the
+// target URL cannot interleave and corrupt the JSON.
 let configWriteChain: Promise<void> = Promise.resolve();
-
-async function readProfileUserId(profile: string): Promise<string | null> {
-  try {
-    const raw = await readFile(profileUserIdPath(profile), "utf-8");
-    const trimmed = raw.trim();
-    return trimmed || null;
-  } catch {
-    return null;
-  }
-}
-
-async function writeProfileUserId(
-  profile: string,
-  userId: string,
-): Promise<void> {
-  await mkdir(profileDir(profile), { recursive: true });
-  await writeFile(profileUserIdPath(profile), userId, "utf-8");
-}
-
-async function removeProfileUserId(profile: string): Promise<void> {
-  try {
-    await rm(profileUserIdPath(profile));
-  } catch {
-    // Already gone — nothing to do.
-  }
-}
 
 function normalizeUrl(u: string): string {
   if (!u) return "";
@@ -251,36 +206,6 @@ async function focusEnvironment(key: unknown): Promise<FocusEnvironmentResult> {
   });
   if (!health || health.status !== "running") return { ok: false, reason: "unavailable" };
   return focusEnvironmentAt(health.port, key);
-}
-
-/**
- * Validates the daemon profile's token against the backend to find out whether
- * a stuck start is an auth problem. Hits the same endpoint `multica auth status`
- * uses (GET /api/me) with the exact token the daemon loads from config.json, so
- * the verdict matches what the daemon itself would get from the server.
- *
- * Only the HTTP status is inspected (never the body) so a future change to the
- * /api/me response shape can't break this — a 401 means the token is rejected,
- * a 2xx means it's fine, and a thrown request means the network is the problem,
- * not auth. See classifyAuthProbe for the full rule set.
- */
-async function probeTokenValidity(profile: string): Promise<AuthProbeResult> {
-  if (!targetApiBaseUrl) return "unknown";
-  const cfg = await readProfileConfig(profile);
-  const token = typeof cfg.token === "string" ? cfg.token : "";
-  if (!token) return classifyAuthProbe({ noToken: true });
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4_000);
-    const res = await fetch(`${targetApiBaseUrl.replace(/\/+$/, "")}/api/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return classifyAuthProbe({ status: res.status });
-  } catch {
-    return classifyAuthProbe({ networkError: true });
-  }
 }
 
 async function readProfileConfig(
@@ -384,29 +309,6 @@ async function fetchHealth(): Promise<DaemonStatus> {
   const data = await fetchProfileHealth(active);
 
   if (!data || data.status !== "running") {
-    // A start that never reaches "running" is the symptom; an expired/invalid
-    // login is the most common cause and the one with no other signal (the
-    // daemon exits before it can serve /health, so we can't read the reason
-    // from it). Probe the token once per attempt, after a grace period, to
-    // surface a re-login prompt instead of spinning on "starting" forever.
-    if (
-      currentState === "starting" &&
-      !authExpired &&
-      !authProbeDone &&
-      startingSince !== null &&
-      Date.now() - startingSince >= AUTH_PROBE_GRACE_MS
-    ) {
-      authProbeDone = true;
-      if ((await probeTokenValidity(active.name)) === "auth_expired") {
-        authExpired = true;
-      }
-    }
-    // Sticky: once login is known-expired, keep reporting it (even after
-    // currentState flips away from "starting") until the next start attempt or
-    // a successful /health clears the flag.
-    if (authExpired) {
-      return { state: "auth_expired", profile: active.name };
-    }
     // The daemon binds /health before preflight finishes and self-reports
     // "starting" until it's ready. Trust that over our own currentState, so a
     // daemon booting on its own — or started via the CLI — surfaces as
@@ -428,10 +330,6 @@ async function fetchHealth(): Promise<DaemonStatus> {
     };
   }
 
-  // A live, authenticated daemon clears any prior auth-failure verdict so the
-  // re-login prompt disappears once the user reconnects.
-  authExpired = false;
-  startingSince = null;
 
   // A running daemon whose OS differs from this host's is one we can't drive
   // via the native lifecycle CLI (e.g. Linux-in-WSL2 behind a Windows desktop,
@@ -703,128 +601,6 @@ async function ensureRunningDaemonVersionMatches(): Promise<
   }
 }
 
-/**
- * Exchange the user's JWT for a long-lived PAT via POST /api/tokens. The
- * daemon needs a PAT (or `mul_` / `mdt_` token) because JWTs expire in 30
- * days and signatures are tied to a specific backend instance.
- */
-async function mintPat(jwt: string): Promise<string> {
-  if (!targetApiBaseUrl) {
-    throw new Error("mint PAT: target API URL not set");
-  }
-  const url = `${targetApiBaseUrl.replace(/\/+$/, "")}/api/tokens`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
-    },
-    // Omit expires_in_days → server treats as null → non-expiring PAT.
-    body: JSON.stringify({ name: "Multica Desktop" }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    // Attach the status so callers can tell a genuine auth rejection (401 — the
-    // session token is dead) apart from a transient failure (5xx, etc.) without
-    // string-matching the message.
-    throw Object.assign(
-      new Error(`mint PAT failed: ${res.status} ${res.statusText} ${body}`),
-      { status: res.status },
-    );
-  }
-  const data = (await res.json()) as { token?: unknown };
-  if (typeof data.token !== "string" || !data.token.startsWith("mul_")) {
-    throw new Error("mint PAT: response missing token");
-  }
-  return data.token;
-}
-
-/**
- * Ensure the active profile's config.json has a usable token for the daemon.
- *
- * - Input from the renderer is the user's JWT (from localStorage) plus the
- *   current user's id, so we can detect session changes.
- * - If the profile already has a cached PAT (`mul_...`) AND the sidecar user
- *   id matches the caller, reuse it — minting fresh on every launch would
- *   accumulate garbage in the user's tokens page.
- * - On user mismatch (or first run) call POST /api/tokens with the JWT to
- *   mint a fresh PAT, overwriting any stale cached PAT. This is the critical
- *   path: without it, a previous user's PAT would be used by a new session.
- * - If the caller happens to pass a PAT directly, write it through.
- * - Reports a user mismatch to the caller; the IPC boundary owns the gated
- *   restart so internal callers such as reauthenticate never re-enter it.
- */
-async function syncToken(
-  tokenFromRenderer: string,
-  userId: string,
-): Promise<{ active: ActiveProfile; userChanged: boolean }> {
-  const active = await ensureActiveProfile();
-  if (!active) {
-    // Writing here would land the token and server_url in the user's default
-    // CLI config. The renderer awaits setTargetApiUrl before calling this, so
-    // reaching this branch is a real error rather than a normal startup race.
-    throw new Error("daemon profile is not resolved yet; token sync skipped");
-  }
-  const config = await readProfileConfig(active.name);
-  const previousUserId = await readProfileUserId(active.name);
-  const userChanged = Boolean(previousUserId) && previousUserId !== userId;
-  const sameUserWithCachedPat =
-    !userChanged &&
-    previousUserId === userId &&
-    typeof config.token === "string" &&
-    config.token.startsWith("mul_");
-
-  let finalToken: string;
-  if (tokenFromRenderer.startsWith("mul_")) {
-    finalToken = tokenFromRenderer;
-  } else if (sameUserWithCachedPat) {
-    finalToken = config.token as string;
-  } else {
-    try {
-      finalToken = await mintPat(tokenFromRenderer);
-      console.log(
-        `[daemon] minted PAT for profile "${active.name}" (user_changed=${userChanged})`,
-      );
-    } catch (err) {
-      console.error("[daemon] failed to mint PAT:", err);
-      throw err;
-    }
-  }
-
-  config.token = finalToken;
-  if (targetApiBaseUrl) config.server_url = targetApiBaseUrl;
-  await writeProfileConfig(active.name, config);
-  await writeProfileUserId(active.name, userId);
-
-  return { active, userChanged };
-}
-
-async function restartDaemonAfterUserSwitch(
-  active: ActiveProfile,
-): Promise<void> {
-  // If we just rotated credentials onto a running daemon, restart it so the
-  // in-memory token in the Go process matches the new config.
-  const existing = await fetchProfileHealth(active);
-  if (daemonStatusAlive(existing?.status)) {
-    // Restart whether it's "running" or still "starting" — a booting daemon
-    // already loaded the old token at startup, so it must be restarted to
-    // pick up the rotated credentials.
-    console.log(
-      "[daemon] user switched — restarting daemon with new credentials",
-    );
-    // Credential rotation is a one-shot login intent, not poll-driven
-    // maintenance: wait for bootstrap/recovery instead of dropping it.
-    const restarted = await lifecycleOperations.runForeground(() =>
-      restartDaemon(),
-    );
-    if (!restarted.success) {
-      console.warn(
-        `[daemon] restart-on-user-switch failed: ${restarted.error ?? "unknown error"}`,
-      );
-    }
-  }
-}
-
 async function loadPrefs(): Promise<DaemonPrefs> {
   try {
     const raw = await readFile(PREFS_PATH, "utf-8");
@@ -839,67 +615,6 @@ async function savePrefs(prefs: DaemonPrefs): Promise<void> {
   const dir = join(homedir(), ".multica");
   await mkdir(dir, { recursive: true });
   await writeFile(PREFS_PATH, JSON.stringify(prefs, null, 2), "utf-8");
-}
-
-async function clearToken(): Promise<void> {
-  const active = await ensureActiveProfile();
-  // Nothing of ours to clear yet, and the default CLI profile is not ours to
-  // strip a token from.
-  if (!active) return;
-  const config = await readProfileConfig(active.name);
-  if ("token" in config) {
-    delete config.token;
-    await writeProfileConfig(active.name, config);
-  }
-  // Always drop the sidecar so a subsequent syncToken from any user is
-  // treated as a fresh mint, not a reuse of a stale cached PAT.
-  await removeProfileUserId(active.name);
-}
-
-// Result of a user-initiated daemon re-authentication. The distinction matters:
-// only `session_invalid` justifies signing the user out of the whole app; a
-// `transient` failure must keep them logged in so they can retry.
-export type ReauthResult =
-  | { ok: true }
-  | { ok: false; reason: "session_invalid" }
-  | { ok: false; reason: "transient"; message: string };
-
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
-
-/**
- * Recover the local daemon from the "auth_expired" state. Drops the stale
- * cached PAT, mints a fresh one from the current session token, and restarts
- * the daemon so it loads the new credential.
- *
- * Failures are classified rather than collapsed: a 401 from the mint means the
- * session token itself is dead (`session_invalid` → the renderer drives a full
- * re-login); anything else — mint 5xx, a network blip, a config write error, a
- * restart hiccup — is `transient`, leaving the user signed in so they can retry.
- * This mirrors the conservative classification the startup probe already uses.
- */
-async function reauthenticate(
-  token: string,
-  userId: string,
-): Promise<ReauthResult> {
-  try {
-    await clearToken();
-    // syncToken mints a fresh PAT because clearToken just removed any cache.
-    await syncToken(token, userId);
-  } catch (err) {
-    if (isAuthStatusError(err)) return { ok: false, reason: "session_invalid" };
-    return { ok: false, reason: "transient", message: errorMessage(err) };
-  }
-  const restart = await restartDaemon();
-  if (!restart.success) {
-    return {
-      ok: false,
-      reason: "transient",
-      message: restart.error ?? getDaemonErrorCopy(currentLanguage()).failedToRestartDaemon,
-    };
-  }
-  return { ok: true };
 }
 
 function successfulRuntimeProbe(
@@ -1053,10 +768,6 @@ async function startDaemon(
   if (quitting) return { success: false, error: getDaemonErrorCopy(currentLanguage()).appQuitting };
   if (recoveryProfile) recoveryPolicy.recordRecoveryAttempt(Date.now());
   currentState = "starting";
-  // Begin a fresh auth-probe window for this attempt.
-  startingSince = Date.now();
-  authProbeDone = false;
-  authExpired = false;
   sendStatus({ state: "starting" });
 
   const args = ["daemon", "start", ...profileArgs(active.name)];
@@ -1087,9 +798,7 @@ async function startDaemon(
  * Fresh boundary preflight for stop/restart: read the active profile's CURRENT
  * /health and decide whether the daemon runs somewhere the app can't drive
  * (WSL2 etc.). Done per call rather than off the poll cache, so a lifecycle op
- * never shells out to a CLI that can't reach the daemon's process — even on
- * paths that didn't just poll (e.g. restart-on-user-switch in syncToken, which
- * calls restartDaemon directly). See #3916.
+ * never shells out to a CLI that can't reach the daemon's process. See #3916.
  */
 async function lifecycleBlockedByForeignDaemon(): Promise<boolean> {
   const active = await ensureActiveProfile();
@@ -1122,9 +831,7 @@ async function stopDaemon(
   // A queued update stop can expire while resolving the CLI/profile/preflight.
   if (signal?.aborted) return { success: true };
   currentState = "stopping";
-  // An explicit stop is a clean reset — drop any pending auth-failure verdict.
-  authExpired = false;
-  startingSince = null;
+  // An explicit stop is a clean reset.
   sendStatus({ state: "stopping" });
 
   const args = ["daemon", "stop", ...(options.force ? ["--force"] : []), ...profileArgs(active.name)];
@@ -1516,28 +1223,6 @@ export function setupDaemonManager(
   // app-managed daemon is reporting a device name (e.g. the daemon runs
   // out-of-band in WSL2). See desktop-runtimes-page.tsx.
   ipcMain.handle("daemon:get-host-name", () => hostname());
-  ipcMain.handle(
-    "daemon:sync-token",
-    async (_event, token: string, userId: string) => {
-      const result = await syncToken(token, userId);
-      if (result.userChanged) {
-        await restartDaemonAfterUserSwitch(result.active);
-      }
-    },
-  );
-  ipcMain.handle("daemon:clear-token", () => {
-    setDesiredDaemonRunning(false, true);
-    return clearToken();
-  });
-  ipcMain.handle(
-    "daemon:reauthenticate",
-    async (_event, token: string, userId: string): Promise<ReauthResult> => {
-      setDesiredDaemonRunning(true, true);
-      return lifecycleOperations.runForeground(() =>
-        reauthenticate(token, userId),
-      );
-    },
-  );
   ipcMain.handle("daemon:is-cli-installed", async () => {
     const bin = await resolveCliBinary();
     return bin !== null;

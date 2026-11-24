@@ -46,10 +46,6 @@ vi.mock("@multica/core/paths", () => ({
   WorkspaceSlugProvider: ({ children }: { children: ReactNode }) => (
     <>{children}</>
   ),
-  paths: {
-    login: () => "/login",
-    onboarding: () => "/onboarding",
-  },
 }));
 
 vi.mock("@multica/core/platform", () => ({

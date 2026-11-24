@@ -58,8 +58,7 @@ export function installGoogleAnalytics(measurementId: string) {
     // config parameters take precedence over set, so a config page_title
     // would freeze the first label and ignore pinPageTitle on navigation.
     w.gtag("set", { page_title: analyticsPageTitle(w.location.href) });
-    // The landing referrer may be a same-origin secret URL (full-page hop
-    // off /login?cli_state=…); pin a sanitized copy instead.
+    // A same-origin referrer can carry a secret query. Pin a sanitized copy.
     w.gtag("config", measurementId, {
       page_location: sanitizeAnalyticsUrl(w.location.href),
       page_referrer: sanitizeAnalyticsUrl(document.referrer),

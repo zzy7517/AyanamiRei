@@ -21,18 +21,10 @@ import { CliInstallInstructions, OnboardingFlow } from "@multica/views/onboardin
  */
 export default function Page() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const isLoading = useAuthStore((s) => s.isLoading);
   const { data: wsList = [] } = useQuery({
     ...workspaceListOptions(),
-    enabled: !!user,
+    enabled: true,
   });
-
-  useEffect(() => {
-    if (!isLoading && !user) router.replace(paths.login());
-  }, [isLoading, user, router]);
-
-  if (isLoading || !user) return null;
 
   // Cancel goes to the root path — the workspace layout redirects from there
   // to the user's default workspace. Only offered when there is somewhere to

@@ -44,14 +44,12 @@ const RESULT_VALUES = new Set([
 // payment at once. Only Stripe's ID shape is forwarded.
 const SESSION_ID_RE = /^cs_[A-Za-z0-9_]+$/;
 // Same shape check the rest of core uses for route UUIDs. Only a well-formed ID
-// is worth carrying anywhere, and this one can end up in a third-party OAuth
-// state on the login detour below.
+// is worth carrying into the workspace settings URL.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function BillingReturnPage() {
   const { t } = useT("billing");
   const navigation = useNavigation();
-  const user = useAuthStore((s) => s.user);
   const isAuthLoading = useAuthStore((s) => s.isLoading);
 
   const workspaceIdRaw = navigation.searchParams.get("workspace_id");
@@ -72,7 +70,7 @@ export function BillingReturnPage() {
     refetch: refetchWorkspaces,
   } = useQuery({
     ...workspaceListOptions(),
-    enabled: !!user,
+    enabled: !isAuthLoading,
   });
 
   const match =
@@ -84,28 +82,10 @@ export function BillingReturnPage() {
 
   useEffect(() => {
     if (isAuthLoading) return;
-    // Checkout can take long enough for a session to expire, so an
-    // unauthenticated return is a normal case rather than an error. Carry enough
-    // to resume the return so the user does not land on their default workspace
-    // with no idea whether the payment took.
-    //
-    // Rebuilt from the two values this page actually uses, NOT forwarded whole:
-    // the login page embeds `next` verbatim in the Google OAuth `state`, so
-    // anything left in here — Stripe's `session_id`, any future cloud param —
-    // would be handed to a third party for no functional reason.
-    // sanitizeNextUrl on the login side also accepts relative paths only, so
-    // this cannot become an off-site redirect.
-    if (!user) {
-      const resume = new URLSearchParams();
-      if (workspaceIdParam) resume.set("workspace_id", workspaceIdParam);
-      if (result) resume.set("result", result);
-      const query = resume.toString();
-      const returnTo = query
-        ? `${navigation.pathname}?${query}`
-        : navigation.pathname;
-      navigation.replace(`${paths.login()}?next=${encodeURIComponent(returnTo)}`);
-      return;
-    }
+    // The local user record is not a login gate. Resolve the workspace the
+    // return already names and open its billing settings. The destination is
+    // rebuilt from workspace_id and result, so Stripe's session id and any
+    // other query value stay off the URL unless this page itself needs them.
     if (isWorkspacesPending || isWorkspacesError || !workspaces) return;
     if (!match) return;
 
@@ -123,8 +103,6 @@ export function BillingReturnPage() {
     match,
     navigation,
     result,
-    user,
-    workspaceIdParam,
     workspaces,
   ]);
 

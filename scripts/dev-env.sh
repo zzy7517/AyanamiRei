@@ -1002,16 +1002,13 @@ start_collab() {
   die "collab never became healthy. Log: $(log_file collab)"
 }
 
-# send-code once, verify-code once. Repeated verify attempts lock the code out
-# and start returning 400 even when it is correct, so retrying is self-defeating.
 write_profile_config() {
-  local config=$1 pat=$2 ws=$3
+  local config=$1 ws=$2
   mkdir -p "$PROFILE_DIR"
   cat > "$config" <<EOF
 {
   "server_url": "http://localhost:${BACKEND_PORT}",
   "app_url": "http://localhost:${FRONTEND_PORT}",
-  "token": "$(json_escape "$pat")",
   "workspace_id": "$(json_escape "$ws")",
   "workspaces_root": "$(json_escape "$WORKSPACES_ROOT")"
 }
@@ -1021,59 +1018,28 @@ EOF
 
 ensure_credentials() {
   local server="http://localhost:${BACKEND_PORT}" config="$PROFILE_DIR/config.json"
-  local code="${MULTICA_DEV_VERIFICATION_CODE:-$DEV_CODE_DEFAULT}"
-  local verify jwt pat ws
+  local ws
 
   if [ -f "$config" ]; then
-    pat="$(json_field "$(cat "$config")" token || true)"
     ws="$(json_field "$(cat "$config")" workspace_id || true)"
-    if [ -n "$pat" ] && curl -sf --max-time 5 "$server/api/me" -H "Authorization: Bearer $pat" >/dev/null 2>&1; then
-      WORKSPACE_ID="$ws"
-      DEV_TOKEN="$pat"
-      write_profile_config "$config" "$pat" "$ws"
-      ensure_onboarded
-      ok "CLI profile $PROFILE already authenticated"
-      return 0
-    fi
   fi
 
-  curl -sf -X POST "$server/auth/send-code" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"${DEV_EMAIL}\"}" >/dev/null \
-    || die "send-code failed. Is MULTICA_DEV_VERIFICATION_CODE set and APP_ENV non-production?"
-
-  verify="$(curl -sS -X POST "$server/auth/verify-code" -H 'Content-Type: application/json' \
-    -d "{\"email\":\"${DEV_EMAIL}\",\"code\":\"${code}\"}")"
-  jwt="$(json_field "$verify" token || true)"
-  [ -n "$jwt" ] || die "verify-code failed: $verify
-Do not retry immediately — repeated attempts lock the code. Wait ~40s and re-run."
-
-  local pat_response
-  pat_response="$(curl -sS -X POST "$server/api/tokens" -H "Authorization: Bearer $jwt" \
-    -H 'Content-Type: application/json' -d '{"name":"dev-env","expires_in_days":365}')"
-  pat="$(json_field "$pat_response" token || true)"
-  [ -n "$pat" ] || die "Personal access token creation failed: $pat_response"
-
-  local ws_response
-  ws_response="$(curl -sS -X POST "$server/api/workspaces" -H "Authorization: Bearer $pat" \
-    -H 'Content-Type: application/json' \
-    -d "{\"name\":\"${WORKSPACE_NAME}\",\"slug\":\"${WORKSPACE_SLUG}\"}")"
-  ws="$(json_field "$ws_response" id || true)"
   if [ -z "$ws" ]; then
     ws="$(node -e '
-      let list;
-      try { list = JSON.parse(process.argv[1]); } catch { process.exit(1); }
-      const match = (Array.isArray(list) ? list : []).find(w => w.slug === process.argv[2]);
+      let response;
+      try { response = JSON.parse(process.argv[1]); } catch { process.exit(1); }
+      const workspaces = Array.isArray(response) ? response : response.workspaces;
+      const match = (Array.isArray(workspaces) ? workspaces : []).find(w => w.slug === process.argv[2]);
       if (!match) process.exit(1);
       process.stdout.write(match.id);
-    ' "$(curl -sS "$server/api/workspaces" -H "Authorization: Bearer $pat")" "$WORKSPACE_SLUG" 2>/dev/null || true)"
+    ' "$(curl -sS --max-time 5 "$server/api/workspaces")" "$WORKSPACE_SLUG" 2>/dev/null || true)"
   fi
-  [ -n "$ws" ] || die "Workspace creation failed: $ws_response"
+  [ -n "$ws" ] || die "fixed workspace $WORKSPACE_SLUG is unavailable"
 
-  write_profile_config "$config" "$pat" "$ws"
+  write_profile_config "$config" "$ws"
   WORKSPACE_ID="$ws"
-  DEV_TOKEN="$pat"
   ensure_onboarded
-  ok "Logged in as $DEV_EMAIL and wrote profile $PROFILE"
+  ok "Wrote profile $PROFILE for workspace $WORKSPACE_SLUG"
 }
 
 # A fresh user has onboarded_at = NULL and a browser login is bounced to
@@ -1081,7 +1047,7 @@ Do not retry immediately — repeated attempts lock the code. Wait ~40s and re-r
 # server keeps the first completion time, so repeating this is harmless.
 ensure_onboarded() {
   curl -sf --max-time 5 -X POST "http://localhost:${BACKEND_PORT}/api/me/onboarding/complete" \
-    -H "Authorization: Bearer $DEV_TOKEN" -H "X-Workspace-ID: $WORKSPACE_ID" \
+    -H "X-Workspace-ID: $WORKSPACE_ID" \
     -H 'Content-Type: application/json' \
     -d "{\"completion_path\":\"skip_existing\",\"workspace_id\":\"$(json_escape "$WORKSPACE_ID")\"}" \
     >/dev/null || warn "could not mark $DEV_EMAIL onboarded; the browser may open /onboarding"
@@ -1101,7 +1067,7 @@ seed_dev_workspace() {
 ensure_fixture_issues() {
   local server="http://localhost:${BACKEND_PORT}" list total entry status title
   list="$(curl -sf --max-time 5 "$server/api/issues?limit=1" \
-    -H "Authorization: Bearer $DEV_TOKEN" -H "X-Workspace-ID: $WORKSPACE_ID" || true)"
+    -H "X-Workspace-ID: $WORKSPACE_ID" || true)"
   total="$(json_field "$list" total || true)"
   if [ -z "$total" ]; then
     warn "could not list issues in workspace $WORKSPACE_SLUG; skipped the issue fixture"
@@ -1247,13 +1213,10 @@ start_desktop() {
   fi
 
   write_desktop_env_file
-  # Desktop's main process delivers MULTICA_DEV_AUTH_TOKEN to the renderer the
-  # way a browser login's deep link does, so the session is stored exactly as
-  # it is for a human. electron-vite turns REMOTE_DEBUGGING_PORT into
+  # electron-vite turns REMOTE_DEBUGGING_PORT into
   # --remote-debugging-port; turbo.json passes both through to the dev task.
   local launch_env=(env
-    DESKTOP_RENDERER_PORT="$DESKTOP_RENDERER_PORT" DESKTOP_APP_SUFFIX="$DESKTOP_APP_SUFFIX"
-    MULTICA_DEV_AUTH_TOKEN="$DEV_TOKEN")
+    DESKTOP_RENDERER_PORT="$DESKTOP_RENDERER_PORT" DESKTOP_APP_SUFFIX="$DESKTOP_APP_SUFFIX")
   [ -z "$DESKTOP_CDP_PORT" ] || launch_env+=(REMOTE_DEBUGGING_PORT="$DESKTOP_CDP_PORT")
   launch_detached desktop "${launch_env[@]}" \
     make -C "$REPO_ROOT" -s desktop-dev ENV_FILE="$ENV_FILE"

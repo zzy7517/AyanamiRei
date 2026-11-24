@@ -4,7 +4,6 @@ import {
   type LinkClickIntent,
   type NavigationAdapter,
 } from "@multica/views/navigation";
-import { useAuthStore } from "@multica/core/auth";
 import { workspaceSlugForPath, paths } from "@multica/core/paths";
 import {
   useTabStore,
@@ -190,10 +189,6 @@ export function DesktopNavigationProvider({
   const adapter: NavigationAdapter = useMemo(
     () => ({
       push: (path: string) => {
-        if (path === "/login") {
-          useAuthStore.getState().logout();
-          return;
-        }
         if (tryRouteToOverlay(path)) return;
         const store = useTabStore.getState();
         const active = getActiveTab(store);

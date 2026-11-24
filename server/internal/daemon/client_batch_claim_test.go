@@ -39,8 +39,6 @@ func TestClient_ClaimTasks_PostsRuntimeSetAndParsesTasks(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
-
 	tasks, err := c.ClaimTasks(context.Background(), "daemon-x", []string{"rt-a", "rt-b", "rt-c"}, 3)
 	if err != nil {
 		t.Fatalf("ClaimTasks: %v", err)
@@ -77,7 +75,6 @@ func TestClient_ClaimTasksWithHints_ParsesSchedulingMetadata(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
 	result, err := c.claimTasksWithHints(context.Background(), "daemon-x", []string{"rt-a"}, 1)
 	if err != nil {
 		t.Fatalf("claimTasksWithHints: %v", err)
@@ -97,8 +94,6 @@ func TestClient_ClaimTasks_EmptyResult(t *testing.T) {
 	defer srv.Close()
 
 	c := NewClient(srv.URL)
-	c.SetToken("tok")
-
 	tasks, err := c.ClaimTasks(context.Background(), "daemon-x", []string{"rt-a"}, 1)
 	if err != nil {
 		t.Fatalf("ClaimTasks: %v", err)

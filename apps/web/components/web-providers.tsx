@@ -11,10 +11,6 @@ import packageJson from "../package.json";
 import { LocaleBundle } from "@/components/i18n/locale-bundle";
 import { WebNavigationProvider } from "@/platform/navigation";
 import { WebScrollRestorationProvider } from "@/platform/scroll-restoration";
-import {
-  setLoggedInCookie,
-  clearLoggedInCookie,
-} from "@/features/auth/auth-cookie";
 import { detectWebOS } from "@/platform/client-os";
 import { useUserLocaleSyncEnabled } from "@/platform/user-locale-sync";
 
@@ -24,21 +20,6 @@ const WebDevToolbar = dynamic(
   () => import("./web-dev-toolbar").then((m) => m.WebDevToolbar),
   { ssr: false },
 );
-
-// Legacy token in localStorage → keep this session in token mode so users who
-// logged in before the cookie-auth migration stay authed. They migrate to
-// cookie mode on their next logout/login cycle (logout clears multica_token).
-// Sunset: once telemetry shows <1% of sessions still carry multica_token,
-// delete this branch and hard-code `cookieAuth` — the localStorage token is
-// XSS-exposed and is the exact thing the cookie migration exists to remove.
-function hasLegacyToken(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return Boolean(window.localStorage.getItem("multica_token"));
-  } catch {
-    return false;
-  }
-}
 
 // Derive WebSocket URL from the page origin so self-hosted / LAN deployments
 // work without an explicit runtime wsUrl. The Next.js runtime proxy handles
@@ -71,7 +52,6 @@ export function WebProviders({
   /** Set only when the dev toolbar is enabled; the backend it reports. */
   devToolbarApiUrl?: string;
 }) {
-  const cookieAuth = !hasLegacyToken();
   const syncUserLocale = useUserLocaleSyncEnabled();
   // Stable identity reference so downstream effects keyed on it don't see a
   // new object on every parent render.
@@ -91,9 +71,6 @@ export function WebProviders({
         <CoreProvider
           apiBaseUrl={apiBaseUrl}
           wsUrl={wsUrl || deriveWsUrl()}
-          cookieAuth={cookieAuth}
-          onLogin={setLoggedInCookie}
-          onLogout={clearLoggedInCookie}
           identity={identity}
           locale={locale}
           resources={resources}

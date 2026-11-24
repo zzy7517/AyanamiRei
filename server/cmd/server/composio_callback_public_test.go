@@ -35,8 +35,9 @@ func TestComposioCallbackIsPublic_NoCookieNot401(t *testing.T) {
 }
 
 // TestComposioNonCallbackEndpointsStayGated is the other half of the invariant:
-// moving the callback out of the Auth group must NOT loosen the four
-// session-scoped endpoints. A cookie-less request to them must still 401.
+// the four integration endpoints run as the deployment user. With no
+// COMPOSIO_API_KEY configured, the handler refuses them as not configured
+// (403) instead of serving a successful integration response.
 func TestComposioNonCallbackEndpointsStayGated(t *testing.T) {
 	gated := []struct {
 		method string
@@ -60,8 +61,8 @@ func TestComposioNonCallbackEndpointsStayGated(t *testing.T) {
 			defer resp.Body.Close()
 			io.Copy(io.Discard, resp.Body)
 
-			if resp.StatusCode != http.StatusUnauthorized {
-				t.Fatalf("expected 401 without a session, got %d — endpoint is no longer auth-gated", resp.StatusCode)
+			if resp.StatusCode != http.StatusForbidden {
+				t.Fatalf("expected 403 while Composio is not configured, got %d", resp.StatusCode)
 			}
 		})
 	}

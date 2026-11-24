@@ -27,7 +27,6 @@
   "no_access": {
     "title": "워크스페이스를 사용할 수 없습니다",
     "description": "존재하지 않는 워크스페이스이거나 접근 권한이 없습니다.",
-    "go_to_workspaces": "내 워크스페이스로 이동",
-    "sign_in_different": "다른 계정으로 로그인"
+    "go_to_workspaces": "내 워크스페이스로 이동"
   }
 }

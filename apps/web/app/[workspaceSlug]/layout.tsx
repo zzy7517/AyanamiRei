@@ -3,10 +3,9 @@
 import { use, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
-import { WorkspaceSlugProvider, paths } from "@multica/core/paths";
+import { WorkspaceSlugProvider } from "@multica/core/paths";
 import { workspaceBySlugOptions } from "@multica/core/workspace";
 import { setCurrentWorkspace } from "@multica/core/platform";
-import { useAuthStore } from "@multica/core/auth";
 import { NoAccessPage } from "@multica/views/workspace/no-access-page";
 import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 import { useWorkspaceSeen } from "@multica/views/workspace/use-workspace-seen";
@@ -20,37 +19,14 @@ export default function WorkspaceLayout({
   params: Promise<{ workspaceSlug: string }>;
 }) {
   const { workspaceSlug } = use(params);
-  const user = useAuthStore((s) => s.user);
-  const isAuthLoading = useAuthStore((s) => s.isLoading);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Workspace routes require auth. If user is unauthenticated (initial visit
-  // without a session, token expired, another tab logged out, etc.), bounce
-  // to /login. Without this, the layout renders null and the user sees a
-  // blank page stuck on /{slug}/...
-  useEffect(() => {
-    if (!isAuthLoading && !user) router.replace(paths.login());
-  }, [isAuthLoading, user, router]);
-
-  // Hard onboarding gate. Authenticated user but onboarded_at NULL means
-  // they bypassed /onboarding (typed the URL, deeplink, etc.). Redirect
-  // back so the questionnaire + Step 3 finish. The reverse gate lives in
-  // `apps/web/app/(auth)/onboarding/page.tsx` — onboarded users hitting
-  // /onboarding bounce out to their workspace. Together those two effects
-  // make `onboarded_at` the single source of truth for "may access /<slug>/*".
-  useEffect(() => {
-    if (user && user.onboarded_at == null) {
-      router.replace(paths.onboarding());
-    }
-  }, [user, router]);
-
   // Resolve workspace by slug through the shared workspace-list query. A
-  // warm auth bootstrap reuses its cache; a cold route fetches it directly.
-  // Keep it disabled until identity has been verified.
+  // warm bootstrap reuses its cache; a cold route fetches it directly.
   const { data: workspace } = useQuery({
     ...workspaceBySlugOptions(workspaceSlug),
-    enabled: !!user,
+    enabled: true,
   });
 
   // Sync routed workspace identity during render so the first child request has
@@ -82,7 +58,6 @@ export default function WorkspaceLayout({
     </div>
   );
 
-  if (isAuthLoading) return loadingIndicator;
   // Don't render children until workspace is resolved. useWorkspaceId()
   // throws when the list hasn't populated or the slug is unknown — gating
   // here makes that invariant hold for every descendant.

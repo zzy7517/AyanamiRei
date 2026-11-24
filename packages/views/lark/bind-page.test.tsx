@@ -67,13 +67,12 @@ describe("LarkBindPage", () => {
     expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull();
   });
 
-  it("shows needs-auth UI when auth finishes loading and user is null", () => {
+  it("opens the app when the user record is missing", () => {
     mockAuthState.isLoading = false;
     mockAuthState.user = null;
     renderPage("tok123");
-    expect(
-      screen.getByRole("button", { name: /sign in/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /back to multica/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull();
   });
 
   it("starts redemption immediately when user is already logged in", async () => {
@@ -102,16 +101,14 @@ describe("LarkBindPage", () => {
     });
   });
 
-  it("sign-in button navigates with ?next= parameter (not ?redirect=)", () => {
+  it("opens the app root instead of a login page", () => {
     mockAuthState.isLoading = false;
     mockAuthState.user = null;
     renderPage("mytoken");
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back to multica/i }));
     expect(mockNavigatePush).toHaveBeenCalledTimes(1);
-    const url: string = mockNavigatePush.mock.calls[0]?.[0] as string;
-    expect(url).toContain("?next=");
-    expect(url).not.toContain("?redirect=");
-    expect(url).toContain(encodeURIComponent("mytoken"));
+    expect(mockNavigatePush).toHaveBeenCalledWith("/");
+    expect(String(mockNavigatePush.mock.calls)).not.toContain("/login");
   });
 
   it("shows missing token error when token is null", () => {

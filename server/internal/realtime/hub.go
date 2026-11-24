@@ -15,9 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
-	"github.com/multica-ai/multica/server/internal/auth"
 )
 
 // MembershipChecker verifies a user belongs to a workspace.
@@ -33,11 +31,6 @@ type MembershipIdentity struct {
 
 // SlugResolver translates a workspace slug to its UUID.
 type SlugResolver func(ctx context.Context, slug string) (workspaceID string, err error)
-
-// PATResolver resolves a Personal Access Token to a user ID.
-type PATResolver interface {
-	ResolveToken(ctx context.Context, token string) (userID string, ok bool)
-}
 
 // ScopeAuthorizer decides whether a connection (identified by userID +
 // workspaceID) is allowed to subscribe to a given scope. Implementations
@@ -703,93 +696,6 @@ func (h *Hub) Snapshot() map[string]any {
 	}
 }
 
-// authenticateToken validates the pre-shared token, a JWT or a PAT string and
-// returns the user ID.
-func authenticateToken(tokenStr string, pr PATResolver, ctx context.Context) (string, string) {
-	// The pre-shared token (MULTICA_AUTH_TOKEN) is the operator's own
-	// credential and is accepted wherever a PAT is. It is checked first: the
-	// operator chooses the string, so there is no prefix to branch on.
-	if uid, ok := auth.ResolveSharedToken(tokenStr); ok {
-		if auth.IsTemporarilyDisabledUserID(uid) {
-			return "", `{"error":"account disabled"}`
-		}
-		return uid, ""
-	}
-	if strings.HasPrefix(tokenStr, "mul_") {
-		if pr == nil {
-			return "", `{"error":"invalid token"}`
-		}
-		uid, ok := pr.ResolveToken(ctx, tokenStr)
-		if !ok {
-			return "", `{"error":"invalid token"}`
-		}
-		if auth.IsTemporarilyDisabledUserID(uid) {
-			return "", `{"error":"account disabled"}`
-		}
-		return uid, ""
-	}
-
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return auth.JWTSecret(), nil
-	})
-	if err != nil || !token.Valid {
-		return "", `{"error":"invalid token"}`
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", `{"error":"invalid claims"}`
-	}
-
-	uid, ok := claims["sub"].(string)
-	if !ok || strings.TrimSpace(uid) == "" {
-		return "", `{"error":"invalid claims"}`
-	}
-	email, _ := claims["email"].(string)
-	if auth.IsTemporarilyDisabledUser(uid, email) {
-		return "", `{"error":"account disabled"}`
-	}
-	return uid, ""
-}
-
-// firstMessageAuth reads the first WebSocket message expecting an auth payload.
-// A non-empty errMsg is for the caller to write back before closing the
-// connection. closed=true means the connection is already torn down and the
-// caller must return without writing anything further.
-func firstMessageAuth(conn *websocket.Conn) (token, errMsg string, closed bool) {
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	defer conn.SetReadDeadline(time.Time{})
-
-	_, raw, err := conn.ReadMessage()
-	if err != nil {
-		if errors.Is(err, websocket.ErrReadLimit) {
-			// gorilla has already replied CloseMessageTooBig (1009), so an
-			// auth_error frame here would be data sent after a close frame.
-			// Counted separately to keep the breach out of ordinary churn.
-			M.InboundTooLargeTotal.Add(1)
-			slog.Warn("ws: pre-auth frame exceeded read limit", "limit_bytes", inboundReadLimit)
-			conn.Close()
-			return "", "", true
-		}
-		return "", `{"error":"auth timeout or read error"}`, false
-	}
-
-	var msg struct {
-		Type    string `json:"type"`
-		Payload struct {
-			Token string `json:"token"`
-		} `json:"payload"`
-	}
-	if err := json.Unmarshal(raw, &msg); err != nil || msg.Type != "auth" || msg.Payload.Token == "" {
-		return "", `{"error":"expected auth message as first frame"}`, false
-	}
-
-	return msg.Payload.Token, "", false
-}
-
 type wsMessageWriter interface {
 	WriteMessage(messageType int, data []byte) error
 }
@@ -808,9 +714,8 @@ func writeWSAuthErrorAndClose(conn *websocket.Conn, payload []byte, attrs ...any
 	conn.Close()
 }
 
-// HandleWebSocket upgrades an HTTP connection to WebSocket with cookie or
-// first-message auth.
-func HandleWebSocket(hub *Hub, mc MembershipChecker, pr PATResolver, resolveSlug SlugResolver, w http.ResponseWriter, r *http.Request) {
+// HandleWebSocket upgrades an HTTP connection for the fixed deployment user.
+func HandleWebSocket(hub *Hub, mc MembershipChecker, userID string, resolveSlug SlugResolver, w http.ResponseWriter, r *http.Request) {
 	workspaceID := r.URL.Query().Get("workspace_id")
 	if workspaceID == "" {
 		if slug := r.URL.Query().Get("workspace_slug"); slug != "" && resolveSlug != nil {
@@ -827,27 +732,14 @@ func HandleWebSocket(hub *Hub, mc MembershipChecker, pr PATResolver, resolveSlug
 		return
 	}
 
-	var userID string
-	if cookie, err := r.Cookie(auth.AuthCookieName); err == nil && cookie.Value != "" {
-		uid, errMsg := authenticateToken(cookie.Value, pr, r.Context())
-		if errMsg != "" {
-			status := http.StatusUnauthorized
-			if errMsg == `{"error":"account disabled"}` {
-				status = http.StatusForbidden
-			}
-			http.Error(w, errMsg, status)
-			return
-		}
-		member, lookupErr := checkMembership(mc, uid, workspaceID)
-		if lookupErr != nil {
-			http.Error(w, `{"error":"membership lookup failed"}`, http.StatusServiceUnavailable)
-			return
-		}
-		if !member {
-			http.Error(w, `{"error":"not a member of this workspace"}`, http.StatusForbidden)
-			return
-		}
-		userID = uid
+	member, lookupErr := checkMembership(mc, userID, workspaceID)
+	if lookupErr != nil {
+		http.Error(w, `{"error":"membership lookup failed"}`, http.StatusServiceUnavailable)
+		return
+	}
+	if !member {
+		http.Error(w, `{"error":"not a member of this workspace"}`, http.StatusForbidden)
+		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -856,52 +748,7 @@ func HandleWebSocket(hub *Hub, mc MembershipChecker, pr PATResolver, resolveSlug
 		return
 	}
 
-	// Bound inbound messages here rather than in readPump: the token auth
-	// path below reads its first frame before the caller is authenticated, so
-	// a limit installed any later leaves that read unbounded.
 	conn.SetReadLimit(inboundReadLimit)
-
-	if userID == "" {
-		tokenStr, errMsg, closed := firstMessageAuth(conn)
-		if closed {
-			return
-		}
-		if errMsg != "" {
-			writeWSAuthErrorAndClose(conn, []byte(errMsg), "workspace_id", workspaceID)
-			return
-		}
-		uid, errMsg := authenticateToken(tokenStr, pr, r.Context())
-		if errMsg != "" {
-			writeWSAuthErrorAndClose(conn, []byte(errMsg), "workspace_id", workspaceID)
-			return
-		}
-		member, lookupErr := checkMembership(mc, uid, workspaceID)
-		if lookupErr != nil {
-			writeWSAuthErrorAndClose(conn, []byte(`{"error":"membership lookup failed"}`), "workspace_id", workspaceID)
-			return
-		}
-		if !member {
-			writeWSAuthErrorAndClose(
-				conn,
-				[]byte(`{"error":"not a member of this workspace"}`),
-				"workspace_id", workspaceID,
-				"user_id", uid,
-			)
-			return
-		}
-		userID = uid
-
-		if !writeWSAuthFrame(
-			conn,
-			[]byte(`{"type":"auth_ack"}`),
-			"auth_ack",
-			"workspace_id", workspaceID,
-			"user_id", userID,
-		) {
-			conn.Close()
-			return
-		}
-	}
 
 	// Capture client metadata from query params (browsers cannot set custom
 	// headers on WebSocket upgrades, so the WSClient passes them via the URL).

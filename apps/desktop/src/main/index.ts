@@ -77,10 +77,6 @@ import {
   WINDOW_WORKSPACE_REPORT_CHANNEL,
 } from "../shared/workspace-window";
 import {
-  AUTH_SESSION_STATE_CHANNEL,
-  parseAuthSessionUserId,
-} from "../shared/auth-session";
-import {
   MAIN_RENDERER_CHANNEL_STATE_CHANNEL,
   MainRendererMessageQueue,
   NEW_WINDOW_SHORTCUT_CHANNEL,
@@ -89,7 +85,6 @@ import {
   WORKSPACE_OPEN_PATH_CHANNEL,
   type MainRendererMessageChannel,
 } from "../shared/main-renderer-messages";
-import { AuthSessionCoordinator } from "./auth-session-coordinator";
 import { MainWindowRegistry } from "./main-window-registry";
 import {
   NotificationGate,
@@ -171,12 +166,6 @@ function freezeBreadcrumbPath(): string {
 
 const mainWindows = new MainWindowRegistry<BrowserWindow>();
 const issueWindows = new Set<BrowserWindow>();
-const authSessionCoordinator = new AuthSessionCoordinator<BrowserWindow>(
-  (window) => {
-    issueWindows.delete(window);
-    if (!window.isDestroyed()) window.close();
-  },
-);
 const notificationGate = new NotificationGate();
 const mainRendererMessages = new MainRendererMessageQueue<BrowserWindow>(
   (window, channel, payload) => {
@@ -186,7 +175,6 @@ const mainRendererMessages = new MainRendererMessageQueue<BrowserWindow>(
 );
 const unreadBadgeCounts = new Map<BrowserWindow, number>();
 let desktopInitialized = false;
-let authSessionGeneration = 0;
 const rendererRouteContexts = new WeakMap<
   Electron.WebContents,
   RendererRouteContext
@@ -323,13 +311,6 @@ function handleDeepLink(url: string): void {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== `${PROTOCOL}:`) return;
-
-    // multica://auth/callback?token=<jwt>
-    if (parsed.hostname === "auth" && parsed.pathname === "/callback") {
-      const token = parsed.searchParams.get("token");
-      if (token) dispatchToMainRenderer("auth:token", token);
-      return;
-    }
 
     if (parsed.hostname === "open" && parsed.pathname === "/issue") {
       // Keep the source instance in the payload. The authenticated renderer
@@ -479,7 +460,6 @@ function createMainWindow(saved: WindowState = {}): BrowserWindow {
     ),
   });
   mainWindows.add(window, workspaceSlug);
-  authSessionCoordinator.registerMainWindow(window);
 
   // Persist bounds on resize/move (debounced) so the next launch restores
   // size/position and max/fullscreen flags. getNormalBounds is used so
@@ -495,7 +475,6 @@ function createMainWindow(saved: WindowState = {}): BrowserWindow {
 
   window.on("closed", () => {
     mainWindows.remove(window);
-    authSessionCoordinator.unregisterMainWindow(window);
     mainRendererMessages.release(window, mainWindows.mostRecent());
     if (unreadBadgeCounts.delete(window)) applyUnreadBadge();
     if (mainWindows.size > 0) saveWindowSession();
@@ -635,10 +614,8 @@ function createIssueWindow(context: IssueWindowContext): void {
   });
 
   issueWindows.add(window);
-  authSessionCoordinator.registerIssueWindow(window);
   window.on("closed", () => {
     issueWindows.delete(window);
-    authSessionCoordinator.unregisterIssueWindow(window);
   });
 
   window.on("ready-to-show", () => window.show());
@@ -765,15 +742,6 @@ if (!gotTheLock) {
     arg.startsWith(`${PROTOCOL}://`),
   );
   if (coldStartDeepLink) handleDeepLink(coldStartDeepLink);
-
-  // scripts/dev-env.sh starts a managed dev Desktop signed in by handing it
-  // the token a browser login would deliver. An environment variable rather
-  // than argv keeps the token out of other users' `ps`; it is removed before
-  // any child process (the daemon, agent CLIs) can inherit it. Packaged builds
-  // never read it.
-  const devAuthToken = is.dev ? process.env.MULTICA_DEV_AUTH_TOKEN : undefined;
-  delete process.env.MULTICA_DEV_AUTH_TOKEN;
-  if (devAuthToken) dispatchToMainRenderer("auth:token", devAuthToken);
 
   app.whenReady().then(async () => {
     const viteEnv = import.meta.env as ImportMetaEnv & {
@@ -963,29 +931,6 @@ if (!gotTheLock) {
       return { ok: true } as const;
     });
 
-    // Account identity is the only cross-renderer auth signal. Main remains
-    // authoritative and closes windows instead of copying credentials.
-    ipcMain.on(AUTH_SESSION_STATE_CHANNEL, (event, value: unknown) => {
-      const sourceWindow = BrowserWindow.fromWebContents(event.sender);
-      const userId = parseAuthSessionUserId(value);
-      if (!sourceWindow || userId === undefined) return;
-
-      if (mainWindows.has(sourceWindow)) {
-        const accountInvalidated = authSessionCoordinator.reportMain(
-          sourceWindow,
-          userId,
-        );
-        if (accountInvalidated) {
-          authSessionGeneration += 1;
-          mainRendererMessages.clear("inbox:open");
-        }
-        return;
-      }
-      if (issueWindows.has(sourceWindow)) {
-        authSessionCoordinator.reportIssue(sourceWindow, userId);
-      }
-    });
-
     // IPC: toggle immersive mode — hides the macOS traffic lights so full-screen
     // modals (e.g. create-workspace) can place UI in the top-left corner
     // without fighting the native window controls' hit-test.
@@ -1006,12 +951,7 @@ if (!gotTheLock) {
     ipcMain.on("notification:show", (event, value: unknown) => {
       const sourceWindow = BrowserWindow.fromWebContents(event.sender);
       if (!sourceWindow) return;
-      if (mainWindows.has(sourceWindow)) {
-        if (!authSessionCoordinator.hasActiveMainSession(sourceWindow)) return;
-      } else if (
-        !issueWindows.has(sourceWindow) ||
-        !authSessionCoordinator.isCurrentIssueSession(sourceWindow)
-      ) {
+      if (!mainWindows.has(sourceWindow) && !issueWindows.has(sourceWindow)) {
         return;
       }
 
@@ -1026,11 +966,7 @@ if (!gotTheLock) {
         title: payload.title,
         body: payload.body,
       });
-      const notificationSessionGeneration = authSessionGeneration;
       notification.on("click", () => {
-        // A banner emitted for user A must not navigate after the main window
-        // logs out or switches to user B.
-        if (notificationSessionGeneration !== authSessionGeneration) return;
         // Prefer the window that shows the item's workspace. Recreate a main
         // window when an issue-only window outlived them all, then wait for
         // the inbox listener before delivering the navigation.

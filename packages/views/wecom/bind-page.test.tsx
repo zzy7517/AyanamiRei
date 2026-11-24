@@ -67,10 +67,10 @@ describe("WecomBindPage", () => {
     expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull();
   });
 
-  it("shows needs-auth UI when auth finishes loading and user is null", () => {
+  it("opens the app when the user record is missing", () => {
     renderPage("tok123");
-    expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
-    // Must NOT have attempted a redeem without a session.
+    expect(screen.getByRole("button", { name: /back to multica/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull();
     expect(mockRedeemToken).not.toHaveBeenCalled();
   });
 
@@ -82,14 +82,12 @@ describe("WecomBindPage", () => {
     await waitFor(() => expect(screen.getByText(/account linked/i)).toBeInTheDocument());
   });
 
-  it("sign-in navigates with ?next= carrying the token (not ?redirect=)", () => {
+  it("opens the app root instead of a login page", () => {
     renderPage("mytoken");
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back to multica/i }));
     expect(mockNavigatePush).toHaveBeenCalledTimes(1);
-    const url = mockNavigatePush.mock.calls[0]?.[0] as string;
-    expect(url).toContain("?next=");
-    expect(url).not.toContain("?redirect=");
-    expect(url).toContain(encodeURIComponent("mytoken"));
+    expect(mockNavigatePush).toHaveBeenCalledWith("/");
+    expect(String(mockNavigatePush.mock.calls)).not.toContain("/login");
   });
 
   it("shows the missing-token error when token is null (and never calls redeem)", () => {

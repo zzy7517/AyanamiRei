@@ -14,12 +14,8 @@ describe("useUserLocaleSyncEnabled", () => {
     route.pathname = null;
   });
 
-  it("waits for the callback to finish before resuming locale synchronization", () => {
+  it("waits until the router has a pathname", () => {
     const { result, rerender } = renderHook(useUserLocaleSyncEnabled);
-    expect(result.current).toBe(false);
-
-    route.pathname = "/auth/callback";
-    rerender();
     expect(result.current).toBe(false);
 
     route.pathname = "/onboarding";
@@ -27,11 +23,11 @@ describe("useUserLocaleSyncEnabled", () => {
     expect(result.current).toBe(true);
   });
 
-  it("also pauses on a callback path with a trailing slash", () => {
-    route.pathname = "/auth/callback/";
+  it("syncs on a workspace path", () => {
+    route.pathname = "/acme/issues";
 
     const { result } = renderHook(useUserLocaleSyncEnabled);
 
-    expect(result.current).toBe(false);
+    expect(result.current).toBe(true);
   });
 });

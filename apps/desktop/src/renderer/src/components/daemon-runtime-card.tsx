@@ -6,7 +6,6 @@ import {
   RotateCw,
   Activity,
   ScrollText,
-  LogIn,
   Info,
 } from "@multica/ui/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +24,6 @@ import {
 import { toast } from "sonner";
 import { useT } from "@multica/views/i18n";
 import { DaemonPanel } from "./daemon-panel";
-import { reauthenticateDaemon } from "../platform/daemon-reauth";
 import type { DaemonStatus } from "../../../shared/daemon-types";
 import { daemonStateLabel } from "./daemon-i18n";
 
@@ -126,14 +124,6 @@ export function DaemonRuntimeActions() {
     }
   }, []);
 
-  const handleReauth = useCallback(async () => {
-    setActionLoading(true);
-    await reauthenticateDaemon(t);
-    // onStatusChange resets actionLoading on the next status push; reset here
-    // too in case reauth logged out (unmount) or produced no status change.
-    setActionLoading(false);
-  }, [t]);
-
   const isRunning = status.state === "running";
   // The daemon runs somewhere the app can't drive (e.g. inside WSL2): the
   // lifecycle CLI acts on the host process namespace and can't reach it. Hide
@@ -144,7 +134,6 @@ export function DaemonRuntimeActions() {
   const isStopped =
     status.state === "stopped" || status.state === "recovery_paused";
   const isCliMissing = status.state === "cli_not_found";
-  const isAuthExpired = status.state === "auth_expired";
   const isTransitioning =
     status.state === "starting" || status.state === "stopping";
   const isInstalling = status.state === "installing_cli";
@@ -209,23 +198,6 @@ export function DaemonRuntimeActions() {
             <RotateCw className="size-3.5 mr-1.5" />
             {t(($) => $.desktop.daemon.retry_setup)}
           </Button>
-        )}
-
-        {isAuthExpired && (
-          <>
-            <span className="inline-flex items-center gap-1.5 text-caption text-destructive">
-              <AlertCircle className="size-3.5 shrink-0" />
-              {t(($) => $.desktop.daemon.signin_expired)}
-            </span>
-            <Button size="sm" onClick={handleReauth} disabled={actionLoading}>
-              {actionLoading ? (
-                <Activity className="size-3.5 mr-1.5 animate-pulse" />
-              ) : (
-                <LogIn className="size-3.5 mr-1.5" />
-              )}
-              {t(($) => $.desktop.daemon.signin_again)}
-            </Button>
-          </>
         )}
 
         {(isTransitioning || isInstalling) && (

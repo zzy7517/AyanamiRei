@@ -27,7 +27,6 @@
   "no_access": {
     "title": "工作区不可用",
     "description": "该工作区不存在，或你没有访问权限。",
-    "go_to_workspaces": "前往我的工作区",
-    "sign_in_different": "使用其他账号登录"
+    "go_to_workspaces": "前往我的工作区"
   }
 }

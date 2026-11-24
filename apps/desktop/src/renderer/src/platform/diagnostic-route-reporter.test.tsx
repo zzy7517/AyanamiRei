@@ -87,14 +87,14 @@ describe("DiagnosticRouteReporter", () => {
     expect(getDiagnosticRoute()).toBe("/:slug/issues/:id");
   });
 
-  it("reports the login surface before a user exists", () => {
+  it("reports the current tab when the local user has not resolved", () => {
     authState.user = null;
 
     render(<DiagnosticRouteReporter />);
 
     expect(setRendererRouteContext).toHaveBeenCalledWith({
-      surface: "login",
-      path: "/login",
+      surface: "tab",
+      path: "/:slug/issues",
     });
   });
 

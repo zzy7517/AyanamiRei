@@ -225,12 +225,7 @@ type workspaceSummary struct {
 // of workspaces.
 func fetchWorkspaces(ctx context.Context, cmd *cobra.Command) ([]workspaceSummary, error) {
 	serverURL := resolveServerURL(cmd)
-	token := resolveToken(cmd)
-	if token == "" {
-		return nil, fmt.Errorf("not authenticated: run 'multica login' first%s", daemonPortOnlyContextHint())
-	}
-
-	client := cli.NewAPIClient(serverURL, "", token)
+	client := cli.NewAPIClient(serverURL, "", "")
 	var workspaces []workspaceSummary
 	if err := client.GetJSON(ctx, "/api/workspaces", &workspaces); err != nil {
 		return nil, fmt.Errorf("list workspaces: %w", err)

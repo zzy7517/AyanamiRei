@@ -83,7 +83,6 @@
     "unpin_tooltip": "Unpin",
     "workspaces_label": "Workspaces",
     "create_workspace": "Create workspace",
-    "log_out": "Sign out",
     "new_issue": "New issue",
     "pinned_label": "Pinned",
     "show_more_pins": "Show {{count}} more...",

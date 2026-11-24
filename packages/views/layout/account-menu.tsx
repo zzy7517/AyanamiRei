@@ -7,7 +7,6 @@ import {
   History,
   Keyboard,
   Globe,
-  LogOut,
   Monitor,
   Moon,
   Palette,
@@ -38,7 +37,6 @@ import {
   DropdownMenuTrigger,
 } from "@multica/ui/components/ui/dropdown-menu";
 import { cn } from "@multica/ui/lib/utils";
-import { useLogout } from "../auth";
 import { docsLocalePrefix } from "../common/docs-locale";
 import { useLanguageSwitch } from "../common/use-language-switch";
 import { useT } from "../i18n";
@@ -83,7 +81,6 @@ export function AccountMenu() {
   const { t, i18n } = useT("layout");
   const user = useAuthStore((s) => s.user);
   const p = useWorkspacePaths();
-  const logout = useLogout();
   const { theme: mode, setTheme: setMode } = useTheme();
   const appliedMode = useAppliedMode();
   const setAppearance = useAppearanceStore((s) => s.set);
@@ -217,13 +214,6 @@ export function AccountMenu() {
               label={t(($) => $.help.download_desktop)}
             />
           )}
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive" onClick={logout}>
-            <LogOut />
-            {t(($) => $.sidebar.log_out)}
-          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

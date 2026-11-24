@@ -6,7 +6,6 @@ import {
   useRouteError,
 } from "react-router-dom";
 import { AlertTriangle, RotateCw, X } from "@multica/ui/icons";
-import { useAuthStore } from "@multica/core/auth";
 import { setCurrentWorkspace } from "@multica/core/platform";
 import { WorkspaceSlugProvider } from "@multica/core/paths";
 import { useWorkspaceList } from "@multica/core/workspace";
@@ -18,7 +17,6 @@ import { VoiceWorkspaceWords } from "@multica/views/voice";
 import { DragStrip, WindowTitleBarProvider } from "@multica/views/platform";
 import { useT } from "@multica/views/i18n";
 import type { IssueWindowContext } from "../../../shared/issue-window";
-import { DesktopAuthRecoveryPage } from "../pages/auth-recovery";
 import { IssueDetailPage } from "../pages/issue-detail-page";
 import { IssueWindowNavigationProvider } from "../platform/issue-window-navigation";
 import { DocumentTitleSync } from "./document-title-sync";
@@ -45,26 +43,13 @@ export function IssueWindow({ context }: { context: IssueWindowContext }) {
 
 function IssueWindowRoute() {
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
-  const user = useAuthStore((state) => state.user);
-  const { workspaces, ready, unavailable, isFetching, refetch } =
-    useWorkspaceList({
-      enabled: !!user && !!workspaceSlug,
-    });
+  const { workspaces, ready } = useWorkspaceList({
+    enabled: !!workspaceSlug,
+  });
   const workspace = workspaces.find((item) => item.slug === workspaceSlug);
 
   if (workspace && workspaceSlug) {
     setCurrentWorkspace(workspaceSlug, workspace.id);
-  }
-
-  if (unavailable) {
-    return (
-      <DesktopAuthRecoveryPage
-        isRetrying={isFetching}
-        onRetry={() => {
-          void refetch();
-        }}
-      />
-    );
   }
 
   if (!ready) {

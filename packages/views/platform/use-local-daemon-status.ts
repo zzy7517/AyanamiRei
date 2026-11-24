@@ -17,8 +17,7 @@ interface DaemonStatusLike {
     | "starting"
     | "stopping"
     | "installing_cli"
-    | "cli_not_found"
-    | "auth_expired";
+    | "cli_not_found";
   daemonId?: string;
   deviceName?: string;
 }

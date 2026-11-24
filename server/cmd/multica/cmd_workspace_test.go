@@ -371,10 +371,6 @@ func TestFetchWorkspacesExplainsPortOnlyFailClosedContext(t *testing.T) {
 	t.Setenv("MULTICA_DAEMON_PORT", "20032")
 	t.Setenv("MULTICA_SERVER_URL", "https://api.example.test")
 	t.Setenv("MULTICA_TOKEN", "")
-	if err := cli.SaveCLIConfig(cli.CLIConfig{Token: "mul_owner_pat"}); err != nil {
-		t.Fatalf("seed config: %v", err)
-	}
-
 	_, err := fetchWorkspaces(t.Context(), newWorkspaceSwitchTestCmd())
 	if err == nil || !strings.Contains(err.Error(), "MULTICA_DAEMON_PORT") || !strings.Contains(err.Error(), "remove") {
 		t.Fatalf("fetchWorkspaces error = %v, want stale port recovery guidance", err)

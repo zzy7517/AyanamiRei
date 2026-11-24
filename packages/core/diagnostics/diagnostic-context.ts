@@ -87,12 +87,8 @@ const WORKSPACE_ROUTES: readonly RoutePattern[] = [
 ];
 
 const GLOBAL_ROUTES: readonly RoutePattern[] = [
-  ["login"],
-  ["signup"],
-  ["logout"],
   ["workspaces", "new"],
   ["onboarding"],
-  ["auth", "callback"],
 ];
 
 const WORKSPACE_SECTIONS = new Set(WORKSPACE_ROUTES.map((route) => route[0]!));

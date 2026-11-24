@@ -438,9 +438,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	origins := allowedOrigins()
 
 	signupConfig := handler.Config{
-		AllowSignup:                    os.Getenv("ALLOW_SIGNUP") != "false",
-		AllowedEmails:                  splitAndTrim(os.Getenv("ALLOWED_EMAILS")),
-		AllowedEmailDomains:            splitAndTrim(os.Getenv("ALLOWED_EMAIL_DOMAINS")),
 		DisableWorkspaceCreation:       os.Getenv("DISABLE_WORKSPACE_CREATION") == "true",
 		WorkspaceCreationAllowedEmails: splitAndTrim(os.Getenv("WORKSPACE_CREATION_ALLOWED_EMAILS")),
 		VCSIntegrationEnabled:          os.Getenv("MULTICA_VCS_INTEGRATION_ENABLED") == "true",
@@ -1525,9 +1522,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// (invalidate). DaemonTokenCache backs the DaemonAuth mdt_ path. Both
 	// constructors return nil when rdb is nil — every consumer handles that
 	// as "no cache, always hit DB".
-	patCache := auth.NewPATCache(rdb)
 	daemonTokenCache := auth.NewDaemonTokenCache(rdb)
-	h.PATCache = patCache
 	h.DaemonTokenCache = daemonTokenCache
 	h.MembershipCache = auth.NewMembershipCache(rdb)
 
@@ -1537,11 +1532,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// reject with 401, instead of falling through to mul_/JWT paths.
 	// Reuses MULTICA_CLOUD_URL (the same URL the cloud-runtime proxy uses) so a
 	// deployment has one authoritative multica-cloud connection.
-	cloudPATVerifier := auth.NewCloudPATVerifier(auth.CloudPATVerifierConfig{
-		FleetBaseURL: signupConfig.CloudURL,
-		Redis:        rdb,
-	})
-
 	// Empty-claim cache: lets the daemon poll path skip a Postgres
 	// scan when a recent check confirmed the runtime had no queued
 	// task. Returns nil when rdb is nil — TaskService treats that
@@ -1609,7 +1599,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// WebSocket
 	mc := &membershipChecker{queries: queries}
 	hub.SetMembershipChecker(mc)
-	pr := &patResolver{queries: queries, cache: patCache}
 	slugResolver := realtime.SlugResolver(func(ctx context.Context, slug string) (string, error) {
 		ws, err := queries.GetWorkspaceBySlug(ctx, slug)
 		if err != nil {
@@ -1618,7 +1607,12 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		return util.UUIDToString(ws.ID), nil
 	})
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		realtime.HandleWebSocket(hub, mc, pr, slugResolver, w, r)
+		userID, err := middleware.ResolveFixedUserID(r.Context(), queries)
+		if err != nil {
+			http.Error(w, `{"error":"system user unavailable"}`, http.StatusServiceUnavailable)
+			return
+		}
+		realtime.HandleWebSocket(hub, mc, userID, slugResolver, w, r)
 	})
 	// Web terminal (terminal_v1). Sibling of /ws for the same reason: the
 	// browser opens it as a WebSocket and authenticates with a ticket from
@@ -1668,15 +1662,9 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		slog.Warn("auth rate limiting disabled: REDIS_URL not configured")
 	}
 	trustedProxies := middleware.ParseTrustedProxies(os.Getenv("RATE_LIMIT_TRUSTED_PROXIES"))
-	authRL := middleware.RateLimit(rdb, envPositiveInt("RATE_LIMIT_AUTH", 5), time.Minute, trustedProxies)
-	authVerifyRL := middleware.RateLimit(rdb, envPositiveInt("RATE_LIMIT_AUTH_VERIFY", 20), time.Minute, trustedProxies)
 	contactSalesRL := middleware.RateLimit(rdb, envPositiveInt("RATE_LIMIT_CONTACT_SALES", 5), time.Hour, trustedProxies)
 	siteStarReadRL := middleware.RateLimit(rdb, envPositiveInt("RATE_LIMIT_SITE_STAR_READ", 30), time.Minute, trustedProxies)
 	siteStarSpinRL := middleware.RateLimit(rdb, envPositiveInt("RATE_LIMIT_SITE_STAR_SPIN", 40), time.Minute, trustedProxies)
-	r.With(authRL).Post("/auth/send-code", h.SendCode)
-	r.With(authVerifyRL).Post("/auth/verify-code", h.VerifyCode)
-	r.With(authRL).Post("/auth/google", h.GoogleLogin)
-	r.Post("/auth/logout", h.Logout)
 
 	// Public API
 	r.Get("/api/config", h.GetConfig)
@@ -1728,9 +1716,9 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// as the Composio callback; the sealed state identifies the handshake.
 	r.Get("/api/apps/oauth/callback", h.AppsOAuthCallback)
 
-	// Daemon API routes (require daemon token or valid user token)
+	// Daemon API routes run as the deployment user. They do not check a bearer.
 	r.Route("/api/daemon", func(r chi.Router) {
-		r.Use(middleware.DaemonAuth(queries, patCache, daemonTokenCache, cloudPATVerifier))
+		r.Use(middleware.DaemonAuth(queries))
 
 		r.Post("/register", h.DaemonRegister)
 		r.Post("/deregister", h.DaemonDeregister)
@@ -1817,7 +1805,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	// signed-in user's session and the installation header. Keeping it outside
 	// /v1 prevents the Public API from accepting session cookies.
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.Auth(queries, patCache, cloudPATVerifier, cfSigner))
+		r.Use(middleware.FixedUser(queries))
 		r.Route(pluginBridgePrefix, func(r chi.Router) {
 			registerPluginActionRoutes(r, h)
 			// ui / manual only. `event` is dispatched by the host off the event
@@ -1827,8 +1815,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.Auth(queries, patCache, cloudPATVerifier, cfSigner))
-		r.Use(middleware.RefreshCloudFrontCookies(cfSigner))
+		r.Use(middleware.FixedUser(queries))
 
 		// Plugin Action API. Called by the HOST PAGE on the signed-in user's
 		// session after a surface asks for something over the postMessage
@@ -1854,11 +1841,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		// (mat_) or cloud-node PAT (mcn_) authenticates as its owner, so
 		// without this guard a prompt-injected agent could trade its scoped,
 		// short-lived credential for a 30-day session JWT.
-		r.With(handler.RequireHumanActor).Post("/api/cli-token", h.IssueCliToken)
-		// Sliding session renewal for clients that hold the session as a
-		// string (Desktop, mobile). Browsers get theirs re-issued inline by
-		// middleware.Auth and never call this (MUL-7436).
-		r.Post("/api/auth/refresh", h.RefreshSession)
 		r.Post("/api/upload-file", h.UploadFile)
 		r.Post("/api/feedback", h.CreateFeedback)
 		r.With(handler.RequireHumanActor).Post("/api/client-usage", h.UpsertClientUsage)
@@ -2151,14 +2133,6 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		// not mint a non-expiring PAT, enumerate the owner's PATs, or revoke
 		// them. /current/renew already accepts only mul_ PATs, which are human
 		// credentials, so the group-wide guard does not change its behavior.
-		r.Route("/api/tokens", func(r chi.Router) {
-			r.Use(handler.RequireHumanActor)
-			r.Get("/", h.ListPersonalAccessTokens)
-			r.Post("/", h.CreatePersonalAccessToken)
-			r.Post("/current/renew", h.RenewCurrentPersonalAccessToken)
-			r.Delete("/{id}", h.RevokePersonalAccessToken)
-		})
-
 		// Cloud Billing proxy. Same upstream service / port as
 		// cloud-runtime — multica-cloud's Fleet and Billing share
 		// :8080 and the same chi router. All routes here forward
@@ -2972,42 +2946,6 @@ func (mc *membershipChecker) Members(ctx context.Context, identities []realtime.
 		}
 	}
 	return members, nil
-}
-
-// patResolver implements realtime.PATResolver using database queries.
-// patCache is shared with the Auth and DaemonAuth middlewares so a token
-// revoke through any path invalidates the cache for all of them. Nil
-// cache is supported and degrades to direct DB lookups.
-type patResolver struct {
-	queries *db.Queries
-	cache   *auth.PATCache
-}
-
-func (pr *patResolver) ResolveToken(ctx context.Context, token string) (string, bool) {
-	hash := auth.HashToken(token)
-
-	if userID, ok := pr.cache.Get(ctx, hash); ok {
-		return userID, true
-	}
-
-	pat, err := pr.queries.GetPersonalAccessTokenByHash(ctx, hash)
-	if err != nil {
-		return "", false
-	}
-
-	userID := util.UUIDToString(pat.UserID)
-
-	var expiresAt time.Time
-	if pat.ExpiresAt.Valid {
-		expiresAt = pat.ExpiresAt.Time
-	}
-	pr.cache.Set(ctx, hash, userID, auth.TTLForExpiry(time.Now(), expiresAt))
-
-	// Cache miss = first WS auth in this TTL window. Refresh last_used_at;
-	// subsequent connects within the window skip the write.
-	go pr.queries.UpdatePersonalAccessTokenLastUsed(context.Background(), pat.ID)
-
-	return userID, true
 }
 
 // parseUUID is a thin alias for util.MustParseUUID. Call sites here are all

@@ -22,6 +22,8 @@ const LEGACY_ROUTE_SEGMENTS = new Set([
   "usage",
 ]);
 
+const DEFAULT_WORKSPACE_SLUG = "dev";
+
 function resolveLocale(req: NextRequest): SupportedLocale {
   return resolveLocaleFromSignals({
     cookieLocale: req.cookies.get(LOCALE_COOKIE)?.value,
@@ -52,7 +54,6 @@ export function proxy(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  const hasSession = req.cookies.has("multica_logged_in");
   const lastSlug = req.cookies.get("last_workspace_slug")?.value;
 
   // --- Legacy URL redirect: /issues/... → /{slug}/issues/... ---
@@ -62,44 +63,28 @@ export function proxy(req: NextRequest) {
   if (LEGACY_ROUTE_SEGMENTS.has(firstSegment)) {
     const url = req.nextUrl.clone();
 
-    if (!hasSession) {
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    }
-
     if (lastSlug) {
       // Preserve deep-link path + query: /issues/abc → /{lastSlug}/issues/abc
       url.pathname = `/${lastSlug}${pathname}`;
       return NextResponse.redirect(url);
     }
 
-    // Logged-in but no cookie yet (never opened a workspace, or the cookie was
-    // cleared). Root is the wrong destination: it lands on `/{lastSlug}/issues`
-    // only with a slug cookie, and this visitor has none. /login already
-    // resolves an authenticated visitor against their workspace list and the
-    // no-workspace-yet case, and replaces to the right destination. Deep-link
-    // path and query are dropped rather than passed as `next`: they are legacy
-    // segments themselves, so feeding one back would land here again.
-    url.pathname = "/login";
+    url.pathname = `/${DEFAULT_WORKSPACE_SLUG}`;
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  // --- Root path: straight into the product ---
-  // "/" is not a page. A session with a remembered workspace opens that
-  // workspace's issue board; everyone else — no session yet, or a session
-  // that has never opened a workspace (first login, cleared cookies) — goes
-  // to /login, which resolves an authenticated visitor against their
-  // workspace list (onboarding / first workspace / new workspace) and
-  // replaces to the right destination.
+  // The personal fork has one fixed workspace.
   if (pathname === "/") {
     const url = req.nextUrl.clone();
-    url.pathname = hasSession && lastSlug ? `/${lastSlug}/issues` : "/login";
+    url.pathname = lastSlug
+      ? `/${lastSlug}/issues`
+      : `/${DEFAULT_WORKSPACE_SLUG}/issues`;
     return NextResponse.redirect(url);
   }
 
   // --- Default: forward locale header to RSC, no redirect/rewrite ---
-  // Covers /login, /:slug/*, and everything else.
+  // Covers /:slug/* and everything else.
   return nextWithLocale(req);
 }
 
@@ -113,7 +98,6 @@ export const config = {
     // Uploads stream through an App Router handler instead of Proxy's body clone.
     "/api",
     "/api/((?!upload-file(?:/|$)).*)",
-    "/auth/:path*",
     "/docs/:path*",
     "/ws",
     "/collab",

@@ -1,4 +1,4 @@
-import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@multica/core/i18n/react";
@@ -15,9 +15,6 @@ function render(ui: ReactElement) {
 const state = vi.hoisted(() => ({
   workspaces: [] as { id: string; slug: string }[],
   ready: false,
-  unavailable: false,
-  isFetching: false,
-  refetch: vi.fn(),
 }));
 
 vi.mock("@multica/core/auth", () => ({
@@ -29,9 +26,6 @@ vi.mock("@multica/core/workspace", () => ({
   useWorkspaceList: () => ({
     workspaces: state.workspaces,
     ready: state.ready,
-    unavailable: state.unavailable,
-    isFetching: state.isFetching,
-    refetch: state.refetch,
   }),
 }));
 
@@ -84,19 +78,6 @@ vi.mock("../pages/issue-detail-page", () => ({
   IssueDetailPage: () => <div data-testid="issue-detail" />,
 }));
 
-vi.mock("../pages/auth-recovery", () => ({
-  DesktopAuthRecoveryPage: ({
-    onRetry,
-    isRetrying,
-  }: {
-    onRetry: () => void;
-    isRetrying: boolean;
-  }) => (
-    <button type="button" disabled={isRetrying} onClick={onRetry}>
-      Retry workspace list
-    </button>
-  ),
-}));
 
 vi.mock("../platform/issue-window-navigation", () => ({
   IssueWindowNavigationProvider: ({ children }: { children: React.ReactNode }) => (
@@ -117,9 +98,6 @@ const context = {
 beforeEach(() => {
   state.workspaces = [];
   state.ready = false;
-  state.unavailable = false;
-  state.isFetching = false;
-  state.refetch.mockReset();
 });
 
 describe("IssueWindow", () => {
@@ -136,19 +114,6 @@ describe("IssueWindow", () => {
     render(<IssueWindow context={context} />);
 
     expect(await screen.findByText("Issue unavailable")).toBeInTheDocument();
-    expect(screen.queryByTestId("workspace-loading")).toBeNull();
-  });
-
-  it("offers a retry when the initial workspace-list request fails", async () => {
-    state.unavailable = true;
-
-    render(<IssueWindow context={context} />);
-
-    const retry = await screen.findByRole("button", {
-      name: "Retry workspace list",
-    });
-    fireEvent.click(retry);
-    expect(state.refetch).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("workspace-loading")).toBeNull();
   });
 

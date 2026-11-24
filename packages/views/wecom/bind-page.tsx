@@ -5,6 +5,7 @@ import { Card, CardContent } from "@multica/ui/components/ui/card";
 import { Button } from "@multica/ui/components/ui/button";
 import { api } from "@multica/core/api";
 import { useAuthStore } from "@multica/core/auth";
+import { paths } from "@multica/core/paths";
 import { AppLink } from "../navigation";
 import { useT } from "../i18n";
 
@@ -16,11 +17,9 @@ type RedeemState =
   | { kind: "error"; reason: string };
 
 // WecomBindPage is the destination the WeCom smart-bot's "link your Multica
-// account" prompt points at. Same shape as SlackBindPage — the user lands
-// here logged out OR logged in; we require auth before redeeming because
-// the redeemer's Multica identity is taken from the session (the token
-// alone never proves who is binding — see wecom.BindingTokenService.
-// RedeemAndBind).
+// account" prompt points at. Redemption waits for the local user record,
+// because the server binds the installation to that user. There is no login
+// page: if that record never arrives, the page sends the visitor into the app.
 //
 // The token comes in via ?token=<raw>. We POST it to /api/wecom/binding/
 // redeem; the backend returns 410 (invalid/expired), 409 (already bound to
@@ -69,24 +68,13 @@ export function WecomBindPage({ token }: { token: string | null }) {
           {state.kind === "idle" || state.kind === "redeeming" ? (
             <p className="text-body text-muted-foreground">{t(($) => $.wecom_bind.redeeming)}</p>
           ) : state.kind === "needs-auth" ? (
-            <>
-              <p className="text-body text-muted-foreground">
-                {t(($) => $.wecom_bind.needs_auth_description)}
-              </p>
-              <Button
-                size="sm"
-                render={
-                  <AppLink
-                    href={`/login?next=${encodeURIComponent(
-                      `/wecom/bind?token=${encodeURIComponent(token ?? "")}`,
-                    )}`}
-                  />
-                }
-                nativeButton={false}
-              >
-                {t(($) => $.wecom_bind.sign_in)}
-              </Button>
-            </>
+            <Button
+              size="sm"
+              render={<AppLink href={paths.root()} />}
+              nativeButton={false}
+            >
+              {t(($) => $.not_found.back_to_multica)}
+            </Button>
           ) : state.kind === "done" ? (
             <>
               <p className="text-body font-medium">{t(($) => $.wecom_bind.done_title)}</p>

@@ -1,18 +1,14 @@
 import { describe, it, expect } from "vitest";
 
 // EXCLUDED_PREFIXES is private to store.ts but checked here via behavior.
-// We assert that every global path prefix is also excluded from lastPath
-// persistence — otherwise lastPath could contain /login etc, and on next
-// app load we'd "restore" a user to the login page.
+// Pre-workspace routes must not become lastPath, or the next launch would
+// restore the user onto a flow that is not a workspace page.
 describe("useNavigationStore.lastPath excludes global paths", () => {
-  it("does not persist /login, /workspaces/new, /auth/, /logout, /signup", async () => {
+  it("does not persist /workspaces/new or /onboarding", async () => {
     const { useNavigationStore } = await import("./store");
     const globalPrefixes = [
-      "/login",
-      "/logout",
-      "/signup",
       "/workspaces/new",
-      "/auth/callback",
+      "/onboarding",
     ];
 
     for (const path of globalPrefixes) {

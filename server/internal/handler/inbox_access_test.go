@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -44,7 +43,7 @@ var inboxOwnerReads = []inboxOwnerRead{
 }
 
 func (e inboxOwnerRead) serve(h *Handler) http.HandlerFunc {
-	return middleware.Auth(testHandler.Queries, nil, nil, nil)(
+	return middleware.FixedUser(testHandler.Queries)(
 		middleware.RequireWorkspaceMember(testHandler.Queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			e.handler(h, w, r)
 		})),
@@ -132,8 +131,11 @@ func inboxAccessHandler() http.HandlerFunc {
 }
 
 func inboxCredentialRequest(token, workspaceID string) *http.Request {
-	return testutil.WithHeaders(testutil.JSONRequest(http.MethodGet, "/api/inbox", nil),
-		"Authorization", "Bearer "+token, "X-Workspace-ID", workspaceID)
+	headers := []string{"X-Workspace-ID", workspaceID}
+	if token != "" {
+		headers = append(headers, "Authorization", "Bearer "+token)
+	}
+	return testutil.WithHeaders(testutil.JSONRequest(http.MethodGet, "/api/inbox", nil), headers...)
 }
 
 func TestListInboxTaskCredentialAccess(t *testing.T) {
@@ -202,7 +204,7 @@ func TestListInboxRejectsForgedTaskIdentityAndWorkspace(t *testing.T) {
 	for _, e := range inboxOwnerReads {
 		t.Run(e.name, func(t *testing.T) {
 			req := testutil.WithHeaders(e.request(token, testWorkspaceID), "X-Task-ID", allowedTask, "X-Agent-ID", agentID,
-				"X-Actor-Source", "member", "X-User-ID", other, "X-Originator-User-ID", testUserID)
+				"X-Actor-Source", "member", "X-Originator-User-ID", testUserID)
 			req.URL.RawQuery = "originator_user_id=" + testUserID + "&recipient_id=" + other
 			testutil.Call(t, e.serve(testHandler), req).Want(http.StatusForbidden)
 
@@ -211,7 +213,7 @@ func TestListInboxRejectsForgedTaskIdentityAndWorkspace(t *testing.T) {
 	}
 }
 
-func TestListInboxHumanCredentialsAndReadOnlyIsolation(t *testing.T) {
+func TestListInboxIdentityResolutionAndReadOnlyIsolation(t *testing.T) {
 	other := createPlainMember(t, "inbox-recipient-"+uuid.NewString()+"@example.test")
 	foreignWorkspace := dbfx.Workspace(t, "Foreign inbox", "inbox-isolation-"+uuid.NewString())
 	dbfx.Member(t, foreignWorkspace, testUserID, "owner")
@@ -219,41 +221,38 @@ func TestListInboxHumanCredentialsAndReadOnlyIsolation(t *testing.T) {
 		return dbfx.Insert(t, "inbox_item", testutil.Cols{"workspace_id": workspaceID,
 			"recipient_type": "member", "recipient_id": recipientID, "type": "system", "severity": "info", "title": "Private personal notice"})
 	}
-	own := newItem(testWorkspaceID, testUserID)
+	// No task token resolves to the deployment user. A mat_ token resolves to
+	// the user bound on that token. The two identities do not share a row.
+	humanOwn := newItem(testWorkspaceID, fixedUserID)
+	taskOwn := newItem(testWorkspaceID, testUserID)
 	otherItem := newItem(testWorkspaceID, other)
-	foreign := newItem(foreignWorkspace, testUserID)
-	pat := "mul_" + uuid.NewString()
-	dbfx.Insert(t, "personal_access_token", testutil.Cols{"user_id": testUserID, "name": "Inbox test", "token_hash": auth.HashToken(pat), "token_prefix": pat[:12]})
-	jwtToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": testUserID, "exp": time.Now().Add(time.Hour).Unix()}).SignedString(auth.JWTSecret())
-	if err != nil {
-		t.Fatal(err)
-	}
+	foreignHuman := newItem(foreignWorkspace, fixedUserID)
+	foreignTask := newItem(foreignWorkspace, testUserID)
 	runtimeID := dbfx.Runtime(t, "Own inbox runtime")
 	agentID := dbfx.Agent(t, "Own inbox agent", runtimeID)
 	taskID := dbfx.Task(t, agentID, testutil.Cols{"runtime_id": runtimeID, "status": "running", "originator_user_id": testUserID, "accountable_user_id": testUserID})
 	taskToken := inboxTaskCredential(t, taskID, agentID, testWorkspaceID, testUserID)
 	for _, tc := range []struct {
-		name, token string
-		cookie      bool
+		name, token, own string
 	}{
-		{"personal PAT", pat, false}, {"login session", jwtToken, true}, {"self-triggered task", taskToken, false},
+		{"human identity", "", humanOwn}, {"self-triggered task", taskToken, taskOwn},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			req := inboxCredentialRequest(tc.token, testWorkspaceID)
-			if tc.cookie {
-				req.Header.Del("Authorization")
-				req.AddCookie(&http.Cookie{Name: auth.AuthCookieName, Value: tc.token})
-			}
 			req.Header.Set("X-User-ID", other)
 			req.URL.RawQuery = "recipient_id=" + other
 			var items []InboxItemResponse
 			testutil.Call(t, inboxAccessHandler(), req).Want(http.StatusOK).JSON(&items)
+			forbidden := map[string]bool{
+				otherItem: true, foreignHuman: true, foreignTask: true, humanOwn: true, taskOwn: true,
+			}
+			delete(forbidden, tc.own)
 			found := false
 			for _, item := range items {
-				if item.ID == otherItem || item.ID == foreign {
+				if forbidden[item.ID] {
 					t.Fatalf("another recipient or workspace leaked: %s", item.ID)
 				}
-				if item.ID == own {
+				if item.ID == tc.own {
 					found = true
 					if item.Read || item.Archived {
 						t.Fatal("read changed notification state")
@@ -263,7 +262,7 @@ func TestListInboxHumanCredentialsAndReadOnlyIsolation(t *testing.T) {
 			if !found {
 				t.Fatal("own personal notification missing")
 			}
-			if state := loadInboxItemState(t, own); state != (inboxItemState{}) {
+			if state := loadInboxItemState(t, tc.own); state != (inboxItemState{}) {
 				t.Fatalf("GET mutated state: %+v", state)
 			}
 		})
@@ -329,11 +328,11 @@ func TestArchivedInboxOwnerReadIsolation(t *testing.T) {
 		return dbfx.Insert(t, "inbox_item", testutil.Cols{"workspace_id": workspaceID, "archived": true,
 			"recipient_type": "member", "recipient_id": recipientID, "type": "system", "severity": "info", "title": "Private archived notice"})
 	}
-	own := newArchived(testWorkspaceID, testUserID)
+	humanOwn := newArchived(testWorkspaceID, fixedUserID)
+	taskOwn := newArchived(testWorkspaceID, testUserID)
 	otherItem := newArchived(testWorkspaceID, other)
-	foreign := newArchived(foreignWorkspace, testUserID)
-	pat := "mul_" + uuid.NewString()
-	dbfx.Insert(t, "personal_access_token", testutil.Cols{"user_id": testUserID, "name": "Archived inbox test", "token_hash": auth.HashToken(pat), "token_prefix": pat[:12]})
+	foreignHuman := newArchived(foreignWorkspace, fixedUserID)
+	foreignTask := newArchived(foreignWorkspace, testUserID)
 	runtimeID := dbfx.Runtime(t, "Own archived inbox runtime")
 	agentID := dbfx.Agent(t, "Own archived inbox agent", runtimeID)
 	taskID := dbfx.Task(t, agentID, testutil.Cols{"runtime_id": runtimeID, "status": "running", "originator_user_id": testUserID, "accountable_user_id": testUserID})
@@ -351,22 +350,31 @@ func TestArchivedInboxOwnerReadIsolation(t *testing.T) {
 		},
 	}
 	paths := map[string]string{"archived": inboxOwnerReads[1].path, "archived page": inboxOwnerReads[2].path}
-	for _, cred := range []struct{ name, token string }{{"personal PAT", pat}, {"self-triggered task", taskToken}} {
+	for _, cred := range []struct{ name, token, own string }{
+		{"human identity", "", humanOwn}, {"self-triggered task", taskToken, taskOwn},
+	} {
 		for name, read := range reads {
 			t.Run(cred.name+"/"+name, func(t *testing.T) {
 				req := testutil.WithHeaders(testutil.JSONRequest(http.MethodGet, paths[name]+"?recipient_id="+other, nil),
-					"Authorization", "Bearer "+cred.token, "X-Workspace-ID", testWorkspaceID, "X-User-ID", other)
+					"X-Workspace-ID", testWorkspaceID, "X-User-ID", other)
+				if cred.token != "" {
+					req.Header.Set("Authorization", "Bearer "+cred.token)
+				}
+				forbidden := map[string]bool{
+					otherItem: true, foreignHuman: true, foreignTask: true, humanOwn: true, taskOwn: true,
+				}
+				delete(forbidden, cred.own)
 				found := false
 				for _, item := range read(t, req) {
-					if item.ID == otherItem || item.ID == foreign {
+					if forbidden[item.ID] {
 						t.Fatalf("another recipient or workspace leaked: %s", item.ID)
 					}
-					found = found || item.ID == own
+					found = found || item.ID == cred.own
 				}
 				if !found {
 					t.Fatal("own archived notification missing")
 				}
-				if state := loadInboxItemState(t, own); state != (inboxItemState{archived: true}) {
+				if state := loadInboxItemState(t, cred.own); state != (inboxItemState{archived: true}) {
 					t.Fatalf("GET mutated state: %+v", state)
 				}
 			})

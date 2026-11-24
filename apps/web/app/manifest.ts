@@ -2,8 +2,7 @@ import type { MetadataRoute } from "next";
 
 /**
  * Installable web manifest. Start at /inbox: the proxy resolves it like any
- * legacy route, so a session opens the last workspace's inbox and a session
- * without a workspace (or no session at all) lands on /login.
+ * legacy route to the last workspace's inbox, or the fixed personal workspace.
  *
  * Standard icons share desktop artwork. The maskable SVG supplies full-bleed
  * artwork for launcher cropping; regenerate raster sizes from those source assets.

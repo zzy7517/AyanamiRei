@@ -50,7 +50,6 @@ describe("DaemonRecoveryPolicy", () => {
     { state: "stopping" as const },
     { state: "installing_cli" as const },
     { state: "cli_not_found" as const },
-    { state: "auth_expired" as const },
     { state: "recovery_paused" as const },
   ])("does not recover when ineligible: %o", (override) => {
     const policy = new DaemonRecoveryPolicy();

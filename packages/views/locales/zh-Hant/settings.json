@@ -573,7 +573,6 @@
       "shortcuts": "快捷鍵",
       "issue": "任務",
       "notifications": "通知",
-      "tokens": "API Token",
       "general": "常規",
       "github": "GitHub",
       "labs": "實驗室",
@@ -920,51 +919,6 @@
       "denied": "已被瀏覽器攔截。請在瀏覽器設定中為本站點開啟通知權限。",
       "enabled_badge": "已啟用"
     }
-  },
-  "tokens": {
-    "title": "API Token",
-    "description": "個人訪問 token 讓 CLI 和外部整合可以代表你的帳號進行身份驗證。可透過 multica login --token 使用，或在呼叫 API 時作為 Bearer token 傳送。",
-    "security_note": "Token 擁有你帳號的完整訪問權限，請像密碼一樣妥善保管。",
-    "empty": "暫無 API token。",
-    "load_failed": "無法載入 API token，請重新整理頁面重試。",
-    "name_placeholder": "Token 名稱（例如：我的 CLI）",
-    "expiry": {
-      "30": "30 天",
-      "90": "90 天",
-      "365": "1 年",
-      "never": "永不過期"
-    },
-    "create": "建立",
-    "creating": "建立中...",
-    "toast_load_failed": "載入 token 失敗",
-    "toast_create_failed": "建立 token 失敗",
-    "toast_revoked": "已吊銷 token",
-    "toast_revoke_failed": "吊銷 token 失敗",
-    "metadata_prefix": "{{prefix}}... · 建立於 {{created}} · {{lastUsed}}",
-    "last_used_with_date": "最後使用 {{date}}",
-    "last_used_never": "從未使用",
-    "expires_with_date": " · {{date}} 過期",
-    "revoke_aria": "吊銷 {{name}}",
-    "revoke_tooltip": "吊銷",
-    "revoke_dialog": {
-      "title": "撤銷 API token？",
-      "description": "該 token 將被永久吊銷且不再可用。此操作不可撤銷。",
-      "cancel": "取消",
-      "confirm": "吊銷"
-    },
-    "created_dialog": {
-      "title": "個人訪問 token 已建立",
-      "warning_prefix": "新的個人訪問 token 已建立。出於安全考慮，它",
-      "warning_emphasis": "僅顯示一次",
-      "warning_suffix": "，請妥善儲存且不要洩露。Token 丟失後無法找回，只能吊銷後重新建立。",
-      "confirm_stored": "我已妥善儲存該 token。",
-      "copy_tooltip": "複製 token",
-      "cli_hint": "使用以下命令登入 CLI：",
-      "copy_command_tooltip": "複製命令",
-      "done": "完成"
-    },
-    "purpose": "用於 CLI 和 API 身份驗證。",
-    "usage_help": "使用方法"
   },
   "workspace": {
     "section_general": "工作區資訊",
@@ -1491,9 +1445,6 @@
       "title": "守護程序",
       "settings_saved": "守護程序設定已儲存",
       "settings_save_failed": "儲存守護程序設定失敗",
-      "signin_expired": "登入已過期",
-      "signin_expired_description": "本地守護程序無法完成身份驗證，因此此裝置暫時不能接收新的執行。請重新登入以恢復。",
-      "signin_again": "重新登入",
       "external_description_before": "此裝置的守護程序在應用之外執行（例如 WSL2 中），因此應用無法啟動或停止它。請在相應環境中執行",
       "external_description_after": "。",
       "auto_start_title": "啟動應用時自動執行",
@@ -1520,7 +1471,6 @@
       "state_cli_not_found": "設定失敗",
       "state_installing_cli": "正在設定...",
       "state_recovery_paused": "恢復已暫停",
-      "state_auth_expired": "需要登入",
       "start_failed": "啟動守護程序失敗",
       "stop_failed": "停止守護程序失敗",
       "restart_failed": "重啟守護程序失敗",

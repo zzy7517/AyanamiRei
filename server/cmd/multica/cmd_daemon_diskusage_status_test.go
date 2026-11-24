@@ -130,9 +130,28 @@ func setupDiskUsageProfile(t *testing.T, home, profile, token, serverURL, wsID, 
 	writeDiskUsageIssueTask(t, root, wsID, taskShort, issueID)
 	if err := cli.SaveCLIConfigForProfile(cli.CLIConfig{
 		ServerURL: serverURL,
-		Token:     token,
 	}, profile); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func mkdirProfile(t *testing.T, home, profile string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(home, ".multica", "profiles", profile), 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func clearDaemonTaskEnv(t *testing.T) {
+	t.Helper()
+	for _, key := range []string{
+		"MULTICA_AGENT_ID",
+		"MULTICA_TASK_ID",
+		"MULTICA_DAEMON_PORT",
+		"MULTICA_TASK_CONFIG_ROOT",
+		daemon.TaskWorkspacesRootEnv,
+	} {
+		t.Setenv(key, "")
 	}
 }
 
@@ -272,10 +291,9 @@ func TestRunDaemonDiskUsageJSONSurvivesServerFailure(t *testing.T) {
 	}
 }
 
-// TestRunDaemonDiskUsageAllProfilesUsesPerProfileToken guards the credential
-// wiring in aggregate mode: each root must be resolved with its own profile's
-// token, not whichever one happened to be loaded first.
-func TestRunDaemonDiskUsageAllProfilesUsesPerProfileToken(t *testing.T) {
+// TestRunDaemonDiskUsageAllProfilesResolvesEachRoot guards aggregate mode: each
+// profile root's tasks are resolved against its configured server.
+func TestRunDaemonDiskUsageAllProfilesResolvesEachRoot(t *testing.T) {
 	pinHumanCLIContext(t)
 	home := t.TempDir()
 	redirectTestHome(t, home)
@@ -284,9 +302,9 @@ func TestRunDaemonDiskUsageAllProfilesUsesPerProfileToken(t *testing.T) {
 
 	rec := &gcCheckRecorder{}
 	srv := newGCCheckServer(t, rec)
-	setupDiskUsageProfile(t, home, "", "token-default", srv.URL,
+	setupDiskUsageProfile(t, home, "", "", srv.URL,
 		"11111111-1111-1111-1111-111111111111", "aaaaaaaa", "issue-default")
-	setupDiskUsageProfile(t, home, "second", "token-second", srv.URL,
+	setupDiskUsageProfile(t, home, "second", "", srv.URL,
 		"22222222-2222-2222-2222-222222222222", "bbbbbbbb", "issue-second")
 
 	cmd := newDiskUsageTestCmd(t)
@@ -300,11 +318,11 @@ func TestRunDaemonDiskUsageAllProfilesUsesPerProfileToken(t *testing.T) {
 
 	rec.mu.Lock()
 	defer rec.mu.Unlock()
-	if got := rec.tokenByIssue["issue-default"]; got != "token-default" {
-		t.Errorf("default root resolved with token %q, want token-default", got)
+	if got := rec.tokenByIssue["issue-default"]; got != "" {
+		t.Errorf("default root resolved with credential %q, want none", got)
 	}
-	if got := rec.tokenByIssue["issue-second"]; got != "token-second" {
-		t.Errorf("second profile root resolved with token %q, want token-second", got)
+	if got := rec.tokenByIssue["issue-second"]; got != "" {
+		t.Errorf("second profile root resolved with credential %q, want none", got)
 	}
 }
 

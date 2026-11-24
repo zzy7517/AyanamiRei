@@ -18,33 +18,18 @@ function launch(cookies: Record<string, string>, host = "www.multica.ai") {
 describe("web app manifest", () => {
 
   it("does not launch at the root path", () => {
-    // "/" is a redirect shell (last workspace or /login) rather than a page;
+    // "/" is a redirect shell (last workspace, or the fixed local workspace) rather than a page;
     // the launch path deep-links into the inbox route of the resolved
     // workspace instead of relying on the root redirect's /issues default.
     expect(manifest().start_url).not.toBe("/");
   });
 
-  it("launches into the last workspace for a signed-in session", () => {
-    expect(
-      launch({ multica_logged_in: "1", last_workspace_slug: "acme" }),
-    ).toContain("/acme/inbox");
+  it("launches into the last workspace", () => {
+    expect(launch({ last_workspace_slug: "acme" })).toContain("/acme/inbox");
   });
 
-  it("launches into login when there is no session", () => {
-    expect(launch({})).toContain("/login");
-  });
-
-  it("never launches onto a redirect dead end for a session with no known workspace", () => {
-    // Reachable whenever `multica_logged_in` outlives `last_workspace_slug`:
-    // a member who signed up but has not opened a workspace yet, or cleared
-    // cookies. The start path resolves through the legacy-route branch, which
-    // sends this state to /login — a page, with the workspace list to resolve.
-    const target = launch({ multica_logged_in: "1" });
-
-    expect(target).toContain("/login");
-    expect(new URL(target ?? "", "https://www.multica.ai").pathname).not.toBe(
-      "/",
-    );
+  it("launches into the fixed workspace when no slug is known", () => {
+    expect(launch({})).toContain("/dev");
   });
 
   it("points every shortcut at a path that resolves the same way", () => {
@@ -59,12 +44,10 @@ describe("web app manifest", () => {
           }),
         ).headers.get("location");
 
-      expect(
-        resolve("multica_logged_in=1; last_workspace_slug=acme"),
-      ).toContain(`/acme${shortcut.url}`);
-      // Same three states as start_url — a shortcut is a launcher entry too.
-      expect(resolve("multica_logged_in=1")).toContain("/login");
-      expect(resolve("")).toContain("/login");
+      expect(resolve("last_workspace_slug=acme")).toContain(
+        `/acme${shortcut.url}`,
+      );
+      expect(resolve("")).toContain("/dev");
     }
   });
 });

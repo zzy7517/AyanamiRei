@@ -82,7 +82,6 @@ export function DesktopClientUsageReporter({ apiUrl }: { apiUrl: string }) {
       if (
         status.state === "running" ||
         status.state === "stopped" ||
-        status.state === "auth_expired" ||
         status.state === "cli_not_found" ||
         status.state === "recovery_paused"
       ) {

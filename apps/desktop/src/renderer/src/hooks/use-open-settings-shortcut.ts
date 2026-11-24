@@ -11,7 +11,7 @@ import { useWindowOverlayStore } from "@/stores/window-overlay-store";
  * it twice should return to the Settings tab that is already open instead of
  * stacking duplicates.
  *
- * No-ops when there is nothing to open into — logged out, zero workspaces, or
+ * No-ops when there is nothing to open into — zero workspaces, or
  * a pre-workspace overlay (onboarding, create workspace) covering the
  * window, where a new tab would appear behind a full-window takeover.
  */

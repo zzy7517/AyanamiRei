@@ -61,7 +61,7 @@ func TestGetConfigReportsCdnSignedMode(t *testing.T) {
 	}
 }
 
-func TestGetConfigIncludesRuntimeAuthConfig(t *testing.T) {
+func TestGetConfigIncludesRuntimeConfig(t *testing.T) {
 	origStorage := testHandler.Storage
 	origCfg := testHandler.cfg
 	testHandler.Storage = &mockStorage{}
@@ -71,8 +71,6 @@ func TestGetConfigIncludesRuntimeAuthConfig(t *testing.T) {
 		testHandler.cfg = origCfg
 	}()
 
-	t.Setenv("ALLOW_SIGNUP", "false")
-	t.Setenv("GOOGLE_CLIENT_ID", "google-client-id")
 	t.Setenv("POSTHOG_API_KEY", "phc_test")
 	t.Setenv("POSTHOG_HOST", "https://eu.i.posthog.com")
 	t.Setenv("MULTICA_DAEMON_SERVER_URL", "")
@@ -97,12 +95,6 @@ func TestGetConfigIncludesRuntimeAuthConfig(t *testing.T) {
 	}
 	if cfg.AttachmentPublicURL != "https://api.example.com" {
 		t.Fatalf("attachment_public_url = %q, want API public URL", cfg.AttachmentPublicURL)
-	}
-	if cfg.AllowSignup {
-		t.Fatalf("allow_signup: want false, got true")
-	}
-	if cfg.GoogleClientID != "google-client-id" {
-		t.Fatalf("google_client_id: want google-client-id, got %q", cfg.GoogleClientID)
 	}
 	if cfg.PosthogKey != "phc_test" {
 		t.Fatalf("posthog_key: want phc_test, got %q", cfg.PosthogKey)

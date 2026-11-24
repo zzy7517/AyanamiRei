@@ -96,7 +96,6 @@ func TestCreateWorkspace_DisabledByConfig(t *testing.T) {
 
 	prev := testHandler.cfg
 	testHandler.cfg = Config{
-		AllowSignup:              prev.AllowSignup,
 		DisableWorkspaceCreation: true,
 	}
 	t.Cleanup(func() { testHandler.cfg = prev })
@@ -156,7 +155,6 @@ func TestCreateWorkspace_AllowedEmails(t *testing.T) {
 
 			prev := testHandler.cfg
 			cfg := tc.cfg
-			cfg.AllowSignup = prev.AllowSignup
 			testHandler.cfg = cfg
 			t.Cleanup(func() { testHandler.cfg = prev })
 
@@ -1598,7 +1596,7 @@ func TestListWorkspacesTaskCredentialSeesOnlyBoundWorkspace(t *testing.T) {
 	}
 
 	// The CLI lists workspaces without a workspace selector.
-	asAgent := middleware.Auth(testHandler.Queries, nil, nil, nil)(http.HandlerFunc(testHandler.ListWorkspaces))
+	asAgent := middleware.FixedUser(testHandler.Queries)(http.HandlerFunc(testHandler.ListWorkspaces))
 	req := testutil.WithHeaders(testutil.JSONRequest(http.MethodGet, "/api/workspaces", nil), "Authorization", "Bearer "+token)
 	var agent []WorkspaceResponse
 	testutil.Call(t, asAgent.ServeHTTP, req).Want(http.StatusOK).JSON(&agent)

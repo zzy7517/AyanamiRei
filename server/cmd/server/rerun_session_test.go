@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
 	"github.com/multica-ai/multica/server/internal/util"
@@ -48,7 +49,7 @@ func setupRerunTestFixture(t *testing.T) (string, string, string) {
 		WHERE u.email = $1
 		  AND a.archived_at IS NULL
 		LIMIT 1
-	`, integrationTestEmail).Scan(&agentID, &runtimeID); err != nil {
+	`, middleware.SystemUserEmail).Scan(&agentID, &runtimeID); err != nil {
 		t.Fatalf("failed to find test agent: %v", err)
 	}
 

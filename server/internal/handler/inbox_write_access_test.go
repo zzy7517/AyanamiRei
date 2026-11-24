@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/inboxread"
 	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/testutil"
@@ -91,7 +90,7 @@ func (f inboxWriteFixture) taskToken(t *testing.T, originator any) string {
 }
 
 func serveInboxEndpoint(handler func(*Handler, http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return middleware.Auth(testHandler.Queries, nil, nil, nil)(
+	return middleware.FixedUser(testHandler.Queries)(
 		middleware.RequireWorkspaceMember(testHandler.Queries)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler(testHandler, w, r)
 		})),
@@ -195,15 +194,16 @@ func TestInboxItemWritesReportChangedCount(t *testing.T) {
 
 func TestDeleteInboxItemIsHumanOnly(t *testing.T) {
 	f := newInboxWriteFixture(t)
+	dbfx.Member(t, f.workspaceID, fixedUserID, "owner")
 	endpoint := inboxOwnerEndpoint{method: http.MethodDelete, path: func(item, _ string) string { return "/api/inbox/" + item }, param: "id"}
 
-	item := f.item(t)
+	// The unauthenticated human is the deployment user, not the fixture user the task token carries.
+	item := dbfx.Insert(t, "inbox_item", testutil.Cols{"workspace_id": f.workspaceID, "issue_id": f.issueID,
+		"recipient_type": "member", "recipient_id": fixedUserID, "type": "new_comment", "severity": "info", "title": "Owner notice"})
 	testutil.Call(t, serveInboxEndpoint((*Handler).DeleteInboxItem), endpoint.request(f, item, f.taskToken(t, testUserID))).Want(http.StatusForbidden)
 	requireInboxItemUntouched(t, item)
 
-	pat := "mul_" + uuid.NewString()
-	dbfx.Insert(t, "personal_access_token", testutil.Cols{"user_id": testUserID, "name": "Inbox delete test", "token_hash": auth.HashToken(pat), "token_prefix": pat[:12]})
-	testutil.Call(t, serveInboxEndpoint((*Handler).DeleteInboxItem), endpoint.request(f, item, pat)).Want(http.StatusOK)
+	testutil.Call(t, serveInboxEndpoint((*Handler).DeleteInboxItem), endpoint.request(f, item, "")).Want(http.StatusOK)
 	var remaining int
 	dbfx.QueryRow(t, `SELECT count(*) FROM inbox_item WHERE id = $1`, item).Scan(&remaining)
 	if remaining != 0 {
@@ -232,7 +232,7 @@ func TestUnreadInboxSummaryTaskCredentialStaysInBoundWorkspace(t *testing.T) {
 			h := *testHandler
 			h.InboxReads = inboxread.New(inboxread.Config{Concurrency: 2})
 			h.TxStarter = starter
-			asAgent := middleware.Auth(h.Queries, nil, nil, nil)(
+			asAgent := middleware.FixedUser(h.Queries)(
 				middleware.RequireWorkspaceMember(h.Queries)(http.HandlerFunc(h.UnreadInboxSummary)))
 			asOwner := middleware.RequireWorkspaceMember(h.Queries)(http.HandlerFunc(h.UnreadInboxSummary))
 			agentRequest := func() *http.Request {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
-import { AlertCircle, Info, LogIn } from "@multica/ui/icons";
+import { Info } from "@multica/ui/icons";
 import { Button } from "@multica/ui/components/ui/button";
 import { Switch } from "@multica/ui/components/ui/switch";
 import { cn } from "@multica/ui/lib/utils";
@@ -12,7 +12,6 @@ import {
   SettingsTab,
 } from "@multica/views/settings";
 import { useT } from "@multica/views/i18n";
-import { reauthenticateDaemon } from "../platform/daemon-reauth";
 import type { DaemonPrefs, DaemonStatus } from "../../../shared/daemon-types";
 import {
   DAEMON_STATE_COLORS,
@@ -54,7 +53,6 @@ export function DaemonSettingsTab() {
   const [cliInstalled, setCliInstalled] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<DaemonStatus>({ state: "stopped" });
-  const [reauthLoading, setReauthLoading] = useState(false);
 
   useEffect(() => {
     window.daemonAPI.getPrefs().then(setPrefs);
@@ -62,12 +60,6 @@ export function DaemonSettingsTab() {
     window.daemonAPI.getStatus().then(setStatus);
     return window.daemonAPI.onStatusChange(setStatus);
   }, []);
-
-  const handleReauth = useCallback(async () => {
-    setReauthLoading(true);
-    await reauthenticateDaemon(t);
-    setReauthLoading(false);
-  }, [t]);
 
   const updatePref = useCallback(
     async (key: keyof DaemonPrefs, value: boolean) => {
@@ -101,29 +93,6 @@ export function DaemonSettingsTab() {
     <SettingsTab
       title={t(($) => $.desktop.daemon.title)}
     >
-
-      {status.state === "auth_expired" && (
-        <div className="mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
-          <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
-          <div className="min-w-0 flex-1">
-            <p className="text-body font-medium text-destructive">
-              {t(($) => $.desktop.daemon.signin_expired)}
-            </p>
-            <p className="mt-0.5 text-body text-muted-foreground">
-              {t(($) => $.desktop.daemon.signin_expired_description)}
-            </p>
-          </div>
-          <Button
-            size="sm"
-            className="shrink-0"
-            onClick={handleReauth}
-            disabled={reauthLoading}
-          >
-            <LogIn className="size-3.5 mr-1.5" />
-            {t(($) => $.desktop.daemon.signin_again)}
-          </Button>
-        </div>
-      )}
 
       {externallyManaged && (
         <div className="mt-4 flex items-start gap-3 rounded-lg border bg-muted/30 px-4 py-3">

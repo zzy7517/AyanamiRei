@@ -27,7 +27,6 @@
   "no_access": {
     "title": "Espacio de trabajo no disponible",
     "description": "Este espacio de trabajo no existe o no tienes acceso.",
-    "go_to_workspaces": "Ir a mis espacios de trabajo",
-    "sign_in_different": "Iniciar sesión con otro usuario"
+    "go_to_workspaces": "Ir a mis espacios de trabajo"
   }
 }

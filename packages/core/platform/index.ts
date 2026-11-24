@@ -1,12 +1,7 @@
 export { CoreProvider } from "./core-provider";
 export type { CoreProviderProps, ClientIdentity } from "./types";
-export { AuthInitializer } from "./auth-initializer";
+export { SystemUserInitializer } from "./system-user-initializer";
 export { defaultStorage } from "./storage";
-export {
-  withPreSharedToken,
-  type PreSharedTokenStorage,
-  type PreSharedTokenState,
-} from "./pre-shared-token";
 export { createPersistStorage } from "./persist-storage";
 export { createWorkspaceAwareStorage, setCurrentWorkspace, getCurrentSlug, getCurrentWsId, subscribeToCurrentSlug, registerForWorkspaceRehydration } from "./workspace-storage";
 export { clearWorkspaceStorage } from "./storage-cleanup";

@@ -83,9 +83,13 @@ describe("bucketDiagnosticPath", () => {
   });
 
   it("keeps pre-workspace routes intact", () => {
-    expect(bucketDiagnosticPath("/login")).toBe("/login");
     expect(bucketDiagnosticPath("/workspaces/new")).toBe("/workspaces/new");
-    expect(bucketDiagnosticPath("/auth/callback")).toBe("/auth/callback");
+    expect(bucketDiagnosticPath("/onboarding")).toBe("/onboarding");
+  });
+
+  it("does not keep a removed auth URL as its own route", () => {
+    expect(bucketDiagnosticPath("/login")).toBe("/:slug");
+    expect(bucketDiagnosticPath("/auth/callback")).toBe("/:slug/*");
   });
 
   it("drops query string and hash — they can carry resource ids", () => {
@@ -106,7 +110,7 @@ describe("bucketDiagnosticPath", () => {
       "/:slug/issues/*",
     );
     expect(bucketDiagnosticPath("/acme/not-a-section/raw-value")).toBe("/:slug/*");
-    expect(bucketDiagnosticPath("/login/raw-value")).toBe("/login/*");
+    expect(bucketDiagnosticPath("/onboarding/raw-value")).toBe("/onboarding/*");
   });
 });
 
@@ -121,10 +125,8 @@ describe("route coverage stays in step with paths.ts", () => {
   function buildAll(): string[] {
     const scoped = paths.workspace(SLUG) as unknown as Record<string, (...args: string[]) => string>;
     const global = {
-      login: paths.login,
       newWorkspace: paths.newWorkspace,
       onboarding: paths.onboarding,
-      authCallback: paths.authCallback,
       root: paths.root,
     } as Record<string, (...args: string[]) => string>;
 

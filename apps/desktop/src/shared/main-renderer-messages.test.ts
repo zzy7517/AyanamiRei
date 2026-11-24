@@ -19,12 +19,12 @@ describe("MainRendererMessageQueue", () => {
   it("holds messages until their matching listener is ready", () => {
     const { queue, send } = createQueue();
 
-    queue.enqueue("a", "auth:token", "token-a");
+    queue.enqueue("a", "issue:open", "issue-a");
     queue.setReady("a", "issue:open", true);
     expect(send).not.toHaveBeenCalled();
 
-    queue.setReady("a", "auth:token", true);
-    expect(send).toHaveBeenCalledWith("a", "auth:token", "token-a");
+    queue.setReady("a", "issue:open", true);
+    expect(send).toHaveBeenCalledWith("a", "issue:open", "issue-a");
   });
 
   it("delivers immediately while the target's channel is ready", () => {
@@ -75,13 +75,13 @@ describe("MainRendererMessageQueue", () => {
   it("delivers an untargeted message to the first window that becomes ready", () => {
     const { queue, send } = createQueue();
 
-    queue.enqueue(null, "auth:token", "token-1");
+    queue.enqueue(null, "issue:open", "issue-1");
     expect(send).not.toHaveBeenCalled();
 
-    queue.setReady("b", "auth:token", true);
-    queue.setReady("a", "auth:token", true);
+    queue.setReady("b", "issue:open", true);
+    queue.setReady("a", "issue:open", true);
     expect(send).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith("b", "auth:token", "token-1");
+    expect(send).toHaveBeenCalledWith("b", "issue:open", "issue-1");
   });
 
   it("can discard account-scoped pending messages", () => {
@@ -98,13 +98,13 @@ describe("MainRendererMessageQueue", () => {
 describe("parseMainRendererChannelState", () => {
   it("accepts only allowlisted channels with an explicit boolean", () => {
     expect(
-      parseMainRendererChannelState({ channel: "auth:token", ready: true }),
-    ).toEqual({ channel: "auth:token", ready: true });
+      parseMainRendererChannelState({ channel: "issue:open", ready: true }),
+    ).toEqual({ channel: "issue:open", ready: true });
     expect(
       parseMainRendererChannelState({ channel: "shell:openExternal", ready: true }),
     ).toBeNull();
     expect(
-      parseMainRendererChannelState({ channel: "auth:token", ready: "yes" }),
+      parseMainRendererChannelState({ channel: "issue:open", ready: "yes" }),
     ).toBeNull();
     expect(
       parseMainRendererChannelState({

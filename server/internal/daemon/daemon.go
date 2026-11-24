@@ -2178,11 +2178,6 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 		d.logger.Warn("workspaces root marker not written; CLI fail-closed guard limited to task workdirs", "error", err)
 	}
 
-	// Load auth token from CLI config.
-	if err := d.resolveAuth(); err != nil {
-		return err
-	}
-
 	// Bind and serve the health port before the (potentially slow) preflight,
 	// so `daemon start` and the desktop see a live "starting" daemon instead
 	// of connection-refused while preflightAuth runs. preflightAuth's initial
@@ -2190,15 +2185,10 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	// which on a cold cache with many agents takes ~20s. Liveness (port up) and
 	// readiness (status:"running") are reported separately: /health stays
 	// "starting" until d.ready is set after preflight, so a slow or *failing*
-	// preflight is never misreported as a started daemon. resolveAuth has
-	// already run, so a missing token still fails fast before we begin serving.
+	// preflight is never misreported as a started daemon.
 	go d.serveHealth(ctx, healthLn, time.Now())
 
-	// Renew the PAT before the first API call, then do the initial
-	// workspace sync. Both steps live in preflightAuth so the ordering
-	// invariant (renew first) is enforced at one site instead of
-	// scattered into Run, and tests can exercise the failure paths
-	// without the full Run setup.
+	// Do the initial workspace sync before the daemon reports ready.
 	if err := d.preflightAuth(ctx); err != nil {
 		return err
 	}
@@ -2223,7 +2213,6 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	go d.gcLoop(ctx)
 	go d.treeWorkerLoop(ctx)
 	go d.autoUpdateLoop(ctx)
-	go d.tokenRenewalLoop(ctx)
 	go d.environments.run(ctx)
 
 	// Preflight succeeded and the background loops are up: the daemon has
@@ -2232,7 +2221,7 @@ func (d *Daemon) run(ctx context.Context, healthLn net.Listener) error {
 	// readiness wait blocks on, so success is reported only after startup
 	// actually completed, not merely because the health port came up.
 	d.ready.Store(true)
-	d.logger.Debug("background loops launched (workspace-sync, terminal-report-replay, task-wakeup, heartbeat, gc, task-trees, auto-update, token-renewal); health now reporting ready")
+	d.logger.Debug("background loops launched (workspace-sync, terminal-report-replay, task-wakeup, heartbeat, gc, task-trees, auto-update); health now reporting ready")
 	err = d.pollLoop(ctx, taskWakeups)
 	d.logger.Debug("daemon main loop returning", "error", err)
 	return err
@@ -2263,26 +2252,6 @@ func (d *Daemon) deregisterRuntimes() {
 	} else {
 		d.logger.Info("deregistered runtimes", "count", len(runtimeIDs))
 	}
-}
-
-// resolveAuth loads the auth token from the CLI config for the active profile.
-func (d *Daemon) resolveAuth() error {
-	cfg, err := cli.LoadCLIConfigForProfile(d.cfg.Profile)
-	if err != nil {
-		return fmt.Errorf("load CLI config: %w", err)
-	}
-	if cfg.Token == "" {
-		loginHint := "'multica login'"
-		if d.cfg.Profile != "" {
-			loginHint = fmt.Sprintf("'multica login --profile %s'", d.cfg.Profile)
-		}
-		d.logger.Warn("not authenticated — run " + loginHint + " to authenticate, then restart the daemon")
-		return fmt.Errorf("not authenticated: run %s first", loginHint)
-	}
-	d.client.SetToken(cfg.Token)
-	d.logger.Info("authenticated")
-	d.logger.Debug("auth token loaded", "profile", d.cfg.Profile, "token_len", len(cfg.Token))
-	return nil
 }
 
 // allRuntimeIDs returns all runtime IDs across all watched workspaces.
@@ -4169,39 +4138,10 @@ func (d *Daemon) ensureRepoReady(ctx context.Context, workspaceID, repoURL strin
 	return "", fmt.Errorf("repo is configured but not synced")
 }
 
-// DefaultTokenRenewalInterval is how often the daemon asks the server to
-// extend its PAT. The server-side threshold is 7 days of remaining lifetime;
-// polling every ~3 days gives at least two chances to renew before the
-// window closes, so a single failed call (network blip, server restart) does
-// not push the token out of the renewal window.
-const DefaultTokenRenewalInterval = 3 * 24 * time.Hour
-
-// preflightAuth runs the two auth-sensitive startup steps in their
-// required order: a synchronous PAT renewal first, then the initial
-// workspace sync. The order matters — running tryRenewToken before any
-// other API call is what surfaces a user-actionable "run multica login"
-// WARN when the PAT is already revoked or expired. If we let the
-// workspace sync go first, its 401 would short-circuit Run before the
-// renewal loop's first tick ever fires, and the operator would see only
-// a generic auth failure in the workspace-sync log with no hint that
-// re-login is the fix.
-//
-// The renewal is best-effort: tryRenewToken logs and returns, never
-// propagating errors. preflightAuth's exit status is driven entirely by
-// the workspace sync — so a transient renewal failure (network blip,
-// 500) does not by itself block startup. A successful sync with zero
-// workspaces is fine: a newly-signed-up user may start the daemon
-// before creating their first workspace, and workspaceSyncLoop will
-// register runtimes once one appears.
+// preflightAuth performs the initial workspace sync before the daemon reports
+// itself ready.
 func (d *Daemon) preflightAuth(ctx context.Context) error {
-	d.tryRenewToken(ctx)
-	err := d.syncWorkspacesFromAPI(ctx, false)
-	if d.startupMayProceedWithoutRuntimes(err) {
-		d.logger.Warn("starting with no runtimes registered: an automatic DSH runtime profile install is still running; " +
-			"the runtime registers when it finishes")
-		return nil
-	}
-	return err
+	return d.syncWorkspacesFromAPI(ctx, false)
 }
 
 // startupMayProceedWithoutRuntimes reports whether a startup that registered
@@ -4247,60 +4187,6 @@ func (d *Daemon) registerAfterDshProfileInstall(ctx context.Context) {
 	if err := d.syncWorkspacesFromAPI(ctx, false); err != nil {
 		d.logger.Warn("workspace sync after the DSH runtime profile install failed; "+
 			"the periodic sync is the backstop", "error", err)
-	}
-}
-
-// tokenRenewalLoop keeps the daemon's PAT alive by periodically asking the
-// server to extend its expires_at in-place. The startup renewal happens
-// synchronously in preflightAuth so a daemon coming back online after a
-// week of downtime gets a fresh expiry before its next heartbeat could
-// 401; this loop owns the long-running ~3-day cadence after that.
-//
-// The server is authoritative on the renewal threshold (it sees expires_at;
-// we don't), so this loop is intentionally dumb: call, log, sleep, repeat.
-// On 401 we surface a clear "re-login required" warning because the daemon
-// has no way to recover automatically — but we keep the loop running so the
-// user sees the same warning on every cycle until they fix it, rather than
-// silently exiting and forcing them to read scrollback to find the cause.
-func (d *Daemon) tokenRenewalLoop(ctx context.Context) {
-	ticker := time.NewTicker(DefaultTokenRenewalInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			d.tryRenewToken(ctx)
-		}
-	}
-}
-
-// tryRenewToken performs one renewal round-trip with a short, isolated
-// timeout. Errors are logged but never propagated — there is no caller to
-// handle them. Failures are debug-level except for 401, which gets a
-// user-actionable warning.
-func (d *Daemon) tryRenewToken(ctx context.Context) {
-	reqCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-
-	resp, err := d.client.RenewToken(reqCtx)
-	if err != nil {
-		if isUnauthorizedError(err) {
-			loginHint := "'multica login'"
-			if d.cfg.Profile != "" {
-				loginHint = fmt.Sprintf("'multica login --profile %s'", d.cfg.Profile)
-			}
-			d.logger.Warn("auth token rejected by server — run "+loginHint+" to re-authenticate, then restart the daemon", "error", err)
-			return
-		}
-		d.logger.Debug("token renewal failed; will retry on next cycle", "error", err)
-		return
-	}
-	if resp.Renewed {
-		d.logger.Info("auth token renewed", "expires_at", resp.ExpiresAt)
-	} else {
-		d.logger.Debug("auth token not yet eligible for renewal", "expires_at", resp.ExpiresAt)
 	}
 }
 

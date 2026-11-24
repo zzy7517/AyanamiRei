@@ -26,7 +26,6 @@ import { StepAboutYou } from "./steps/step-about-you";
 import { StepWorkspace } from "./steps/step-workspace";
 import { StepRuntimeConnect } from "./steps/step-runtime-connect";
 import { StepPlatformFork } from "./steps/step-platform-fork";
-import { OnboardingLogoutButton } from "./components/onboarding-logout-button";
 import {
   getMikaOnboarding,
   INSTALL_RUNTIME_ISSUE_BODY,
@@ -382,7 +381,7 @@ export function OnboardingFlow({
   // Log out lives at the foot of the progress rail rather than pinned to the
   // window corner: pinned put it outside the measure and above Back, which
   // read as a second header row.
-  const headerTrailing = <OnboardingLogoutButton inline />;
+  const headerTrailing = null;
 
   const runtimeStepBack = isNewWorkspace
     ? undefined
@@ -406,7 +405,6 @@ export function OnboardingFlow({
     // Welcome has no rail, so the escape hatch stays pinned there.
     return (
       <>
-        <OnboardingLogoutButton />
         <StepWelcome
           onNext={handleWelcomeNext}
           onSkip={canSkipWelcome ? handleWelcomeSkip : undefined}

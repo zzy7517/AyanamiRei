@@ -187,10 +187,10 @@ describe("BillingReturnPage", () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  // A session can expire while the user is on Stripe, so this is a normal path.
-  // Losing the return context here would leave the user on their default
-  // workspace with no idea whether the payment landed.
-  it("carries the return context through login when the session expired", async () => {
+  // The local install has no login page. A return that arrives before the
+  // user record does still opens the workspace billing page, and Stripe's
+  // session id stays off that URL.
+  it("opens workspace billing when the user record is not loaded yet", async () => {
     authRef.current = { user: null, isLoading: false };
     renderReturn(
       "workspace_id=11111111-1111-1111-1111-111111111111&result=success&session_id=cs_test_1",
@@ -198,18 +198,11 @@ describe("BillingReturnPage", () => {
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith(
-        "/login?next=" +
-          encodeURIComponent(
-            "/billing/return?workspace_id=11111111-1111-1111-1111-111111111111&result=success",
-          ),
+        "/acme/settings?tab=billing&result=success",
       );
     });
-    // Relative path only — the login page's sanitizer rejects anything else, so
-    // this cannot become an off-site redirect.
-    const target = mockReplace.mock.calls[0]?.[0] as string;
-    expect(decodeURIComponent(target.split("next=")[1] ?? "")).toMatch(
-      /^\/billing\/return\?/,
-    );
+    expect(String(mockReplace.mock.calls)).not.toContain("/login");
+    expect(String(mockReplace.mock.calls)).not.toContain("cs_test_1");
   });
 
   it("offers a retry instead of spinning forever when the workspace list fails", async () => {
@@ -306,11 +299,13 @@ describe("BillingReturnPage outcome-neutral failure copy", () => {
   });
 });
 
-describe("BillingReturnPage login continuation", () => {
+describe("BillingReturnPage without a user record", () => {
   beforeEach(() => {
     authRef.current = { user: null, isLoading: false };
     workspacesRef.current = {
-      data: undefined,
+      data: [
+        { id: "11111111-1111-1111-1111-111111111111", slug: "acme" },
+      ],
       isPending: false,
       isError: false,
       refetch: mockRefetchWorkspaces,
@@ -321,39 +316,33 @@ describe("BillingReturnPage login continuation", () => {
     mockReplace.mockReset();
   });
 
-  function nextParamFrom(call: string): string {
-    return decodeURIComponent(call.split("next=")[1] ?? "");
-  }
-
-  // The login page embeds `next` verbatim in the Google OAuth state, so anything
-  // carried here reaches a third party. Only the two values this page uses to
-  // resume may travel; Stripe's session id and unknown params must be dropped.
-  it("carries only workspace_id and result into the login continuation", async () => {
+  it("opens billing and drops unrelated return parameters", async () => {
     renderReturn(
       "workspace_id=11111111-1111-1111-1111-111111111111&result=success" +
         "&session_id=cs_test_secret&utm_source=stripe&anything=else",
     );
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledOnce());
-    const next = nextParamFrom(mockReplace.mock.calls[0]?.[0] as string);
-
-    expect(next).toBe(
-      "/billing/return?workspace_id=11111111-1111-1111-1111-111111111111&result=success",
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith(
+        "/acme/settings?tab=billing&result=success",
+      ),
     );
-    expect(next).not.toContain("session_id");
-    expect(next).not.toContain("cs_test_secret");
-    expect(next).not.toContain("utm_source");
-    expect(next).not.toContain("anything");
+    const target = String(mockReplace.mock.calls);
+    expect(target).not.toContain("/login");
+    expect(target).not.toContain("session_id");
+    expect(target).not.toContain("cs_test_secret");
+    expect(target).not.toContain("utm_source");
+    expect(target).not.toContain("anything");
   });
 
-  it("drops an invalid result and a malformed workspace id from the continuation", async () => {
+  it("explains a malformed workspace id instead of leaving for login", async () => {
     renderReturn("workspace_id=not-a-uuid&result=javascript:alert(1)&session_id=cs_x");
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledOnce());
-    const next = nextParamFrom(mockReplace.mock.calls[0]?.[0] as string);
-
-    expect(next).toBe("/billing/return");
-    expect(next).not.toContain("javascript");
-    expect(next).not.toContain("not-a-uuid");
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not find that workspace",
+      ),
+    );
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

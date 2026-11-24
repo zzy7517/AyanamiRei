@@ -61,23 +61,20 @@ describe("TelegramBindPage", () => {
     expect(mockRedeemToken).not.toHaveBeenCalled();
   });
 
-  it("requires sign-in before redeeming", () => {
+  it("opens the app when the user record is missing and does not redeem", () => {
     renderPage("tok123");
-    expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /back to multica/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull();
     expect(mockRedeemToken).not.toHaveBeenCalled();
   });
 
-  it("preserves the token in the login next parameter", () => {
+  it("opens the app root instead of a login page", () => {
     renderPage("token with+/reserved");
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back to multica/i }));
 
     expect(mockNavigatePush).toHaveBeenCalledTimes(1);
-    const destination = mockNavigatePush.mock.calls[0]?.[0] as string;
-    expect(destination).toContain("/login?next=");
-    expect(destination).not.toContain("?redirect=");
-    expect(decodeURIComponent(destination.split("next=")[1] ?? "")).toBe(
-      "/telegram/bind?token=token%20with%2B%2Freserved",
-    );
+    expect(mockNavigatePush).toHaveBeenCalledWith("/");
+    expect(String(mockNavigatePush.mock.calls)).not.toContain("/login");
   });
 
   it("redeems immediately when signed in and shows success", async () => {

@@ -46,7 +46,6 @@
     "unpin_tooltip": "Dejar de fijar",
     "workspaces_label": "Espacios de trabajo",
     "create_workspace": "Crear espacio de trabajo",
-    "log_out": "Cerrar sesión",
     "new_issue": "Nueva tarea",
     "pinned_label": "Fijados",
     "show_more_pins": "Mostrar {{count}} más…",

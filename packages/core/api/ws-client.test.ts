@@ -40,7 +40,7 @@ describe("WSClient", () => {
     const ws = new WSClient("ws://example.test/ws", {
       identity: { platform: "desktop", version: "1.2.3", os: "macos" },
     });
-    ws.setAuth("tok", "acme");
+    ws.setAuth("acme");
     ws.connect();
 
     const url = new URL(FakeWebSocket.lastUrl!);
@@ -55,7 +55,7 @@ describe("WSClient", () => {
 
   it("omits client_* params when identity is not configured", () => {
     const ws = new WSClient("ws://example.test/ws");
-    ws.setAuth("tok", "acme");
+    ws.setAuth("acme");
     ws.connect();
 
     const url = new URL(FakeWebSocket.lastUrl!);
@@ -68,7 +68,7 @@ describe("WSClient", () => {
     const ws = new WSClient("ws://example.test/ws", {
       identity: { platform: "cli" },
     });
-    ws.setAuth("tok", "acme");
+    ws.setAuth("acme");
     ws.connect();
 
     const url = new URL(FakeWebSocket.lastUrl!);
@@ -185,7 +185,7 @@ describe("WSClient", () => {
 
   it("passes actor_id and actor_type to event handlers", () => {
     const ws = new WSClient("ws://example.test/ws");
-    ws.setAuth("tok", "acme");
+    ws.setAuth("acme");
     ws.connect();
 
     const handler = vi.fn();
@@ -247,7 +247,7 @@ describe("WSClient", () => {
       const ws = new WSClient("ws://example.test/ws");
       const listener = vi.fn();
       ws.onStatusChange(listener);
-      ws.setAuth("tok", "acme");
+      ws.setAuth("acme");
       ws.connect();
       expect(ws.getStatus()).toBe("connecting");
 
@@ -391,7 +391,7 @@ describe("WSClient", () => {
       );
 
       const ws = new WSClient("ws://example.test/ws");
-      ws.setAuth("tok", "acme");
+      ws.setAuth("acme");
       ws.connect();
 
       // Two failures: delays 1000, 2000
@@ -413,7 +413,7 @@ describe("WSClient", () => {
 
     it("notifies reconnect when the initial connection succeeds only after a retry", () => {
       const ws = new WSClient("ws://example.test/ws");
-      ws.setAuth("tok", "acme");
+      ws.setAuth("acme");
       const onReconnect = vi.fn();
       ws.onReconnect(onReconnect);
       ws.connect();
@@ -499,56 +499,3 @@ describe("WSClient", () => {
   });
 });
 
-// A socket can be reconnecting hours after the provider built this client —
-// long enough for a sliding session to have been renewed. Sending the token
-// captured at construction would authenticate the new connection with a
-// credential on its way out (MUL-7436).
-describe("WSClient session renewal", () => {
-  beforeEach(() => {
-    FakeWebSocket.lastUrl = null;
-    FakeWebSocket.lastInstance = null;
-    vi.stubGlobal("WebSocket", FakeWebSocket as unknown as typeof WebSocket);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("reads the current token on every connect", () => {
-    let current = "token-v1";
-    const ws = new WSClient("ws://example.test/ws", {
-      getToken: () => current,
-    });
-    ws.setAuth("token-v1", "acme");
-
-    ws.connect();
-    FakeWebSocket.lastInstance!.onopen!();
-    expect(JSON.parse(FakeWebSocket.lastInstance!.sent[0]!)).toEqual({
-      type: "auth",
-      payload: { token: "token-v1" },
-    });
-
-    // Session renewed between connections.
-    current = "token-v2";
-
-    ws.connect();
-    FakeWebSocket.lastInstance!.onopen!();
-    expect(JSON.parse(FakeWebSocket.lastInstance!.sent[0]!)).toEqual({
-      type: "auth",
-      payload: { token: "token-v2" },
-    });
-  });
-
-  it("sends no auth frame in cookie mode, where the cookie rides the upgrade", () => {
-    const ws = new WSClient("ws://example.test/ws", {
-      cookieAuth: true,
-      getToken: () => "should-not-be-used",
-    });
-    ws.setAuth(null, "acme");
-
-    ws.connect();
-    FakeWebSocket.lastInstance!.onopen!();
-
-    expect(FakeWebSocket.lastInstance!.sent).toEqual([]);
-  });
-});

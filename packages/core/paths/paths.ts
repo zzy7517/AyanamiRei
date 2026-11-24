@@ -4,7 +4,7 @@
  *
  * Two kinds of paths:
  *  - workspace-scoped: paths.workspace(slug).xxx() — carry workspace in URL
- *  - global: paths.login(), paths.newWorkspace() — pre-workspace routes
+ *  - global: paths.newWorkspace(), paths.onboarding() — pre-workspace routes
  *
  * Why pure functions + builder pattern:
  *  - Changing a route shape (e.g. adding workspace slug prefix) becomes a single-file edit
@@ -113,11 +113,10 @@ function workspaceScoped(slug: string) {
 export const paths = {
   workspace: workspaceScoped,
 
-  // Global (pre-workspace) routes
-  login: () => "/login",
+  // Global (pre-workspace) routes. There is no login route: the local
+  // install has one user and the clients open straight into a workspace.
   newWorkspace: () => "/workspaces/new",
   onboarding: () => "/onboarding",
-  authCallback: () => "/auth/callback",
   root: () => "/",
 };
 
@@ -127,7 +126,7 @@ export type WorkspacePaths = ReturnType<typeof workspaceScoped>;
 // A path is global if it equals or begins with any of these.
 // Note: `/workspaces/` (trailing slash) is the prefix — `workspaces` is reserved,
 // so any path starting with `/workspaces/...` is system-owned, not user-owned.
-const GLOBAL_PREFIXES = ["/login", "/workspaces/", "/onboarding", "/auth/", "/logout", "/signup"];
+const GLOBAL_PREFIXES = ["/workspaces/", "/onboarding"];
 
 export function isGlobalPath(path: string): boolean {
   return GLOBAL_PREFIXES.some((p) => path === p || path.startsWith(p));

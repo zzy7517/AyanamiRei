@@ -68,9 +68,7 @@ func init() {
 	runtimeCmd.GroupID = groupRuntime
 
 	// Additional commands
-	authCmd.GroupID = groupAdditional
 	userCmd.GroupID = groupAdditional
-	loginCmd.GroupID = groupAdditional
 	setupCmd.GroupID = groupAdditional
 	attachmentCmd.GroupID = groupAdditional
 	configCmd.GroupID = groupAdditional
@@ -95,9 +93,7 @@ func init() {
 	rootCmd.AddCommand(chatCmd)
 	rootCmd.AddCommand(daemonCmd)
 	rootCmd.AddCommand(runtimeCmd)
-	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(userCmd)
-	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(attachmentCmd)
 	rootCmd.AddCommand(configCmd)

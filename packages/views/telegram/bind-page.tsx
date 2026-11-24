@@ -5,6 +5,7 @@ import { Card, CardContent } from "@multica/ui/components/ui/card";
 import { Button } from "@multica/ui/components/ui/button";
 import { api } from "@multica/core/api";
 import { useAuthStore } from "@multica/core/auth";
+import { paths } from "@multica/core/paths";
 import { useNavigation } from "../navigation";
 import { useT } from "../i18n";
 
@@ -16,8 +17,9 @@ type RedeemState =
   | { kind: "error"; reason: string };
 
 // TelegramBindPage is the destination the bot's "link your account" prompt
-// points at, mirroring SlackBindPage. Auth is required before redeeming: the
-// redeemer's Multica identity comes from the session, never the token.
+// points at, mirroring SlackBindPage. Redemption waits for the local user
+// record, because the server binds the installation to that user. There is
+// no login page: if that record never arrives, the page opens the app.
 export function TelegramBindPage({ token }: { token: string | null }) {
   const { t } = useT("common");
   const user = useAuthStore((s) => s.user);
@@ -62,23 +64,9 @@ export function TelegramBindPage({ token }: { token: string | null }) {
           {state.kind === "idle" || state.kind === "redeeming" ? (
             <p className="text-body text-muted-foreground">{t(($) => $.telegram_bind.redeeming)}</p>
           ) : state.kind === "needs-auth" ? (
-            <>
-              <p className="text-body text-muted-foreground">
-                {t(($) => $.telegram_bind.needs_auth_description)}
-              </p>
-              <Button
-                size="sm"
-                onClick={() =>
-                  navigation.push(
-                    `/login?next=${encodeURIComponent(
-                      `/telegram/bind?token=${encodeURIComponent(token ?? "")}`,
-                    )}`,
-                  )
-                }
-              >
-                {t(($) => $.telegram_bind.sign_in)}
-              </Button>
-            </>
+            <Button size="sm" onClick={() => navigation.push(paths.root())}>
+              {t(($) => $.not_found.back_to_multica)}
+            </Button>
           ) : state.kind === "done" ? (
             <>
               <p className="text-body font-medium">{t(($) => $.telegram_bind.done_title)}</p>

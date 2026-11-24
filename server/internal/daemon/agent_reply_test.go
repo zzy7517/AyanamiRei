@@ -124,7 +124,6 @@ func TestReportTurnEndsTellsTheServerOfEachTurn(t *testing.T) {
 		logger:     slog.New(slog.NewTextHandler(&logs, nil)),
 		agentHooks: hooks,
 	}
-	d.client.SetToken("tok")
 	tree := t.TempDir()
 	hooks.MapIssue(tree, "issue-1")
 
@@ -154,7 +153,7 @@ func TestReportTurnEndsTellsTheServerOfEachTurn(t *testing.T) {
 	}
 
 	endTurn(t, hooks, "s1", tree)
-	want := agentReplyRequest{method: "POST", path: "/api/daemon/issues/issue-1/agent-reply", daemonID: "daemon-1", authorization: "Bearer tok"}
+	want := agentReplyRequest{method: "POST", path: "/api/daemon/issues/issue-1/agent-reply", daemonID: "daemon-1"}
 	if got := route.request(t, 1); got != want {
 		t.Fatalf("the route was asked %+v, want %+v", got, want)
 	}

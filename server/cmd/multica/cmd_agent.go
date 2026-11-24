@@ -257,7 +257,7 @@ func resolveProfile(cmd *cobra.Command) string {
 
 func newAPIClient(cmd *cobra.Command) (*cli.APIClient, error) {
 	taskContext := inDaemonManagedExecutionContext()
-	token := resolveToken(cmd)
+	token := strings.TrimSpace(os.Getenv("MULTICA_TOKEN"))
 	if taskContext && !strings.HasPrefix(token, "mat_") {
 		// When the ONLY daemon signal is a workdir marker (no MULTICA_AGENT_ID /
 		// MULTICA_TASK_ID / MULTICA_DAEMON_PORT), name the exact file and say

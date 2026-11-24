@@ -52,10 +52,7 @@ function withoutRuntimeUpstreams(run: () => void) {
 }
 
 describe("proxy legacy workspace route redirects", () => {
-  const sessionCookies = {
-    multica_logged_in: "1",
-    last_workspace_slug: "acme",
-  };
+  const sessionCookies = { last_workspace_slug: "acme" };
 
   it.each([
     ["issues", "/acme/issues"],
@@ -82,20 +79,10 @@ describe("proxy legacy workspace route redirects", () => {
     ).toBe("https://app.multica.test/acme/projects/project-123?view=members");
   });
 
-  it("sends logged-out legacy URLs to login", () => {
-    expect(redirectLocation("/usage?tab=billing")).toBe(
-      "https://app.multica.test/login?tab=billing",
+  it("sends legacy URLs without a last workspace cookie to the fixed workspace", () => {
+    expect(redirectLocation("/projects?view=members")).toBe(
+      "https://app.multica.test/dev",
     );
-  });
-
-  it("sends logged-in legacy URLs without a last workspace cookie to login", () => {
-    // Not root: the root redirect needs a `last_workspace_slug` cookie, and
-    // this visitor has none. /login resolves against the workspace list
-    // instead. The deep-link query is dropped because feeding a legacy path
-    // back through `next` would return here and loop.
-    expect(
-      redirectLocation("/projects?view=members", { multica_logged_in: "1" }),
-    ).toBe("https://app.multica.test/login");
   });
 
   it("does not redirect workspace-scoped URLs whose first segment is already a slug", () => {
@@ -216,7 +203,7 @@ describe("proxy runtime upstream rewrites", () => {
     }
   });
 
-  it("does not rewrite frontend auth callback pages", () => {
+  it("does not rewrite retired auth routes", () => {
     const previous = process.env.REMOTE_API_URL;
     process.env.REMOTE_API_URL = "http://backend:8080";
     try {
@@ -234,17 +221,11 @@ describe("proxy runtime upstream rewrites", () => {
 });
 
 describe("proxy root and locale handling", () => {
-  const sessionCookies = {
-    multica_logged_in: "1",
-    last_workspace_slug: "acme",
-  };
+  const sessionCookies = { last_workspace_slug: "acme" };
 
-  it("redirects logged-in root visits to the last workspace", () => {
+  it("redirects root visits to the last workspace", () => {
     const res = proxy(
-      makeRequest("/", {
-        multica_logged_in: "1",
-        last_workspace_slug: "acme",
-      }),
+      makeRequest("/", { last_workspace_slug: "acme" }),
     );
 
     expect(res.status).toBe(307);
@@ -259,21 +240,14 @@ describe("proxy root and locale handling", () => {
     ).toBe("https://app.multica.test/acme/issues?view=board");
   });
 
-  it("redirects a session without a known workspace from the root to login", () => {
-    // First login, or cleared cookies: the workspace list lives behind the
-    // session, not the proxy, so /login resolves onboarding / first workspace
-    // / new workspace instead.
-    expect(redirectLocation("/", { multica_logged_in: "1" })).toBe(
-      "https://app.multica.test/login",
+  it("redirects the root to the fixed workspace when no slug is known", () => {
+    expect(redirectLocation("/")).toBe(
+      "https://app.multica.test/dev/issues",
     );
   });
 
-  it("redirects the logged-out root to login", () => {
-    expect(redirectLocation("/")).toBe("https://app.multica.test/login");
-  });
-
-  it("forwards locale on login requests", () => {
-    const res = proxy(makeRequest("/login", { "multica-locale": "zh-Hans" }));
+  it("forwards locale on workspace routes", () => {
+    const res = proxy(makeRequest("/dev/issues", { "multica-locale": "zh-Hans" }));
 
     expect(res.status).toBe(200);
     expect(res.headers.get("location")).toBeNull();
@@ -299,7 +273,7 @@ describe("upload route bypasses the buffering proxy", () => {
     (url) => expect(unstable_doesMiddlewareMatch({ config, url })).toBe(false),
   );
 
-  it.each(["/api", "/api/config", "/api/upload-file-extra", "/v1/issues", "/auth/token", "/docs/intro", "/login"])(
+  it.each(["/api", "/api/config", "/api/upload-file-extra", "/v1/issues", "/docs/intro", "/onboarding"])(
     "keeps the existing proxy behavior for %s",
     (url) => expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true),
   );

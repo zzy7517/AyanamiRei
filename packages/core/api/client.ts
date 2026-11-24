@@ -107,9 +107,6 @@ import type {
   UpdateSkillRequest,
   SetAgentSkillsRequest,
   SetAgentRuntimeSkillEnabledRequest,
-  PersonalAccessToken,
-  CreatePersonalAccessTokenRequest,
-  CreatePersonalAccessTokenResponse,
   RuntimeUsage,
   IssueUsageSummary,
   RuntimeHourlyActivity,
@@ -388,9 +385,6 @@ import {
   EMPTY_STORE_THEME_LIST,
   type StoreTheme,
   type StoreThemeMode,
-  type RefreshSessionResponse,
-  RefreshSessionResponseSchema,
-  EMPTY_REFRESH_SESSION_RESPONSE,
   GroupedIssuesResponseSchema,
   IssueTableFacetsResponseSchema,
   IssueTableGroupsResponseSchema,
@@ -632,21 +626,8 @@ export interface ApiClientIdentity {
 
 export interface ApiClientOptions {
   logger?: Logger;
-  onUnauthorized?: () => void;
   /** Identifies the client to the server. Sent as X-Client-* headers. */
   identity?: ApiClientIdentity;
-  /**
-   * Reads the bearer token from shared storage at request time (token mode
-   * only; omit in cookie mode).
-   *
-   * Without it the token is per-instance, and Desktop runs one ApiClient per
-   * window over one shared localStorage: a session renewed in window A would
-   * leave every other window still sending the token it happened to be
-   * holding, until that one expired and took the whole session down with it
-   * (MUL-7436). Reading through means there is one current credential, not one
-   * per window.
-   */
-  getToken?: () => string | null;
 }
 
 export interface ClientRuntimeSnapshot {
@@ -660,11 +641,6 @@ export interface ClientRuntimeSnapshot {
 export interface ClientUsageRequest {
   install_id: string;
   runtime?: ClientRuntimeSnapshot;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: User;
 }
 
 /** Response header carrying the plan's enforced dashboard history limit. */
@@ -930,31 +906,6 @@ function dingTalkGroupSearch(params: ListDingTalkGroupsParams): string {
   return encoded ? `?${encoded}` : "";
 }
 
-// The server's exact wording for a rejected CSRF token
-// (server/internal/middleware/auth.go). Matched rather than inferred from the
-// status, because 403 also covers real authorization failures that must not
-// be retried.
-const CSRF_REJECTED_ERROR = "CSRF validation failed";
-
-// One header, two possible values — see ApiClient.readCsrfValue.
-const CSRF_HEADER = "X-CSRF-Token";
-const CSRF_COOKIE = "multica_csrf";
-const SESSION_CSRF_COOKIE = "multica_csrf_session";
-
-/**
- * Whether a request body can be sent a second time. Strings and multipart
- * forms can; a stream cannot, and silently replaying a half-consumed one
- * would send a truncated request.
- */
-function isReplayableBody(body: BodyInit | null | undefined): boolean {
-  if (body === undefined || body === null) return true;
-  if (typeof body === "string") return true;
-  if (typeof FormData !== "undefined" && body instanceof FormData) return true;
-  if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams)
-    return true;
-  return false;
-}
-
 export class ApiClient {
   private parseDoc(raw: unknown, endpoint: string): Doc {
     const doc = parseWithFallback<Doc | null>(raw, DocSchema, null, {
@@ -1137,7 +1088,6 @@ export class ApiClient {
     await this.fetch(`/api/doc-folders/${id}`, { method: "DELETE" });
   }
   private baseUrl: string;
-  private token: string | null = null;
   private logger: Logger;
   private options: ApiClientOptions;
 
@@ -1151,101 +1101,15 @@ export class ApiClient {
     return this.baseUrl;
   }
 
-  setToken(token: string | null) {
-    this.token = token;
-  }
-
-  /**
-   * The bearer token this client is currently using, or null in cookie mode.
-   *
-   * Prefers the shared-storage reader when one is configured, so every window
-   * agrees on the current credential rather than each trusting its own copy.
-   */
-  getToken(): string | null {
-    const shared = this.options.getToken?.();
-    if (shared !== undefined) return shared;
-    return this.token;
-  }
-
-  /**
-   * Which of the two CSRF cookies to echo (MUL-7436).
-   *
-   * The session-bound value is preferred: it survives a sliding renewal, so a
-   * request another tab built before a renewal still validates after it. The
-   * token-bound value is the fallback, and it is what a server running the
-   * PREVIOUS release can verify — after a rollback the session-bound value is
-   * meaningless to it.
-   *
-   * Both travel in the same header. A second header name would have to be in
-   * that server's CORS allowlist, and a rolled-back server allowlists only the
-   * names it shipped with: the preflight would fail and no retry could help.
-   *
-   * `csrfSessionValueRejected` records the exact session-bound value a server
-   * refused, so the fallback is used for as long as that value is current and
-   * no longer — a renewal or a new login replaces the cookie and the preferred
-   * binding is tried again. Keying on the value rather than a boolean is what
-   * stops this from oscillating once per renewal against a current server.
-   */
-  private csrfSessionValueRejected: string | null = null;
-
-  private readCsrfValue(): string | null {
-    const sessionBound = this.readCookie(SESSION_CSRF_COOKIE);
-    if (sessionBound && sessionBound !== this.csrfSessionValueRejected) {
-      return sessionBound;
-    }
-    return this.readCookie(CSRF_COOKIE) ?? sessionBound;
-  }
-
-  private readCookie(name: string): string | null {
-    if (typeof document === "undefined") return null;
-    const prefix = `${name}=`;
-    const match = document.cookie.split("; ").find((c) => c.startsWith(prefix));
-    return match ? match.slice(prefix.length) || null : null;
-  }
-
   private authHeaders(): Record<string, string> {
     const headers: Record<string, string> = {};
-    const token = this.getToken();
-    if (token) headers["Authorization"] = `Bearer ${token}`;
     const slug = getCurrentSlug();
     if (slug) headers["X-Workspace-Slug"] = slug;
-    const csrf = this.readCsrfValue();
-    if (csrf) headers[CSRF_HEADER] = csrf;
     const id = this.options.identity;
     if (id?.platform) headers["X-Client-Platform"] = id.platform;
     if (id?.version) headers["X-Client-Version"] = id.version;
     if (id?.os) headers["X-Client-OS"] = id.os;
     return headers;
-  }
-
-  /**
-   * A 401 ends the session — unless the credential it answered has already
-   * been replaced.
-   *
-   * A request that went out just before a renewal (or from another window
-   * still finishing one) carries the previous token, and its 401 arrives
-   * AFTER the new one is in storage. Treating that as expiry would tear down
-   * a session that is demonstrably alive, clearing drafts and tabs with it
-   * (MUL-7028). Comparing against the credential in use now is what tells the
-   * two apart: a genuinely expired session still has the same token stored,
-   * so the real case is unaffected.
-   *
-   * "Replaced" includes going from no credential to one. A flow that was
-   * already running at logout can still send a bearer-less request, and its
-   * 401 may land after the user has signed in again (#10190). Cookie mode is
-   * null on both sides, so its expiries still end the session.
-   */
-  private handleUnauthorized(credentialUsed: string | null) {
-    if (this.getToken() !== credentialUsed) {
-      this.logger.info("ignoring 401 for a credential that has since been replaced");
-      return;
-    }
-    this.token = null;
-    // Workspace id is owned by the URL-driven workspace-storage singleton
-    // (set by [workspaceSlug]/layout.tsx). On 401, the auth flow navigates
-    // to /login which leaves the workspace route, and the next workspace
-    // entry will overwrite the id. No clear needed here.
-    this.options.onUnauthorized?.();
   }
 
   private async parseErrorMessage(res: Response, fallback: string): Promise<string> {
@@ -1271,9 +1135,9 @@ export class ApiClient {
     }
   }
 
-  // Sends the request with the standard headers (auth, CSRF, request id,
-  // client identity) and runs the shared error path (401 → handleUnauthorized,
-  // structured ApiError, status-aware log level). Returns the raw Response so
+  // Sends the request with the standard headers (workspace scoping, request
+  // id, client identity) and runs the shared error path (structured ApiError,
+  // status-aware log level). Returns the raw Response so
   // callers can decide how to decode the body — JSON for the typed `fetch<T>`
   // path, plain text for the attachment-preview proxy, etc.
   private async fetchRaw(
@@ -1287,19 +1151,12 @@ export class ApiClient {
     const refusal = observer?.refuse?.({ method, path, readOnly: init?.readOnly === true });
     if (refusal) throw new Error(refusal);
 
-    // Rebuilt per attempt rather than captured once: authHeaders() reads the
-    // CSRF cookie at call time, and the retry below exists precisely because
-    // that cookie may have just been replaced.
-    const buildHeaders = (): Record<string, string> => ({
+    const headers: Record<string, string> = ({
       "X-Request-ID": rid,
       ...this.authHeaders(),
       ...(init?.extraHeaders ?? {}),
       ...((init?.headers as Record<string, string>) ?? {}),
     });
-
-    // Captured before the request so a late 401 can be matched against the
-    // credential it actually used, not whatever is current when it lands.
-    const credentialUsed = this.getToken();
 
     this.logger.info(`→ ${method} ${path}`, { rid });
 
@@ -1311,49 +1168,23 @@ export class ApiClient {
     });
 
     const { readOnly: _readOnly, ...requestInit } = init ?? {};
-    const send = async () => {
-      try {
-        return await fetch(`${this.baseUrl}${path}`, {
-          ...requestInit,
-          headers: buildHeaders(),
-          credentials: "include",
-        });
-      } catch (err) {
-        observer?.onEnd({
-          requestId: rid,
-          status: null,
-          error: err instanceof Error && err.name === "AbortError" ? "aborted" : String(err),
-        });
-        throw err;
-      }
-    };
-
-    let res = await send();
-
-    // Two things can make a CSRF value the server refuses, and one retry
-    // covers both (MUL-7436):
-    //
-    //   - It went stale. The first renewal of a session that predates the
-    //     session-bound binding rotates the cookie the old value was keyed to,
-    //     and a request another tab had already built carries the previous
-    //     one. Rebuilding the headers re-reads the cookie.
-    //   - The server does not understand it. After a rollback, the previous
-    //     release can only verify the token-bound binding. Recording the
-    //     rejected value switches this client to that binding until the cookie
-    //     changes again.
-    //
-    // Neither is an attack, and neither should surface as a failed write.
-    if (res.status === 403 && isReplayableBody(init?.body)) {
-      const { message } = await this.parseErrorBody(res.clone(), "");
-      if (message === CSRF_REJECTED_ERROR) {
-        this.csrfSessionValueRejected = this.readCookie(SESSION_CSRF_COOKIE);
-        this.logger.info(`↻ ${method} ${path} (CSRF token rejected, retrying once)`, { rid });
-        res = await send();
-      }
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${path}`, {
+        ...requestInit,
+        headers,
+        credentials: "include",
+      });
+    } catch (err) {
+      observer?.onEnd({
+        requestId: rid,
+        status: null,
+        error: err instanceof Error && err.name === "AbortError" ? "aborted" : String(err),
+      });
+      throw err;
     }
 
     if (!res.ok) {
-      if (res.status === 401) this.handleUnauthorized(credentialUsed);
       const { message, body } = await this.parseErrorBody(res, `API error: ${res.status} ${res.statusText}`);
       const logLevel = res.status === 404 ? "warn" : "error";
       this.logger[logLevel](`← ${res.status} ${path}`, { rid, duration: `${Date.now() - start}ms`, error: message });
@@ -1385,57 +1216,6 @@ export class ApiClient {
    */
   request(path: string, init?: RequestInit): Promise<unknown> {
     return this.fetch<unknown>(path, init);
-  }
-
-  // Auth
-  async sendCode(email: string): Promise<void> {
-    await this.fetch("/auth/send-code", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  async verifyCode(email: string, code: string): Promise<LoginResponse> {
-    return this.fetch("/auth/verify-code", {
-      method: "POST",
-      body: JSON.stringify({ email, code }),
-    });
-  }
-
-  async googleLogin(code: string, redirectUri: string): Promise<LoginResponse> {
-    return this.fetch("/auth/google", {
-      method: "POST",
-      body: JSON.stringify({ code, redirect_uri: redirectUri }),
-    });
-  }
-
-  async logout(): Promise<void> {
-    await this.fetch("/auth/logout", { method: "POST" });
-  }
-
-  async issueCliToken(): Promise<{ token: string }> {
-    return this.fetch("/api/cli-token", { method: "POST" });
-  }
-
-  /**
-   * Ask the server to extend this session if it has entered its renewal
-   * window. The server owns that decision — no client reads `exp` or
-   * compares it against a local clock, which is what keeps clock skew out of
-   * the picture entirely.
-   *
-   * Cookie-mode callers never need this: middleware.Auth re-issues their
-   * cookie inline on any authenticated safe request.
-   */
-  async refreshSession(): Promise<RefreshSessionResponse> {
-    const raw = await this.fetch<unknown>("/api/auth/refresh", {
-      method: "POST",
-    });
-    return parseWithFallback<RefreshSessionResponse>(
-      raw,
-      RefreshSessionResponseSchema,
-      EMPTY_REFRESH_SESSION_RESPONSE,
-      { endpoint: "POST /api/auth/refresh" },
-    );
   }
 
   async getMe(): Promise<User> {
@@ -3945,7 +3725,6 @@ export class ApiClient {
     const formData = new FormData();
     formData.append("bundle", bundle);
 
-    const credentialUsed = this.getToken();
     const res = await fetch(`${this.baseUrl}/api/workspaces/${workspaceId}/plugins/packages`, {
       method: "POST",
       headers: this.authHeaders(),
@@ -3953,7 +3732,6 @@ export class ApiClient {
       credentials: "include",
     });
     if (!res.ok) {
-      if (res.status === 401) this.handleUnauthorized(credentialUsed);
       throw new Error(await this.parseErrorMessage(res, `Publishing failed: ${res.status}`));
     }
     const raw = (await res.json()) as unknown;
@@ -4332,22 +4110,6 @@ export class ApiClient {
 		});
 	}
 
-  // Personal Access Tokens
-  async listPersonalAccessTokens(): Promise<PersonalAccessToken[]> {
-    return this.fetch("/api/tokens");
-  }
-
-  async createPersonalAccessToken(data: CreatePersonalAccessTokenRequest): Promise<CreatePersonalAccessTokenResponse> {
-    return this.fetch("/api/tokens", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async revokePersonalAccessToken(id: string): Promise<void> {
-    await this.fetch(`/api/tokens/${id}`, { method: "DELETE" });
-  }
-
   // File Upload & Attachments
   async uploadFile(
     file: File,
@@ -4368,7 +4130,6 @@ export class ApiClient {
     const start = Date.now();
     this.logger.info("→ POST /api/upload-file", { rid });
 
-    const credentialUsed = this.getToken();
     const res = await fetch(`${this.baseUrl}/api/upload-file`, {
       method: "POST",
       headers: this.authHeaders(),
@@ -4378,7 +4139,6 @@ export class ApiClient {
     });
 
     if (!res.ok) {
-      if (res.status === 401) this.handleUnauthorized(credentialUsed);
       // An ApiError, so callers can branch on the body's `code` (for example
       // storage_limit_reached) instead of the message.
       const { message, body } = await this.parseErrorBody(res, `Upload failed: ${res.status}`);
@@ -4763,8 +4523,8 @@ export class ApiClient {
   // the original MIME ships back in the `X-Original-Content-Type` header so
   // the preview dispatcher can choose between markdown / html / plain code.
   //
-  // Routes through `fetchRaw` so it inherits the standard auth headers,
-  // 401 → handleUnauthorized recovery, request-id logging, and ApiError
+  // Routes through `fetchRaw` so it inherits standard request headers,
+  // request-id logging, and ApiError
   // shape. 413 / 415 are translated to typed `Preview*Error` instances so
   // the modal can render specific fallbacks instead of generic failure.
   async getAttachmentTextContent(
@@ -4802,8 +4562,8 @@ export class ApiClient {
   // Desktop's file:// renderer, the mobile webview, split-origin web — get
   // the bytes here and render them from an object URL instead.
   //
-  // Routes through `fetchRaw` so it inherits the standard auth headers,
-  // 401 → handleUnauthorized recovery, request-id logging and ApiError shape.
+  // Routes through `fetchRaw` so it inherits standard request headers,
+  // request-id logging and ApiError shape.
   // Callers must only reach for this once the metadata refresh has shown
   // there is no signed URL: in the other modes the endpoint 302s to storage,
   // where CORS is not configured for a JS fetch.

@@ -53,7 +53,6 @@
     "unpin_tooltip": "Открепить",
     "workspaces_label": "Рабочие пространства",
     "create_workspace": "Создать рабочее пространство",
-    "log_out": "Выйти",
     "new_issue": "Новая задача",
     "pinned_label": "Закреплённые",
     "show_more_pins": "Показать ещё {{count}}…",

@@ -79,19 +79,13 @@ func TestLocalAttachmentAPIStillRequiresMembership(t *testing.T) {
 		"filename": "private.png", "url": "/uploads/" + key,
 		"content_type": "image/png", "size_bytes": len(body),
 	})
-	foreignToken, err := generateTestJWT(uuid.NewString(), "outsider@example.test", "Outsider")
-	if err != nil {
-		t.Fatal(err)
-	}
 	router := NewRouter(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil)
 	for _, tc := range []struct {
 		name  string
 		token string
-		code  int
 	}{
-		{"anonymous", "", http.StatusUnauthorized},
-		{"non-member", foreignToken, http.StatusNotFound},
-		{"member", testToken, http.StatusOK},
+		{"no bearer", ""},
+		{"non-task bearer", testToken},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/api/attachments/"+id+"/download", nil)
@@ -100,20 +94,41 @@ func TestLocalAttachmentAPIStillRequiresMembership(t *testing.T) {
 			}
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			if w.Code != tc.code {
-				t.Fatalf("status = %d, want %d; body=%s", w.Code, tc.code, w.Body.String())
+			if w.Code != http.StatusOK {
+				t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
 			}
-			if tc.code == http.StatusOK {
-				if got := w.Body.String(); got != body {
-					t.Fatalf("body = %q, want %q", got, body)
-				}
-				if got := w.Header().Get("Content-Disposition"); got != `inline; filename="private.png"` {
-					t.Errorf("Content-Disposition = %q, want original filename", got)
-				}
-				if got := w.Header().Get("Content-Security-Policy"); !strings.Contains(got, "frame-ancestors 'self' https://app.example.test") {
-					t.Errorf("Content-Security-Policy = %q, want configured preview origin", got)
-				}
+			if got := w.Body.String(); got != body {
+				t.Fatalf("body = %q, want %q", got, body)
+			}
+			if got := w.Header().Get("Content-Disposition"); got != `inline; filename="private.png"` {
+				t.Errorf("Content-Disposition = %q, want original filename", got)
+			}
+			if got := w.Header().Get("Content-Security-Policy"); !strings.Contains(got, "frame-ancestors 'self' https://app.example.test") {
+				t.Errorf("Content-Security-Policy = %q, want configured preview origin", got)
 			}
 		})
+	}
+
+	foreignWS := fixture.Workspace(t, "Attachment other workspace", "attach-other-"+uuid.NewString())
+	foreignID := uuid.NewString()
+	foreignKey := "workspaces/" + foreignWS + "/" + foreignID + ".png"
+	foreignFull := filepath.Join(dir, filepath.FromSlash(foreignKey))
+	if err := os.MkdirAll(filepath.Dir(foreignFull), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(foreignFull, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	fixture.Insert(t, "attachment", testutil.Cols{
+		"id": foreignID, "workspace_id": foreignWS,
+		"uploader_type": "member", "uploader_id": testUserID,
+		"filename": "other.png", "url": "/uploads/" + foreignKey,
+		"content_type": "image/png", "size_bytes": len(body),
+	})
+	req := httptest.NewRequest(http.MethodGet, "/api/attachments/"+foreignID+"/download", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("other workspace status = %d, want 404; body=%s", w.Code, w.Body.String())
 	}
 }

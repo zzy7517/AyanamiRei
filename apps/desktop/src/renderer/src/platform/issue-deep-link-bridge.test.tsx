@@ -78,13 +78,10 @@ beforeEach(() => {
 });
 
 describe("IssueDeepLinkBridge", () => {
-  it("leaves links in main's queue until sign-in and membership are ready", () => {
+  it("leaves links in main's queue until the workspace list is ready", () => {
     state.authenticated = false;
-    const { rerender } = render(ui());
-    expect(subscribe).not.toHaveBeenCalled();
-    state.authenticated = true;
     state.ready = false;
-    rerender(ui());
+    const { rerender } = render(ui());
     expect(subscribe).not.toHaveBeenCalled();
     state.ready = true;
     rerender(ui());

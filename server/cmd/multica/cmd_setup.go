@@ -21,18 +21,15 @@ import (
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Configure the CLI, authenticate, and start the daemon",
-	Long: `Configures the CLI to connect to Multica Cloud (multica.ai), then
-authenticates via browser and starts the agent daemon.
+	Short: "Configure the CLI and start the daemon",
+	Long: `Configures the CLI to connect to Multica Cloud (multica.ai), then starts
+the agent daemon.
 
 If a configuration already exists, you will be prompted before overwriting.
 
 Use 'multica setup self-host' to connect to a self-hosted server instead.
 
-If you run this command over SSH on a remote machine, keep the localhost
-callback and follow the SSH tunnel hint printed during browser login. If your
-browser can reach this CLI directly on a private network address, pass
---callback-host <host-or-ip>.
+The local daemon does not require a user credential.
 
 Use --profile to create an isolated configuration for a separate environment:
   multica setup self-host --profile staging --server-url https://api-staging.co`,
@@ -44,10 +41,7 @@ var setupCloudCmd = &cobra.Command{
 	Short: "Configure the CLI for Multica Cloud (multica.ai)",
 	Long: `Explicitly configures the CLI to connect to Multica Cloud (multica.ai).
 
-If you run this command over SSH on a remote machine, keep the localhost
-callback and follow the SSH tunnel hint printed during browser login. If your
-browser can reach this CLI directly on a private network address, pass
---callback-host <host-or-ip>.
+The local daemon does not require a user credential.
 
 This is equivalent to running 'multica setup' without a subcommand.`,
 	RunE: runSetupCloud,
@@ -61,9 +55,7 @@ var setupSelfHostCmd = &cobra.Command{
 By default, connects to http://localhost:8080 (backend) and http://localhost:3000 (frontend).
 Use --server-url and --app-url to specify a custom server (e.g. an on-premise deployment).
 
-If you run this command from a different machine than the server, also pass
---callback-host <host-or-ip-the-browser-can-reach-back-to-this-machine-on> so
-the OAuth login flow can return the token to the CLI.
+Run this command from the machine that should host the daemon.
 
 Examples:
   multica setup self-host
@@ -73,15 +65,10 @@ Examples:
 }
 
 func init() {
-	setupCmd.Flags().String(callbackHostFlag, "", callbackHostFlagHelp)
-	setupCloudCmd.Flags().String(callbackHostFlag, "", callbackHostFlagHelp)
-
 	setupSelfHostCmd.Flags().String("server-url", "", "Backend server URL (e.g. https://api.internal.co) (env: MULTICA_SERVER_URL)")
 	setupSelfHostCmd.Flags().String("app-url", "", "Frontend app URL (e.g. https://app.internal.co) (env: MULTICA_APP_URL)")
 	setupSelfHostCmd.Flags().Int("port", 8080, "Backend server port (used when --server-url is not set)")
 	setupSelfHostCmd.Flags().Int("frontend-port", 3000, "Frontend port (used when --app-url is not set)")
-	setupSelfHostCmd.Flags().String(callbackHostFlag, "", callbackHostFlagHelp)
-
 	setupCmd.AddCommand(setupCloudCmd)
 	setupCmd.AddCommand(setupSelfHostCmd)
 }
@@ -117,7 +104,7 @@ func confirmOverwrite(cfg cli.CLIConfig, newServerURL, newAppURL string) bool {
 	}
 	fmt.Fprintln(os.Stderr, "")
 	if sameSetupBackend(cfg.ServerURL, newServerURL) {
-		fmt.Fprint(os.Stderr, "Keep the existing local settings and sign in again? [y/N] ")
+		fmt.Fprint(os.Stderr, "Keep the existing local settings? [y/N] ")
 	} else {
 		fmt.Fprint(os.Stderr, "This will reset your configuration. Continue? [y/N] ")
 	}
@@ -169,12 +156,6 @@ func runSetupCloud(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stderr, "  app_url:    %s\n", cfg.AppURL)
 	printConfigLocation(profile)
 
-	// Authenticate.
-	fmt.Fprintln(os.Stderr, "")
-	if err := runLogin(cmd, args); err != nil {
-		return err
-	}
-
 	if err := runDaemonAfterSetup(cmd, args); err != nil {
 		return fmt.Errorf("start or restart daemon: %w", err)
 	}
@@ -210,8 +191,7 @@ func runSetupSelfHost(cmd *cobra.Command, args []string) error {
 	if appURL == "" {
 		if userProvidedServerURL && !serverHostIsLocal(serverURL) {
 			// We can't guess the frontend URL for a remote server: api.x.co
-			// and app.x.co, or an https-fronted deployment, would silently
-			// produce a broken login URL. Ask the user instead.
+			// and app.x.co commonly differ. Ask the user instead.
 			entered, err := promptAppURL(serverURL)
 			if err != nil {
 				return err
@@ -254,12 +234,6 @@ func runSetupSelfHost(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stderr, "  app_url:    %s\n", appURL)
 	printConfigLocation(profile)
 
-	// Authenticate.
-	fmt.Fprintln(os.Stderr, "")
-	if err := runLogin(cmd, args); err != nil {
-		return err
-	}
-
 	if err := runDaemonAfterSetup(cmd, args); err != nil {
 		return fmt.Errorf("start or restart daemon: %w", err)
 	}
@@ -268,8 +242,8 @@ func runSetupSelfHost(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// runDaemonAfterSetup makes the freshly authenticated profile effective in
-// the daemon process. A daemon reads its server URL and token only at startup,
+// runDaemonAfterSetup makes the new server URL effective in the daemon
+// process. A daemon reads its server URL only at startup,
 // so merely overwriting config.json while one is already running leaves it
 // connected to the previous deployment. Restart that profile when needed;
 // otherwise perform the normal first start.
@@ -367,13 +341,13 @@ func saveSetupTarget(profile, serverURL, appURL string, expected cli.CLIConfig) 
 		return fmt.Errorf("profile changed during setup; rerun setup")
 	}
 	if sameSetupBackend(cfg.ServerURL, serverURL) {
-		if strings.TrimRight(cfg.AppURL, "/") == strings.TrimRight(appURL, "/") && cfg.Token == "" && cfg.WorkspaceID == "" {
+		if strings.TrimRight(cfg.AppURL, "/") == strings.TrimRight(appURL, "/") && cfg.WorkspaceID == "" {
 			return nil
 		}
 	} else {
 		cfg = cli.CLIConfig{}
 	}
-	cfg.Token, cfg.WorkspaceID = "", ""
+	cfg.WorkspaceID = ""
 	cfg.ServerURL, cfg.AppURL = serverURL, appURL
 	return cli.SaveCLIConfigForProfile(cfg, profile)
 }

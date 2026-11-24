@@ -8,7 +8,6 @@ import {
 } from "@multica/core/workspace";
 import { getCurrentSlug, setCurrentWorkspace } from "@multica/core/platform";
 import { isWorkspaceDeletePending } from "@multica/core/workspace/pending-delete";
-import { useAuthStore } from "@multica/core/auth";
 import { useWorkspaceSeen } from "@multica/views/workspace/use-workspace-seen";
 import { WorkspacePresencePrefetch } from "@multica/views/layout";
 import { VoiceWorkspaceWords } from "@multica/views/voice";
@@ -54,8 +53,6 @@ export function WorkspaceRouteLayout() {
   // same-workspace tab swap, which carry the same slug and workspace id and
   // are therefore indistinguishable by value.
   const [instanceId] = useState(() => Symbol("workspace-route-layout"));
-  const user = useAuthStore((s) => s.user);
-  const isAuthLoading = useAuthStore((s) => s.isLoading);
   // While a WindowOverlay is open (onboarding, new-workspace),
   // the underlying tab is still mounted in the React tree — so this layout
   // and its SourceBackfillModal would render UNDER the overlay.
@@ -65,15 +62,12 @@ export function WorkspaceRouteLayout() {
   // moment the overlay closes.
   const overlayActive = useWindowOverlayStore((s) => s.overlay !== null);
 
-  // Workspace routes require auth. App.tsx renders <DesktopLoginPage>
-  // instead of the shell whenever `user` is null, so this tree never mounts
-  // unauthenticated — the old in-router bounce to /login was dead defensive
-  // code and violated MUL-4741 invariant 1 (only the Coordinator navigates).
-  // The `!user` early return below keeps the defense without navigating.
+  // The workspace list is enough to mount this route. A missing user record
+  // is not a login screen and does not block the layout.
 
   const { data: workspace } = useQuery({
     ...workspaceBySlugOptions(workspaceSlug ?? ""),
-    enabled: !!user && !!workspaceSlug,
+    enabled: !!workspaceSlug,
   });
   // A failed background refetch retains the last authoritative selection.
   // Only undefined means the shared workspace list has never resolved.
@@ -81,7 +75,6 @@ export function WorkspaceRouteLayout() {
 
   const { data: wsList } = useQuery({
     ...workspaceListOptions(),
-    enabled: !!user,
   });
 
   // Feed the URL slug into the platform singleton so the API client's
@@ -119,14 +112,13 @@ export function WorkspaceRouteLayout() {
   // is scoped to the stale slug; navigating to "/" would create an
   // inconsistent "tab in group X with path /" state.
   useEffect(() => {
-    if (!user) return;
     if (!listReady) return;
     if (workspace) return;
     if (hasBeenSeen) return; // active eviction in flight — let the other path win
     if (!wsList) return;
     const validSlugs = new Set(wsList.map((w) => w.slug));
     useTabStore.getState().validateWorkspaceSlugs(validSlugs);
-  }, [user, listReady, workspace, hasBeenSeen, wsList]);
+  }, [listReady, workspace, hasBeenSeen, wsList]);
 
   // Release the platform singleton when this layout's workspace stops
   // resolving, and again when the layout unmounts. Nothing else owned that
@@ -169,8 +161,6 @@ export function WorkspaceRouteLayout() {
     };
   }, [workspaceSlug, instanceId]);
 
-  if (isAuthLoading) return null;
-  if (!user) return null;
   if (!workspaceSlug) return null;
   if (!listReady) return null;
   if (!workspace) return null; // auto-heal effect above handles the cleanup

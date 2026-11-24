@@ -28,7 +28,6 @@ export const WORKSPACE_OPEN_PATH_CHANNEL = "workspace:open-path";
 export const NEW_WINDOW_SHORTCUT_CHANNEL = "window:new-by-shortcut";
 
 export const MAIN_RENDERER_MESSAGE_CHANNELS = [
-  "auth:token",
   "issue:open",
   "inbox:open",
   "settings:open",

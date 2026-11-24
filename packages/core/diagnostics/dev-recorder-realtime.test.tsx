@@ -65,8 +65,8 @@ function emit(msg: WSMessage) {
 function setup() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   installDevRecorder(qc);
-  const client = new WSClient("ws://example.test/ws", { cookieAuth: true });
-  client.setAuth(null, "acme");
+  const client = new WSClient("ws://example.test/ws");
+  client.setAuth("acme");
   client.connect();
   FakeSocket.last!.onopen!();
   renderHook(() => useRealtimeSync(client, stores), {
@@ -259,7 +259,7 @@ describe("dev recorder: realtime events", () => {
   });
 
   it("tags nothing and holds no causes when the recorder is not installed", () => {
-    const client = new WSClient("ws://example.test/ws", { cookieAuth: true });
+    const client = new WSClient("ws://example.test/ws");
     client.connect();
     FakeSocket.last!.onopen!();
     let seen: unknown[] = ["unset"];

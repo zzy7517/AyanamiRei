@@ -47,8 +47,7 @@
     "continue": "계속",
     "skip": "건너뛰기",
     "cancel": "취소",
-    "close": "닫기",
-    "log_out": "로그아웃"
+    "close": "닫기"
   },
   "source_backfill": {
     "eyebrow": "간단한 질문 하나",
@@ -161,7 +160,6 @@
     "create_failed_toast": "워크스페이스를 만들지 못했습니다",
     "creation_disabled_headline": "관리자에게 접근 권한을 요청하세요.",
     "creation_disabled_lede": "이 Multica instance에서는 새 워크스페이스를 만들 수 없습니다. 관리자가 워크스페이스 접근 권한을 주면 새로고침해 계속하세요.",
-    "creation_disabled_logout": "로그아웃",
     "creation_disabled_headline_resume": "{{name}}에서 계속하세요.",
     "creation_disabled_lede_resume": "이 instance에서는 워크스페이스 생성이 비활성화되어 있으므로 기존 워크스페이스로 계속 이동합니다."
   },

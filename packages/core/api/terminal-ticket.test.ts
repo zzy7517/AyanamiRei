@@ -21,7 +21,6 @@ describe("createTerminalTicket", () => {
   it("posts to the ticket endpoint with the client's usual headers and returns the ticket", async () => {
     const fetchMock = respond({ ticket: "tk_1", expiresInSeconds: 120 });
     const client = new ApiClient("https://api.example.test");
-    client.setToken("tok");
 
     expect(await client.createTerminalTicket()).toEqual({ ticket: "tk_1", expiresInSeconds: 120 });
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -29,7 +28,6 @@ describe("createTerminalTicket", () => {
     expect(url).toBe("https://api.example.test/api/terminal/ticket");
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
-    expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer tok");
   });
 
   it("fills in the contract's lifetime when the server sends none", async () => {

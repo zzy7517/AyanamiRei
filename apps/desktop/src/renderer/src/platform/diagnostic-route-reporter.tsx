@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { bucketDiagnosticPath, setDiagnosticRoute } from "@multica/core/diagnostics";
-import { useAuthStore } from "@multica/core/auth";
 import { useActiveTabIdentity, useActiveTabUrl } from "@/stores/tab-store";
 import {
   useWindowOverlayStore,
@@ -20,15 +19,14 @@ import type { RendererRouteContextInput } from "../../../shared/renderer-route-c
  *     `location.pathname` is the packaged index.html path here (this window
  *     runs a memory router), so without this the watchdog has no route at all.
  *
- * Desktop has three layers that can own the visible page: the logged-out
- * `/login` state, window overlays (onboarding, new-workspace — these
- * are overlay state, not tab routes), and otherwise the active tab's path.
+ * Desktop has two layers that can own the visible page: window overlays
+ * (onboarding, new-workspace — these are overlay state, not tab routes),
+ * and otherwise the active tab's path. A missing user record is not a page.
  *
  * Paths are bucketed to route templates before publishing, so telemetry
  * carries `/:slug/issues/:id` rather than a workspace slug and issue id.
  */
 export function DiagnosticRouteReporter() {
-  const user = useAuthStore((s) => s.user);
   const overlay = useWindowOverlayStore((s) => s.overlay);
   // The slug decides whether a workspace is mounted at all; it is never sent.
   const { slug: activeWorkspaceSlug } = useActiveTabIdentity();
@@ -42,7 +40,6 @@ export function DiagnosticRouteReporter() {
 
   useEffect(() => {
     const surface = resolveSurface({
-      user,
       overlay,
       activeWorkspaceSlug,
       activeTabUrl,
@@ -57,7 +54,7 @@ export function DiagnosticRouteReporter() {
       path: surface.path,
     };
     send(context, lastSentRef);
-  }, [user, overlay, activeWorkspaceSlug, activeTabUrl]);
+  }, [overlay, activeWorkspaceSlug, activeTabUrl]);
 
   return null;
 }
@@ -73,17 +70,14 @@ function send(
 }
 
 function resolveSurface({
-  user,
   overlay,
   activeWorkspaceSlug,
   activeTabUrl,
 }: {
-  user: unknown;
   overlay: WindowOverlay | null;
   activeWorkspaceSlug: string | null;
   activeTabUrl: string | null;
 }): { kind: RendererRouteContextInput["surface"]; path: string } {
-  if (!user) return { kind: "login", path: "/login" };
   if (overlay) {
     return { kind: "overlay", path: bucketDiagnosticPath(overlayPath(overlay)) };
   }

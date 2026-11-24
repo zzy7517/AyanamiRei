@@ -76,17 +76,23 @@ describe("terminal addresses", () => {
 
 describe("paths (global)", () => {
   it("builds global paths without slug", () => {
-    expect(paths.login()).toBe("/login");
     expect(paths.newWorkspace()).toBe("/workspaces/new");
-    expect(paths.authCallback()).toBe("/auth/callback");
+    expect(paths.onboarding()).toBe("/onboarding");
+    expect(paths.root()).toBe("/");
   });
 });
 
 describe("isGlobalPath", () => {
   it("returns true for pre-workspace routes", () => {
-    expect(isGlobalPath("/login")).toBe(true);
     expect(isGlobalPath("/workspaces/new")).toBe(true);
-    expect(isGlobalPath("/auth/callback")).toBe(true);
+    expect(isGlobalPath("/onboarding")).toBe(true);
+  });
+
+  it("does not treat removed auth URLs as routes", () => {
+    expect(isGlobalPath("/login")).toBe(false);
+    expect(isGlobalPath("/auth/callback")).toBe(false);
+    expect(isGlobalPath("/logout")).toBe(false);
+    expect(isGlobalPath("/signup")).toBe(false);
   });
 
   it("returns false for workspace-scoped paths", () => {

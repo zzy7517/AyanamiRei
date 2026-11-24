@@ -529,28 +529,6 @@ func requireKnownProfile(profile string) error {
 // the test binary itself, which ignores the daemon args and re-runs the suite.
 var daemonExecutable = selfexec.Resolve
 
-// requireDaemonAuth fails fast when the user never ran `multica login`. The
-// daemon child performs the same check (resolveAuth) and dies immediately,
-// but the background parent can't see that exit — it would poll the health
-// port for the full 45s readiness window and then print a vague "check logs"
-// warning. Checking before spawning turns that silent stall into an
-// immediate, actionable error. Mirrors daemon.resolveAuth: the daemon only
-// authenticates via the stored config token, never MULTICA_TOKEN.
-func requireDaemonAuth(profile string) error {
-	cfg, err := cli.LoadCLIConfigForProfile(profile)
-	if err != nil {
-		return fmt.Errorf("load CLI config: %w", err)
-	}
-	if cfg.Token == "" {
-		loginHint := "multica login"
-		if profile != "" {
-			loginHint = fmt.Sprintf("multica login --profile %s", profile)
-		}
-		return fmt.Errorf("you are not logged in. Run '%s' first, then start the daemon", loginHint)
-	}
-	return nil
-}
-
 func runDaemonStart(cmd *cobra.Command, _ []string) error {
 	if err := requireHumanLocalDaemonCommand(cmd, "daemon start"); err != nil {
 		return err
@@ -586,10 +564,6 @@ func runDaemonBackground(cmd *cobra.Command) error {
 			pid, _ := health["pid"].(float64)
 			return fmt.Errorf("%s is already running (pid %v). Use 'daemon restart' to restart it", label, int(pid))
 		}
-	}
-
-	if err := requireDaemonAuth(profile); err != nil {
-		return err
 	}
 
 	// Hint about boot autostart / refresh an owned entry. Never creates a
@@ -1277,23 +1251,9 @@ func runDaemonForeground(cmd *cobra.Command) error {
 
 // --- daemon restart ---
 
-// requireDaemonRestartPreflight validates, before a running daemon is
-// stopped, that its replacement could actually start. requireDaemonAuth's
-// empty-token check is not enough here: a stored token can be expired or
-// revoked, and the server can be unreachable — either passes the local check,
-// kills the working daemon in the stop phase, and then fails the replacement
-// child's preflight, leaving no daemon at all (#5165). So probe the server
-// the daemon will talk to with the stored token (same whoami call as
-// `multica auth status`) and refuse to touch the running daemon on failure.
+// requireDaemonRestartPreflight validates, before a running daemon is stopped,
+// that its replacement can reach the configured server.
 func requireDaemonRestartPreflight(cmd *cobra.Command, profile string) error {
-	if err := requireDaemonAuth(profile); err != nil {
-		return err
-	}
-	cfg, err := cli.LoadCLIConfigForProfile(profile)
-	if err != nil {
-		return fmt.Errorf("load CLI config: %w", err)
-	}
-
 	rawURL := resolveDaemonServerURL(cmd, profile)
 	if rawURL == "" {
 		rawURL = daemon.DefaultServerURL
@@ -1303,19 +1263,11 @@ func requireDaemonRestartPreflight(cmd *cobra.Command, profile string) error {
 		return fmt.Errorf("refusing to restart: invalid server URL %q: %w", rawURL, err)
 	}
 
-	loginHint := "multica login"
-	if profile != "" {
-		loginHint += " --profile " + profile
-	}
-
 	ctx, cancel := cli.APIContext(context.Background())
 	defer cancel()
-	if err := cli.NewAPIClient(baseURL, "", cfg.Token).GetJSON(ctx, "/api/me", nil); err != nil {
+	if err := cli.NewAPIClient(baseURL, "", "").GetJSON(ctx, "/health", nil); err != nil {
 		var httpErr *cli.HTTPError
 		if errors.As(err, &httpErr) {
-			if httpErr.StatusCode == http.StatusUnauthorized {
-				return fmt.Errorf("refusing to restart: the server rejected your login token (it may have expired or been revoked); the running daemon was left untouched.\nRun '%s' to sign in again, then rerun 'multica daemon restart'", loginHint)
-			}
 			return fmt.Errorf("refusing to restart: preflight check against %s failed (%w); the running daemon was left untouched", baseURL, err)
 		}
 		return fmt.Errorf("refusing to restart: cannot reach the Multica server at %s (%w); the running daemon was left untouched.\nMake sure the server is running and reachable, then rerun 'multica daemon restart'", baseURL, err)
@@ -1344,7 +1296,7 @@ func runDaemonRestart(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		// Validate the restart can succeed BEFORE the stop phase, not just
-		// inside the start phase: a missing/revoked token or an unreachable
+		// inside the start phase: an unreachable
 		// server would otherwise kill the running daemon and then fail to
 		// start a replacement, leaving no daemon at all. When nothing is
 		// running there is nothing to lose, so the cheaper start-path checks
@@ -2078,15 +2030,8 @@ func fillDiskUsageParentStatuses(cmd *cobra.Command, profile string, report *dae
 
 // newParentStatusFetcher builds a fetcher backed by the same batch gc-check
 // endpoint the daemon's GC loop uses, so the STATUS column reports exactly the
-// status the GC would act on. The daemon authenticates with the profile's CLI
-// token (see Daemon.resolveAuth), so reusing it here needs no extra API
-// surface. Returns nil when this profile has no usable credentials — the
-// caller then leaves the column blank rather than erroring.
+// status the GC would act on.
 func newParentStatusFetcher(cmd *cobra.Command, profile string) daemon.ParentStatusFetcher {
-	cfg, err := cli.LoadCLIConfigForProfile(profile)
-	if err != nil || strings.TrimSpace(cfg.Token) == "" {
-		return nil
-	}
 	rawURL := resolveDaemonServerURL(cmd, profile)
 	if rawURL == "" {
 		rawURL = daemon.DefaultServerURL
@@ -2097,7 +2042,6 @@ func newParentStatusFetcher(cmd *cobra.Command, profile string) daemon.ParentSta
 	}
 
 	client := daemon.NewClient(baseURL)
-	client.SetToken(cfg.Token)
 	return func(ctx context.Context, workspaceID string, issueIDs []string) (map[string]string, error) {
 		results, err := client.GetIssueGCChecks(ctx, workspaceID, issueIDs)
 		if err != nil {

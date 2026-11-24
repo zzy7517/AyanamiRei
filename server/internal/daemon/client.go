@@ -98,7 +98,6 @@ func isRuntimeNotFoundError(err error) bool {
 // Client handles HTTP communication with the Multica server daemon API.
 type Client struct {
 	baseURL string
-	token   string
 	client  *http.Client
 
 	// bundleClient downloads skill bundles. Unlike client it carries no fixed
@@ -218,16 +217,6 @@ func daemonCommonCapabilities() []string {
 	}
 }
 
-// SetToken sets the auth token for authenticated requests.
-func (c *Client) SetToken(token string) {
-	c.token = token
-}
-
-// Token returns the current auth token.
-func (c *Client) Token() string {
-	return c.token
-}
-
 func (c *Client) ClaimTask(ctx context.Context, runtimeID string) (*Task, error) {
 	var resp struct {
 		Task *Task `json:"task"`
@@ -252,7 +241,7 @@ func (c *Client) ResolveRemoteMCPCredential(ctx context.Context, daemonToken, ta
 	}
 	path := fmt.Sprintf("/api/daemon/tasks/%s/%s/%s/credential",
 		url.PathEscape(taskID), route, url.PathEscape(contributionID))
-	if err := c.getJSONWithToken(ctx, path, daemonToken, &response); err != nil {
+	if err := c.getJSON(ctx, path, &response); err != nil {
 		return nil, err
 	}
 	headers := make(http.Header)
@@ -970,9 +959,6 @@ func (c *Client) ListWorkspaces(ctx context.Context) ([]WorkspaceInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
-	}
 	c.setIdentityHeaders(req)
 	if c.workspaceETag != "" {
 		req.Header.Set("If-None-Match", c.workspaceETag)
@@ -1470,9 +1456,6 @@ func (c *Client) postJSONViaObserved(ctx context.Context, httpClient *http.Clien
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
-	}
 	c.setIdentityHeaders(req)
 
 	resp, err := httpClient.Do(req)
@@ -1496,20 +1479,11 @@ func (c *Client) postJSONViaObserved(ctx context.Context, httpClient *http.Clien
 	return json.NewDecoder(respReader).Decode(respBody)
 }
 
+// getJSON performs one GET request.
 func (c *Client) getJSON(ctx context.Context, path string, respBody any) error {
-	return c.getJSONWithToken(ctx, path, c.token, respBody)
-}
-
-// getJSONWithToken performs one GET with an explicit credential. It is used by
-// the Remote MCP broker so its short-lived daemon token cannot replace or race
-// the client's long-lived PAT used by concurrent control-plane requests.
-func (c *Client) getJSONWithToken(ctx context.Context, path, token string, respBody any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
 	if err != nil {
 		return err
-	}
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	c.setIdentityHeaders(req)
 
@@ -1522,40 +1496,6 @@ func (c *Client) getJSONWithToken(ctx context.Context, path, token string, respB
 	if resp.StatusCode >= 400 {
 		data, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		return &requestError{Method: http.MethodGet, Path: path, StatusCode: resp.StatusCode, Body: strings.TrimSpace(string(data))}
-	}
-	if respBody == nil {
-		io.Copy(io.Discard, resp.Body)
-		return nil
-	}
-	return json.NewDecoder(resp.Body).Decode(respBody)
-}
-
-// postJSONWithToken is getJSONWithToken's write counterpart, for the daemon's
-// task-scoped calls that carry a body.
-func (c *Client) postJSONWithToken(ctx context.Context, path, token string, reqBody, respBody any) error {
-	encoded, err := json.Marshal(reqBody)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(encoded))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	c.setIdentityHeaders(req)
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		data, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return &requestError{Method: http.MethodPost, Path: path, StatusCode: resp.StatusCode, Body: strings.TrimSpace(string(data))}
 	}
 	if respBody == nil {
 		io.Copy(io.Discard, resp.Body)
@@ -1581,7 +1521,7 @@ func (c *Client) InvokeAgentPluginHook(ctx context.Context, daemonToken, taskID,
 	if len(input) > 0 {
 		body["input"] = input
 	}
-	if err := c.postJSONWithToken(ctx, path, daemonToken, body, &response); err != nil {
+	if err := c.postJSON(ctx, path, body, &response); err != nil {
 		return nil, err
 	}
 	// A refused or failed hook comes back as a 200 with a status, so that the

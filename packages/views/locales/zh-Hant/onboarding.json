@@ -47,8 +47,7 @@
     "continue": "繼續",
     "skip": "跳過",
     "cancel": "取消",
-    "close": "關閉",
-    "log_out": "退出登入"
+    "close": "關閉"
   },
   "source_backfill": {
     "eyebrow": "順便問一句",
@@ -161,7 +160,6 @@
     "create_failed_toast": "建立工作區失敗",
     "creation_disabled_headline": "請聯絡管理員開通訪問權限。",
     "creation_disabled_lede": "該 Multica 例項不允許建立新的工作區。等管理員為你開通工作區訪問權限後，重新整理即可繼續。",
-    "creation_disabled_logout": "退出登入",
     "creation_disabled_headline_resume": "繼續使用 {{name}}。",
     "creation_disabled_lede_resume": "該例項已禁用建立工作區，繼續進入你已有的工作區即可。"
   },

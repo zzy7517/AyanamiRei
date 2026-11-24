@@ -82,7 +82,6 @@
     "unpin_tooltip": "고정 해제",
     "workspaces_label": "워크스페이스",
     "create_workspace": "워크스페이스 만들기",
-    "log_out": "로그아웃",
     "new_issue": "새 태스크",
     "pinned_label": "고정됨",
     "show_more_pins": "{{count}}개 더 보기…",

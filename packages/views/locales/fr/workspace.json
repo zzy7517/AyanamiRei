@@ -27,7 +27,6 @@
   "no_access": {
     "title": "Espace de travail indisponible",
     "description": "Cet espace de travail n'existe pas ou vous n'y avez pas accès.",
-    "go_to_workspaces": "Accéder à mes espaces de travail",
-    "sign_in_different": "Se connecter avec un autre compte"
+    "go_to_workspaces": "Accéder à mes espaces de travail"
   }
 }

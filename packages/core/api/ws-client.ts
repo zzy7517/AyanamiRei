@@ -39,9 +39,7 @@ export type WSConnectionStatus = "connecting" | "connected" | "reconnecting";
 export class WSClient {
   private ws: WebSocket | null = null;
   private baseUrl: string;
-  private token: string | null = null;
   private workspaceSlug: string | null = null;
-  private cookieAuth = false;
   private identity: WSClientIdentity | undefined;
   private handlers = new Map<WSEventType, Set<EventHandler>>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -57,32 +55,19 @@ export class WSClient {
   private statusListeners = new Set<() => void>();
   private logger: Logger;
 
-  /**
-   * Reads the current token at connect time. A reconnect can happen long
-   * after this client was built — long enough for a sliding session to have
-   * been renewed in between — so the token the auth frame carries has to be
-   * looked up now, not captured once (MUL-7436).
-   */
-  private getToken: (() => string | null) | undefined;
-
   constructor(
     url: string,
     options?: {
       logger?: Logger;
-      cookieAuth?: boolean;
       identity?: WSClientIdentity;
-      getToken?: () => string | null;
     },
   ) {
     this.baseUrl = url;
     this.logger = options?.logger ?? noopLogger;
-    this.cookieAuth = options?.cookieAuth ?? false;
     this.identity = options?.identity;
-    this.getToken = options?.getToken;
   }
 
-  setAuth(token: string | null, workspaceSlug: string) {
-    this.token = token;
+  setAuth(workspaceSlug: string) {
     this.workspaceSlug = workspaceSlug;
   }
 
@@ -90,10 +75,6 @@ export class WSClient {
     this.badFrameLogged = false;
     this.setStatus(this.reconnectAttempt > 0 ? "reconnecting" : "connecting");
     const url = new URL(this.baseUrl);
-    // Token is never sent as a URL query parameter — it would be logged by
-    // proxies, CDNs, and browser history.  In cookie mode the HttpOnly cookie
-    // is sent automatically with the upgrade request.  In token mode the token
-    // is delivered as the first WebSocket message after the connection opens.
     if (this.workspaceSlug)
       url.searchParams.set("workspace_slug", this.workspaceSlug);
     if (this.identity?.platform)
@@ -106,14 +87,6 @@ export class WSClient {
     this.ws = new WebSocket(url.toString());
 
     this.ws.onopen = () => {
-      const token = this.getToken?.() ?? this.token;
-      if (!this.cookieAuth && token) {
-        this.ws!.send(
-          JSON.stringify({ type: "auth", payload: { token } }),
-        );
-        return;
-      }
-
       this.onAuthenticated();
     };
 

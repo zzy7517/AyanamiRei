@@ -58,7 +58,6 @@
     "./layout/collection-list": "./layout/collection-list/index.ts",
     "./common/pill-button": "./common/pill-button.tsx",
     "./layout/route-icon-components": "./layout/route-icon-components.tsx",
-    "./auth": "./auth/index.ts",
     "./search": "./search/index.ts",
     "./chat": "./chat/index.ts",
     "./chat/floating-chat": "./chat/floating-chat.tsx",

@@ -53,18 +53,13 @@ func addProjectSubscribers(t *testing.T, projectID string, userIDs ...string) {
 	}
 }
 
-// requestAs calls the real router as userID.
-func requestAs(t *testing.T, userID, email, method, path string) {
+// requestAs calls the real router as the deployment user.
+func requestAs(t *testing.T, method, path string) {
 	t.Helper()
-	token, err := generateTestJWT(userID, email, "Project Watcher")
-	if err != nil {
-		t.Fatalf("generate token: %v", err)
-	}
 	req, err := http.NewRequest(method, testServer.URL+path, nil)
 	if err != nil {
 		t.Fatalf("new request: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("X-Workspace-ID", testWorkspaceID)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -185,10 +180,6 @@ func TestNotification_ProjectSubscriber_LeaveOneIssue(t *testing.T) {
 	queries := db.New(testPool)
 	bus := newNotificationBus(t, queries)
 
-	watcherEmail := "notif-project-leave@multica.ai"
-	watcherID := createNotificationMember(t, watcherEmail)
-	t.Cleanup(func() { cleanupTestUser(t, watcherEmail) })
-
 	commenterEmail := "notif-project-commenter@multica.ai"
 	commenterID := createNotificationMember(t, commenterEmail)
 	t.Cleanup(func() { cleanupTestUser(t, commenterEmail) })
@@ -197,36 +188,36 @@ func TestNotification_ProjectSubscriber_LeaveOneIssue(t *testing.T) {
 	leftIssueID := createProjectIssue(t, projectID)
 	otherIssueID := createProjectIssue(t, projectID)
 
-	requestAs(t, watcherID, watcherEmail, http.MethodPut, "/api/projects/"+projectID+"/subscription")
-	requestAs(t, watcherID, watcherEmail, http.MethodPost, "/api/issues/"+leftIssueID+"/unsubscribe")
+	requestAs(t, http.MethodPut, "/api/projects/"+projectID+"/subscription")
+	requestAs(t, http.MethodPost, "/api/issues/"+leftIssueID+"/unsubscribe")
 
 	publishComment(bus, leftIssueID, commenterID)
 	publishComment(bus, otherIssueID, commenterID)
-	if got := inboxCountForIssue(t, queries, watcherID, leftIssueID); got != 0 {
+	if got := inboxCountForIssue(t, queries, testUserID, leftIssueID); got != 0 {
 		t.Fatalf("left issue inbox items = %d, want 0", got)
 	}
-	if got := inboxCountForIssue(t, queries, watcherID, otherIssueID); got != 1 {
+	if got := inboxCountForIssue(t, queries, testUserID, otherIssueID); got != 1 {
 		t.Fatalf("other issue inbox items = %d, want 1", got)
 	}
 
 	// Re-subscribing to the project keeps the per-issue opt-out.
-	requestAs(t, watcherID, watcherEmail, http.MethodDelete, "/api/projects/"+projectID+"/subscription")
-	requestAs(t, watcherID, watcherEmail, http.MethodPut, "/api/projects/"+projectID+"/subscription")
+	requestAs(t, http.MethodDelete, "/api/projects/"+projectID+"/subscription")
+	requestAs(t, http.MethodPut, "/api/projects/"+projectID+"/subscription")
 	publishComment(bus, leftIssueID, commenterID)
-	if got := inboxCountForIssue(t, queries, watcherID, leftIssueID); got != 0 {
+	if got := inboxCountForIssue(t, queries, testUserID, leftIssueID); got != 0 {
 		t.Fatalf("left issue inbox items after project re-subscribe = %d, want 0", got)
 	}
 
 	// An explicit subscribe brings the issue back as its own subscription,
 	// which then outlives the project subscription.
-	requestAs(t, watcherID, watcherEmail, http.MethodPost, "/api/issues/"+leftIssueID+"/subscribe")
-	requestAs(t, watcherID, watcherEmail, http.MethodDelete, "/api/projects/"+projectID+"/subscription")
+	requestAs(t, http.MethodPost, "/api/issues/"+leftIssueID+"/subscribe")
+	requestAs(t, http.MethodDelete, "/api/projects/"+projectID+"/subscription")
 	publishComment(bus, leftIssueID, commenterID)
 	publishComment(bus, otherIssueID, commenterID)
-	if got := inboxCountForIssue(t, queries, watcherID, leftIssueID); got != 1 {
+	if got := inboxCountForIssue(t, queries, testUserID, leftIssueID); got != 1 {
 		t.Fatalf("left issue inbox items after explicit subscribe = %d, want 1", got)
 	}
-	if got := inboxCountForIssue(t, queries, watcherID, otherIssueID); got != 1 {
+	if got := inboxCountForIssue(t, queries, testUserID, otherIssueID); got != 1 {
 		t.Fatalf("other issue inbox items after project unsubscribe = %d, want still 1", got)
 	}
 }

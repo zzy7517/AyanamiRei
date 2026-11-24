@@ -139,19 +139,7 @@ export function runtimeRewriteDestination(
   if (pathname === "/health") {
     return appendPath(remoteApiUrl, "/health");
   }
-  if (isBackendAuthPath(pathname)) {
-    return appendPath(remoteApiUrl, pathname);
-  }
-
   return undefined;
-}
-
-function isBackendAuthPath(pathname: string): boolean {
-  if (pathname === "/auth/callback") return false;
-  if (pathname.startsWith("/auth/callback/")) return false;
-  if (pathname === "/auth/hg-sso/callback") return false;
-  if (pathname.startsWith("/auth/hg-sso/callback/")) return false;
-  return pathname === "/auth" || pathname.startsWith("/auth/");
 }
 
 // `/ws` is appended to the api base's PATH, not to its origin, and that is

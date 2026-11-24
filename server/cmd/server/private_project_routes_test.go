@@ -78,7 +78,6 @@ var routeParamsOutsideProjects = map[string]outsideProjectParam{
 	"members/{memberId}":             {why: "a workspace membership"},
 	"invitations/{id}":               {why: "the caller's own workspace invitation"},
 	"invitations/{invitationId}":     {why: "a workspace invitation"},
-	"tokens/{id}":                    {why: "the caller's own access token"},
 	"checkout-sessions/{sessionId}":  {why: "a billing checkout"},
 	"themes/{themeId}":               {why: "a theme store entry"},
 	"screenshots/{mode}":             {why: "a theme screenshot variant"},
@@ -452,8 +451,8 @@ func (a routeAnswer) String() string {
 // does not exist. Each handler has to remember that check, and it has been
 // forgotten route by route. This walks the real router, so a new route is
 // covered the moment it is registered: on every route declaring a
-// project-scoped parameter, a workspace admin outside the project must get
-// the answer a missing id gets, and a project member must not.
+// project-scoped parameter, the deployment user outside the project must get
+// the answer a missing id gets, and the same user after joining must not.
 func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	fx := dbfx.New(testPool, testWorkspaceID, testUserID)
 	fx.WorkspaceID = fx.Workspace(t, "Private project routes", "private-routes-"+uuid.NewString())
@@ -465,34 +464,23 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	fx.Cleanup(t, `DELETE FROM issue_project_scope WHERE workspace_id = $1`, fx.WorkspaceID)
 	fx.Cleanup(t, `DELETE FROM issue_source_context WHERE workspace_id = $1`, fx.WorkspaceID)
 
-	// Both callers are admins, so role checks pass and only project
-	// membership tells them apart: a workspace role grants no visibility.
-	newAdmin := func(name string) (string, string) {
-		email := "private-routes-" + uuid.NewString() + "@example.test"
-		id := fx.User(t, name, email)
-		fx.Member(t, fx.WorkspaceID, id, "admin")
-		token, err := generateTestJWT(id, email, name)
-		if err != nil {
-			t.Fatalf("sign %s token: %v", name, err)
-		}
-		return id, token
-	}
-	insiderID, insiderToken := newAdmin("Private routes insider")
-	outsiderID, outsiderToken := newAdmin("Private routes outsider")
-
-	shared := privateRouteShared{insiderID: insiderID}
-	shared.runtimeID = fx.Runtime(t, "Private routes runtime", dbfx.Cols{"owner_id": insiderID})
-	// Anyone in the workspace may invoke the agent, so only visibility can
-	// stop the outsider from starting its runs.
+	// The only HTTP actor is the workspace owner. A workspace role grants no
+	// visibility into a private project, so the same user is hidden until a
+	// project_member row exists.
+	ownerID := fx.UserID
+	shared := privateRouteShared{insiderID: ownerID}
+	shared.runtimeID = fx.Runtime(t, "Private routes runtime", dbfx.Cols{"owner_id": ownerID})
+	// Anyone in the workspace may invoke the agent, so only project
+	// visibility can stop a non-member from starting its runs.
 	shared.agentID = fx.Agent(t, "Private routes agent", shared.runtimeID, dbfx.Cols{
-		"owner_id": insiderID, "visibility": "workspace", "permission_mode": "public_to",
+		"owner_id": ownerID, "visibility": "workspace", "permission_mode": "public_to",
 	})
 	fx.Insert(t, "agent_invocation_target", dbfx.Cols{"agent_id": shared.agentID, "target_type": "workspace", "target_id": fx.WorkspaceID})
 	shared.labelID = fx.Insert(t, "issue_label", dbfx.Cols{"workspace_id": fx.WorkspaceID, "name": "probe", "color": "#000000"})
 	shared.propertyID = fx.Insert(t, "issue_property", dbfx.Cols{"workspace_id": fx.WorkspaceID, "name": "Probe", "type": "text"})
 	shared.quickActionID = fx.Insert(t, "quick_action", dbfx.Cols{
 		"workspace_id": fx.WorkspaceID, "name": "Probe", "assignee_type": "agent", "assignee_id": shared.agentID,
-		"prompt": "Probe", "created_by_type": "member", "created_by_id": insiderID,
+		"prompt": "Probe", "created_by_type": "member", "created_by_id": ownerID,
 	})
 
 	// The insider's control calls read and delete stored files: keep them in
@@ -508,7 +496,7 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	router, _ := NewRouterWithOptions(testPool, realtime.NewHub(), events.New(), analytics.NoopClient{}, nil, RouterOptions{
 		FeatureFlags: featureflag.NewService(flags),
 	})
-	call := func(token, method, path, body string) routeAnswer {
+	call := func(method, path, body string) routeAnswer {
 		var req *http.Request
 		switch method {
 		case http.MethodPost, http.MethodPut, http.MethodPatch:
@@ -520,7 +508,6 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 		default:
 			req = httptest.NewRequest(method, path, nil)
 		}
-		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("X-Workspace-ID", fx.WorkspaceID)
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, req)
@@ -530,10 +517,6 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 	probe := func(t *testing.T, method, pattern string, params []routeParamRef, shape privateRouteRequest) {
 		f := &privateRouteFixture{t: t, fx: fx, shared: shared, ids: map[string]string{}}
 		f.projectID = fx.Project(t, "Private route probe project", dbfx.Cols{"visibility": projectaccess.VisibilityPrivate})
-		for _, member := range []string{insiderID, fx.UserID} {
-			fx.InsertNoID(t, "project_member", dbfx.Cols{"workspace_id": fx.WorkspaceID, "project_id": f.projectID, "user_id": member},
-				"project_id = $1 AND user_id = $2", f.projectID, member)
-		}
 		// request returns the parameter values naming the fixture's objects
 		// for the caller, the same values with every project object replaced
 		// by an id that does not exist, and the request body.
@@ -562,22 +545,22 @@ func TestEveryRouteByProjectObjectIDHidesPrivateProjects(t *testing.T) {
 			return existingValues, missingValues, body
 		}
 
-		existing, missing, body := request(outsiderID)
-		notFound := call(outsiderToken, method, routePath(pattern, missing), body)
-		hidden := call(outsiderToken, method, routePath(pattern, existing), body)
+		existing, missing, body := request(ownerID)
+		notFound := call(method, routePath(pattern, missing), body)
+		hidden := call(method, routePath(pattern, existing), body)
 		// An answer that echoes the id it was asked about still matches.
 		for i := range existing {
 			hidden.body = strings.ReplaceAll(hidden.body, existing[i], missing[i])
 		}
 		if hidden != notFound {
-			t.Errorf("a workspace admin outside the project got %v; an id that does not exist gets %v. Does the handler check the project visibility of the object it loads?", hidden, notFound)
+			t.Errorf("the workspace owner outside the project got %v; an id that does not exist gets %v. Does the handler check the project visibility of the object it loads?", hidden, notFound)
 		}
 
-		// Control: the same request from a project member must not look like
-		// a missing id, or the outsider's answer above proves nothing.
-		existing, missing, body = request(insiderID)
-		insiderNotFound := call(insiderToken, method, routePath(pattern, missing), body)
-		if visible := call(insiderToken, method, routePath(pattern, existing), body); visible == insiderNotFound {
+		fx.InsertNoID(t, "project_member", dbfx.Cols{"workspace_id": fx.WorkspaceID, "project_id": f.projectID, "user_id": ownerID},
+			"project_id = $1 AND user_id = $2", f.projectID, ownerID)
+		existing, missing, body = request(ownerID)
+		memberNotFound := call(method, routePath(pattern, missing), body)
+		if visible := call(method, routePath(pattern, existing), body); visible == memberNotFound {
 			t.Errorf("a project member got the missing-id answer too, %v: the fixture does not reach the object, or the route needs a request in privateProjectRouteRequests", visible)
 		}
 	}

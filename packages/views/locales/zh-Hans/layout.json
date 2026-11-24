@@ -82,7 +82,6 @@
     "unpin_tooltip": "取消固定",
     "workspaces_label": "工作区",
     "create_workspace": "创建工作区",
-    "log_out": "退出登录",
     "new_issue": "新建任务",
     "pinned_label": "固定",
     "show_more_pins": "再显示 {{count}} 项...",

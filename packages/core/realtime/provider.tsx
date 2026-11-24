@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { WSClient, type WSConnectionStatus } from "../api/ws-client";
-import type { WSEventType, StorageAdapter } from "../types";
+import type { WSEventType } from "../types";
 import type { ClientIdentity } from "../platform/types";
 import type { StoreApi, UseBoundStore } from "zustand";
 import type { AuthState } from "../auth/store";
@@ -57,10 +57,6 @@ export interface WSProviderProps {
   wsUrl: string;
   /** Platform-created auth store instance */
   authStore: UseBoundStore<StoreApi<AuthState>>;
-  /** Platform-specific storage adapter for reading auth tokens */
-  storage: StorageAdapter;
-  /** When true, use HttpOnly cookies instead of token query param for WS auth. */
-  cookieAuth?: boolean;
   /** Identifies the WS client to the server (sent as query params on the upgrade URL). */
   identity?: ClientIdentity;
   /** Optional callback for showing toast messages (platform-specific, e.g. sonner) */
@@ -71,8 +67,6 @@ export function WSProvider({
   children,
   wsUrl,
   authStore,
-  storage,
-  cookieAuth,
   identity,
   onToast,
 }: WSProviderProps) {
@@ -103,18 +97,8 @@ export function WSProvider({
   useEffect(() => {
     if (!user || !wsSlug) return;
 
-    // In token mode we need a token from storage; in cookie mode the HttpOnly
-    // cookie is sent automatically with the WS upgrade request.
-    const token = cookieAuth ? null : storage.getItem("multica_token");
-    if (!cookieAuth && !token) return;
-
     const ws = new WSClient(wsUrl, {
       logger: createLogger("ws"),
-      cookieAuth,
-      // Re-read on every (re)connect instead of pinning the token captured
-      // below: a session renewed since this effect ran would otherwise keep
-      // reconnecting with a credential that is on its way to expiring.
-      getToken: cookieAuth ? undefined : () => storage.getItem("multica_token"),
       identity:
         identityPlatform || identityVersion || identityOS
           ? {
@@ -124,7 +108,7 @@ export function WSProvider({
             }
           : undefined,
     });
-    ws.setAuth(token, wsSlug);
+    ws.setAuth(wsSlug);
     setWsClient(ws);
     ws.connect();
 
@@ -136,8 +120,6 @@ export function WSProvider({
     user,
     wsSlug,
     wsUrl,
-    storage,
-    cookieAuth,
     identityPlatform,
     identityVersion,
     identityOS,
