@@ -1,0 +1,49 @@
+server/internal/cli/errors_test.go
+  s_fc0852876b2926::t_6e963a8f3d18d5 544-545,548-549,567,601-602,605,607,614,616,640,646-647
+  s_fc0852876b2926::t_4e3d7bcd31f735 486-488
+server/internal/service/builtin_skills/multica-platform/references/runtimes.md
+  s_fc0852876b2926::t_5cb7b1f8feba8c 122-123
+server/cmd/multica/cmd_setup.go
+  s_fc0852876b2926::t_5cb7b1f8feba8c 364,427-428
+server/internal/cli/errors.go
+  s_fc0852876b2926::t_96fcd37658a625 157-159,421-422,528-529,547-549
+server/internal/cli/errors_integration_test.go
+  s_fc0852876b2926::t_4e3d7bcd31f735 408-412
+  s_fc0852876b2926::t_6e963a8f3d18d5 264
+server/cmd/multica/cmd_daemon_identity_test.go
+  s_fc0852876b2926::t_1ee9616403bb9d 57-75,232-234,238-239,241-251
+server/cmd/multica/cmd_daemon_unknown_profile_test.go
+  s_fc0852876b2926::t_b0968b860f3786 124,132,137,148,272-273,277,279,283,285-287
+server/cmd/multica/cmd_agent.go
+  s_e983fda2d78021::t_e847dade99f631 362,379,387-389
+server/cmd/multica/cmd_daemon.go
+  s_e983fda2d78021::t_d1aca163fa6807 400,647-652,684-687,693,750-754,759,762,1287-1291
+server/cmd/multica/cmd_daemon_startup_test.go
+  s_e983fda2d78021::t_46ec91dc8e9fd4 8,16-75
+server/cmd/multica/help.go
+  s_e983fda2d78021::t_b75ff0c6637c47 138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "f44167c3b10d992428c32c27ec2e2593f37f071e",
+  "prompts": {},
+  "sessions": {
+    "s_e983fda2d78021": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a26b034d49c0752b2",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    },
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "zhipu/glm-5.4"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
