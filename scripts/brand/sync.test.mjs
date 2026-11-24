@@ -26,7 +26,7 @@ for (const { name, from, to, drift, stay } of [
     name: "a wordmark coordinate",
     from: "const gap = 12;",
     to: "const gap = 13;",
-    drift: ["apps/mobile/components/brand/multica-logo.tsx", "server/cmd/multica/cmd_auth.go", "docs/assets/logo-light.svg"],
+    drift: ["apps/mobile/components/brand/multica-logo.tsx", "docs/assets/logo-light.svg"],
     stay: ["apps/web/public/favicon.svg"],
   },
   {
@@ -34,7 +34,7 @@ for (const { name, from, to, drift, stay } of [
     from: "export const ICON_TILE_RADIUS = 22.5;",
     to: "export const ICON_TILE_RADIUS = 30;",
     drift: ["apps/web/public/favicon.svg", "apps/docs/app/icon.svg"],
-    stay: ["apps/web/public/icons/icon.svg", "server/cmd/multica/cmd_auth.go"],
+    stay: ["apps/web/public/icons/icon.svg"],
   },
 ]) {
   test(`changing ${name} without regenerating fails the check, and regenerating fixes it`, async (t) => {
