@@ -20,7 +20,7 @@ describe("MainRendererMessageQueue", () => {
     const { queue, send } = createQueue();
 
     queue.enqueue("a", "issue:open", "issue-a");
-    queue.setReady("a", "issue:open", true);
+    queue.setReady("a", "inbox:open", true);
     expect(send).not.toHaveBeenCalled();
 
     queue.setReady("a", "issue:open", true);

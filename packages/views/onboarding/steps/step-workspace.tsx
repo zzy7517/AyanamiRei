@@ -436,7 +436,9 @@ export function StepWorkspace({
               )}
             </div>
           ) : workspaceCreationDisabled ? (
-            <CreationDisabledNotice />
+            // Nothing to reuse and creation is gated: the headline and lede
+            // above carry the message (#3433), and there is no action to offer.
+            null
           ) : (
             createFields
           )}
@@ -456,20 +458,6 @@ export function StepWorkspace({
         </StepFooter>
       )}
     </>
-  );
-}
-
-/**
- * Onboarding-step notice rendered when the operator has set
- * DISABLE_WORKSPACE_CREATION=true (#3433) AND the user has no existing
- * workspace yet. The headline / lede above this block already carry the
- * messaging; this component only provides the logout escape so a user who
- * landed here is not trapped.
- */
-function CreationDisabledNotice() {
-  return (
-    <div className="flex flex-col gap-3">
-    </div>
   );
 }
 

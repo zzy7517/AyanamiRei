@@ -20,16 +20,11 @@ type MockConfigState = {
   daemonAppUrl: string;
 };
 
-const mockLogout = vi.hoisted(() => vi.fn());
 const mockUseConfigStore = vi.hoisted(() =>
   vi.fn((selector: (state: MockConfigState) => unknown) =>
     selector({ workspaceCreationDisabled: false, daemonAppUrl: "" }),
   ),
 );
-
-vi.mock("../../auth", () => ({
-  useLogout: () => mockLogout,
-}));
 
 vi.mock("@multica/core/config", () => ({
   useConfigStore: (selector: (state: MockConfigState) => unknown) =>
@@ -90,8 +85,8 @@ const EXISTING_WORKSPACE: Workspace = {
 
 // Regression for #3433 (PR feedback): when DISABLE_WORKSPACE_CREATION is on,
 // every onboarding entry point must steer the user toward an existing
-// workspace or a logout escape — never toward the create form, even
-// indirectly (stale CTA copy, "or start another" prose, etc.).
+// workspace — never toward the create form, even indirectly (stale CTA copy,
+// "or start another" prose, etc.).
 describe("StepWorkspace — DISABLE_WORKSPACE_CREATION gate", () => {
   it("renders the create form when the flag is off and the user has no workspace", () => {
     renderStep({ existing: null, disabled: false });
@@ -113,7 +108,9 @@ describe("StepWorkspace — DISABLE_WORKSPACE_CREATION gate", () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Workspace name")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("URL")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+    // The notice is text only: with one local user there is no account to
+    // leave, so the page offers no control at all.
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("forces the existing-workspace-only state when the flag is on and the user already has a workspace", () => {
