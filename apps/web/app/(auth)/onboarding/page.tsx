@@ -14,7 +14,8 @@ import { CliInstallInstructions, OnboardingFlow } from "@multica/views/onboardin
 /**
  * Web shell for the onboarding flow. The route is the platform chrome on
  * web (matching `WindowOverlay` on desktop); content is the shared
- * `<OnboardingFlow />`. Kept minimal — guard on auth, render, exit.
+ * `<OnboardingFlow />`. Kept minimal — wait for the user record, render,
+ * exit.
  *
  * Runtime-connected onboarding opens the Mika session that the final step
  * created and started; skipping the runtime opens the install-runtime guide
@@ -27,6 +28,8 @@ import { CliInstallInstructions, OnboardingFlow } from "@multica/views/onboardin
  */
 export default function OnboardingPage() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const hasOnboarded = useHasOnboarded();
   const { workspaces, ready: workspacesReady } = useWorkspaceList({
     enabled: true,
@@ -47,15 +50,16 @@ export default function OnboardingPage() {
     // already onboarded. We deliberately don't bounce on `workspaces.length`
     // here — the flow creates a workspace mid-onboarding, and a
     // hasWorkspaces bounce here would kick the user out before runtime and
-    // Mika setup can run. The new entry-point
-    // judgment in callback / login handles "where should this user go on
-    // login" so OnboardingPage no longer needs to second-guess it.
+    // Mika setup can run. Where a visitor enters is decided before this
+    // route, so OnboardingPage does not second-guess it.
     if (hasOnboarded) {
       router.replace(resolvePostAuthDestination(workspaces, hasOnboarded));
     }
   }, [hasOnboarded, workspacesReady, workspaces, router]);
 
-  if (hasOnboarded) return null;
+  // OnboardingFlow needs the user record, which on a direct load arrives
+  // after the first render.
+  if (isLoading || !user || hasOnboarded) return null;
 
   // Layout: page owns its own scroll (root layout sets `body {
   // overflow: hidden }` for the app-shell convention). OnboardingFlow

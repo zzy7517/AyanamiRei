@@ -21,10 +21,16 @@ import { CliInstallInstructions, OnboardingFlow } from "@multica/views/onboardin
  */
 export default function Page() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const { data: wsList = [] } = useQuery({
     ...workspaceListOptions(),
     enabled: true,
   });
+
+  // OnboardingFlow needs the user record, which on a direct load arrives
+  // after the first render.
+  if (isLoading || !user) return null;
 
   // Cancel goes to the root path — the workspace layout redirects from there
   // to the user's default workspace. Only offered when there is somewhere to
