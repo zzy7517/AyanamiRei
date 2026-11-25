@@ -1,0 +1,21 @@
+apps/desktop/electron-builder.yml
+  s_fc0852876b2926::t_4a9828aab5c843 144-147
+apps/desktop/package.json
+  s_fc0852876b2926::t_95cd573e0cc66c 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "f115a918e3a8ae981c6af79b575820e879b98eec",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
