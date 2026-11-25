@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nProvider } from "@multica/core/i18n/react";
 import { WorkspaceSlugProvider } from "@multica/core/paths";
@@ -15,11 +15,13 @@ import { IssueTreesSection } from "./issue-trees-section";
 // write (and whether they still do it once the page is gone) is what runs here.
 
 const mocks = vi.hoisted(() => ({
+  getIssue: vi.fn(),
   getIssueProjectScope: vi.fn(),
   replaceIssueProjectScope: vi.fn(),
-  deleteIssueProjectTree: vi.fn(),
   rebuildIssueProjectTree: vi.fn(),
+  reportIssueProjectTreeState: vi.fn(),
   listProjects: vi.fn(),
+  listProjectResources: vi.fn(),
   copyText: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
@@ -32,11 +34,13 @@ vi.mock("@multica/core/api", async (importOriginal) => {
     // On the real client's prototype, so that a method nobody mocked here
     // fails for the usual reason instead of not existing.
     api: Object.assign(Object.create(real.api), {
+      getIssue: mocks.getIssue,
       getIssueProjectScope: mocks.getIssueProjectScope,
       replaceIssueProjectScope: mocks.replaceIssueProjectScope,
-      deleteIssueProjectTree: mocks.deleteIssueProjectTree,
       rebuildIssueProjectTree: mocks.rebuildIssueProjectTree,
+      reportIssueProjectTreeState: mocks.reportIssueProjectTreeState,
       listProjects: mocks.listProjects,
+      listProjectResources: mocks.listProjectResources,
     }),
   };
 });
@@ -54,6 +58,42 @@ vi.mock("../../projects/components/project-picker", () => ({
     </button>
   ),
 }));
+
+/**
+ * The desktop app's tree builder, driven by hand. Deleting a tree asks the app
+ * to remove it from the disk before the server is told; the test speaks for
+ * the app through this bridge.
+ */
+class FakeTreeHost {
+  static instances: FakeTreeHost[] = [];
+  removeCalls: { place: unknown; taskKey: string; tree: unknown }[] = [];
+  private held: { promise: Promise<{ ok: true; removed: [] } | { ok: false; error: string }>; release: (r: { ok: true; removed: [] } | { ok: false; error: string }) => void } | null = null;
+
+  constructor() {
+    FakeTreeHost.instances.push(this);
+  }
+  remove(place: unknown, taskKey: string, tree: unknown) {
+    this.removeCalls.push({ place, taskKey, tree });
+    if (this.held) return this.held.promise;
+    return Promise.resolve({ ok: true as const, removed: [] as never[] });
+  }
+  /** Holds the next `remove` answer until `release`. */
+  hold() {
+    let release!: (r: { ok: true; removed: [] } | { ok: false; error: string }) => void;
+    const promise = new Promise<{ ok: true; removed: [] } | { ok: false; error: string }>((resolve) => {
+      release = resolve;
+    });
+    this.held = { promise, release };
+  }
+  release(result: { ok: true; removed: [] } | { ok: false; error: string } = { ok: true, removed: [] }) {
+    const held = this.held;
+    this.held = null;
+    held?.release(result);
+  }
+  static get last(): FakeTreeHost {
+    return FakeTreeHost.instances.at(-1)!;
+  }
+}
 
 const navigation: NavigationAdapter = {
   push: vi.fn(),
@@ -118,16 +158,6 @@ const rows = () => screen.findAllByRole("listitem");
 /** A row of a list that `rows()` has found whole. */
 const nth = async (index: number) => (await rows())[index]!;
 
-/** Leaves the promise returned by `mock` to the test, which settles it in its own time. */
-function hold(mock: { mockImplementation: (impl: () => Promise<unknown>) => unknown }) {
-  let settle!: { resolve: () => void; reject: (err: unknown) => void };
-  const promise = new Promise<void>((resolve, reject) => {
-    settle = { resolve, reject };
-  });
-  mock.mockImplementation(() => promise);
-  return settle;
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.listProjects.mockResolvedValue({
@@ -136,7 +166,36 @@ beforeEach(() => {
       { id: "proj-2", title: "Mobile" },
     ],
   });
+  mocks.listProjectResources.mockResolvedValue({
+    resources: [
+      {
+        id: "folder-1",
+        project_id: "proj-1",
+        workspace_id: "ws-1",
+        resource_type: "local_directory",
+        resource_ref: { local_path: "/srv/billing", daemon_id: "daemon-1" },
+        label: null,
+        position: 0,
+        created_at: "2026-11-22T10:00:00Z",
+        created_by: null,
+      },
+    ],
+    total: 1,
+  });
+  mocks.getIssue.mockResolvedValue({
+    id: "issue-1",
+    workspace_id: "ws-1",
+    identifier: "MUL-1",
+    title: "Ship it",
+    description: "",
+  });
+  mocks.reportIssueProjectTreeState.mockResolvedValue(null);
   mocks.copyText.mockResolvedValue(true);
+  (window as unknown as { desktopAPI?: unknown }).desktopAPI = { trees: new FakeTreeHost() };
+});
+
+afterEach(() => {
+  delete (window as unknown as { desktopAPI?: unknown }).desktopAPI;
 });
 
 describe("IssueTreesSection", () => {
@@ -239,7 +298,7 @@ describe("IssueTreesSection", () => {
   });
 
   describe("deleting a tree", () => {
-    it("asks first, and deletes only once told to", async () => {
+    it("asks first, and removes it from the machine only once told to", async () => {
       mocks.getIssueProjectScope.mockResolvedValue({ items: [BUILT] });
       renderSection();
       const built = await nth(0);
@@ -251,7 +310,7 @@ describe("IssueTreesSection", () => {
       expect(dialog).toHaveTextContent("The worktree is removed from the machine.");
       expect(dialog).toHaveTextContent("Billing");
       expect(dialog).toHaveTextContent("task/MUL-1");
-      expect(mocks.deleteIssueProjectTree).not.toHaveBeenCalled();
+      expect(FakeTreeHost.last.removeCalls).toHaveLength(0);
     });
 
     it("closes without a request when cancelled", async () => {
@@ -264,57 +323,76 @@ describe("IssueTreesSection", () => {
       fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
       await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
-      expect(mocks.deleteIssueProjectTree).not.toHaveBeenCalled();
+      expect(FakeTreeHost.last.removeCalls).toHaveLength(0);
       expect(screen.getByRole("listitem")).toHaveTextContent("Ready");
     });
 
-    it("keeps the tree on screen and the question open until the server has deleted it, then reads the list again", async () => {
+    it("keeps the tree on screen and the question open until the app has removed it, then reads the list again", async () => {
       mocks.getIssueProjectScope.mockResolvedValue({ items: [BUILT] });
       renderSection();
       const built = await nth(0);
-      const server = hold(mocks.deleteIssueProjectTree);
+      const app = FakeTreeHost.last;
+      app.hold();
 
       fireEvent.click(within(built).getByRole("button", { name: "Delete worktree" }));
       const dialog = await screen.findByRole("alertdialog");
       mocks.getIssueProjectScope.mockClear();
       fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
 
-      await waitFor(() => expect(mocks.deleteIssueProjectTree).toHaveBeenCalledWith("issue-1", "tree-1"));
+      await waitFor(() => expect(app.removeCalls).toHaveLength(1));
+      // The tree is removed where its project's folder is, under the task's name.
+      expect(app.removeCalls[0]).toEqual({
+        place: { kind: "local" },
+        taskKey: "MUL-1",
+        tree: { branch: "task/MUL-1" },
+      });
       // Behind the question, which hides the page from assistive technology,
-      // the tree is still the one shown.
+      // the tree is still the one shown, and the server is not told yet.
       expect(screen.getByRole("listitem", { hidden: true })).toHaveTextContent("Ready");
       expect(screen.getByRole("alertdialog")).toBeInTheDocument();
       expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
-      expect(mocks.getIssueProjectScope).not.toHaveBeenCalled();
+      expect(mocks.reportIssueProjectTreeState).not.toHaveBeenCalled();
 
-      mocks.getIssueProjectScope.mockResolvedValue({ items: [{ ...BUILT, tree: tree({ id: "tree-1", state: "deleted" }) }] });
-      await act(async () => server.resolve());
+      // Removed: the app tells the server, the list is read again, and the
+      // question closes.
+      mocks.getIssueProjectScope.mockResolvedValue({
+        items: [{ ...BUILT, tree: tree({ id: "tree-1", state: "deleted" }) }],
+      });
+      await act(async () => app.release());
 
       await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+      expect(mocks.reportIssueProjectTreeState).toHaveBeenCalledWith("ws-1", "issue-1", "tree-1", {
+        state: "deleted",
+      });
       expect(await screen.findByRole("button", { name: "Rebuild" })).toBeInTheDocument();
       expect(screen.queryByRole("link", { name: "Agent terminal" })).toBeNull();
     });
 
-    it("says why the server refused, and keeps the tree", async () => {
+    it("says why the tree was kept, and keeps it", async () => {
       mocks.getIssueProjectScope.mockResolvedValue({ items: [BUILT] });
       renderSection();
       const built = await nth(0);
-      const server = hold(mocks.deleteIssueProjectTree);
+      const app = FakeTreeHost.last;
+      app.hold();
       fireEvent.click(within(built).getByRole("button", { name: "Delete worktree" }));
       const dialog = await screen.findByRole("alertdialog");
       fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
 
-      await act(async () => server.reject(new Error("Failed to fetch")));
+      await waitFor(() => expect(app.removeCalls).toHaveLength(1));
+      await act(async () =>
+        app.release({ ok: false, error: "merge conflicts left in the worktree" }),
+      );
 
-      expect(within(dialog).getByRole("alert")).toHaveTextContent("Couldn't delete the worktree");
+      expect(within(dialog).getByRole("alert")).toHaveTextContent("merge conflicts left in the worktree");
       expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeEnabled();
+      expect(mocks.reportIssueProjectTreeState).not.toHaveBeenCalled();
 
       // The question can be left, and the tree is still there to be used.
       fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
       await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
       expect(screen.getByRole("listitem")).toHaveTextContent("Ready");
       expect(screen.getByRole("link", { name: "Agent terminal" })).toBeInTheDocument();
-      expect(mocks.deleteIssueProjectTree).toHaveBeenCalledTimes(1);
+      expect(app.removeCalls).toHaveLength(1);
     });
   });
 

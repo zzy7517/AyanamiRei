@@ -2,7 +2,13 @@
 import { createRef } from "react";
 import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError } from "@multica/core/api";
+import type {
+  TerminalHostBridge,
+  TerminalHostEvent,
+  TerminalHostAttachResult,
+  TerminalHostOpenResult,
+  TerminalSize,
+} from "@multica/core/terminal";
 import { TerminalSession } from "@multica/core/terminal";
 import { renderWithI18n } from "../test/i18n";
 import { Terminal, type TerminalHandle } from "./terminal";
@@ -39,6 +45,7 @@ const xterm = vi.hoisted(() => {
     options: Record<string, unknown>;
     written: Array<string | Uint8Array> = [];
     focused = 0;
+    resets = 0;
     disposed = false;
     cols = 80;
     rows = 24;
@@ -61,6 +68,9 @@ const xterm = vi.hoisted(() => {
     }
     write(data: string | Uint8Array) {
       this.written.push(data);
+    }
+    reset() {
+      this.resets += 1;
     }
     // Only a real change of size is reported, as by the real one.
     resize(cols: number, rows: number) {
@@ -105,67 +115,63 @@ const xterm = vi.hoisted(() => {
 vi.mock("@xterm/xterm", () => ({ Terminal: xterm.FakeTerminal }));
 vi.mock("@xterm/addon-fit", () => ({ FitAddon: xterm.FakeFitAddon }));
 
-const apiMocks = vi.hoisted(() => ({
-  createTerminalTicket: vi.fn<() => Promise<{ ticket: string; expiresInSeconds: number } | null>>(),
-}));
-
 vi.mock("@multica/core/api", () => ({
-  ApiError: class ApiError extends Error {
-    status: number;
-    constructor(message: string, status: number) {
-      super(message);
-      this.status = status;
-    }
-  },
-  api: {
-    createTerminalTicket: apiMocks.createTerminalTicket,
-    getBaseUrl: () => "https://multica.test",
-  },
+  api: { reportIssueAgentReply: vi.fn(() => Promise.resolve(undefined)) },
 }));
 
-const READY = JSON.stringify({ type: "ready", terminalId: "t-1", pid: 4242, cols: 120, rows: 40 });
-const encoder = new TextEncoder();
+/**
+ * The desktop app's main process, driven by hand. One bridge per test: a
+ * session follows it through `window.desktopAPI.terminal`, and the test speaks
+ * for the app by resolving `open` and emitting events.
+ */
+class FakeBridge implements TerminalHostBridge {
+  static instances: FakeBridge[] = [];
+  openCalls: { target: unknown; size: TerminalSize }[] = [];
+  attachCalls: { terminalId: string; size: TerminalSize }[] = [];
+  writeCalls: { terminalId: string; data: string }[] = [];
+  resizeCalls: { terminalId: string; size: TerminalSize }[] = [];
+  endCalls: string[] = [];
+  detachCalls: string[] = [];
+  /** The answers to `open`, in order; the default names the terminal t-1. */
+  openResults: TerminalHostOpenResult[] = [];
+  attachResults: Array<Extract<TerminalHostAttachResult, { ok: true }> | Extract<TerminalHostAttachResult, { ok: false }>> = [];
+  private listeners = new Set<(event: TerminalHostEvent) => void>();
 
-/** One socket per connection attempt, driven by hand: no network, no real handshake. */
-class FakeSocket {
-  static instances: FakeSocket[] = [];
-  onopen: (() => void) | null = null;
-  onmessage: ((event: { data: unknown }) => void) | null = null;
-  onclose: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  binaryType = "blob";
-  sent: Array<string | Uint8Array> = [];
-  constructor(readonly url: string) {
-    FakeSocket.instances.push(this);
+  constructor() {
+    FakeBridge.instances.push(this);
   }
-  send(data: string | Uint8Array) {
-    this.sent.push(data);
+  open(target: unknown, size: TerminalSize): Promise<TerminalHostOpenResult> {
+    this.openCalls.push({ target, size });
+    const result = this.openResults.shift() ?? { ok: true, terminalId: "t-1", pid: 4242, cwd: "/srv/app" };
+    return Promise.resolve(result);
   }
-  closeCalls = 0;
-  close() {
-    this.closeCalls += 1;
+  attach(terminalId: string, size: TerminalSize): Promise<TerminalHostAttachResult> {
+    this.attachCalls.push({ terminalId, size });
+    const result = this.attachResults.shift() ?? { ok: true, running: true, exit: null, screen: "" };
+    return Promise.resolve(result);
   }
-  open() {
-    this.onopen?.();
+  detach(terminalId: string) {
+    this.detachCalls.push(terminalId);
   }
-  receiveText(text: string) {
-    this.onmessage?.({ data: text });
+  write(terminalId: string, data: string) {
+    this.writeCalls.push({ terminalId, data });
   }
-  receiveBytes(...bytes: number[]) {
-    this.onmessage?.({ data: new Uint8Array(bytes).buffer });
+  resize(terminalId: string, size: TerminalSize) {
+    this.resizeCalls.push({ terminalId, size });
   }
-  /** The socket went away the way a network drop looks to a page. */
-  drop() {
-    this.onclose?.();
+  end(terminalId: string) {
+    this.endCalls.push(terminalId);
   }
-  /** The control messages sent so far; keyboard bytes are left out. */
-  control(): Array<Record<string, unknown>> {
-    return this.sent
-      .filter((data): data is string => typeof data === "string")
-      .map((data) => JSON.parse(data) as Record<string, unknown>);
+  onEvent(listener: (event: TerminalHostEvent) => void) {
+    this.listeners.add(listener);
+    return () => void this.listeners.delete(listener);
   }
-  static get last(): FakeSocket {
-    return FakeSocket.instances.at(-1)!;
+  /** The app's turn: an event about one of its terminals, shown by React. */
+  emit(event: TerminalHostEvent) {
+    for (const listener of [...this.listeners]) listener(event);
+  }
+  static get last(): FakeBridge {
+    return FakeBridge.instances.at(-1)!;
   }
 }
 
@@ -189,46 +195,35 @@ const settle = async () => {
   });
 };
 
-/** The server's turn: what it sends or does to the socket, shown by React. */
-const serve = (action: (socket: FakeSocket) => void) =>
-  act(async () => {
-    action(FakeSocket.last);
-  });
+const shellIn = (cwd: string) => ({ kind: "shell", place: { kind: "local" }, cwd }) as const;
 
 const sessions: TerminalSession[] = [];
 
-function setup() {
-  const session = new TerminalSession();
+function setup(target: ReturnType<typeof shellIn> = shellIn("/srv/app"), terminalId?: string) {
+  const bridge = new FakeBridge();
+  (window as unknown as { desktopAPI: unknown }).desktopAPI = { terminal: bridge };
+  const session = new TerminalSession({ target, terminalId });
   sessions.push(session);
   const onReady = vi.fn();
-  const onRequestClose = vi.fn();
   const handle = createRef<TerminalHandle>();
-  const view = renderWithI18n(
-    <Terminal ref={handle} session={session} onReady={onReady} onRequestClose={onRequestClose} />,
-  );
-  return { ...view, session, onReady, onRequestClose, handle, host: view.container.firstElementChild as HTMLElement };
+  const view = renderWithI18n(<Terminal ref={handle} session={session} onReady={onReady} />);
+  return { ...view, session, onReady, handle, bridge, host: view.container.firstElementChild as HTMLElement };
 }
 
-/** A terminal that answered: open a shell, let the server say it is ready. */
+/** A terminal that answered: open it, let the owner name and run it. */
 async function readyTerminal() {
   const view = setup();
-  act(() => view.session.open("/srv/app"));
+  act(() => view.session.start());
   await settle();
-  await serve((socket) => {
-    socket.open();
-    socket.receiveText(READY);
-  });
-  return { ...view, socket: FakeSocket.last };
+  return { ...view, bridge: FakeBridge.last };
 }
 
 beforeEach(() => {
-  FakeSocket.instances = [];
+  FakeBridge.instances = [];
   xterm.FakeTerminal.instances = [];
   xterm.FakeFitAddon.instances = [];
   xterm.FakeTerminal.measured = { cols: 120, rows: 40 };
   observers.length = 0;
-  apiMocks.createTerminalTicket.mockResolvedValue({ ticket: "tk", expiresInSeconds: 120 });
-  vi.stubGlobal("WebSocket", FakeSocket as unknown as typeof WebSocket);
   vi.stubGlobal("ResizeObserver", FakeResizeObserver as unknown as typeof ResizeObserver);
   // No canvas to resolve the theme's tokens through: the plain values stand in.
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
@@ -237,6 +232,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const session of sessions) session.dispose();
   sessions.length = 0;
+  delete (window as unknown as { desktopAPI?: unknown }).desktopAPI;
   document.documentElement.classList.remove("dark");
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -262,16 +258,12 @@ describe("Terminal", () => {
     expect(host.closest("[data-raw-keyboard]")).toBe(host);
   });
 
-  it("says it is connecting until the server answers", async () => {
+  it("says it is opening until the owner answers", async () => {
     const { session, onReady } = setup();
-    act(() => session.open("/srv/app"));
-    expect(screen.getByRole("status")).toHaveTextContent("Connecting...");
+    act(() => session.start());
+    expect(screen.getByRole("status")).toHaveTextContent("Opening...");
 
     await settle();
-    await serve((socket) => {
-      socket.open();
-      socket.receiveText(READY);
-    });
 
     expect(screen.queryByRole("status")).toBeNull();
     expect(onReady).toHaveBeenCalledWith("t-1");
@@ -279,121 +271,114 @@ describe("Terminal", () => {
 
   it("opens the shell at the size the terminal was fitted to", async () => {
     const { session } = setup();
-    act(() => session.open("/srv/app"));
+    act(() => session.start());
     await settle();
-    await serve((socket) => socket.open());
 
-    expect(FakeSocket.last.url).toBe("wss://multica.test/terminal/ws?ticket=tk");
-    expect(FakeSocket.last.control()).toEqual([{ type: "open", cwd: "/srv/app", cols: 120, rows: 40 }]);
+    expect(FakeBridge.last.openCalls).toEqual([
+      { target: shellIn("/srv/app"), size: { cols: 120, rows: 40 } },
+    ]);
   });
 
-  it("sends what is typed to the socket, once the terminal is ready", async () => {
-    const { socket } = await readyTerminal();
+  it("sends what is typed to the owner, once the terminal is ready", async () => {
+    const { bridge } = await readyTerminal();
 
     act(() => xterm.FakeTerminal.last.onData.emit("ls\r\n"));
 
-    expect(socket.sent.at(-1)).toEqual(encoder.encode("ls\r\n"));
+    expect(bridge.writeCalls.at(-1)).toEqual({ terminalId: "t-1", data: "ls\r\n" });
   });
 
   it("drops what is typed before the terminal is ready", async () => {
-    const { session } = setup();
-    act(() => session.open("/srv/app"));
+    const { session, bridge } = setup();
     act(() => xterm.FakeTerminal.last.onData.emit("too soon\r\n"));
+    act(() => session.start());
     await settle();
-    await serve((socket) => socket.open());
 
-    expect(FakeSocket.last.sent).toHaveLength(1);
+    expect(bridge.writeCalls).toHaveLength(0);
   });
 
   it("sends bytes that are not text as they are", async () => {
-    const { socket } = await readyTerminal();
+    const { bridge } = await readyTerminal();
 
     act(() => xterm.FakeTerminal.last.onBinary.emit("\x1b[M !!"));
 
-    expect(socket.sent.at(-1)).toEqual(Uint8Array.from([0x1b, 0x5b, 0x4d, 0x20, 0x21, 0x21]));
+    // The keyboard arrives as text; the bytes it carries are kept whole.
+    expect(bridge.writeCalls.at(-1)).toEqual({ terminalId: "t-1", data: "\x1b[M !!" });
   });
 
   it("puts the terminal's output on screen", async () => {
     await readyTerminal();
 
-    await serve((it) => it.receiveBytes(0x1b, 0x5b, 0x33, 0x32, 0x6d, 0x24, 0x20));
+    await act(async () =>
+      FakeBridge.last.emit({ terminalId: "t-1", type: "output", data: "\x1b[32m$ " }),
+    );
 
-    expect(xterm.FakeTerminal.last.written).toEqual([Uint8Array.from([0x1b, 0x5b, 0x33, 0x32, 0x6d, 0x24, 0x20])]);
+    expect(xterm.FakeTerminal.last.written).toEqual(["\x1b[32m$ "]);
   });
 
-  it("tells the server the new size once the container has stopped moving", async () => {
-    const { socket } = await readyTerminal();
+  it("tells the owner the new size once the container has stopped moving", async () => {
+    const { bridge } = await readyTerminal();
     const observer = observers.at(-1)!;
     xterm.FakeTerminal.measured = { cols: 100, rows: 30 };
 
     // A window drag: many size changes in a row.
-    const resizes = () => socket.control().filter((message) => message.type === "resize");
     await act(async () => {
       for (let i = 0; i < 5; i += 1) observer.callback([], observer as unknown as ResizeObserver);
     });
-    expect(resizes()).toEqual([]);
+    expect(bridge.resizeCalls).toEqual([]);
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
     });
-    expect(resizes()).toEqual([{ type: "resize", cols: 100, rows: 30 }]);
+    expect(bridge.resizeCalls).toEqual([{ terminalId: "t-1", size: { cols: 100, rows: 30 } }]);
     expect(xterm.FakeFitAddon.last.fits).toBe(2);
   });
 
   it("shows how the process ended", async () => {
     await readyTerminal();
-    await serve((it) => it.receiveText(JSON.stringify({ type: "exit", terminalId: "t-1", exitCode: 0 })));
+    await act(async () =>
+      FakeBridge.last.emit({ terminalId: "t-1", type: "exit", exit: { exitCode: 0 } }),
+    );
     expect(screen.getByRole("status")).toHaveTextContent("Session ended with exit code 0");
   });
 
   it("names the signal when one ended the process", async () => {
     await readyTerminal();
-    await serve((it) =>
-      it.receiveText(JSON.stringify({ type: "exit", terminalId: "t-1", exitCode: null, signal: "KILL" })),
+    await act(async () =>
+      FakeBridge.last.emit({ terminalId: "t-1", type: "exit", exit: { exitCode: 0, signal: 9 } }),
     );
-    expect(screen.getByRole("status")).toHaveTextContent("Session ended by signal KILL");
+    expect(screen.getByRole("status")).toHaveTextContent("Session ended by signal 9");
   });
 
-  it("says only that the session ended when the server says no more", async () => {
+  it("says only that the session ended when the owner says no more", async () => {
     await readyTerminal();
-    await serve((it) => it.receiveText(JSON.stringify({ type: "exit", terminalId: "t-1", exitCode: null })));
+    // An exit described without a code.
+    const ended = { terminalId: "t-1", type: "exit", exit: { exitCode: null } } as unknown as TerminalHostEvent;
+    await act(async () => FakeBridge.last.emit(ended));
     expect(screen.getByRole("status")).toHaveTextContent("Session ended");
   });
 
-  it("says the server refused, in its own words too", async () => {
-    const { session, onReady } = setup();
-    act(() => session.open("/etc"));
+  it("says why the owner refused, in its own words too", async () => {
+    const { session, onReady, bridge } = setup(shellIn("/etc"));
+    bridge.openResults = [{ ok: false, code: "not_found", message: "/etc is not there any more." }];
+    act(() => session.start());
     await settle();
-    await serve((socket) => {
-      socket.open();
-      socket.receiveText(
-        JSON.stringify({ type: "error", code: "path_not_allowed", message: "/etc is outside /home/me" }),
-      );
-    });
 
     const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("A terminal cannot be opened in this directory.");
-    expect(alert).toHaveTextContent("/etc is outside /home/me");
+    expect(alert).toHaveTextContent("The folder is not there any more.");
+    expect(alert).toHaveTextContent("/etc is not there any more.");
     expect(onReady).not.toHaveBeenCalled();
   });
 
-  it("says so when this server has no terminal to offer", async () => {
-    apiMocks.createTerminalTicket.mockRejectedValue(new ApiError("API error: 404", 404, "Not Found"));
-    const { session } = setup();
-    act(() => session.open("/srv/app"));
+  it("says so when this client has no owner for terminals", async () => {
+    // No desktopAPI: jsdom's window carries none, and no bridge is built.
+    const session = new TerminalSession({ target: shellIn("/srv/app") });
+    sessions.push(session);
+    renderWithI18n(<Terminal session={session} />);
+    act(() => session.start());
     await settle();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("The terminal is not available on this server.");
-    expect(FakeSocket.instances).toHaveLength(0);
-  });
-
-  it("offers a way out while it is reconnecting", async () => {
-    const { onRequestClose } = await readyTerminal();
-    await serve((it) => it.drop());
-
-    expect(screen.getByRole("status")).toHaveTextContent("Reconnecting...");
-    fireEvent.click(screen.getByRole("button", { name: "End session" }));
-    expect(onRequestClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alert")).toHaveTextContent("Terminals open in the desktop app only.");
+    expect(FakeBridge.instances).toHaveLength(0);
   });
 
   it("dresses the same terminal again when the app theme changes", async () => {
@@ -429,7 +414,7 @@ describe("Terminal", () => {
   });
 
   it("lets go of the terminal when it leaves the screen, without ending it", async () => {
-    const { unmount, socket } = await readyTerminal();
+    const { unmount, bridge, session } = await readyTerminal();
     const term = xterm.FakeTerminal.last;
     expect(term.listeners()).toBeGreaterThan(0);
 
@@ -438,6 +423,50 @@ describe("Terminal", () => {
     expect(term.disposed).toBe(true);
     expect(term.listeners()).toBe(0);
     expect(observers.at(-1)!.disconnected).toBe(true);
-    expect(socket.control().some((message) => message.type === "close")).toBe(false);
+    // The session outlives the view: the terminal runs on, still followed.
+    expect(bridge.endCalls).toHaveLength(0);
+    expect(bridge.detachCalls).toHaveLength(0);
+    session.dispose();
+    await settle();
+  });
+
+  describe("a terminal the address names", () => {
+    it("rejoins it with its screen instead of opening another", async () => {
+      const { session, bridge, onReady } = setup(shellIn("/srv/app"), "t-9");
+      bridge.attachResults = [{ ok: true, running: true, exit: null, screen: "old screen" }];
+      act(() => session.start());
+      await settle();
+
+      expect(bridge.attachCalls).toEqual([{ terminalId: "t-9", size: { cols: 120, rows: 40 } }]);
+      expect(bridge.openCalls).toHaveLength(0);
+      expect(onReady).toHaveBeenCalledWith("t-9");
+      // The screen it had reached is drawn whole, before what follows it.
+      expect(xterm.FakeTerminal.last.resets).toBe(1);
+      expect(xterm.FakeTerminal.last.written).toEqual(["old screen"]);
+
+      await act(async () => FakeBridge.last.emit({ terminalId: "t-9", type: "output", data: "more" }));
+      expect(xterm.FakeTerminal.last.written).toEqual(["old screen", "more"]);
+    });
+
+    it("opens the target again when no terminal has that id any more", async () => {
+      const { session, bridge } = setup(shellIn("/srv/app"), "t-9");
+      bridge.attachResults = [{ ok: false, code: "not_found", message: "" }];
+      act(() => session.start());
+      await settle();
+
+      expect(bridge.attachCalls).toHaveLength(1);
+      expect(bridge.openCalls).toHaveLength(1);
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+
+  it("stops following a terminal it is disposed of, without ending it", async () => {
+    const { session, bridge } = await readyTerminal();
+
+    act(() => session.dispose());
+    await settle();
+
+    expect(bridge.detachCalls).toEqual(["t-1"]);
+    expect(bridge.endCalls).toHaveLength(0);
   });
 });

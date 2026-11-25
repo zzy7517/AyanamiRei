@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { configStore } from "@multica/core/config";
+import { describe, expect, it, vi } from "vitest";
 
 const route = vi.hoisted(() => ({ props: null as null | Record<string, unknown> }));
 
@@ -20,24 +19,13 @@ import { IssueTreesSection } from "@multica/views/issues/components";
 const renderPage = () => render(<IssueDetailPage onDelete={() => {}} />);
 
 describe("IssueDetailPage", () => {
-  beforeEach(() => {
-    route.props = null;
-    configStore.getState().setFeatureFlags({});
-  });
-
   it("passes the route's issue and delete action through", () => {
     renderPage();
     expect(route.props).toMatchObject({ routeId: "issue-1", deliverable: undefined });
     expect(route.props!.onDelete).toBeTypeOf("function");
   });
 
-  it("offers no trees while the task sessions flag is off", () => {
-    renderPage();
-    expect(route.props!.trees).toBeUndefined();
-  });
-
-  it("passes the task's trees behind the flag", () => {
-    configStore.getState().setFeatureFlags({ task_sessions_v1: true });
+  it("passes the task's trees through", () => {
     renderPage();
     const trees = route.props!.trees as (issueId: string) => ReactElement;
     const section = trees("issue-1");
@@ -46,7 +34,6 @@ describe("IssueDetailPage", () => {
   });
 
   it("keeps the same slot across renders of the page", () => {
-    configStore.getState().setFeatureFlags({ task_sessions_v1: true });
     const { rerender } = renderPage();
     const first = route.props!.trees;
     rerender(<IssueDetailPage onDelete={() => {}} />);

@@ -342,12 +342,8 @@ describe("CodeTab — pull requests", () => {
 });
 
 describe("CodeTab — worktrees", () => {
-  it("shows how long worktrees are kept only while task sessions are on", () => {
+  it("shows how long worktrees are kept, at the workspace's default", () => {
     const label = enSettings.code.task_tree_retention.label;
-    const { unmount } = render(<CodeTab />, { wrapper: Wrapper });
-    expect(screen.queryByRole("spinbutton", { name: label })).toBeNull();
-    unmount();
-
     render(<CodeTab />, { wrapper: Wrapper });
     expect(screen.getByRole("spinbutton", { name: label })).toHaveValue(5);
   });

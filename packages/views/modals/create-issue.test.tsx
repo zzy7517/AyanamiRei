@@ -11,7 +11,6 @@ import { describe, it, expect, vi, beforeEach, onTestFinished } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { configStore } from "@multica/core/config";
 import type { Issue } from "@multica/core/types";
 import { I18nProvider } from "@multica/core/i18n/react";
 import enCommon from "../locales/en/common.json";
@@ -2476,16 +2475,10 @@ describe("CreateIssueModal", () => {
   // A task's "project + branch" pairs are chosen while the task is written and
   // saved once it exists, which is the only moment the server can take them.
   describe("project + branch pairs", () => {
-    beforeEach(() => {
-      configStore.getState().setFeatureFlags({});
-    });
-
-    const enable = () => configStore.getState().setFeatureFlags({ task_sessions_v1: true });
     const pairs = () => screen.findByRole("group", { name: "Projects + branches" });
 
-    /** The dialog with the flag on, a title, and one pair: `proj-1` and `main`. */
+    /** The dialog with a title, and one pair: `proj-1` and `main`. */
     async function withPair(user: ReturnType<typeof userEvent.setup>, onClose: () => void) {
-      enable();
       renderModal(<CreateIssueModal onClose={onClose} />);
       fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
       const group = await pairs();
@@ -2494,13 +2487,6 @@ describe("CreateIssueModal", () => {
       await user.type(within(group).getByRole("textbox", { name: "Branch" }), "main");
       return group;
     }
-
-    it("are not offered while the flag is off", async () => {
-      renderModal(<CreateIssueModal onClose={vi.fn()} />);
-
-      expect(screen.queryByRole("group", { name: "Projects + branches" })).toBeNull();
-      expect(screen.queryByRole("button", { name: "Add project" })).toBeNull();
-    });
 
     it("are saved on the new task, and the dialog closes once they are", async () => {
       const user = userEvent.setup();
@@ -2561,7 +2547,6 @@ describe("CreateIssueModal", () => {
 
     it("hold the task back while a pair is incomplete, with the editor saying what it lacks", async () => {
       const user = userEvent.setup();
-      enable();
       renderModal(<CreateIssueModal onClose={vi.fn()} />);
       fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
       const group = await pairs();
@@ -2577,7 +2562,6 @@ describe("CreateIssueModal", () => {
 
     it("are not needed: a row added and left empty is not a pair", async () => {
       const user = userEvent.setup();
-      enable();
       renderModal(<CreateIssueModal onClose={vi.fn()} />);
       fireEvent.change(screen.getByPlaceholderText("Issue title"), { target: { value: "Ship it" } });
       const group = await pairs();
