@@ -30,8 +30,7 @@
     "package": "node scripts/package.mjs",
     "package:all": "node scripts/package.mjs --all-platforms --publish never",
     "lint": "eslint .",
-    "test": "vitest run",
-    "postinstall": "electron-builder install-app-deps"
+    "test": "vitest run"
   },
   "dependencies": {
     "@dnd-kit/core": "catalog:",

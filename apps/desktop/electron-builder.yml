@@ -141,4 +141,8 @@ publish:
   # uploads of the DMG/ZIP/blockmaps/latest-mac.yml to be silently skipped,
   # which breaks electron-updater auto-update on installed clients.
   releaseType: release
+  # Native modules are not rebuilt for Electron, here nor in a postinstall:
+  # electron-builder's rebuild cannot tell Electron 44's module version, and
+  # node-pty is Node-API, so the binary it ships or builds at install loads
+  # in Electron as it is. A module that is not Node-API needs another way.
 npmRebuild: false
