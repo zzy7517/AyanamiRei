@@ -1,0 +1,159 @@
+.dockerignore
+  s_fc0852876b2926::t_5271df041bc041 38-39
+.env.example
+  s_fc0852876b2926::t_fc3365660605d2 64-67,89-90,741-742
+.multica/environments.toml
+  s_fc0852876b2926::t_30de7a06475ba2 5-8
+.vercelignore
+  s_fc0852876b2926::t_bd31a270ab6cdd 1-2,4
+AGENTS.md
+  s_fc0852876b2926::t_2f7e3bf70ad3f2 18,20,26-27,47,55-57,115,123,127
+CONTRIBUTING.md
+  s_fc0852876b2926::t_73e13a9261a705 14,40,138,153-154,163-164,167,173,196,199,221,342,346,422,425,428,491,495,519,530,533,535-539,542,545-546,552,765,785
+Dockerfile.collab
+  s_fc0852876b2926::t_669710594e7e02 8
+Makefile
+  s_fc0852876b2926::t_f14437dfab5994 1,77,166-167,173,223,230,235,246,294,309,312
+README.ja.md
+  s_fc0852876b2926::t_33f052a778e548 157,224-227,243
+README.md
+  s_fc0852876b2926::t_1420673b899667 157,224-227,243
+README.zh.md
+  s_fc0852876b2926::t_55379553114fcb 150,215-218,234
+SELF_HOSTING.md
+  s_fc0852876b2926::t_fbc2771c4338a1 58,86,88,92,100-101,104-105,180
+SELF_HOSTING_ADVANCED.md
+  s_fc0852876b2926::t_3b757fc7c27817 15,299,475,479,483-484,491,508,514,552,561,564-565,574,577-579,590,592
+apps/desktop/src/renderer/src/App.tsx
+  s_fc0852876b2926::t_7ca65d49a41dd7 42
+apps/desktop/src/renderer/src/components/workspace-route-layout.tsx
+  s_fc0852876b2926::t_3c5d0f8b4b7908 39
+apps/desktop/src/renderer/src/globals.css
+  s_fc0852876b2926::t_3e893d599a484f 12,33,47,61
+apps/desktop/src/renderer/src/main.tsx
+  s_fc0852876b2926::t_d9e7c0e8d25601 11,16,21-25,39
+apps/docs/app/[lang]/layout.tsx
+  s_fc0852876b2926::t_ed8a8e6dee29ed 19,34
+apps/docs/app/global.css
+  s_fc0852876b2926::t_509c7b6e05d41c 15,43
+apps/docs/app/layout.config.tsx
+  s_fc0852876b2926::t_1d96272de9ad0a 7
+apps/docs/app/sitemap.ts
+  s_fc0852876b2926::t_3b4a5bd1b3a520 12
+apps/docs/content/docs/developers/architecture.fr.mdx
+  s_fc0852876b2926::t_e82fefac94cf62 34,39,41,47,49
+apps/docs/content/docs/developers/architecture.ja.mdx
+  s_fc0852876b2926::t_0c2f9ba5d7a892 34,39,41,47,49
+apps/docs/content/docs/developers/architecture.ko.mdx
+  s_fc0852876b2926::t_7d21f5cff8d96d 34,39,41,47,49
+apps/docs/content/docs/developers/architecture.mdx
+  s_fc0852876b2926::t_ec2f4ac35990f6 34,39,41,47,49
+apps/docs/content/docs/developers/architecture.zh-Hant.mdx
+  s_fc0852876b2926::t_31ac7e91e61bb1 34,39,41,47,49
+apps/docs/content/docs/developers/architecture.zh.mdx
+  s_fc0852876b2926::t_9c7d67768707dc 34,39,41,47,49
+apps/docs/content/docs/developers/contributing.fr.mdx
+  s_fc0852876b2926::t_e2be0a43fe7a12 8,28,55,72,84,132,134,139-140
+apps/docs/content/docs/developers/contributing.ja.mdx
+  s_fc0852876b2926::t_b11343a27e65b2 8,28,55,72,84,124,126,131-132
+apps/docs/content/docs/developers/contributing.ko.mdx
+  s_fc0852876b2926::t_7050c90fb327ac 8,28,55,72,84,124,126,131-132
+apps/docs/content/docs/developers/contributing.mdx
+  s_fc0852876b2926::t_50fcf28f73b46c 8,28,30,55,72,84,132,134,139-140,165
+apps/docs/content/docs/developers/contributing.zh-Hant.mdx
+  s_fc0852876b2926::t_0b2fb97899b2e0 8,55,72,84,124,126,131-132
+apps/docs/content/docs/developers/contributing.zh.mdx
+  s_fc0852876b2926::t_5b071f217951a9 8,55,72,84,124,126,131-132
+apps/docs/content/docs/developers/conventions.fr.mdx
+  s_fc0852876b2926::t_29f386e898f9c7 41
+apps/docs/content/docs/developers/conventions.ja.mdx
+  s_fc0852876b2926::t_1a3a1e00812a05 41
+apps/docs/content/docs/developers/conventions.ko.mdx
+  s_fc0852876b2926::t_7d5893a4b778d0 41
+apps/docs/content/docs/developers/conventions.mdx
+  s_fc0852876b2926::t_3c9282b64cac1a 41
+apps/docs/content/docs/developers/conventions.zh-Hant.mdx
+  s_fc0852876b2926::t_d6c0d1a3e0b05e 39
+apps/docs/content/docs/developers/conventions.zh.mdx
+  s_fc0852876b2926::t_24515082547cb4 39
+apps/docs/content/docs/self-host-quickstart.fr.mdx
+  s_fc0852876b2926::t_97bd47d728cfd8 112,231,339
+apps/docs/content/docs/self-host-quickstart.ja.mdx
+  s_fc0852876b2926::t_77ab38b0f7c53a 112,230,338
+apps/docs/content/docs/self-host-quickstart.ko.mdx
+  s_fc0852876b2926::t_3491e36a7ccc29 112,230,338
+apps/docs/content/docs/self-host-quickstart.mdx
+  s_fc0852876b2926::t_683865dd82f860 61-62,112,231,339
+apps/docs/content/docs/self-host-quickstart.zh-Hant.mdx
+  s_fc0852876b2926::t_a3a05e821247e0 112,230,338
+apps/docs/content/docs/self-host-quickstart.zh.mdx
+  s_fc0852876b2926::t_e8650c9513eef6 112,230,338
+apps/mobile/AGENTS.md
+  s_fc0852876b2926::t_3a77eb51d906e3 15,34,92
+docker-compose.selfhost.build.yml
+  s_fc0852876b2926::t_bdfc57bc3d7b7b 1-2
+docker-compose.selfhost.yml
+  s_fc0852876b2926::t_4fc0b166bc24f6 1,6-10,20-24,149-150
+packages/core/appearance/built-in-themes.ts
+  s_fc0852876b2926::t_c2f26cf2a721fb 4-5
+packages/core/eslint.config.mjs
+  s_fc0852876b2926::t_606431cad5c50a 5-6,29
+packages/core/paths/hooks.tsx
+  s_fc0852876b2926::t_2839afe4c46143 12-13
+packages/ui/lib/utils.ts
+  s_fc0852876b2926::t_3e2463033dafed 15-17
+packages/views/assets.d.ts
+  s_fc0852876b2926::t_14ab85fb0d1c1d 4
+packages/views/common/safe-area.test.ts
+  s_fc0852876b2926::t_9fe2c14a863346 8-11,15,144,173
+packages/views/common/theme-anchors.test.ts
+  s_fc0852876b2926::t_c3219a6a9a842e 14
+packages/views/layout/dashboard-layout.tsx
+  s_fc0852876b2926::t_ad628d1ede8d6f 60
+packages/views/runtimes/components/provider-logo.tsx
+  s_fc0852876b2926::t_f42ddf8f30764f 348
+pnpm-lock.yaml
+  s_fc0852876b2926::t_185f44ddf98915 786,935,1127,17096,17099,17103,17106
+scripts/agent-environment.sh
+  s_fc0852876b2926::t_25017da323515f 5-6,8,11-12,16,20-22,25-26,40,44-45,104,110,134,140,143,152,161-166,171,181,187,192
+scripts/brand/README.md
+  s_fc0852876b2926::t_016b481ef05265 34
+scripts/brand/generate.mjs
+  s_fc0852876b2926::t_ef71d61cc55473 18-19,61
+scripts/brand/sync.mjs
+  s_fc0852876b2926::t_62607073435b48 3
+scripts/brand/sync.test.mjs
+  s_fc0852876b2926::t_8c68511db5ee54 30,36-37
+scripts/check-dependency-catalog.test.mjs
+  s_fc0852876b2926::t_71824e11699ab2 63,80
+scripts/check-ui-radius-tokens.mjs
+  s_fc0852876b2926::t_4e8b2449899040 9,20
+scripts/check.sh
+  s_fc0852876b2926::t_6887082f983f28 5,27,56,63,70
+scripts/check.test.sh
+  s_fc0852876b2926::t_6d1c38bff9ec4a 8,17-18,44,46-47,53,69,71-78
+scripts/dev-env.sh
+  s_fc0852876b2926::t_1b93d0a1364909 4-5,43-44,1529,1652,1665,1795,2104,2114,2116-2119
+scripts/selfhost-wait.sh
+  s_fc0852876b2926::t_6bf09bf92bfc23 82,84,87-94
+server/internal/handler/contact_sales.go
+  s_fc0852876b2926::t_38d9999476e45d 39-40
+turbo.json
+  s_fc0852876b2926::t_30c8c88d067d80 57,83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "d16ca7be10e403860cd453b092daa7f6be0a0a5b",
+  "prompts": {},
+  "sessions": {
+    "s_fc0852876b2926": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38d573b5-0620-45e3-8dd5-e2eca62f97b9",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhongyuan <152588091+zzy7517@users.noreply.github.com>"
+    }
+  }
+}
