@@ -51,10 +51,8 @@ compose_host_port() {
 }
 
 backend_port=$(compose_host_port backend 8080 "${BACKEND_PORT:-${API_PORT:-${SERVER_PORT:-${PORT:-8080}}}}")
-frontend_port=$(compose_host_port frontend 3000 "${FRONTEND_PORT:-3000}")
 
 backend_url="http://localhost:${backend_port}"
-frontend_url="http://localhost:${frontend_port}"
 
 health_ok() {
   curl -sf "${backend_url}/health" >/dev/null 2>&1
@@ -77,18 +75,23 @@ fi
 
 echo ""
 echo "✓ Multica is running!"
-echo "  Frontend: ${frontend_url}"
 echo "  Backend:  ${backend_url}"
 echo ""
 if [ "$mode" = "build" ]; then
   echo "Built images locally via docker-compose.selfhost.build.yml."
-  echo "Local tags: multica-backend:dev and multica-web:dev."
+  echo "Local tag: multica-backend:dev."
 else
-  echo "Images: ${MULTICA_BACKEND_IMAGE:-ghcr.io/multica-ai/multica-backend}:${MULTICA_IMAGE_TAG:-latest}"
-  echo "        ${MULTICA_WEB_IMAGE:-ghcr.io/multica-ai/multica-web}:${MULTICA_IMAGE_TAG:-latest}"
+  echo "Image: ${MULTICA_BACKEND_IMAGE:-ghcr.io/multica-ai/multica-backend}:${MULTICA_IMAGE_TAG:-latest}"
 fi
 case ",${COMPOSE_PROFILES:-}," in
-  *,collab,*) echo "Live doc co-editing: on (collab service)" ;;
+  *,collab,*)
+    echo "Live doc co-editing: on (collab service)"
+    if [ "$mode" = "build" ]; then
+      echo "Local tag: multica-collab:dev."
+    else
+      echo "Image: ${MULTICA_COLLAB_IMAGE:-ghcr.io/multica-ai/multica-collab}:${MULTICA_IMAGE_TAG:-latest}"
+    fi
+    ;;
 esac
 echo ""
 echo "Log in: configure RESEND_API_KEY in .env for email codes,"

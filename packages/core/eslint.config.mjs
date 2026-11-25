@@ -2,8 +2,8 @@ import reactConfig from "@multica/eslint-config/react";
 import { ICON_LIBRARY_IMPORT_PATTERNS } from "@multica/eslint-config/base";
 import { NO_FULL_PAGE_NAVIGATION } from "@multica/eslint-config/full-page-navigation";
 
-// Package boundary (AGENTS.md): core is headless and runs unchanged in web,
-// desktop and SSR. No UI libraries, no react-dom, no next/*, no Web Storage
+// Package boundary (AGENTS.md): core is headless and runs unchanged in
+// desktop, docs and mobile. No UI libraries, no react-dom, no next/*, no Web Storage
 // globals and no process.env outside tests — tests may stub env and storage.
 
 const UI_LIBRARIES = [
@@ -26,7 +26,7 @@ const UI_LIBRARY_IMPORT_PATTERN = {
 const NEXT_IMPORT_PATTERN = {
   regex: "^next(/.*)?$",
   message:
-    "packages/core is shared by web and desktop: keep next/* in apps/web and have the app layer pass the value in.",
+    "packages/core does not import next/*. Have the app layer pass the value in.",
 };
 
 const PROCESS_ENV = {

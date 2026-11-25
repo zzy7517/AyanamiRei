@@ -5,14 +5,14 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
- * The installed web app draws under the iPhone camera and home indicator
- * (`viewport-fit=cover`), so keeping content out of those areas is on us, and
- * a mistake only shows on a real phone. These read the source for the two
- * ways a layer slips under them.
+ * A viewport-fit=cover client draws under the camera and home indicator, so
+ * keeping content out of those areas is on the shared UI, and a mistake only
+ * shows on a real phone. These read the source for the two ways a layer slips
+ * under them.
  */
 
 const REPO = join(__dirname, "../../..");
-const WEB_ROOTS = ["packages/views", "packages/ui/components", "apps/web/app", "apps/web/components"];
+const SHARED_ROOTS = ["packages/views", "packages/ui/components"];
 const DESKTOP_ROOTS = ["apps/desktop/src/renderer"];
 
 function sourceFiles(dir: string, out: string[] = []): string[] {
@@ -141,7 +141,7 @@ function unpaddedFullScreenLayers(tags: JsxTag[]): string[] {
 describe("safe area", () => {
   it("sizes centred dialogs against the safe area, not the screen", () => {
     expect(
-      dialogsSizedByScreen(jsxTags([...WEB_ROOTS, ...DESKTOP_ROOTS], /<(?:Alert)?DialogContent\b/)),
+      dialogsSizedByScreen(jsxTags([...SHARED_ROOTS, ...DESKTOP_ROOTS], /<(?:Alert)?DialogContent\b/)),
       "Dialog and AlertDialog popups sit inside SafeAreaLayer (packages/ui/components/ui/dialog.tsx), which is the safe area " +
         "of the screen. Size them with %, e.g. w-[calc(100%-2rem)] or max-h-[85%]: vw, vh, dvh and svh still measure the " +
         "whole screen, so on an iPhone the dialog reaches under the camera or the home indicator.",
@@ -170,7 +170,7 @@ describe("safe area", () => {
 
   it("pads full-screen layers that hold content by the safe-area insets", () => {
     expect(
-      unpaddedFullScreenLayers(jsxTags(WEB_ROOTS, /\binset-0\b/)),
+      unpaddedFullScreenLayers(jsxTags(SHARED_ROOTS, /\binset-0\b/)),
       "A `fixed inset-0` layer with content covers the whole iPhone screen, camera and home indicator included. Pad it with " +
         "pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] " +
         "pl-[env(safe-area-inset-left)] (see attachment-preview-modal.tsx), or put a centred popup in a Dialog, " +

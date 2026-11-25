@@ -12,7 +12,7 @@ These rules apply only to `apps/mobile/`, in addition to the [root instructions]
 
 ## Behavioral Parity
 
-- Before implementing a feature, inspect its web/desktop implementation in `packages/views/` and `packages/core/`: endpoints, permissions, state transitions, display transforms, and cross-cache side effects.
+- Before implementing a feature, inspect its desktop implementation in `packages/views/` and `packages/core/`: endpoints, permissions, state transitions, display transforms, and cross-cache side effects.
 - Match product semantics: counts/visibility, permissions, enums, and canonical IDs/fields. Adapt UI and navigation to the phone; document meaningful divergences with the source behavior they preserve.
 - Mirror the relevant behavior using mobile-owned caches and helpers; do not copy cache shapes or UI preprocessing blindly. List transforms must preserve pagination, grouping, and visibility semantics.
 - Reuse `lib/inbox-display.ts` for inbox list display. Badge counts come from the server unread summary via `lib/unread-counts.ts` and `data/queries/inbox.ts`; do not derive them from the downloaded list. Inbox writes/events refresh both the list and unread summary through `data/realtime/inbox-ws-updaters.ts`.
@@ -31,7 +31,7 @@ These rules apply only to `apps/mobile/`, in addition to the [root instructions]
 
 - `global.css` defines mobile color variables; `tailwind.config.js` maps classes and `lib/theme.ts` supplies native style/navigation values. Update the corresponding mappings together when changing tokens.
 - Preserve class-based light/dark/system switching through `lib/use-color-scheme.ts` and its secure-store persistence. React Navigation uses `NAV_THEME` from `lib/theme.ts`.
-- Keep mobile tokens local; do not import web/desktop CSS. Read [docs/markdown-rendering-adr.md](docs/markdown-rendering-adr.md) before changing the Markdown renderer or its native styling.
+- Keep mobile tokens local; do not import desktop CSS. Read [docs/markdown-rendering-adr.md](docs/markdown-rendering-adr.md) before changing the Markdown renderer or its native styling.
 
 ### Sheets and navigation
 
@@ -89,6 +89,6 @@ pnpm --filter @multica/mobile test
 ```
 
 - Root frontend checks exclude mobile. `.github/workflows/mobile-verify.yml` defines the current mobile CI scope; these checks do not build an IPA or verify native rendering.
-- For UI changes, verify the affected flow in the simulator/device, including themes, keyboard/scrolling, and navigation. For shared semantics or realtime changes, change the same data from web and confirm mobile catches up without manual refresh, including after reconnect.
+- For UI changes, verify the affected flow in the simulator/device, including themes, keyboard/scrolling, and navigation. For shared semantics or realtime changes, change the same data from Desktop and confirm mobile catches up without manual refresh, including after reconnect.
 - Test parsing/transforms in the existing Vitest setup. Preserve `scripts/ios-run.test.sh` coverage when changing the native build wrapper.
 - Report which checks ran and which native/cross-client checks were unavailable. Do not claim visual or release verification from typecheck/unit tests alone.

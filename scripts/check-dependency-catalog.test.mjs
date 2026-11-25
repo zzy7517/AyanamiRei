@@ -60,7 +60,7 @@ test("accepts catalog:, workspace:, single-workspace deps, peers, and mobile pin
   const violations = catalogViolations({
     catalog: new Map([["react", "19.2.3"]]),
     workspaces: [
-      workspace("apps/web", {
+      workspace("apps/storybook", {
         dependencies: { react: "catalog:", "@multica/core": "workspace:*", "web-only": "^1.0.0" },
       }),
       workspace("packages/views", {
@@ -77,7 +77,7 @@ test("accepts catalog:, workspace:, single-workspace deps, peers, and mobile pin
 test("allowlisted drift passes until it is gone, then must be removed", () => {
   const allowlist = new Map([["fumadocs-core", "pending upgrade"]]);
   const drifted = [
-    workspace("apps/web", { dependencies: { "fumadocs-core": "^15.5.2" } }),
+    workspace("apps/storybook", { dependencies: { "fumadocs-core": "^15.5.2" } }),
     workspace("apps/docs", { dependencies: { "fumadocs-core": "^16.17.8" } }),
   ];
   assert.deepEqual(catalogViolations({ catalog: new Map(), workspaces: drifted, allowlist }), []);

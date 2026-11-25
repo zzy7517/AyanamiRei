@@ -154,7 +154,7 @@ turn it off — [what's collected](SELF_HOSTING.md#anonymous-deployment-telemetr
 
 **1. Connect a computer.** A *runtime* is any machine agents can work on — your laptop, or a
 cloud box. Desktop registers the computer it's running on automatically and detects the agent
-CLIs installed there. On the web — or to add another machine — open **Team → Runtimes**, click
+CLIs installed there. To add another machine, open **Team → Runtimes**, click
 **Add runtime → Other machine or server**, and paste the two commands it shows into a terminal on
 that machine.
 
@@ -221,15 +221,10 @@ The docs are also available in [简体中文](https://multica.ai/docs/zh), [繁�
 ## Architecture
 
 ```
-   Web (browser)        Desktop (Electron)        iPhone · iPad (Expo)
-         │                      │                          │
-         ▼                      │                          │
-  ┌──────────────┐              │                          │
-  │   Next.js    │              │                          │
-  │ pages + API  │              │                          │
-  │    proxy     │              │                          │
-  └──────┬───────┘              │  HTTPS + WebSocket       │
-         ▼                      ▼                          ▼
+        Desktop (Electron)        iPhone · iPad (Expo)
+                 │                          │
+                 │  HTTPS + WebSocket       │
+                 ▼                          ▼
   ┌───────────────────────────────────────────────────────────┐   ┌───────────────┐
   │                Go backend  (Chi + WebSocket)              │──>│ PostgreSQL 17 │
   └─────────────────────────────┬─────────────────────────────┘   └───────────────┘
@@ -245,8 +240,7 @@ The docs are also available in [简体中文](https://multica.ai/docs/zh), [繁�
 
 | Layer | Stack |
 | --- | --- |
-| Web | Next.js 16 (App Router) |
-| Desktop | Electron, sharing the web UI packages |
+| Desktop | Electron, sharing the UI packages |
 | Mobile | Expo / React Native (iPhone and iPad) |
 | Backend | Go (Chi router, sqlc, gorilla/websocket) |
 | Database | PostgreSQL 17 (`pgcrypto` + `pg_trgm`) |

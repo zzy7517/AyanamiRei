@@ -26,33 +26,31 @@ For a product-facing explanation, see [How Multica works](/how-multica-works). T
 | Directory | Responsibility | Main technologies |
 | --- | --- | --- |
 | `server/` | API, authentication, task scheduling, integrations, CLI, and daemon | Go, Chi, sqlc, gorilla/websocket |
-| `apps/web/` | Browser client and landing page | Next.js App Router |
 | `apps/desktop/` | Desktop client and local process management | Electron, electron-vite |
 | `apps/mobile/` | Standalone iOS client | Expo, React Native |
 | `apps/docs/` | Multilingual documentation site | Next.js, Fumadocs |
 | `packages/core/` | API client, types, queries, mutations, and platform-independent business logic | TanStack Query, Zustand |
 | `packages/ui/` | Foundational UI with no business logic | shadcn, Base UI |
-| `packages/views/` | Business pages and components shared by Web and Desktop | React |
+| `packages/views/` | Business pages and components for Desktop | React |
 | `packages/tsconfig/`, `packages/eslint-config/` | Shared tooling configuration | TypeScript, ESLint |
 
 Shared packages export `.ts` and `.tsx` source files directly and are compiled by their consuming applications. The dependency direction is `views → core + ui`; `core` and `ui` do not depend on each other.
 
-## Code sharing between Web and Desktop
+## Shared UI
 
-Web and Desktop share three layers:
+Desktop's product UI is three layers:
 
 1. `packages/core` handles APIs, caching, permissions, and platform-independent state.
 2. `packages/ui` provides foundational components.
 3. `packages/views` composes business pages.
 
-Platform capabilities such as routing, cookies, and Electron IPC stay in the application layer. Shared pages navigate through `NavigationAdapter` and do not import `next/*` or `react-router-dom` directly.
+Platform capabilities such as routing and Electron IPC stay in the application layer. Shared pages navigate through `NavigationAdapter` and do not import `next/*` or `react-router-dom` directly.
 
-For example, an issue feature needed by both Web and Desktop usually touches:
+An issue feature usually touches:
 
 ```text
 packages/core/issues/      queries, mutations, cache updates
 packages/views/issues/     pages and business components
-apps/web/platform/         Next.js routing adapter
 apps/desktop/.../platform/ Electron routing adapter
 ```
 

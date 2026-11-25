@@ -31,8 +31,7 @@ are untested, and they skip `icon.icns` because `iconutil` is macOS-only.
 `sync.mjs` writes the text copies. It needs no dependencies, so CI runs it
 with `--check` and fails when a copy drifts from `multica-brand.ts`.
 
-- `apps/web/public/favicon.svg`, `apps/docs/app/icon.svg`: favicon, with a dark-mode variant
-- `apps/web/public/icons/icon.svg`: full-bleed source for the home-screen icons
+- `apps/docs/app/icon.svg`: favicon, with a dark-mode variant
 - `docs/assets/logo-{light,dark}.svg`: the README wordmark
 - `apps/mobile/components/brand/multica-logo.tsx`: the block between the `GENERATED` markers. Mobile does not depend on `@multica/ui`.
 
@@ -43,10 +42,7 @@ with `--check` and fails when a copy drifts from `multica-brand.ts`.
 | `apps/desktop/build/icons/*.png`, `build/icon.png` | 16–1024 | tile with transparent margin |
 | `apps/desktop/build/icon.ico` | 16–256 | same tiles, packed by Pillow |
 | `apps/desktop/resources/icon.png`, `build/icon.icns` | 16–1024 | Apple's 1024 grid (body 100–924) with a soft shadow |
-| `apps/web/public/icons/icon-{192,512}.png` | 192, 512 | PWA tile with transparent margin |
-| `apps/web/public/icons/apple-touch-icon.png`, `icon-maskable-512.png` | 180, 512 | full-bleed, opaque |
 | `apps/mobile/assets/icon.png` | 1024 | full-bleed, opaque |
-| `apps/web/app/opengraph-image.png` | 1200×630 | OG card, Inter from `@fontsource-variable/inter` |
 | `docs/assets/logo-{light,dark}.gif` | 720×256 | README write-on, 30 fps, 64 colours |
 
 At 24px and below, the star grows and thickens (`iconStar`). The margins in

@@ -58,8 +58,8 @@ Running `make selfhost` again reuses the existing `.env` and volumes; it does no
 
 1. Create `.env` from `.env.example`
 2. Generate a random `JWT_SECRET`, PostgreSQL password, and `MULTICA_VCS_SECRET_KEY` (the encryption key for self-hosted Git integrations)
-3. Pull the PostgreSQL, Multica backend, and Multica frontend images
-4. Create persistent volumes and start the three containers
+3. Pull the PostgreSQL and Multica backend images
+4. Create persistent volumes and start the containers
 5. Wait until the backend starts answering health checks
 
 </Accordion>
@@ -109,7 +109,7 @@ The backend container runs database migrations on every startup before serving; 
 <Tabs items={["Local access", "Remote access"]}>
 <Tab value="Local access">
 
-Open [http://localhost:3000](http://localhost:3000) directly. You also won't need to pass any URLs when running `multica setup self-host` later.
+The API is at [http://localhost:8080](http://localhost:8080). Open the Desktop app. There is no browser UI. You also won't need to pass any URLs when running `multica setup self-host` later.
 
 </Tab>
 <Tab value="Remote access" id="remote-access">
@@ -228,7 +228,7 @@ The last command prints `daemon_server_url`, the URL daemons use to reach the AP
 
 ## Open Multica [#4-open-multica]
 
-Open `http://localhost:3000` locally, or the `https://app.example.com` you just configured. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`. The web root opens straight into it.
+Open the Desktop app. There is no browser UI and no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`.
 
 </Step>
 <Step>
@@ -336,7 +336,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### Check for a pinned image tag
 
-Both images resolve as `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image` / `services.frontend.image`), and `.env.example` ships `MULTICA_IMAGE_TAG=latest`.
+The backend image resolves as `${MULTICA_IMAGE_TAG:-latest}` (`docker-compose.selfhost.yml`, `services.backend.image`), and `.env.example` ships `MULTICA_IMAGE_TAG=latest`.
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

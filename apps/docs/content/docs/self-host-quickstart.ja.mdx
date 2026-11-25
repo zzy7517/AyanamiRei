@@ -109,7 +109,7 @@ backend コンテナは起動のたびにデータベースの migration を実�
 <Tabs items={["ローカルアクセス", "リモートアクセス"]}>
 <Tab value="ローカルアクセス">
 
-[http://localhost:3000](http://localhost:3000) をそのまま開きます。後で `multica setup self-host` を実行するときも、URL を渡す必要はありません。
+API は [http://localhost:8080](http://localhost:8080) です。Desktop を開きます。ブラウザ UI はありません。後で `multica setup self-host` を実行するときも、URL を渡す必要はありません。
 
 </Tab>
 <Tab value="リモートアクセス" id="remote-access">
@@ -227,7 +227,7 @@ curl -fsS https://app.example.com/api/config | grep -o '"daemon_server_url":"[^"
 
 ## Multica を開く [#4-multica-を開く]
 
-ローカルの `http://localhost:3000`、または先ほど設定した `https://app.example.com` を開きます。サインアップもサインインもありません。サーバーは 1 人のローカルユーザーに応答するもので、初回起動時にそのユーザーのデフォルトワークスペース `dev` を作成しています。Web のルートを開くと、そのワークスペースが直接開きます。
+Desktop を開きます。ブラウザ UI はなく、サインアップもサインインもありません。サーバーは 1 人のローカルユーザーに応答するもので、初回起動時にそのユーザーのデフォルトワークスペース `dev` を作成しています。
 
 </Step>
 <Step>
@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### イメージタグが固定されていないか確認する
 
-両方のイメージが `${MULTICA_IMAGE_TAG:-latest}` として解決され（`docker-compose.selfhost.yml`：`services.backend.image`、`services.frontend.image`）、`.env.example` は `MULTICA_IMAGE_TAG=latest` を同梱しています。
+backend イメージは `${MULTICA_IMAGE_TAG:-latest}` として解決され（`docker-compose.selfhost.yml`：`services.backend.image`）、`.env.example` は `MULTICA_IMAGE_TAG=latest` を同梱しています。
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

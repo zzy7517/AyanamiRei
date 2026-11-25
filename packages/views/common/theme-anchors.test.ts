@@ -11,7 +11,7 @@ import { THEME_ANCHORS, THEME_PUBLIC_SLOTS } from "@multica/core/appearance";
  */
 
 const REPO = join(__dirname, "../../..");
-const SOURCE_ROOTS = ["packages/views", "packages/ui/components", "apps/desktop/src/renderer", "apps/web/app", "apps/web/components"];
+const SOURCE_ROOTS = ["packages/views", "packages/ui/components", "apps/desktop/src/renderer"];
 
 function sourceFiles(dir: string, out: string[] = []): string[] {
   let entries: string[];

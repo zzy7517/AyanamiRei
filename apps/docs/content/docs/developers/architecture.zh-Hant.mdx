@@ -26,33 +26,31 @@ Web / Desktop / Mobile / CLI
 | 目錄 | 職責 | 主要技術 |
 | --- | --- | --- |
 | `server/` | API、認證、task 調度、整合、CLI 和守護程序 | Go、Chi、sqlc、gorilla/websocket |
-| `apps/web/` | 瀏覽器客戶端和 landing page | Next.js App Router |
 | `apps/desktop/` | 桌面客戶端和本機程序管理 | Electron、electron-vite |
 | `apps/mobile/` | 獨立的 iOS 客戶端 | Expo、React Native |
 | `apps/docs/` | 多語言文件站 | Next.js、Fumadocs |
 | `packages/core/` | API client、類型、查詢、mutation 和平臺無關業務邏輯 | TanStack Query、Zustand |
 | `packages/ui/` | 不包含業務邏輯的基礎 UI | shadcn、Base UI |
-| `packages/views/` | Web 與 Desktop 共用的業務頁面和元件 | React |
+| `packages/views/` | Desktop 的業務頁面和元件 | React |
 | `packages/tsconfig/`、`packages/eslint-config/` | 共享工具配置 | TypeScript、ESLint |
 
 共享包直接匯出 `.ts` 和 `.tsx` 原始檔，由使用它們的應用編譯。依賴方向是 `views → core + ui`；`core` 和 `ui` 互不依賴。
 
-## Web 與 Desktop 的程式碼共享
+## 共享介面
 
-Web 和 Desktop 共用三層：
+Desktop 的產品介面分三層：
 
 1. `packages/core` 處理 API、快取、權限和平臺無關狀態；
 2. `packages/ui` 提供基礎元件；
 3. `packages/views` 組合業務頁面。
 
-路由、cookie 和 Electron IPC 等平臺能力留在應用層。共享頁面透過 `NavigationAdapter` 導航，不直接匯入 `next/*` 或 `react-router-dom`。
+路由和 Electron IPC 等平臺能力留在應用層。共享頁面透過 `NavigationAdapter` 導航，不直接匯入 `next/*` 或 `react-router-dom`。
 
-例如，一項 Web 與 Desktop 都需要的任務功能通常會涉及：
+一項任務功能通常會涉及：
 
 ```text
 packages/core/issues/ 查詢、mutation、快取更新
 packages/views/issues/ 頁面和業務元件
-apps/web/platform/ Next.js 路由適配
 apps/desktop/.../platform/ Electron 路由適配
 ```
 

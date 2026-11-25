@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes every text copy of the brand geometry from packages/ui/lib/multica-brand.ts:
-// favicons, the PWA icon source, the README wordmark SVGs and the mobile wordmark.
+// the docs favicon, the README wordmark SVGs and the mobile wordmark.
 //
 //   node scripts/brand/sync.mjs           rewrite the copies
 //   node scripts/brand/sync.mjs --check   exit 1 if any copy drifted (CI)
@@ -32,13 +32,6 @@ export function svgs(brand) {
     tile,
     wordmark,
     favicon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Multica"><style>.t{fill:${INK}}.m{fill:${PAPER}}@media (prefers-color-scheme:dark){.t{fill:${PAPER}}.m{fill:${INK}}}</style><rect class="t" width="100" height="100" rx="${ICON_TILE_RADIUS}"/>${star(16, `class="m"`)}</svg>\n`,
-    pwaIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Multica">
-  <!--
-    Full-bleed source for the generated home-screen icons (apple-touch-icon.png,
-    icon-maskable-512.png). Full-bleed because both surfaces mask the artwork
-    themselves: iOS rounds the corners, Android crops to the launcher shape.
-    Geometry is packages/ui/lib/multica-brand.ts (starPath, iconStar).
-  --><rect width="100" height="100" fill="${INK}"/>${star(512, `fill="${PAPER}"`)}</svg>\n`,
   };
 }
 
@@ -73,9 +66,7 @@ export async function targets(root) {
   const mobile = "apps/mobile/components/brand/multica-logo.tsx";
   const between = new RegExp(`(${escapeRe(MOBILE_BEGIN)})[^]*?(${escapeRe(MOBILE_END)})`);
   return [
-    ["apps/web/public/favicon.svg", s.favicon],
     ["apps/docs/app/icon.svg", s.favicon],
-    ["apps/web/public/icons/icon.svg", s.pwaIcon],
     ["docs/assets/logo-light.svg", s.wordmark(INK) + "\n"],
     ["docs/assets/logo-dark.svg", s.wordmark(PAPER) + "\n"],
     [mobile, splice(read(mobile), mobile, between, mobileBlock(brand))],

@@ -7,7 +7,6 @@ Deploy Multica on your own infrastructure in minutes.
 | Component | Description | Technology |
 |-----------|-------------|------------|
 | **Backend** | REST API + WebSocket server | Go (single binary) |
-| **Frontend** | Web application | Next.js 16 |
 | **Database** | Primary data store | PostgreSQL 17 (`pgcrypto` + `pg_trgm`) |
 | **Collab** (optional) | Live co-editing for Docs | Node.js (Hocuspocus + Yjs) |
 
@@ -56,7 +55,7 @@ multica setup self-host
 
 This installs the `multica` CLI, checks out the latest self-host assets, pulls the official Multica images from GHCR, and configures everything for localhost.
 
-Open http://localhost:3000. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`. See [Step 2 — Open Multica](#step-2--open-multica) for details.
+The API listens on http://localhost:8080. There is no browser UI: open the Desktop app. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`. See [Step 2 — Open Multica](#step-2--open-multica) for details.
 
 > **Prerequisites:** Docker and Docker Compose must be installed. The script checks for this and provides install links if missing.
 >
@@ -84,14 +83,13 @@ make selfhost
 
 `make selfhost` automatically creates `.env` from the example, generates a random `JWT_SECRET`, and starts all services via Docker Compose.
 
-By default it pulls the latest stable release images from GHCR. To build the backend/web from your current checkout instead, run `make selfhost-build`.
+By default it pulls the latest stable release images from GHCR. To build the backend from your current checkout instead, run `make selfhost-build`.
 If the selected GHCR tag has not been published yet, `make selfhost` now tells you to fall back to `make selfhost-build`.
-`make selfhost-build` uses local `multica-backend:dev` / `multica-web:dev` tags, so it does not overwrite the pulled `:latest` images.
+`make selfhost-build` uses the local `multica-backend:dev` tag, so it does not overwrite the pulled `:latest` image.
 
 Once ready:
 
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8080
+- **API:** http://localhost:8080
 
 > **Note:** If you prefer to run the Docker Compose steps manually, see [Manual Docker Compose Setup](#manual-docker-compose-setup) below.
 
@@ -99,13 +97,12 @@ Once ready:
 
 ### Step 2 — Open Multica
 
-Open http://localhost:3000 in your browser. There is no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`.
-The web root opens straight into it, and the CLI and the daemon need no
-credential either.
+Open the Desktop app. There is no browser UI and no sign-up or sign-in: the server serves one local user and, on its first start, created that user's default workspace, `dev`.
+The CLI and the daemon need no credential either.
 
 `DISABLE_WORKSPACE_CREATION` and `WORKSPACE_CREATION_ALLOWED_EMAILS` take
-effect after restarting the backend / compose stack. The web UI reads
-`DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no web rebuild
+effect after restarting the backend / compose stack. Clients read
+`DISABLE_WORKSPACE_CREATION` from `/api/config` at runtime, so no client rebuild
 is needed. `WORKSPACE_CREATION_ALLOWED_EMAILS` is read only by the backend and
 is not exposed through `/api/config`. See [Advanced Configuration → Workspace
 Creation](SELF_HOSTING_ADVANCED.md#workspace-creation-optional).
@@ -180,7 +177,7 @@ multica daemon status
 
 ### Step 4 — Verify & Start Using
 
-1. Open your workspace in the web app at http://localhost:3000
+1. Open your workspace in the Desktop app
 2. Navigate to **Settings → Runtimes** — you should see your machine listed
 3. Go to **Settings → Agents** and create a new agent
 4. Create an issue and assign it to your agent — it will pick up the task automatically

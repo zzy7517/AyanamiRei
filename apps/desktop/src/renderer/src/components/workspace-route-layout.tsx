@@ -30,15 +30,13 @@ import { DocumentTitleSync } from "./document-title-sync";
 let singletonOwner: symbol | null = null;
 
 /**
- * Desktop equivalent of apps/web/app/[workspaceSlug]/layout.tsx.
- *
  * Resolves the URL slug → workspace UUID via the React Query list cache
  * (seeded by AuthInitializer). Children do not render until the workspace
  * is fully resolved — useWorkspaceId() inside child pages is therefore
  * guaranteed non-null when called. Two industry-standard identities are
  * kept distinct: slug (URL / browser) and UUID (API / cache keys).
  *
- * Unlike web, desktop never renders a "workspace not available" page: the
+ * Desktop never renders a "workspace not available" page: the
  * app has no URL bar and no clickable links from outside the session, so
  * landing on an inaccessible slug can only mean stale state (a persisted
  * tab group for a workspace the current user no longer has access to, or

@@ -109,7 +109,7 @@ Backend 容器每次啟動時都會先執行資料庫 migration，再啟動服�
 <Tabs items={["本機訪問", "遠端訪問"]}>
 <Tab value="本機訪問">
 
-直接開啟 [http://localhost:3000](http://localhost:3000)。後面執行 `multica setup self-host` 時也不需要傳 URL。
+API 在 [http://localhost:8080](http://localhost:8080)。開啟桌面端。沒有瀏覽器介面。後面執行 `multica setup self-host` 時也不需要傳 URL。
 
 </Tab>
 <Tab value="遠端訪問" id="remote-access">
@@ -227,7 +227,7 @@ curl -fsS https://app.example.com/api/config | grep -o '"daemon_server_url":"[^"
 
 ## 打開 Multica [#4-打開-multica]
 
-開啟本機的 `http://localhost:3000`，或剛才配置的 `https://app.example.com`。這裡沒有註冊和登入：伺服器只服務一個本機使用者，並在首次啟動時為該使用者建立了預設工作區 `dev`。開啟網站根路徑會直接進入這個工作區。
+開啟桌面端。沒有瀏覽器介面，也沒有註冊和登入：伺服器只服務一個本機使用者，並在首次啟動時為該使用者建立了預設工作區 `dev`。
 
 </Step>
 <Step>
@@ -335,7 +335,7 @@ docker compose -f docker-compose.selfhost.yml down
 
 ### 確認沒有釘死映象 tag
 
-兩個映象都寫成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`、`services.frontend.image`），而 `.env.example` 裡預設是 `MULTICA_IMAGE_TAG=latest`。
+backend 映象寫成 `${MULTICA_IMAGE_TAG:-latest}`（`docker-compose.selfhost.yml`：`services.backend.image`），而 `.env.example` 裡預設是 `MULTICA_IMAGE_TAG=latest`。
 
 ```bash
 grep MULTICA_IMAGE_TAG .env

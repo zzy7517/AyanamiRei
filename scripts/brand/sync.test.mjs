@@ -27,14 +27,14 @@ for (const { name, from, to, drift, stay } of [
     from: "const gap = 12;",
     to: "const gap = 13;",
     drift: ["apps/mobile/components/brand/multica-logo.tsx", "docs/assets/logo-light.svg"],
-    stay: ["apps/web/public/favicon.svg"],
+    stay: ["apps/docs/app/icon.svg"],
   },
   {
     name: "the tile radius",
     from: "export const ICON_TILE_RADIUS = 22.5;",
     to: "export const ICON_TILE_RADIUS = 30;",
-    drift: ["apps/web/public/favicon.svg", "apps/docs/app/icon.svg"],
-    stay: ["apps/web/public/icons/icon.svg"],
+    drift: ["apps/docs/app/icon.svg"],
+    stay: ["docs/assets/logo-light.svg"],
   },
 ]) {
   test(`changing ${name} without regenerating fails the check, and regenerating fixes it`, async (t) => {

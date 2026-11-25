@@ -5,7 +5,7 @@ description: Configurez un environnement de développement Multica local, exécu
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-Multica est composé d'un backend Go et d'un monorepo pnpm. Le moyen le plus simple de démarrer en local est `make dev` : cette commande prépare l'environnement, la base de données et les migrations pour le checkout courant, puis démarre Web et l'API.
+Multica est composé d'un backend Go et d'un monorepo pnpm. Le moyen le plus simple de démarrer en local est `make dev` : cette commande prépare l'environnement, la base de données et les migrations pour le checkout courant, puis démarre l'API.
 
 ## Prérequis
 
@@ -25,12 +25,11 @@ cd multica
 make dev
 ```
 
-Le checkout principal utilise `.env`. Si ce fichier n'existe pas, `make dev` le crée à partir de `.env.example`, puis démarre l'instance PostgreSQL partagée, installe les dépendances, exécute les migrations et démarre l'API et Web.
+Le checkout principal utilise `.env`. Si ce fichier n'existe pas, `make dev` le crée à partir de `.env.example`, puis démarre l'instance PostgreSQL partagée, installe les dépendances, exécute les migrations et démarre l'API.
 
 Adresses par défaut :
 
 ```text
-Web: http://localhost:3000
 API: http://localhost:8080
 ```
 
@@ -53,7 +52,7 @@ make start-worktree
 make start-worktree
 ```
 
-Pour arrêter Web et l'API du worktree courant :
+Pour arrêter l'API du worktree courant :
 
 ```bash
 make stop-worktree
@@ -70,7 +69,7 @@ Les différents worktrees partagent le conteneur PostgreSQL, pas la base de donn
 ### Workflow complet
 
 ```bash
-make up               # Démarre l'environnement de ce checkout (C=api,collab,web,daemon,desktop)
+make up               # Démarre l'environnement de ce checkout (C=api,collab,daemon,desktop)
 make status           # Affiche ce qui tourne et prouve qu'il s'agit de cet environnement
 make list             # Liste tous les environnements de cette machine
 make down             # Arrête les processus, conserve la base de données
@@ -82,7 +81,7 @@ make check            # Exécute le workflow complet de vérification locale
 make build            # Compile les binaires server, CLI et migrate
 ```
 
-`make up` traite un environnement comme un objet nommé : il alloue sous verrou les ports de l'API, de Web et du renderer Desktop,
+`make up` traite un environnement comme un objet nommé : il alloue sous verrou les ports de l'API, de l'origine publique et du renderer Desktop,
 le nom de la base de données et le profil CLI, puis les enregistre dans `~/.multica/dev/`,
 de sorte que deux checkouts ne peuvent pas occuper le même emplacement sans que l'un d'eux en soit averti.
 Il vérifie la base de données via `DATABASE_URL` et le backend via
@@ -96,7 +95,6 @@ temporaires sont nettoyés au mieux lors du `make up` suivant l'expiration de le
 
 ```bash
 pnpm install
-pnpm dev:web
 pnpm dev:desktop
 pnpm build
 pnpm typecheck
@@ -131,15 +129,15 @@ Pour exécuter une commande CLI depuis les sources :
 make cli ARGS="issue list"
 ```
 
-## Modifier des fonctionnalités frontend
+## Modifier les fonctionnalités produit
 
-Placez les fonctionnalités nécessaires à la fois à Web et à Desktop selon leur responsabilité :
+Placez une fonctionnalité Desktop selon sa responsabilité :
 
 1. Placez les types d'API, les queries, les mutations et la logique indépendante de la plateforme dans `packages/core/`.
 2. Placez l'UI de base dans `packages/ui/` ; elle ne doit pas dépendre du code métier.
 3. Placez les pages et composants métier dans `packages/views/`.
-4. Conservez les adaptateurs Next.js, Electron et de routage dans l'application correspondante.
-5. Branchez les pages partagées à la fois dans Web et dans Desktop.
+4. Conservez Electron et l'adaptateur de routage dans `apps/desktop/`.
+5. Branchez les pages partagées au routeur Desktop ou à son overlay.
 
 TanStack Query gère les données serveur. Zustand gère l'état client, comme les filtres, les brouillons et la mise en page. Consultez [Architecture du projet](/developers/architecture) et le `AGENTS.md` racine pour connaître la frontière exacte.
 

@@ -39,8 +39,7 @@ import {
   resolveWindowWorkspace,
 } from "./platform/workspace-windows";
 
-// BCP-47 region tags for the <html lang> attribute, mirroring
-// apps/web/app/layout.tsx HTML_LANG. index.html ships a static lang="en";
+// BCP-47 region tags for the <html lang> attribute. index.html ships a static lang="en";
 // we sync it to the resolved locale at boot so screen readers announce the
 // right language AND the Japanese-scoped CJK font override in globals.css
 // (`html[lang|="ja"]`) can take effect.

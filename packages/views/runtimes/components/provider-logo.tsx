@@ -345,7 +345,7 @@ function MuseLogo({ className }: { className: string }) {
 }
 
 // DeepSeek Harness — official mark copied from deepseek-ai/deepseek-harness
-// (apps/web/public/favicon.svg, MIT — Copyright 2026 DeepSeek). Upstream picks
+// (MIT — Copyright 2026 DeepSeek). Upstream picks
 // its colour with a prefers-color-scheme block; inlining the path lets
 // currentColor follow the app theme instead, which an <img> could not do.
 function DshLogo({ className }: { className: string }) {

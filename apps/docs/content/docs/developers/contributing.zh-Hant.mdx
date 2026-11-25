@@ -5,7 +5,7 @@ description: 配置 Multica 本地開發環境，執行測試，並按倉庫約�
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-Multica 是 Go backend 與 pnpm monorepo。最簡單的本地啟動方式是 `make dev`；它會為當前 checkout 準備環境、資料庫和 migration，再啟動 Web 與 API。
+Multica 是 Go backend 與 pnpm monorepo。最簡單的本地啟動方式是 `make dev`；它會為當前 checkout 準備環境、資料庫和 migration，再啟動 API。
 
 ## 環境要求
 
@@ -30,7 +30,6 @@ make dev
 預設地址：
 
 ```text
-Web: http://localhost:3000
 API: http://localhost:8080
 ```
 
@@ -53,7 +52,7 @@ make start-worktree
 make start-worktree
 ```
 
-停止當前 worktree 的 Web 與 API：
+停止當前 worktree 的 API：
 
 ```bash
 make stop-worktree
@@ -70,7 +69,7 @@ make stop-worktree
 ### 整體流程
 
 ```bash
-make up               # 啟動當前 checkout 的環境（C=api,collab,web,daemon,desktop）
+make up               # 啟動當前 checkout 的環境（C=api,collab,daemon,desktop）
 make status           # 檢視執行中的元件並確認歸屬本環境
 make list             # 列出本機所有開發環境
 make down             # 停止程序，保留資料庫
@@ -82,13 +81,12 @@ make check            # 完整本地驗證流程
 make build            # 建構 server、CLI 和 migrate 二進位檔
 ```
 
-`make up` 將每個環境視為具名物件：在鎖保護下分配 API、Web 與 Desktop renderer 埠、資料庫名與 CLI profile，並記錄於 `~/.multica/dev/` 中，避免兩個 checkout 在無提示下佔用同一槽位。它透過 `DATABASE_URL` 校驗資料庫，並透過回傳 `pid`、`commit` 與 `started_at` 的 `GET /health` 校驗後端（僅看 200 狀態碼無法區分同埠殘留程序）。`make destroy` 會移除資料庫、CLI profile、守護程序工作區、Desktop userData 與註冊表項目；若刪除失敗會保留註冊表項目以便重試。臨時環境到期後會在下次 `make up` 時盡力回收。
+`make up` 將每個環境視為具名物件：在鎖保護下分配 API、公開來源和 Desktop renderer 埠、資料庫名與 CLI profile，並記錄於 `~/.multica/dev/` 中，避免兩個 checkout 在無提示下佔用同一槽位。它透過 `DATABASE_URL` 校驗資料庫，並透過回傳 `pid`、`commit` 與 `started_at` 的 `GET /health` 校驗後端（僅看 200 狀態碼無法區分同埠殘留程序）。`make destroy` 會移除資料庫、CLI profile、守護程序工作區、Desktop userData 與註冊表項目；若刪除失敗會保留註冊表項目以便重試。臨時環境到期後會在下次 `make up` 時盡力回收。
 
 ### 前端
 
 ```bash
 pnpm install
-pnpm dev:web
 pnpm dev:desktop
 pnpm build
 pnpm typecheck
@@ -123,15 +121,15 @@ make sqlc
 make cli ARGS="issue list"
 ```
 
-## 修改前端功能
+## 修改產品功能
 
-Web 與 Desktop 都需要的功能按職責放置：
+Desktop 的功能按職責放置：
 
 1. API 類型、query、mutation 和平臺無關邏輯放在 `packages/core/`；
 2. 基礎 UI 放在 `packages/ui/`，不能依賴業務程式碼；
 3. 業務頁面和元件放在 `packages/views/`；
-4. Next.js、Electron 和路由適配留在對應 app；
-5. 共享頁面需要同時接入 Web 與 Desktop。
+4. Electron 和路由適配留在 `apps/desktop/`；
+5. 共享頁面接入桌面端路由或 overlay。
 
 服務端資料由 TanStack Query 管理，篩選、草稿和佈局等客戶端狀態由 Zustand 管理。具體邊界見[專案架構](/developers/architecture)和根目錄 `AGENTS.md`。
 
