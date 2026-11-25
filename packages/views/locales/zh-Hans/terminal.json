@@ -7,7 +7,7 @@
   "end_session": "结束会话",
   "agent_terminal": "智能体终端",
   "restart": "重启",
-  "preparing_trees": "正在构建 worktree…",
+  "preparing_trees": "正在构建 worktree...",
   "retry": "重试",
   "status": {
     "connecting": "正在打开...",
